@@ -17,7 +17,7 @@ button,input{font:inherit}
 button{cursor:pointer}
 button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #ffb41f;outline-offset:2px}
 img{max-width:100%;display:block}
-.game-app{width:min(720px,100%);margin:0 auto;min-height:100vh;background:linear-gradient(rgba(245,249,255,.92),rgba(255,250,239,.96)),url("assets/game_background_9x16.png") center/cover fixed;padding:14px 14px 46px}
+.game-app{width:min(720px,100%);margin:0 auto;min-height:100vh;background:linear-gradient(rgba(245,249,255,.92),rgba(255,250,239,.96)),url("../../nise_transfer_student_background_9x16.png") center/cover fixed;padding:14px 14px 46px}
 .top-nav{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:10px}
 .back-home{display:inline-flex;align-items:center;text-decoration:none;background:rgba(255,255,255,.92);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 13px;font-size:13px;font-weight:800;box-shadow:0 5px 16px rgba(24,42,66,.08)}
 .game-brand{width:min(430px,76%);margin:4px auto 12px;filter:drop-shadow(0 7px 12px rgba(18,48,93,.17))}
