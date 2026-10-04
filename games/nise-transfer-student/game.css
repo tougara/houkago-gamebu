@@ -725,3 +725,35 @@ body.easy-rules-open{
     font-size:18px;
   }
 }
+
+
+/* Timer: place start/pause beside the time; remove +30s */
+.timer-main-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(150px,.72fr);
+  gap:14px;
+  align-items:center;
+  margin-bottom:14px;
+}
+.timer-main-row .timer{
+  margin:0;
+}
+.timer-main-toggle{
+  min-height:76px;
+  margin:0;
+  font-size:clamp(20px,5vw,28px);
+}
+.timer-adjust-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-top:0;
+}
+@media(max-width:420px){
+  .timer-main-row{
+    grid-template-columns:minmax(0,1fr) 145px;
+    gap:10px;
+  }
+  .timer-main-toggle{
+    min-height:68px;
+    font-size:20px;
+  }
+}
