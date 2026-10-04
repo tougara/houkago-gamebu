@@ -549,3 +549,66 @@ body.registry-open{overflow:hidden}
 .proto-final-card{display:grid;justify-items:center;gap:9px;text-align:center;padding:20px;border:1px solid #dfe7ef;border-radius:20px;background:#fff;margin-bottom:14px}
 .proto-final-card h3{margin:0;font-size:22px}.proto-final-card p{margin:0;color:#667085;line-height:1.6;font-weight:750}
 @media(max-width:520px){.docchi-prototype-modal{padding:14px;border-radius:22px}.proto-head h2{font-size:24px}.proto-choice-grid button{min-height:92px;font-size:19px}.proto-round-buttons{gap:5px}.proto-result-row{grid-template-columns:minmax(0,1fr) auto}.proto-result-row b{grid-column:2}.proto-result-row strong{grid-column:1}}
+
+
+/* Official Minna wa Docchi title assets */
+.game-card-art-docchi{
+  min-height:250px;
+  background:url("../minna_wa_docchi_background_9x16.png") center 47%/cover no-repeat;
+}
+.game-card-art-docchi::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(255,255,255,.05),rgba(20,25,40,.12) 62%,rgba(20,25,40,.20));
+  z-index:1;
+}
+.game-card-art-docchi img{
+  position:relative;z-index:2;width:min(500px,88%);max-height:190px;object-fit:contain;
+  filter:drop-shadow(0 8px 16px rgba(22,30,48,.25));
+}
+.game-card-art-docchi .status-ribbon{z-index:3}
+
+.docchi-title-hero{
+  position:relative;
+  width:100%;
+  min-height:390px;
+  margin:16px 0 22px;
+  border-radius:26px;
+  overflow:hidden;
+  background:url("../../minna_wa_docchi_background_9x16.png") center 46%/cover no-repeat;
+  box-shadow:var(--shadow);
+  display:grid;
+  place-items:center;
+  padding:28px 18px 30px;
+}
+.docchi-title-shade{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(255,255,255,.03),rgba(22,28,42,.10) 54%,rgba(19,24,37,.52) 100%);
+}
+.docchi-title-logo{
+  position:relative;z-index:2;
+  width:min(92%,560px);
+  max-height:230px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.26));
+  align-self:center;
+}
+.docchi-title-copy{
+  position:relative;z-index:2;
+  align-self:end;
+  display:grid;
+  justify-items:center;
+  text-align:center;
+  gap:8px;
+  margin-top:16px;
+}
+.docchi-title-copy .preparing-badge{margin:0}
+.docchi-title-copy p{
+  margin:0;max-width:520px;color:#fff;font-size:14px;line-height:1.65;font-weight:850;
+  text-shadow:0 2px 8px rgba(0,0,0,.55);
+}
+@media(max-width:520px){
+  .game-card-art-docchi{min-height:220px}
+  .game-card-art-docchi img{max-height:160px}
+  .docchi-title-hero{min-height:350px;margin-top:12px;border-radius:22px;padding:22px 14px 24px}
+  .docchi-title-logo{width:96%;max-height:200px}
+}
