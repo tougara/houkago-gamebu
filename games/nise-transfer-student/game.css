@@ -46,16 +46,7 @@ h1,h2,h3,p{margin-top:0}
   position:relative;
   overflow:hidden;
   padding:20px;
-  background:
-    linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.82)),
-    url("../../nise_transfer_student_background_9x16.png") center 48%/cover no-repeat;
-}
-.game-title-card::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(to bottom,rgba(255,255,255,.12),rgba(255,255,255,.04) 48%,rgba(255,255,255,.18));
-  pointer-events:none;
+  background:url("../../nise_transfer_student_background_9x16.png") center 48%/cover no-repeat;
 }
 .game-title-card > *{
   position:relative;
