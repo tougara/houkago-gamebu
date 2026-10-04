@@ -137,41 +137,52 @@ h1,h2,h3,p{margin-top:0}
 /* Card table: おやすみ / 参加者 */
 .table-board{
   display:grid;
-  gap:14px;
-  margin:0 0 14px;
+  gap:8px;
+  margin:0 0 10px;
 }
 .table-zone{
   background:rgba(255,253,249,.96);
   border:1px solid rgba(218,210,199,.95);
-  border-radius:22px;
-  padding:14px;
-  box-shadow:var(--shadow);
+  border-radius:18px;
+  padding:9px;
+  box-shadow:0 7px 18px rgba(30,44,64,.12);
   backdrop-filter:blur(4px);
 }
 .table-zone-title{
   text-align:center;
-  font-size:15px;
+  font-size:13px;
   font-weight:1000;
   color:#526076;
-  margin-bottom:10px;
+  margin-bottom:7px;
 }
 .table-card-row{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
   justify-content:center;
-  gap:10px;
+  align-items:start;
+  gap:6px;
+}
+.table-rest-row{
+  grid-template-columns:repeat(2,minmax(0,88px));
+  max-width:188px;
+  margin:0 auto;
+}
+.table-player-row{
+  grid-template-columns:repeat(var(--player-cols),minmax(0,1fr));
 }
 .table-card-wrap{
-  width:clamp(82px,22vw,130px);
+  width:100%;
+  max-width:105px;
+  min-width:0;
   text-align:center;
+  justify-self:center;
 }
 .table-card{
   width:100%;
   aspect-ratio:3/4;
-  border-radius:15px;
+  border-radius:11px;
   overflow:hidden;
-  border:3px solid #fff;
-  box-shadow:0 7px 15px rgba(18,42,75,.16);
+  border:2px solid #fff;
+  box-shadow:0 5px 10px rgba(18,42,75,.13);
 }
 .table-card-back{
   display:grid;
@@ -184,14 +195,14 @@ h1,h2,h3,p{margin-top:0}
 .table-card-mark{
   display:grid;
   place-items:center;
-  width:50%;
+  width:46%;
   aspect-ratio:1;
   border-radius:50%;
   background:#ffe96b;
   color:#103c66;
-  font-size:clamp(30px,8vw,52px);
+  font-size:clamp(22px,6vw,38px);
   font-weight:1000;
-  box-shadow:0 4px 0 rgba(0,0,0,.14);
+  box-shadow:0 3px 0 rgba(0,0,0,.14);
 }
 .table-card-face{background:#fff}
 .table-card-face img{
@@ -200,30 +211,72 @@ h1,h2,h3,p{margin-top:0}
   object-fit:cover;
 }
 .table-card-name{
-  margin-top:7px;
-  min-height:1.4em;
-  font-size:clamp(12px,3.3vw,16px);
+  margin-top:4px;
+  min-height:1.25em;
+  font-size:clamp(10px,2.8vw,14px);
+  line-height:1.15;
   font-weight:1000;
   color:var(--ink);
   overflow-wrap:anywhere;
 }
 .table-card-role{
-  margin-top:2px;
-  font-size:11px;
+  margin-top:1px;
+  font-size:10px;
+  line-height:1.1;
   font-weight:800;
   color:var(--muted);
 }
 .table-card-current .table-card{
-  outline:5px solid #ffd34e;
-  outline-offset:2px;
+  outline:4px solid #ffd34e;
+  outline-offset:1px;
 }
-.table-rest-row .table-card-wrap{
-  width:clamp(86px,24vw,135px);
+.table-board.board-dense .table-zone{
+  padding:7px;
+}
+.table-board.board-dense .table-card-row{
+  gap:5px;
+}
+.table-board.board-dense .table-card-name{
+  font-size:10px;
+}
+.table-board.board-dense .table-card-role{
+  font-size:9px;
+}
+.table-board.board-very-dense{
+  gap:6px;
+}
+.table-board.board-very-dense .table-zone{
+  padding:6px;
+  border-radius:16px;
+}
+.table-board.board-very-dense .table-zone-title{
+  margin-bottom:5px;
+  font-size:12px;
+}
+.table-board.board-very-dense .table-card-row{
+  gap:4px;
+}
+.table-board.board-very-dense .table-card{
+  border-radius:9px;
+}
+.table-board.board-very-dense .table-card-name{
+  margin-top:3px;
+  font-size:9px;
+}
+.table-board.board-very-dense .table-card-role{
+  font-size:8px;
 }
 .role-detail-under-board{margin-top:0}
-.role-pass-panel,.vote-pass-panel{min-height:260px}
+.role-pass-panel,.vote-pass-panel{min-height:220px}
+
 @media(max-width:420px){
-  .table-card-row{gap:8px}
+  .table-zone{padding:7px}
+  .table-rest-row{grid-template-columns:repeat(2,minmax(0,74px));max-width:158px}
+  .table-card-name{font-size:10px}
+  .table-card-role{font-size:9px}
+  .table-board.board-very-dense .table-card-name{font-size:8px}
+  .table-board.board-very-dense .table-card-role{font-size:7px}
+}
   .table-zone{padding:12px 9px}
   .table-card-wrap{width:clamp(76px,28vw,108px)}
   .table-rest-row .table-card-wrap{width:clamp(84px,31vw,116px)}
