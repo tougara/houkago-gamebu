@@ -989,3 +989,17 @@ body.easy-rules-open{
   cursor:zoom-out;
   touch-action:manipulation;
 }
+
+
+/* Processing-order role icons can open their role details */
+.night-order-role-icon{
+  cursor:pointer;
+  touch-action:manipulation;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.night-order-role-icon:active{
+  transform:scale(.94);
+}
+.rule-role-detail-backdrop{
+  z-index:180;
+}
