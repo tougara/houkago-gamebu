@@ -33,7 +33,7 @@ function gameBoard(opts){
     return show?boardRoleCard(roles[i],p.name,opts.facePlayer===i?'table-card-current':''):boardCardBack(p.name);
   }).join('');
   const cols=state.playerCount<=5?state.playerCount:(state.playerCount===6?3:(state.playerCount<=8?4:5));
-  const density=state.playerCount>=9?' board-very-dense':(state.playerCount>=7?' board-dense':'');
+  const density=state.playerCount>=9?' board-very-dense':(state.playerCount>=7?' board-dense':(state.playerCount>=5?' board-medium':''));
   return '<div class="table-board'+density+'" style="--player-cols:'+cols+'"><div class="table-zone"><div class="table-zone-title">おやすみ</div><div class="table-card-row table-rest-row">'+restHtml+'</div></div><div class="table-zone"><div class="table-zone-title">参加者</div><div class="table-card-row table-player-row">'+playersHtml+'</div></div></div>';
 }
 
