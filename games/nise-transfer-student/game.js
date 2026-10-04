@@ -52,18 +52,18 @@ function gameBoard(opts){
   return '<div class="table-board'+density+'" style="--player-cols:'+cols+'"><div class="table-zone"><div class="table-zone-title">おやすみ</div><div class="table-card-row table-rest-row">'+restHtml+'</div></div><div class="table-zone"><div class="table-zone-title">参加者</div><div class="table-card-row table-player-row">'+playersHtml+'</div></div></div>';
 }
 
-function topNav(){return `<div class="top-nav"><button type="button" class="back-home" id="stepBack">← 1個前にもどる</button><button type="button" class="back-home top-home-link" id="goTop">トップへもどる</button></div>`;} function brand(){return `<img class="game-brand" src="../../nise_transfer_student_logo.png" alt="ニセ転校生を探せ！">`;} function heading(t,s=''){return `<h1 class="title">${t}</h1>${s?`<p class="subtitle">${s}</p>`:''}`;} function helpButtons(){return `<div class="topbar"><button class="btn secondary" data-open="roles">役職確認</button><button class="btn secondary" data-open="reg">レギュ確認</button></div>`;}
+function topNav(){return `<div class="top-nav"><button type="button" class="back-home" id="stepBack">← 1個前にもどる</button><button type="button" class="back-home top-home-link" id="goTop">ゲームをえらぶ</button></div>`;} function brand(){return `<img class="game-brand" src="../../nise_transfer_student_logo.png" alt="ニセ転校生を探せ！">`;} function heading(t,s=''){return `<h1 class="title">${t}</h1>${s?`<p class="subtitle">${s}</p>`:''}`;} function helpButtons(){return `<div class="topbar"><button class="btn secondary" data-open="roles">役職確認</button><button class="btn secondary" data-open="reg">レギュ確認</button></div>`;}
 function stopTimer(){if(state.timerId){clearInterval(state.timerId);state.timerId=null;}}
 function go(s){stopTimer();if(state.screen!==s)state.navHistory.push(state.screen);state.screen=s;render();}
 function backOne(){stopTimer();if(state.navHistory.length){state.screen=state.navHistory.pop();render();}else{window.location.href='../';}}
-function doNavAction(type){if(type==='back')backOne();else window.location.href='../../';}
+function doNavAction(type){if(type==='back')backOne();else window.location.href='../';}
 function confirmNav(type){
   if(!state.gameStarted){doNavAction(type);return;}
   document.querySelector('.nav-confirm-backdrop')?.remove();
   const wrap=document.createElement('div');
   wrap.className='modal-backdrop nav-confirm-backdrop';
   const isTop=type==='top';
-  wrap.innerHTML=`<div class="modal nav-confirm-modal"><h2>ほんとにもどる？</h2><p>${isTop?'ゲームを途中でやめて、放課後ゲーム部のトップへもどります。':'ゲームの途中です。1個前の画面にもどります。'}</p><div class="grid2"><button type="button" class="btn secondary" id="cancelNav">ゲームにもどる</button><button type="button" class="btn danger" id="confirmNav">ほんとにもどる</button></div></div>`;
+  wrap.innerHTML=`<div class="modal nav-confirm-modal"><h2>ほんとにもどる？</h2><p>${isTop?'ゲームを途中でやめて、ゲームをえらぶ画面へもどります。':'ゲームの途中です。1個前の画面にもどります。'}</p><div class="grid2"><button type="button" class="btn secondary" id="cancelNav">ゲームにもどる</button><button type="button" class="btn danger" id="confirmNav">ほんとにもどる</button></div></div>`;
   document.body.appendChild(wrap);
   document.getElementById('cancelNav').addEventListener('click',()=>wrap.remove());
   document.getElementById('confirmNav').addEventListener('click',()=>{wrap.remove();doNavAction(type);});
