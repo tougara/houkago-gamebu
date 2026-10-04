@@ -18,9 +18,25 @@
         </div>
         <div class="hero-action-wrap">
           <a class="primary-cta home-cta" href="games/">ゲームをえらぶ</a>
+          <button class="home-member-btn" id="openPlayerRegistry" type="button">いつものメンバーを登録</button>
         </div>
       </div>
     </section>
   </main>
+  <div class="player-registry-overlay" id="playerRegistryOverlay" hidden>
+    <section class="player-registry-modal" role="dialog" aria-modal="true" aria-labelledby="registryTitle">
+      <div class="player-registry-head">
+        <div><span class="eyebrow">PLAYER REGISTRY</span><h2 id="registryTitle">いつものメンバー</h2><p>ここで登録した名前とアイコンは、放課後ゲーム部のゲームで共通して使えます。</p></div>
+        <button type="button" class="registry-close" id="closePlayerRegistry" aria-label="閉じる">×</button>
+      </div>
+      <div class="registry-block"><strong>遊ぶ人数</strong><div class="registry-count-choices" id="registryCountChoices"></div></div>
+      <p class="registry-summary" id="registrySummary"></p>
+      <div class="registry-player-list" id="registryPlayerList"></div>
+      <div class="registry-save-note">変更内容はこの端末に自動保存されます。</div>
+      <button type="button" class="primary-cta registry-done" id="finishPlayerRegistry">登録をおわる</button>
+    </section>
+  </div>
+  <script src="player-registry.js"></script>
+  <script src="home.js"></script>
 </body>
 </html>
