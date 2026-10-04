@@ -663,8 +663,26 @@ h1,h2,h3,p{margin-top:0}
   font-size:clamp(22px,5.5vw,30px);
 }
 .classroom-result-bg .result-hero{
-  background:rgba(255,253,249,.90);
-  backdrop-filter:blur(4px);
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(rgba(255,255,255,.18),rgba(255,248,235,.28)),
+    url("../../nise_transfer_student_background_9x16.png") center 30%/cover no-repeat;
+  backdrop-filter:none;
+}
+.classroom-result-bg .result-hero .result-logo,
+.classroom-result-bg .result-hero .result-reason{
+  position:relative;
+  z-index:1;
+}
+.classroom-result-bg .result-hero .result-reason{
+  width:fit-content;
+  max-width:92%;
+  margin:10px auto 4px;
+  padding:10px 14px;
+  border-radius:15px;
+  background:rgba(255,255,255,.84);
+  box-shadow:0 4px 14px rgba(27,49,79,.10);
 }
 @media(max-width:520px){
   .vote-complete-wrap{min-height:calc(100svh - 76px);padding-top:12px;}
