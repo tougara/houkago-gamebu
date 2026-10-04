@@ -46,8 +46,8 @@ img{max-width:100%;display:block}
 .hero-logo-wrap{
   position:absolute;
   left:50%;
-  top:30%;
-  width:min(88%,620px);
+  top:33%;
+  width:min(94%,680px);
   transform:translate(-50%,-50%);
   display:grid;
   place-items:center;
@@ -55,14 +55,14 @@ img{max-width:100%;display:block}
 }
 .site-logo{
   width:100%;
-  max-height:36dvh;
+  max-height:40dvh;
   object-fit:contain;
   filter:drop-shadow(0 8px 12px rgba(5,21,54,.22));
 }
 .hero-action-wrap{
   position:absolute;
   left:50%;
-  top:70%;
+  top:67%;
   width:min(82%,520px);
   transform:translate(-50%,-50%);
   display:grid;
@@ -132,8 +132,8 @@ img{max-width:100%;display:block}
 .coming-soon strong{color:var(--ink)}
 
 @media(max-width:520px){
-  .hero-logo-wrap{top:31%;width:86%}
-  .hero-action-wrap{top:70%;width:78%}
+  .hero-logo-wrap{top:34%;width:94%}
+  .hero-action-wrap{top:67%;width:78%}
   .home-cta{min-height:62px}
   .games-section{padding-left:14px;padding-right:14px}
   .games-header{padding-left:14px;padding-right:14px}
