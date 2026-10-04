@@ -16,13 +16,13 @@ function needCards(){return state.playerCount+2;} function totalCards(){return O
 function formatTime(s){return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
 function ensurePlayers(){while(state.players.length<state.playerCount){const i=state.players.length;const used=new Set(state.players.map(p=>p.icon));state.players.push({name:`プレイヤー${i+1}`,icon:PLAYER_ICONS.find(x=>!used.has(x))||PLAYER_ICONS[i%PLAYER_ICONS.length]});}state.players=state.players.slice(0,state.playerCount);}
 function setBaseRoles(){const c={classmate:0,fake:2,president:0,observer:0,swapper:0,collaborator:0};let r=needCards()-2;for(const k of ['president','swapper','observer','collaborator']){if(r>1){c[k]=1;r--;}}c.classmate=r;state.roleCounts=c;}
-function boardCardBack(label){
-  label=label||'';
-  return '<div class="table-card-wrap"><div class="table-card table-card-back"><div class="table-card-mark">?</div></div>'+(label?'<div class="table-card-name">'+esc(label)+'</div>':'')+'</div>';
+function boardCardBack(label,attrs){
+  label=label||''; attrs=attrs||'';
+  return '<div class="table-card-wrap '+(attrs?'table-card-selectable':'')+'" '+attrs+'><div class="table-card table-card-back"><div class="table-card-mark">?</div></div>'+(label?'<div class="table-card-name">'+esc(label)+'</div>':'')+'</div>';
 }
-function boardRoleCard(role,label,extra){
-  const d=ROLE_DEFS[role]; label=label||''; extra=extra||'';
-  return '<div class="table-card-wrap '+extra+'"><div class="table-card table-card-face"><img src="'+d.image+'" alt="'+esc(d.name)+'"></div>'+(label?'<div class="table-card-name">'+esc(label)+'</div>':'')+'<div class="table-card-role">'+esc(d.name)+'</div></div>';
+function boardRoleCard(role,label,extra,attrs){
+  const d=ROLE_DEFS[role]; label=label||''; extra=extra||''; attrs=attrs||'';
+  return '<div class="table-card-wrap '+extra+' '+(attrs?'table-card-selectable':'')+'" '+attrs+'><div class="table-card table-card-face"><img src="'+d.image+'" alt="'+esc(d.name)+'"></div>'+(label?'<div class="table-card-name">'+esc(label)+'</div>':'')+'<div class="table-card-role">'+esc(d.name)+'</div></div>';
 }
 function gameBoard(opts){
   opts=opts||{};
@@ -30,14 +30,20 @@ function gameBoard(opts){
   const facePlayers=Array.isArray(opts.facePlayers)?opts.facePlayers:(Number.isInteger(opts.facePlayer)?[opts.facePlayer]:[]);
   const partnerPlayers=Array.isArray(opts.partnerPlayers)?opts.partnerPlayers:[];
   const swapPlayers=Array.isArray(opts.swapPlayers)?opts.swapPlayers:[];
-  const restHtml=state.rest.map(function(r,i){return opts.revealRest?boardRoleCard(r,'おやすみ'+(i+1),''):boardCardBack('おやすみ'+(i+1));}).join('');
+  const clickablePlayers=Array.isArray(opts.clickablePlayers)?opts.clickablePlayers:null;
+  const restHtml=state.rest.map(function(r,i){
+    const attrs=opts.restAction?'data-'+opts.restAction+'="'+i+'"':'';
+    return opts.revealRest?boardRoleCard(r,'おやすみ'+(i+1),'',attrs):boardCardBack('おやすみ'+(i+1),attrs);
+  }).join('');
   const playersHtml=state.players.map(function(p,i){
     const show=opts.revealAll||facePlayers.includes(i);
     let extra='';
     if(opts.selfPlayer===i||opts.facePlayer===i)extra='table-card-current';
     else if(partnerPlayers.includes(i))extra='table-card-partner';
     else if(swapPlayers.includes(i))extra='table-card-swap';
-    return show?boardRoleCard(roles[i],p.name,extra):boardCardBack(p.name);
+    const canClick=opts.playerAction&&(!clickablePlayers||clickablePlayers.includes(i));
+    const attrs=canClick?'data-'+opts.playerAction+'="'+i+'"':'';
+    return show?boardRoleCard(roles[i],p.name,extra,attrs):boardCardBack(p.name,attrs);
   }).join('');
   const cols=state.playerCount<=5?state.playerCount:(state.playerCount===6?3:(state.playerCount<=8?4:5));
   const density=state.playerCount>=9?' board-very-dense':(state.playerCount>=7?' board-dense':(state.playerCount>=5?' board-medium':''));
@@ -59,6 +65,16 @@ function confirmNav(type){
   document.body.appendChild(wrap);
   document.getElementById('cancelNav').addEventListener('click',()=>wrap.remove());
   document.getElementById('confirmNav').addEventListener('click',()=>{wrap.remove();doNavAction(type);});
+  wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove();});
+}
+function confirmCardChoice(title,message,onConfirm){
+  document.querySelector('.card-choice-confirm')?.remove();
+  const wrap=document.createElement('div');
+  wrap.className='modal-backdrop card-choice-confirm';
+  wrap.innerHTML=`<div class="modal card-choice-modal"><h2>${title}</h2><p>${message}</p><div class="grid2"><button type="button" class="btn secondary" id="cancelCardChoice">選びなおす</button><button type="button" class="btn" id="confirmCardChoice">このカードで決定</button></div></div>`;
+  document.body.appendChild(wrap);
+  document.getElementById('cancelCardChoice').addEventListener('click',()=>wrap.remove());
+  document.getElementById('confirmCardChoice').addEventListener('click',()=>{wrap.remove();onConfirm();});
   wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove();});
 }
 function render(){app.innerHTML=screenHtml();bind();if(state.modal)renderModal();}
@@ -87,17 +103,21 @@ function nightActionScreen(){
       : 'ほかのプレイヤーにニセ転校生はいません。';
     body=`<div class="card role-reveal"><span class="night-role fake">ニセ転校生</span><img class="role-card-large" src="${d.image}" alt="ニセ転校生"><h2>${partnerPlayers.length?'ニセ転校生の相方を確認':'今回は1人です'}</h2><p class="role-desc">${partnerText}</p><button class="btn full" id="nightDone">確認した</button></div>`;
   }else if(r==='president'){
-    body=`<div class="card stack"><h2>学級委員</h2><p>どちらか1つを選びます。</p><button class="btn" id="presidentPlayer">プレイヤー1人を見る</button><button class="btn secondary" id="presidentRest">お休み2枚を見る</button></div>`;
+    body=`<div class="card stack"><h2>学級委員</h2><p>見たいカードを直接タップしてください。</p><div class="note">参加者カードをタップ → その1人の役職を確認<br>おやすみカードをどちらかタップ → おやすみ2枚を両方確認</div></div>`;
   }else if(r==='observer'){
     body=`<div class="card stack"><h2>観察係</h2><p>自分以外から2人を選び、同じサイドか確認します。</p><div id="observerChoices" class="grid2">${state.players.map((p,j)=>j===i?'':`<button class="btn choice" data-observe="${j}">${esc(p.name)}</button>`).join('')}</div><button class="btn" id="observerCheck" disabled>確認する</button></div>`;
   }else if(r==='swapper'){
-    body=`<div class="card stack"><h2>席替え係</h2><p>1人を選んで自分のカードと交換します。交換しなくてもOKです。</p><div class="grid2">${state.players.map((p,j)=>j===i?'':`<button class="btn choice" data-swap="${j}">${esc(p.name)}</button>`).join('')}</div><button class="btn secondary" id="noSwap">交換しない</button></div>`;
+    body=`<div class="card stack"><h2>席替え係</h2><p>交換したい相手のカードを直接タップしてください。</p><div class="note">カードをタップしたあと、確認画面が出ます。</div><button class="btn secondary" id="noSwap">交換しない</button></div>`;
   }
-  return `${topNav()}${helpButtons()}${heading(`${esc(state.players[i].name)}さんの休み時間`)}${gameBoard({useFinal:true,facePlayers,selfPlayer:i,partnerPlayers})}${body}`;
+  const clickablePlayers=(r==='president'||r==='swapper')?state.players.map((_,j)=>j).filter(j=>j!==i):null;
+  const boardOpts={useFinal:true,facePlayers,selfPlayer:i,partnerPlayers};
+  if(r==='president'){boardOpts.playerAction='pres-card';boardOpts.restAction='pres-rest';boardOpts.clickablePlayers=clickablePlayers;}
+  if(r==='swapper'){boardOpts.playerAction='swap-card';boardOpts.clickablePlayers=clickablePlayers;}
+  return `${topNav()}${helpButtons()}${heading(`${esc(state.players[i].name)}さんの休み時間`)}${gameBoard(boardOpts)}${body}`;
 }
 function discussionScreen(){return topNav()+helpButtons()+heading('話し合い','ニセ転校生は誰？')+gameBoard({useFinal:true})+'<div class="card"><div id="timer" class="timer '+(state.timerRemaining<=10?'low':'')+'">'+formatTime(state.timerRemaining)+'</div><div class="grid2"><button class="btn secondary" id="timerToggle">'+(state.timerId?'一時停止':'スタート')+'</button><button class="btn secondary" id="plus30">＋30秒</button></div></div><button class="btn danger full" id="toVote">投票へ</button>';}
 function votePassScreen(){const p=state.players[state.voteIndex];return topNav()+heading('秘密投票',(state.voteIndex+1)+' / '+state.playerCount)+gameBoard({useFinal:true})+'<div class="privacy-screen vote-pass-panel"><div><div class="avatar large">'+p.icon+'</div><h2>'+esc(p.name)+'さんに<br>スマホを渡してください</h2><p>投票内容はほかの人に見せないでね。</p><button class="btn yellow hold" id="holdVote">長押しして投票</button></div></div>';}
-function voteScreen(){const v=state.voteIndex;return topNav()+heading(esc(state.players[v].name)+'さんの投票','自分以外の1人を選んでください')+gameBoard({useFinal:true})+'<div class="card vote-grid">'+state.players.map(function(p,i){return i===v?'':'<button class="btn choice vote-choice" data-vote="'+i+'"><span class="avatar">'+p.icon+'</span><span>'+esc(p.name)+'</span></button>';}).join('')+'</div>';}
+function voteScreen(){const v=state.voteIndex,targets=state.players.map((_,i)=>i).filter(i=>i!==v);return topNav()+heading(esc(state.players[v].name)+'さんの投票','投票したい人のカードをタップしてください')+gameBoard({useFinal:true,playerAction:'vote-card',clickablePlayers:targets})+'<div class="card vote-card-guide"><p>カードをタップしたあと、確認画面が出ます。</p></div>';}
 function calcResult(){const counts=Array(state.playerCount).fill(0);state.votes.forEach(v=>counts[v]++);const max=Math.max(...counts);const expelled=max<=1?[]:counts.map((c,i)=>c===max?i:-1).filter(i=>i>=0);const fakeExists=state.finalRoles.includes('fake'),fakeExpelled=expelled.some(i=>state.finalRoles[i]==='fake');if(!fakeExists&&expelled.length===0)return{kind:'peace',winner:'平和なクラス！',reason:'ニセ転校生がいないことを見抜き、だれも処刑されませんでした。',logo:'../../result_peaceful_class.png',expelled,max};const realWin=fakeExists&&fakeExpelled;return{kind:realWin?'real':'fake',winner:realWin?'ホンモノサイド勝利！':'ニセモノサイド勝利！',reason:fakeExists?(fakeExpelled?'ニセ転校生を見つけました。':'ニセ転校生が正体を隠し切りました。'):'ニセ転校生がいないのに、だれかが処刑されました。',logo:realWin?'../../result_honmono_side_win.png':'../../result_nisemono_side_win.png',expelled,max};}
 function resultScreen(){const r=calcResult(),names=r.expelled.length?r.expelled.map(function(i){return state.players[i].name;}).join('、'):'だれも選ばれませんでした';return topNav()+'<div class="card result-hero"><img class="result-logo" src="'+r.logo+'" alt="'+r.winner+'"><p class="result-reason">'+r.reason+'</p></div>'+gameBoard({useFinal:true,revealAll:true,revealRest:true})+'<div class="card"><h2>投票結果</h2><p>最多票：'+r.max+'票</p><p><strong>'+esc(names)+'</strong></p></div><div class="stack"><button class="btn full" id="restartSame">同じメンバーでもう一度</button><button class="btn secondary full" id="restartAll">最初から</button></div>';}
 function startGame(){const d=[];Object.entries(state.roleCounts).forEach(([r,n])=>{for(let i=0;i<n;i++)d.push(r);});state.deck=shuffle(d);state.initialRoles=state.deck.slice(0,state.playerCount);state.finalRoles=[...state.initialRoles];state.rest=state.deck.slice(state.playerCount);state.revealIndex=state.nightIndex=state.voteIndex=0;state.votes=[];state.timerRemaining=state.timerSeconds;state.gameStarted=true;go('revealPass');}
@@ -115,11 +135,11 @@ function bind(){
   document.querySelectorAll('[data-role-minus]').forEach(b=>b.addEventListener('click',()=>{const r=b.dataset.roleMinus;if(state.roleCounts[r]>0)state.roleCounts[r]--;render();}));document.querySelectorAll('[data-role-plus]').forEach(b=>b.addEventListener('click',()=>{const r=b.dataset.rolePlus;if(state.roleCounts[r]<ROLE_DEFS[r].max)state.roleCounts[r]++;render();}));document.getElementById('dealRoles')?.addEventListener('click',startGame);
   bindHold('holdReveal',()=>go('revealRole'));document.getElementById('hideRole')?.addEventListener('click',()=>queueCover('revealNext'));document.getElementById('coverNext')?.addEventListener('click',()=>{const n=state.coverNext;state.coverNext=null;if(n==='revealNext')nextReveal();else if(n==='nightNext')nextNight();else if(n==='voteNext')nextVote();});
   document.getElementById('beginNight')?.addEventListener('click',()=>{state.nightIndex=0;go('nightPass')});bindHold('holdNight',()=>go('nightAction'));document.getElementById('nightDone')?.addEventListener('click',()=>queueCover('nightNext'));
-  document.getElementById('presidentPlayer')?.addEventListener('click',()=>{const me=state.nightIndex,p=document.querySelector('.card.stack');p.innerHTML=`<h2>1人選ぶ</h2><div class="grid2">${state.players.map((x,i)=>i===me?'':`<button class="btn choice" data-pres-see="${i}">${esc(x.name)}</button>`).join('')}</div>`;document.querySelectorAll('[data-pres-see]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.presSee),r=state.initialRoles[i];p.innerHTML=`<div class="role-reveal"><p>${esc(state.players[i].name)}さんの役職</p><img class="role-card-large" src="${ROLE_DEFS[r].image}" alt="${ROLE_DEFS[r].name}"><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('nightNext'));}));});
-  document.getElementById('presidentRest')?.addEventListener('click',()=>{const p=document.querySelector('.card.stack');p.innerHTML=`<div class="role-reveal"><h2>お休みのカード</h2><div class="grid2">${state.rest.map(r=>`<img class="role-card-large" src="${ROLE_DEFS[r].image}" alt="${ROLE_DEFS[r].name}">`).join('')}</div><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('nightNext'));});
+  document.querySelectorAll('[data-pres-card]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.presCard);confirmCardChoice('このカードでよろしいですか？',esc(state.players[i].name)+'さんのカードを確認します。',()=>{const r=state.initialRoles[i],board=document.querySelector('.table-board'),p=document.querySelector('.card.stack');if(board)board.outerHTML=gameBoard({useFinal:true,facePlayers:[state.nightIndex,i],selfPlayer:state.nightIndex});p.innerHTML=`<div class="role-reveal"><p>${esc(state.players[i].name)}さんの役職</p><img class="role-card-large" src="${ROLE_DEFS[r].image}" alt="${ROLE_DEFS[r].name}"><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('nightNext'));});}));
+  document.querySelectorAll('[data-pres-rest]').forEach(b=>b.addEventListener('click',()=>{const idx=Number(b.dataset.presRest);confirmCardChoice('このカードでよろしいですか？','おやすみ'+(idx+1)+'を選ぶと、おやすみカード2枚を両方確認します。',()=>{const board=document.querySelector('.table-board'),p=document.querySelector('.card.stack');if(board)board.outerHTML=gameBoard({useFinal:true,facePlayers:[state.nightIndex],selfPlayer:state.nightIndex,revealRest:true});p.innerHTML=`<div class="role-reveal"><h2>おやすみカード2枚</h2><div class="grid2">${state.rest.map(r=>`<img class="role-card-large" src="${ROLE_DEFS[r].image}" alt="${ROLE_DEFS[r].name}">`).join('')}</div><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('nightNext'));});}));
   let observed=[];document.querySelectorAll('[data-observe]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.observe);if(observed.includes(i)){observed=observed.filter(x=>x!==i);b.classList.remove('selected');}else if(observed.length<2){observed.push(i);b.classList.add('selected');}const c=document.getElementById('observerCheck');if(c)c.disabled=observed.length!==2;}));document.getElementById('observerCheck')?.addEventListener('click',()=>{const same=ROLE_DEFS[state.initialRoles[observed[0]]].side===ROLE_DEFS[state.initialRoles[observed[1]]].side,p=document.querySelector('.card.stack');p.innerHTML=`<div class="role-reveal"><h2>${same?'同じサイドです':'ちがうサイドです'}</h2><p>${esc(state.players[observed[0]].name)}さん と ${esc(state.players[observed[1]].name)}さん</p><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('nightNext'));});
-  document.querySelectorAll('[data-swap]').forEach(b=>b.addEventListener('click',()=>{const t=Number(b.dataset.swap),me=state.nightIndex;[state.finalRoles[me],state.finalRoles[t]]=[state.finalRoles[t],state.finalRoles[me]];const myRole=state.finalRoles[me],theirRole=state.finalRoles[t],board=document.querySelector('.table-board'),p=document.querySelector('.card.stack');if(board)board.outerHTML=gameBoard({useFinal:true,facePlayers:[me,t],selfPlayer:me,swapPlayers:[t]});p.innerHTML=`<div class="role-reveal"><h2>${esc(state.players[t].name)}さんと交換しました</h2><p><strong>黄色の枠が自分の新しいカード</strong><br><strong>水色の枠が交換相手のカード</strong>です。</p><div class="swap-result-cards"><div><span>自分の新しい役職</span><img class="role-card-large" src="${ROLE_DEFS[myRole].image}" alt="${ROLE_DEFS[myRole].name}"><strong>${ROLE_DEFS[myRole].name}</strong></div><div><span>${esc(state.players[t].name)}さん</span><img class="role-card-large" src="${ROLE_DEFS[theirRole].image}" alt="${ROLE_DEFS[theirRole].name}"><strong>${ROLE_DEFS[theirRole].name}</strong></div></div><p class="role-desc">交換された相手には、交換されたことは知らされません。</p><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('nightNext'));}));document.getElementById('noSwap')?.addEventListener('click',()=>queueCover('nightNext'));
-  document.getElementById('timerToggle')?.addEventListener('click',toggleTimer);document.getElementById('plus30')?.addEventListener('click',()=>{state.timerRemaining+=30;render();});document.getElementById('toVote')?.addEventListener('click',()=>{stopTimer();state.voteIndex=0;state.votes=[];go('votePass');});bindHold('holdVote',()=>go('vote'));document.querySelectorAll('[data-vote]').forEach(b=>b.addEventListener('click',()=>{state.votes[state.voteIndex]=Number(b.dataset.vote);queueCover('voteNext');}));
+  document.querySelectorAll('[data-swap-card]').forEach(b=>b.addEventListener('click',()=>{const t=Number(b.dataset.swapCard),me=state.nightIndex;confirmCardChoice('このカードでよろしいですか？',esc(state.players[t].name)+'さんと席替えします。',()=>{[state.finalRoles[me],state.finalRoles[t]]=[state.finalRoles[t],state.finalRoles[me]];const myRole=state.finalRoles[me],theirRole=state.finalRoles[t],board=document.querySelector('.table-board'),p=document.querySelector('.card.stack');if(board)board.outerHTML=gameBoard({useFinal:true,facePlayers:[me,t],selfPlayer:me,swapPlayers:[t]});p.innerHTML=`<div class="role-reveal"><h2>${esc(state.players[t].name)}さんと交換しました</h2><p><strong>黄色の枠が自分の新しいカード</strong><br><strong>水色の枠が交換相手のカード</strong>です。</p><div class="swap-result-cards"><div><span>自分の新しい役職</span><img class="role-card-large" src="${ROLE_DEFS[myRole].image}" alt="${ROLE_DEFS[myRole].name}"><strong>${ROLE_DEFS[myRole].name}</strong></div><div><span>${esc(state.players[t].name)}さん</span><img class="role-card-large" src="${ROLE_DEFS[theirRole].image}" alt="${ROLE_DEFS[theirRole].name}"><strong>${ROLE_DEFS[theirRole].name}</strong></div></div><p class="role-desc">交換された相手には、交換されたことは知らされません。</p><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('nightNext'));});}));document.getElementById('noSwap')?.addEventListener('click',()=>queueCover('nightNext'));
+  document.getElementById('timerToggle')?.addEventListener('click',toggleTimer);document.getElementById('plus30')?.addEventListener('click',()=>{state.timerRemaining+=30;render();});document.getElementById('toVote')?.addEventListener('click',()=>{stopTimer();state.voteIndex=0;state.votes=[];go('votePass');});bindHold('holdVote',()=>go('vote'));document.querySelectorAll('[data-vote-card]').forEach(b=>b.addEventListener('click',()=>{const t=Number(b.dataset.voteCard);confirmCardChoice('このカードに投票しますか？',esc(state.players[t].name)+'さんに投票します。',()=>{state.votes[state.voteIndex]=t;queueCover('voteNext');});}));
   document.getElementById('restartSame')?.addEventListener('click',()=>{state.gameStarted=false;go('roles');});document.getElementById('restartAll')?.addEventListener('click',()=>{state.players=[];state.playerCount=3;state.navHistory=[];state.gameStarted=false;setBaseRoles();state.screen='title';render();});
 }
 setBaseRoles();ensurePlayers();render();
