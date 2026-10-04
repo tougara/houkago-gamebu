@@ -108,15 +108,17 @@ function rolesScreen(){
     const d=ROLE_DEFS[k];
     return '<div class="role-row">'
       +'<button type="button" class="role-thumb-button" data-role-detail="'+k+'" aria-label="'+d.name+'の詳細を見る"><img class="role-thumb" src="'+d.image+'" alt=""></button>'
-      +'<div><div class="role-title">'+d.name+'</div><span class="side-tag '+d.side+'">'+sideLabel(k)+'</span></div>'
-      +'<button class="btn secondary" data-role-minus="'+k+'" '+(state.roleCounts[k]<=roleMin(k)?'disabled':'')+'>−</button>'
+      +'<div class="role-info"><div class="role-title">'+d.name+'</div><span class="side-tag '+d.side+'">'+sideLabel(k)+'</span></div>'
+      +'<div class="role-count-controls">'
+      +'<button class="btn secondary role-step" data-role-minus="'+k+'" '+(state.roleCounts[k]<=roleMin(k)?'disabled':'')+' aria-label="'+d.name+'を1枚減らす">−</button>'
       +'<span class="count">'+state.roleCounts[k]+'</span>'
-      +'<button class="btn secondary" data-role-plus="'+k+'" '+(state.roleCounts[k]>=roleMax(k)?'disabled':'')+'>＋</button>'
+      +'<button class="btn secondary role-step" data-role-plus="'+k+'" '+(state.roleCounts[k]>=roleMax(k)?'disabled':'')+' aria-label="'+d.name+'を1枚増やす">＋</button>'
+      +'</div>'
       +'</div>';
   };
   return topNav()
     +heading('使用する役職','人数＋お休み2枚ぶんのカードを選ぶ')
-    +'<div class="card">'
+    +'<div class="card role-select-card">'
     +'<div class="note '+(valid?'success':'warning')+'">必要：'+needCards()+'枚 ／ 現在：'+totalCards()+'枚<br>'+fakeNote+'</div>'
     +'<div class="role-reg-group basic"><div class="role-reg-heading"><div><strong>基本レギュ</strong><span>まずはここから</span></div><span class="role-reg-badge">おすすめ</span></div>'
     +BASIC_ROLE_KEYS.map(roleRow).join('')
@@ -124,7 +126,7 @@ function rolesScreen(){
     +'<div class="role-reg-group advanced"><div class="role-reg-heading"><div><strong>応用レギュ</strong><span>慣れてきたら追加</span></div><span class="role-reg-badge">アレンジ</span></div>'
     +ADVANCED_ROLE_KEYS.map(roleRow).join('')
     +'</div></div>'
-    +'<div class="row"><button class="btn secondary" id="backPlayers">戻る</button><button class="btn" id="dealRoles" '+(valid?'':'disabled')+'>役職を配る</button></div>';
+    +'<div class="row role-select-actions"><button class="btn secondary" id="backPlayers">戻る</button><button class="btn" id="dealRoles" '+(valid?'':'disabled')+'>役職を配る</button></div>';
 }
 function revealPassScreen(){const p=state.players[state.revealIndex];return topNav()+heading('役職確認',(state.revealIndex+1)+' / '+state.playerCount)+gameBoard()+ '<div class="privacy-screen role-pass-panel"><div><div class="avatar large">'+p.icon+'</div><h2>'+esc(p.name)+'さんに<br>スマホを渡してください</h2><p>ほかの人は画面を見ないでね。</p><button class="btn yellow hold" id="holdReveal">長押しして役職を見る</button></div></div>';}
 function revealRoleScreen(){const r=state.initialRoles[state.revealIndex],d=ROLE_DEFS[r];return topNav()+heading('あなたの役職',(state.revealIndex+1)+' / '+state.playerCount)+gameBoard({facePlayer:state.revealIndex})+'<div class="card role-reveal role-detail-under-board"><span class="side-tag '+d.side+'">'+sideLabel(r)+'</span><p class="role-desc">'+d.desc+'</p><button class="btn full" id="startRoleAction">このまま休み時間の行動へ</button></div>';}
