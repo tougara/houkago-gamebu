@@ -897,3 +897,54 @@ body.easy-rules-open{
     font-size:20px;
   }
 }
+
+
+/* Result: visually mark every player tied for the most votes */
+.table-card-expelled{
+  position:relative;
+}
+.table-card-expelled .table-card{
+  filter:saturate(.45) brightness(.82);
+  box-shadow:
+    0 0 0 4px rgba(212,52,68,.48),
+    0 4px 8px rgba(18,42,75,.12);
+}
+.table-card-expelled::before{
+  content:"×";
+  position:absolute;
+  z-index:5;
+  top:calc(var(--card-size) * .08);
+  left:50%;
+  transform:translateX(-50%);
+  width:calc(var(--card-size) * .72);
+  height:calc(var(--card-size) * .72);
+  display:grid;
+  place-items:center;
+  color:#e52f45;
+  font-size:calc(var(--card-size) * .76);
+  line-height:1;
+  font-weight:1000;
+  text-shadow:
+    0 3px 0 #fff,
+    2px 0 0 #fff,
+    -2px 0 0 #fff,
+    0 -2px 0 #fff,
+    0 5px 10px rgba(98,12,24,.25);
+  pointer-events:none;
+}
+.table-card-expelled .table-card-name,
+.table-card-expelled .table-card-role{
+  color:#a52839;
+  font-weight:1000;
+}
+.table-card-expelled .table-card-name::after{
+  content:" 追放";
+  display:inline-block;
+  margin-left:3px;
+  padding:1px 5px;
+  border-radius:999px;
+  background:#ffe2e6;
+  color:#b51f35;
+  font-size:.72em;
+  vertical-align:middle;
+}
