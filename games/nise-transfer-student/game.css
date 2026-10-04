@@ -404,3 +404,90 @@ h1,h2,h3,p{margin-top:0}
     padding:13px 12px;
   }
 }
+
+
+/* Title buttons: equal spacing and equal height */
+.game-title-card .stack{
+  gap:18px;
+}
+.game-title-card .stack > .btn{
+  min-height:68px;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+
+/* Detailed rules: break-time action order */
+.night-order{
+  display:grid;
+  gap:7px;
+  margin-top:12px;
+}
+.night-order-item{
+  display:grid;
+  grid-template-columns:48px 30px minmax(0,1fr);
+  grid-template-areas:
+    "icon no name"
+    "icon no desc";
+  column-gap:9px;
+  align-items:center;
+  background:#fff;
+  border:1px solid #dce6f1;
+  border-radius:13px;
+  padding:8px 10px;
+}
+.night-order-item img{
+  grid-area:icon;
+  width:48px;
+  height:48px;
+  object-fit:cover;
+  border-radius:10px;
+  box-shadow:0 3px 8px rgba(20,45,83,.12);
+}
+.night-order-item .order-no{
+  grid-area:no;
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#1687e8;
+  color:#fff;
+  font-weight:1000;
+}
+.night-order-item strong{
+  grid-area:name;
+  font-size:16px;
+  color:#18294c;
+}
+.night-order-item small{
+  grid-area:desc;
+  color:#5b687b;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:700;
+}
+.night-order-arrow{
+  text-align:center;
+  color:#1687e8;
+  font-weight:1000;
+  line-height:1;
+}
+.night-order-note{
+  margin-top:10px !important;
+  padding:9px 10px;
+  border-radius:11px;
+  background:#fff7d8;
+  color:#645014 !important;
+}
+@media(max-width:420px){
+  .game-title-card .stack{gap:15px;}
+  .game-title-card .stack > .btn{min-height:64px;}
+  .night-order-item{
+    grid-template-columns:44px 28px minmax(0,1fr);
+    padding:7px 8px;
+  }
+  .night-order-item img{width:44px;height:44px;}
+}
