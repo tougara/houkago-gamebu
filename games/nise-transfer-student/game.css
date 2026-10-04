@@ -52,3 +52,18 @@ h1,h2,h3,p{margin-top:0}
   position:relative;
   z-index:1;
 }
+
+.game-title-card .subtitle{
+  width:fit-content;
+  max-width:92%;
+  margin:0 auto 18px;
+  padding:9px 14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.82);
+  color:#34435b;
+  font-weight:800;
+  line-height:1.55;
+  text-shadow:0 1px 0 rgba(255,255,255,.8);
+  box-shadow:0 4px 14px rgba(27,49,79,.10);
+  backdrop-filter:blur(2px);
+}
