@@ -132,3 +132,99 @@ h1,h2,h3,p{margin-top:0}
 @media(max-width:520px){
   .role-thumb-button{width:52px;height:52px}
 }
+
+
+/* Card table: おやすみ / 参加者 */
+.table-board{
+  display:grid;
+  gap:14px;
+  margin:0 0 14px;
+}
+.table-zone{
+  background:rgba(255,253,249,.96);
+  border:1px solid rgba(218,210,199,.95);
+  border-radius:22px;
+  padding:14px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(4px);
+}
+.table-zone-title{
+  text-align:center;
+  font-size:15px;
+  font-weight:1000;
+  color:#526076;
+  margin-bottom:10px;
+}
+.table-card-row{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+}
+.table-card-wrap{
+  width:clamp(82px,22vw,130px);
+  text-align:center;
+}
+.table-card{
+  width:100%;
+  aspect-ratio:3/4;
+  border-radius:15px;
+  overflow:hidden;
+  border:3px solid #fff;
+  box-shadow:0 7px 15px rgba(18,42,75,.16);
+}
+.table-card-back{
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),transparent 30%),
+    linear-gradient(155deg,#0b376f,#138db4 55%,#0a476d);
+  border-color:#d8f6ff;
+}
+.table-card-mark{
+  display:grid;
+  place-items:center;
+  width:50%;
+  aspect-ratio:1;
+  border-radius:50%;
+  background:#ffe96b;
+  color:#103c66;
+  font-size:clamp(30px,8vw,52px);
+  font-weight:1000;
+  box-shadow:0 4px 0 rgba(0,0,0,.14);
+}
+.table-card-face{background:#fff}
+.table-card-face img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.table-card-name{
+  margin-top:7px;
+  min-height:1.4em;
+  font-size:clamp(12px,3.3vw,16px);
+  font-weight:1000;
+  color:var(--ink);
+  overflow-wrap:anywhere;
+}
+.table-card-role{
+  margin-top:2px;
+  font-size:11px;
+  font-weight:800;
+  color:var(--muted);
+}
+.table-card-current .table-card{
+  outline:5px solid #ffd34e;
+  outline-offset:2px;
+}
+.table-rest-row .table-card-wrap{
+  width:clamp(86px,24vw,135px);
+}
+.role-detail-under-board{margin-top:0}
+.role-pass-panel,.vote-pass-panel{min-height:260px}
+@media(max-width:420px){
+  .table-card-row{gap:8px}
+  .table-zone{padding:12px 9px}
+  .table-card-wrap{width:clamp(76px,28vw,108px)}
+  .table-rest-row .table-card-wrap{width:clamp(84px,31vw,116px)}
+}
