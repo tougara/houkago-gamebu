@@ -1018,3 +1018,46 @@ body.easy-rules-open{
   padding-right:8px;
   font-size:clamp(12px,3.2vw,16px);
 }
+
+
+/* Kusemono / Trickster result */
+.result-trick{
+  background:linear-gradient(160deg,#fff8ff,#f3e2ff);
+  border:2px solid #d6a6ef;
+}
+.trick-result-mark{
+  width:min(520px,100%);
+  margin:0 auto 12px;
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  border-radius:22px;
+  background:linear-gradient(145deg,#7d2dac,#b95de0);
+  color:#fff;
+  box-shadow:0 10px 22px rgba(99,31,135,.24);
+}
+.trick-result-mark img{
+  width:min(120px,28vw);
+  aspect-ratio:1;
+  object-fit:contain;
+  filter:drop-shadow(0 5px 10px rgba(40,8,58,.25));
+}
+.trick-result-mark div{
+  display:grid;
+  gap:2px;
+  text-align:left;
+}
+.trick-result-mark span{
+  font-size:clamp(16px,4vw,24px);
+  font-weight:900;
+}
+.trick-result-mark strong{
+  font-size:clamp(34px,9vw,58px);
+  line-height:1;
+}
+@media(max-width:420px){
+  .trick-result-mark{gap:10px;padding:12px;}
+  .trick-result-mark img{width:min(100px,26vw);}
+}
