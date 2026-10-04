@@ -90,3 +90,45 @@ h1,h2,h3,p{margin-top:0}
 .nav-confirm-modal .grid2{
   margin-top:8px;
 }
+
+.role-thumb-button{
+  width:64px;
+  height:64px;
+  padding:0;
+  border:0;
+  background:transparent;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.role-thumb-button:active{
+  transform:scale(.94);
+}
+.role-thumb-button:focus-visible{
+  outline:4px solid #ffb41f;
+  outline-offset:2px;
+}
+.role-detail-modal{
+  text-align:center;
+}
+.role-detail-image{
+  width:min(300px,78vw);
+  margin:0 auto 14px;
+  filter:drop-shadow(0 10px 20px rgba(20,45,83,.18));
+}
+.role-detail-modal h2{
+  margin-bottom:6px;
+  font-size:clamp(26px,8vw,36px);
+}
+.role-detail-modal p{
+  margin:16px auto 4px;
+  color:#4c5a70;
+  font-weight:700;
+  line-height:1.75;
+  max-width:520px;
+}
+@media(max-width:520px){
+  .role-thumb-button{width:52px;height:52px}
+}
