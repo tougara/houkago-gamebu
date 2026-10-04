@@ -67,3 +67,8 @@ h1,h2,h3,p{margin-top:0}
   box-shadow:0 4px 14px rgba(27,49,79,.10);
   backdrop-filter:blur(2px);
 }
+
+.game-title-card .game-brand{
+  width:min(560px,92%);
+  margin:0 auto 10px;
+}
