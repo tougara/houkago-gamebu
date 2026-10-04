@@ -71,11 +71,54 @@
         <div class="mode-note">得点や勝敗はなし。結果を見て「誰だろう？」と話すこと自体を楽しむモードです。</div>
       </article>
 
+      <section class="question-lab" aria-labelledby="questionLabTitle">
+        <div class="question-lab-head">
+          <span class="mode-number">QUESTION LAB</span>
+          <h2 id="questionLabTitle">よみあいバトルのお題</h2>
+          <p>実装予定のお題データを今のうちから試し引きできます。</p>
+        </div>
+        <div class="question-lab-tabs">
+          <button class="lab-tab selected" type="button" data-lab-mode="battle">よみあいバトル</button>
+          <button class="lab-tab" type="button" data-lab-mode="secret">ひみつ投票</button>
+        </div>
+        <div class="question-filter-row">
+          <select id="questionCategory" aria-label="お題ジャンル"></select>
+          <button class="primary-cta lab-draw" id="drawQuestion" type="button">1問ひく</button>
+        </div>
+        <div class="question-lab-count" id="labCount"></div>
+        <div class="question-lab-card" id="questionLabCard">
+          <span class="question-category-label" id="labCategoryLabel">ジャンル</span>
+          <strong id="labQuestion">お題</strong>
+          <div class="question-lab-choices"><span id="labA">A</span><b>VS</b><span id="labB">B</span></div>
+        </div>
+        <p class="secret-pass-note" id="secretPassNote" hidden>ひみつ投票では、答えにくいお題はいつでもパスできる仕様にします。</p>
+
+        <div class="custom-question-box">
+          <h3>自分たちで質問を考える</h3>
+          <p>その場だけのオリジナル2択も作れます。入力したお題はこの端末に保存されます。</p>
+          <form id="customQuestionForm">
+            <label>質問<input id="customQuestion" maxlength="70" placeholder="例：放課後に行くなら？" required></label>
+            <div class="custom-choice-grid">
+              <label>A<input id="customA" maxlength="30" placeholder="公園" required></label>
+              <label>B<input id="customB" maxlength="30" placeholder="友達の家" required></label>
+            </div>
+            <button class="play-button" type="submit">マイお題に保存</button>
+          </form>
+          <div class="custom-question-actions">
+            <span id="customCount">保存中のマイお題：0問</span>
+            <button type="button" id="drawCustomQuestion">マイお題から1問</button>
+            <button type="button" id="clearCustomQuestions">全部消す</button>
+          </div>
+        </div>
+      </section>
+
       <div class="docchi-next-note">
         <strong>次の制作予定</strong>
         <span>人数設定・お題データ・秘密投票画面・結果画面から順番に実装していきます。</span>
       </div>
     </section>
   </main>
+  <script src="questions.js"></script>
+  <script src="preview.js"></script>
 </body>
 </html>
