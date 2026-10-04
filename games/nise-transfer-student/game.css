@@ -72,3 +72,21 @@ h1,h2,h3,p{margin-top:0}
   width:min(560px,92%);
   margin:0 auto 10px;
 }
+
+.nav-confirm-modal{
+  text-align:center;
+  max-width:460px;
+}
+.nav-confirm-modal h2{
+  margin-bottom:10px;
+  font-size:clamp(24px,7vw,32px);
+}
+.nav-confirm-modal p{
+  color:#526076;
+  line-height:1.7;
+  margin-bottom:18px;
+  font-weight:700;
+}
+.nav-confirm-modal .grid2{
+  margin-top:8px;
+}
