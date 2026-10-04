@@ -73,7 +73,7 @@ function drawQuestion(){
 }
 function topNav(){
   if(state.screen==='title')return '';
-  return '<nav class="top-nav"><button type="button" class="nav-pill" data-nav-back>← 戻る</button><a class="nav-pill" href="../">ゲーム一覧</a></nav>';
+  return '<nav class="top-nav"><button type="button" class="nav-pill" data-nav-back>← 戻る</button><button type="button" class="nav-pill" data-nav-home>ゲーム一覧</button></nav>';
 }
 function logo(){return '<img class="game-logo" src="../../minna_wa_docchi_logo.png" alt="みんなはどっち？">'}
 function heading(title,sub=''){return '<header class="screen-heading"><h1>'+esc(title)+'</h1>'+(sub?'<p>'+esc(sub)+'</p>':'')+'</header>'}
@@ -203,7 +203,7 @@ function render(){
   app.className='docchi-app screen-'+state.screen;
   app.innerHTML=screenHtml();
   bind();
-  window.scrollTo({top:0,behavior:'instant'});
+  window.scrollTo({top:0,behavior:'auto'});
 }
 function go(screen,{push=true}={}){
   if(push&&state.screen!==screen)state.history.push(state.screen);
@@ -211,11 +211,17 @@ function go(screen,{push=true}={}){
   render();
 }
 function safeBack(){
-  if(state.gameStarted&&['question','pass','answer','predict','cover','result'].includes(state.screen)){
-    if(!confirm('ゲームの途中です。1つ前の画面にもどりますか？'))return;
+  if(state.gameStarted&&['pass','answer','predict','cover','result'].includes(state.screen)){
+    alert('秘密回答が始まったあとは、前の画面には戻れません。');
+    return;
   }
+  if(state.gameStarted&&state.screen==='question'&&!confirm('ゲーム設定にもどりますか？'))return;
   if(state.history.length){state.screen=state.history.pop();render();}
   else{state.screen='title';render();}
+}
+function goGameList(){
+  if(state.gameStarted&&!confirm('ゲームを途中でやめて、ゲーム一覧にもどりますか？'))return;
+  window.location.href='../';
 }
 function chooseMode(mode){
   state.mode=mode;
@@ -335,6 +341,7 @@ function bindHold(btn,fn){
 }
 function bind(){
   document.querySelector('[data-nav-back]')?.addEventListener('click',safeBack);
+  document.querySelector('[data-nav-home]')?.addEventListener('click',goGameList);
   document.querySelectorAll('[data-go-mode]').forEach(b=>b.addEventListener('click',()=>{state.gameStarted=false;state.history=[];go('mode',{push:false})}));
   document.querySelectorAll('[data-go-rules]').forEach(b=>b.addEventListener('click',()=>go('rules')));
   document.querySelectorAll('[data-go-custom]').forEach(b=>b.addEventListener('click',()=>go('custom')));
