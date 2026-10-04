@@ -17,7 +17,7 @@ const PLAYER_ICONS=['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','�
 const BASIC_ROLE_KEYS=['classmate','fake','president','swapper'];
 const ADVANCED_ROLE_KEYS=['observer','dayDuty','collaborator','trickster'];
 const roleKeys=[...BASIC_ROLE_KEYS,...ADVANCED_ROLE_KEYS];
-const ROLE_HELP_KEYS=['classmate','president','observer','dayDuty','swapper','fake','collaborator','trickster'];
+const ROLE_HELP_KEYS=['classmate','president','swapper','observer','dayDuty','fake','collaborator','trickster'];
 const app=document.getElementById('app');
 app.addEventListener('click',e=>{const trigger=e.target.closest('[data-role-detail]');if(!trigger)return;e.preventDefault();e.stopPropagation();openModal('roleDetail:'+trigger.dataset.roleDetail);});
 const state={screen:'title',playerCount:3,players:[],roleCounts:{},deck:[],rest:[],initialRoles:[],finalRoles:[],revealIndex:0,nightIndex:0,voteIndex:0,votes:[],coverNext:null,timerSeconds:180,timerRemaining:180,timerId:null,modal:null,roleHelpSide:'real',ruleHelpMode:'simple',navHistory:[],gameStarted:false};
