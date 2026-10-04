@@ -540,3 +540,20 @@ h1,h2,h3,p{margin-top:0}
   .swap-result-cards{gap:8px;}
   .swap-result-cards > div{padding:8px 6px;}
 }
+
+
+/* Give rules action and close buttons more breathing room */
+.modal:has(.rules-modal) .rules-detail-button,
+.modal:has(.rules-modal) .rules-modal > .btn.secondary{
+  margin-bottom:8px;
+}
+.modal:has(.rules-modal) .modal-close-button,
+.modal:has(.rules-modal) #closeModal{
+  margin-top:22px;
+}
+@media(max-width:520px){
+  .modal:has(.rules-modal) .modal-close-button,
+  .modal:has(.rules-modal) #closeModal{
+    margin-top:20px;
+  }
+}
