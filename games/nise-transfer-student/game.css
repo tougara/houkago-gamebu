@@ -1071,3 +1071,101 @@ body.easy-rules-open{
   .role-reg-heading strong{font-size:17px}
   .role-reg-heading span{font-size:11px}
 }
+
+
+/* Make an invalid role distribution unmistakably non-actionable */
+.role-select-actions #dealRoles.role-deal-disabled,
+.role-select-actions #dealRoles:disabled{
+  opacity:1;
+  background:#cfd6df;
+  color:#667085;
+  border:2px solid #b9c2ce;
+  box-shadow:none;
+  cursor:not-allowed;
+}
+.role-select-actions #dealRoles.role-deal-disabled:active,
+.role-select-actions #dealRoles:disabled:active{
+  transform:none;
+}
+
+
+/* Detailed rules: step 2 roles share one frame */
+.night-order-group{
+  position:relative;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  background:#fff;
+  border:1px solid #dce6f1;
+  border-radius:14px;
+  padding:10px;
+}
+.night-order-group > .order-no{
+  display:grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  background:#1687e8;
+  color:#fff;
+  font-weight:1000;
+  margin-top:4px;
+}
+.night-order-group-list{
+  display:grid;
+  gap:0;
+}
+.night-order-subitem{
+  display:grid;
+  grid-template-columns:50px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  padding:8px 0;
+  border-bottom:1px dashed #dce6f1;
+}
+.night-order-subitem:first-child{padding-top:0}
+.night-order-subitem:last-child{
+  padding-bottom:0;
+  border-bottom:0;
+}
+.night-order-subitem img{
+  width:48px;
+  height:48px;
+  object-fit:cover;
+  border-radius:10px;
+  box-shadow:0 3px 8px rgba(20,45,83,.12);
+}
+.night-order-subitem > div{
+  display:grid;
+  gap:2px;
+}
+.night-order-subitem strong{
+  font-size:16px;
+  color:#18294c;
+}
+.night-order-subitem small{
+  color:#5b687b;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:700;
+}
+@media(max-width:420px){
+  .night-order-group{
+    grid-template-columns:30px minmax(0,1fr);
+    gap:8px;
+    padding:8px;
+  }
+  .night-order-group > .order-no{
+    width:28px;
+    height:28px;
+  }
+  .night-order-subitem{
+    grid-template-columns:46px minmax(0,1fr);
+    gap:8px;
+  }
+  .night-order-subitem img{
+    width:44px;
+    height:44px;
+  }
+}
