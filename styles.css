@@ -148,3 +148,241 @@ img{max-width:100%;display:block}
 @media(prefers-reduced-motion:reduce){
   .primary-cta,.play-button{transition:none}
 }
+
+/* みんなはどっち？ preview */
+.game-card-coming{margin-top:22px}
+.game-card-art-docchi{
+  min-height:220px;
+  background:
+    radial-gradient(circle at 22% 28%,rgba(255,255,255,.72) 0 10%,transparent 11%),
+    radial-gradient(circle at 78% 72%,rgba(255,255,255,.55) 0 9%,transparent 10%),
+    linear-gradient(145deg,#dff4ff 0%,#fff3c9 48%,#ffe0e8 100%);
+}
+.docchi-art-mark{
+  position:relative;
+  z-index:2;
+  width:min(430px,92%);
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:12px;
+  align-items:center;
+}
+.docchi-art-mark > span:not(.docchi-vs){
+  aspect-ratio:1;
+  display:grid;
+  place-items:center;
+  border-radius:28%;
+  color:#fff;
+  font-size:clamp(54px,16vw,92px);
+  font-weight:1000;
+  border:5px solid #fff;
+  box-shadow:0 10px 20px rgba(31,62,103,.16);
+}
+.docchi-a{background:linear-gradient(160deg,#38a9ff,#1573d5)}
+.docchi-b{background:linear-gradient(160deg,#ff8092,#eb4163)}
+.docchi-vs{
+  font-size:clamp(18px,5vw,28px);
+  font-weight:1000;
+  color:#27324a;
+  white-space:nowrap;
+}
+.status-ribbon{
+  position:absolute;
+  z-index:3;
+  top:14px;
+  right:14px;
+  padding:7px 12px;
+  border-radius:999px;
+  background:#27324a;
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  box-shadow:0 5px 12px rgba(0,0,0,.15);
+}
+.preview-button{
+  background:linear-gradient(180deg,#58677d,#36465d);
+  box-shadow:0 6px 0 #263347,0 12px 24px rgba(38,51,71,.2);
+}
+.preview-button:active{box-shadow:0 2px 0 #263347,0 5px 14px rgba(38,51,71,.18)}
+.docchi-heading{margin-bottom:8px}
+.preparing-badge{
+  display:inline-flex;
+  margin-top:14px;
+  padding:7px 14px;
+  border-radius:999px;
+  background:#27324a;
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+}
+.docchi-preview-section{
+  display:grid;
+  gap:18px;
+  padding-top:10px;
+}
+.docchi-intro-card,
+.mode-preview-card,
+.docchi-next-note{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:24px;
+  box-shadow:0 12px 30px rgba(41,37,30,.10);
+}
+.docchi-intro-card{
+  padding:18px;
+  text-align:center;
+}
+.docchi-intro-card p{
+  margin:10px 0 0;
+  color:var(--muted);
+  line-height:1.7;
+  font-weight:700;
+}
+.docchi-mini-mark{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+}
+.docchi-mini-mark span{
+  width:52px;
+  height:52px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  color:#fff;
+  font-size:28px;
+  font-weight:1000;
+}
+.docchi-mini-mark span:first-child{background:#238de8}
+.docchi-mini-mark span:last-child{background:#f05270}
+.docchi-mini-mark b{font-size:20px;color:#27324a}
+.mode-preview-card{padding:20px}
+.mode-preview-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.mode-number{
+  color:var(--blue);
+  font-size:12px;
+  font-weight:1000;
+  letter-spacing:.14em;
+}
+.mode-status{
+  padding:5px 10px;
+  border-radius:999px;
+  background:#f0f3f7;
+  color:#5d6777;
+  font-size:11px;
+  font-weight:900;
+}
+.mode-preview-card h2{
+  margin:0;
+  font-size:28px;
+}
+.mode-catch{
+  margin:6px 0 16px;
+  color:var(--muted);
+  font-weight:800;
+}
+.question-sample{
+  padding:15px;
+  border-radius:18px;
+  background:#f4f9ff;
+  border:1px solid #d9eaf8;
+  text-align:center;
+}
+.secret-question{
+  background:#fff7fa;
+  border-color:#f3d9e1;
+}
+.sample-label{
+  display:block;
+  margin-bottom:5px;
+  font-size:11px;
+  font-weight:900;
+  color:#7b8798;
+}
+.question-sample strong{
+  display:block;
+  font-size:20px;
+  color:#27324a;
+}
+.choice-sample{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+}
+.choice-sample span{
+  padding:11px 8px;
+  border-radius:13px;
+  color:#fff;
+  font-weight:1000;
+}
+.choice-sample span:first-child{background:#258fe9}
+.choice-sample span:last-child{background:#f05270}
+.choice-sample b{font-size:12px;color:#7c8797}
+.mode-flow{
+  margin:16px 0 0;
+  padding-left:23px;
+  color:#46546b;
+  line-height:1.65;
+  font-weight:700;
+}
+.mode-flow li+li{margin-top:5px}
+.mode-note{
+  margin-top:14px;
+  padding:10px 12px;
+  border-radius:13px;
+  background:#fff8e8;
+  color:#765d21;
+  font-size:12px;
+  line-height:1.55;
+  font-weight:800;
+}
+.anonymous-result{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+.anonymous-result > div{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding:12px;
+  border-radius:14px;
+  background:#f5f7fa;
+}
+.anonymous-result strong{font-size:14px}
+.anonymous-result span{
+  font-size:20px;
+  font-weight:1000;
+}
+.docchi-next-note{
+  display:grid;
+  gap:5px;
+  padding:18px;
+  text-align:center;
+  background:#fffaf2;
+  border-style:dashed;
+}
+.docchi-next-note strong{font-size:18px}
+.docchi-next-note span{
+  color:var(--muted);
+  line-height:1.6;
+  font-size:13px;
+  font-weight:700;
+}
+@media(max-width:520px){
+  .game-card-art-docchi{min-height:190px}
+  .docchi-art-mark{gap:8px}
+  .mode-preview-card{padding:16px}
+  .mode-preview-card h2{font-size:25px}
+}
