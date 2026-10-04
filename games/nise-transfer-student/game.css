@@ -608,3 +608,66 @@ h1,h2,h3,p{margin-top:0}
     padding:2px 6px;
   }
 }
+
+
+/* Vote-complete interstitial and classroom-backed result */
+.game-app.classroom-result-bg{
+  background:
+    linear-gradient(rgba(255,255,255,.38),rgba(255,247,232,.48)),
+    url("../../nise_transfer_student_background_9x16.png") center/cover fixed;
+}
+.vote-complete-wrap{
+  min-height:calc(100svh - 90px);
+  display:grid;
+  place-items:center;
+  padding:22px 0 36px;
+}
+.vote-complete-card{
+  width:min(540px,94%);
+  text-align:center;
+  padding:28px 22px 24px;
+  border-radius:26px;
+  background:rgba(255,253,249,.93);
+  border:1px solid rgba(218,210,199,.92);
+  box-shadow:0 16px 42px rgba(29,45,67,.18);
+  backdrop-filter:blur(5px);
+}
+.vote-complete-icon{
+  display:grid;
+  place-items:center;
+  width:94px;
+  height:94px;
+  margin:0 auto 18px;
+  border-radius:50%;
+  background:linear-gradient(180deg,#ffe36b,#ffc62c);
+  color:#183052;
+  font-size:56px;
+  line-height:1;
+  font-weight:1000;
+  box-shadow:0 8px 0 #c98810,0 16px 28px rgba(32,47,70,.16);
+}
+.vote-complete-card h1{
+  margin:0 0 12px;
+  font-size:clamp(30px,8vw,46px);
+  color:#18294c;
+}
+.vote-complete-card p{
+  margin:0 0 24px;
+  color:#5f6d82;
+  line-height:1.7;
+  font-size:clamp(17px,4.5vw,22px);
+  font-weight:800;
+}
+.vote-result-button{
+  min-height:72px;
+  font-size:clamp(22px,5.5vw,30px);
+}
+.classroom-result-bg .result-hero{
+  background:rgba(255,253,249,.90);
+  backdrop-filter:blur(4px);
+}
+@media(max-width:520px){
+  .vote-complete-wrap{min-height:calc(100svh - 76px);padding-top:12px;}
+  .vote-complete-card{padding:24px 18px 22px;}
+  .vote-complete-icon{width:82px;height:82px;font-size:48px;}
+}
