@@ -5,12 +5,12 @@ const SIDE_DEFS={
 };
 const ROLE_DEFS={
   classmate:{name:'クラスメイト',side:'real',image:'../../role_classmate.png',max:10,desc:'特別な能力はありません。話し合いからニセ転校生を見つけます。'},
-  fake:{name:'ニセ転校生',side:'fake',image:'../../role_fake_transfer_student.png',max:3,desc:'休み時間にほかのニセ転校生がいるかどうか確認します。6人以上では3人まで設定できます。最終投票でニセ転校生が1人も判定対象にならなければ、ニセモノサイドの勝利です。'},
+  fake:{name:'ニセ転校生',side:'fake',image:'../../role_fake_transfer_student.png',max:3,desc:'休み時間にほかのニセ転校生がいるかどうか確認します。最終投票でニセ転校生が1人も判定対象にならなければ、ニセモノサイドの勝利です。'},
   president:{name:'学級委員',side:'real',image:'../../role_class_representative.png',max:1,desc:'休み時間に「プレイヤー1人の役職を見る」か「お休みのカード2枚を見る」のどちらかを選びます。'},
   dayDuty:{name:'日直',side:'real',image:'../../role_day_duty.png',max:1,desc:'休み時間に、おやすみカード2枚のうち好きな1枚だけ確認できます。'},
   swapper:{name:'席替え係',side:'real',image:'../../role_seat_changer.png',max:1,desc:'休み時間にプレイヤー1人を選び、自分の役職カードと入れ替えます。交換しないこともできます。入れ替えた場合は新しい役職を確認し、その役職になります。'},
   observer:{name:'観察係',side:'real',image:'../../role_observer.png',max:1,desc:'休み時間にプレイヤー2人を選び、その2人が同じ陣営か違う陣営かを確認します。'},
-  collaborator:{name:'秘密の協力者',side:'fake',image:'../../role_secret_collaborator.png',max:1,desc:'ニセモノサイドですが、ニセ転校生そのものではありません。秘密の協力者が最多票の判定対象になっても、それだけではホンモノサイドの勝利にはなりません。ニセ転校生が見つからなければ一緒に勝利します。誰がニセ転校生かは知りません。'},
+  collaborator:{name:'秘密の協力者',side:'fake',image:'../../role_secret_collaborator.png',max:1,desc:'ニセモノサイドですが、ニセ転校生そのものではありません。ニセ転校生が見つからなければ一緒に勝利します。誰がニセ転校生かは知りません。'},
   trickster:{name:'いたずらっ子',side:'trick',image:'../../role_trickster.png',max:1,desc:'クセモノサイドです。休み時間の行動はありません。最終投票で自分が最多票の判定対象になれば、クセモノサイドの単独勝利です。'}
 };
 const PLAYER_ICONS=['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','👽','🤖','👻'];
