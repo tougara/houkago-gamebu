@@ -1018,3 +1018,38 @@ body.easy-rules-open{
   padding-right:8px;
   font-size:clamp(12px,3.2vw,16px);
 }
+
+
+/* Role setup grouping */
+.role-reg-group{
+  margin-top:14px;
+  border:1px solid #e5dfd6;
+  border-radius:18px;
+  overflow:hidden;
+  background:#fffdfa;
+}
+.role-reg-group + .role-reg-group{margin-top:18px}
+.role-reg-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-bottom:1px solid #e7e1d8;
+}
+.role-reg-heading > div{display:grid;gap:2px}
+.role-reg-heading strong{font-size:18px;line-height:1.2}
+.role-reg-heading span{font-size:12px;font-weight:800;color:#667085}
+.role-reg-group.basic .role-reg-heading{background:#eef8ff}
+.role-reg-group.advanced .role-reg-heading{background:#f8f1ff}
+.role-reg-badge{
+  flex:0 0 auto;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+.role-reg-group.basic .role-reg-badge{background:#d8efff;color:#0c63a6}
+.role-reg-group.advanced .role-reg-badge{background:#eadcff;color:#7137a8}
+.role-reg-group .role-row{padding-left:12px;padding-right:12px}
+.role-reg-group .role-row:last-child{border-bottom:0}
