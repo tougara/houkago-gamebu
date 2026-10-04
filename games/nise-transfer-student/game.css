@@ -276,3 +276,48 @@ h1,h2,h3,p{margin-top:0}
   .table-zone{padding:6px}
   .table-card-row{gap:3px}
 }
+
+
+/* Title-screen あそびかた and two-level rules */
+.rules-button{
+  background:linear-gradient(180deg,#62baff,#2f8ee9);
+  color:#fff;
+  box-shadow:0 7px 0 #1168b6;
+}
+.rules-button:active{box-shadow:0 3px 0 #1168b6;}
+.rules-modal{text-align:center;}
+.rules-modal h2{margin-bottom:8px;}
+.rules-lead{color:#657086;font-weight:800;margin-bottom:12px;}
+.easy-rules-image{
+  display:block;
+  width:100%;
+  max-width:430px;
+  max-height:58vh;
+  object-fit:contain;
+  margin:0 auto 14px;
+  border-radius:16px;
+  box-shadow:0 7px 18px rgba(22,35,79,.14);
+}
+.rules-detail-button{margin-top:4px;}
+.rules-detail-list{
+  display:grid;
+  gap:10px;
+  max-height:58vh;
+  overflow:auto;
+  text-align:left;
+  margin:12px 0 14px;
+  padding-right:3px;
+}
+.rules-detail-list section{
+  background:#f6f9fc;
+  border:1px solid #dde6f0;
+  border-radius:14px;
+  padding:12px 13px;
+}
+.rules-detail-list h3{margin:0 0 5px;font-size:18px;color:#18294c;}
+.rules-detail-list p{margin:0;line-height:1.65;color:#536178;font-weight:700;}
+.modal-close-button{margin-top:12px;}
+@media(max-width:520px){
+  .easy-rules-image{max-height:55vh;}
+  .rules-detail-list{max-height:54vh;}
+}
