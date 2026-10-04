@@ -491,3 +491,52 @@ h1,h2,h3,p{margin-top:0}
   }
   .night-order-item img{width:44px;height:44px;}
 }
+
+
+/* Break-time known-card highlights */
+.table-card-partner .table-card{
+  outline:3px solid #ef4355;
+  outline-offset:1px;
+}
+.table-card-partner .table-card-name{
+  color:#b51f35;
+}
+.table-card-swap .table-card{
+  outline:3px solid #38aee8;
+  outline-offset:1px;
+}
+.table-card-swap .table-card-name{
+  color:#147bb1;
+}
+.swap-result-cards{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  width:100%;
+  margin:12px 0;
+}
+.swap-result-cards > div{
+  display:grid;
+  gap:7px;
+  justify-items:center;
+  min-width:0;
+  padding:10px;
+  border-radius:14px;
+  background:#f6f9fc;
+  border:1px solid #dce6f1;
+}
+.swap-result-cards .role-card-large{
+  width:min(170px,100%);
+}
+.swap-result-cards span{
+  font-size:13px;
+  font-weight:800;
+  color:#607087;
+}
+.swap-result-cards strong{
+  font-size:15px;
+}
+@media(max-width:420px){
+  .swap-result-cards{gap:8px;}
+  .swap-result-cards > div{padding:8px 6px;}
+}
