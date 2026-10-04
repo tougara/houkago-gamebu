@@ -975,3 +975,17 @@ body.easy-rules-open{
   line-height:1.7;
   margin-bottom:18px;
 }
+
+
+/* Tappable role-card details */
+.role-card-detail-trigger{
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.role-card-detail-trigger:active{
+  transform:scale(.97);
+}
+.role-detail-image{
+  cursor:zoom-out;
+  touch-action:manipulation;
+}
