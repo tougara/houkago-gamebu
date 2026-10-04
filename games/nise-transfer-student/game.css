@@ -930,3 +930,48 @@ body.easy-rules-open{
   font-size:.72em;
   vertical-align:middle;
 }
+
+
+/* Observer: select two players directly from the cards */
+.table-card-observer-selected{
+  position:relative;
+  border-radius:12px;
+}
+.table-card-observer-selected .table-card{
+  box-shadow:
+    0 0 0 4px #1d92e5,
+    0 7px 14px rgba(20,92,150,.22);
+  transform:translateY(-2px);
+}
+.table-card-observer-selected::after{
+  content:"選択中";
+  background:#1d92e5;
+  color:#fff;
+}
+.observer-action-card{
+  text-align:center;
+}
+.observer-action-card > p{
+  margin-bottom:12px;
+  line-height:1.65;
+}
+.observer-status{
+  width:fit-content;
+  margin:4px auto 12px;
+  padding:7px 14px;
+  border-radius:999px;
+  background:#eef7ff;
+  color:#176fae;
+  font-weight:1000;
+  font-size:15px;
+}
+.observer-action-card #observerCheck{
+  margin-top:2px;
+}
+.observer-result{
+  text-align:center;
+}
+.observer-result p{
+  line-height:1.7;
+  margin-bottom:18px;
+}
