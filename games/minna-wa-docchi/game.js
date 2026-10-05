@@ -72,8 +72,7 @@ function drawQuestion(){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 function topNav(){
-  if(state.screen==='title')return '';
-  return '<nav class="top-nav"><button type="button" class="nav-pill" data-nav-back>← 戻る</button><button type="button" class="nav-pill" data-nav-home>ゲーム一覧</button></nav>';
+  return '<nav class="top-nav"><button type="button" class="nav-pill" data-nav-back>← 1個前にもどる</button><button type="button" class="nav-pill" data-nav-home>ゲームをえらぶ</button></nav>';
 }
 function logo(){return '<img class="game-logo" src="../../minna_wa_docchi_logo.png" alt="みんなはどっち？">'}
 function heading(title,sub=''){return '<header class="screen-heading"><h1>'+esc(title)+'</h1>'+(sub?'<p>'+esc(sub)+'</p>':'')+'</header>'}
@@ -81,7 +80,7 @@ function avatarChip(p){return '<span class="member-chip">'+esc(p.icon)+' '+esc(p
 function modeLabel(){return state.mode==='battle'?'よみあいバトル':'ひみつ投票'}
 
 function titleScreen(){
-  return '<section class="title-card">'+
+  return topNav()+'<section class="title-card">'+
     '<div class="title-shade"></div><div class="title-content">'+logo()+
     '<p class="title-copy">みんなの答え、読めるかな？</p>'+
     '<div class="stack">'+
@@ -224,7 +223,7 @@ function safeBack(){
   }
   if(state.gameStarted&&state.screen==='question'&&!confirm('ゲーム設定にもどりますか？'))return;
   if(state.history.length){state.screen=state.history.pop();render();}
-  else{state.screen='title';render();}
+  else{window.location.href='../';}
 }
 function goGameList(){
   if(state.gameStarted&&!confirm('ゲームを途中でやめて、ゲーム一覧にもどりますか？'))return;
@@ -357,7 +356,12 @@ function bindHold(btn,fn){
 function bind(){
   document.querySelector('[data-nav-back]')?.addEventListener('click',safeBack);
   document.querySelector('[data-nav-home]')?.addEventListener('click',goGameList);
-  document.querySelectorAll('[data-go-mode]').forEach(b=>b.addEventListener('click',()=>{state.gameStarted=false;state.history=[];go('mode',{push:false})}));
+  document.querySelectorAll('[data-go-mode]').forEach(b=>b.addEventListener('click',()=>{
+    state.gameStarted=false;
+    state.history=[];
+    if(state.screen==='title')go('mode');
+    else go('mode',{push:false});
+  }));
   document.querySelectorAll('[data-go-rules]').forEach(b=>b.addEventListener('click',()=>go('rules')));
   document.querySelectorAll('[data-go-custom]').forEach(b=>b.addEventListener('click',()=>go('custom')));
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>chooseMode(b.dataset.mode)));
