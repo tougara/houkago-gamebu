@@ -17,7 +17,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #ffb4
 .stack{display:grid;gap:10px}.btn{border:0;border-radius:16px;min-height:52px;padding:13px 16px;background:linear-gradient(#41a9ff,#147ad4);color:#fff;font-weight:1000;box-shadow:0 5px 0 #0755a2;touch-action:manipulation}.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #0755a2}.btn.yellow{background:linear-gradient(#ffe66e,#ffc62c);color:#352b14;box-shadow:0 5px 0 #c98810}.btn.secondary{background:#edf2f7;color:var(--ink);box-shadow:0 4px 0 #c6d0dc}.btn.glass{background:rgba(255,255,255,.9);color:#284363;box-shadow:0 4px 0 rgba(68,87,107,.28)}.btn.full{width:100%}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 .title-card{position:relative;min-height:calc(100vh - 24px);border-radius:28px;overflow:hidden;background:url("../../minna_wa_docchi_background_9x16.png") center 47%/cover no-repeat;display:grid;place-items:center;padding:26px 18px}
 .title-shade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.02),rgba(18,26,42,.08) 50%,rgba(18,26,42,.56) 100%)}
-.title-content{position:relative;z-index:1;width:min(540px,100%);align-self:end;margin-bottom:4vh}.title-content .game-logo{width:100%;margin:0 auto 12px;max-height:240px;object-fit:contain}.title-copy{text-align:center;width:max-content;max-width:96%;margin:0 auto 16px;padding:8px 13px;border-radius:15px;background:rgba(255,255,255,.87);font-weight:900;color:#34445b;box-shadow:0 4px 14px rgba(27,49,79,.12)}
+.title-content{position:relative;z-index:1;width:min(540px,100%);align-self:end;margin-bottom:4vh}.title-content .game-logo{width:100%;margin:0 auto -44px;max-height:240px;object-fit:contain;transform:translateY(-64px)}.title-copy{text-align:center;width:max-content;max-width:96%;margin:0 auto 16px;padding:8px 13px;border-radius:15px;background:rgba(255,255,255,.87);font-weight:900;color:#34445b;box-shadow:0 4px 14px rgba(27,49,79,.12)}
 .mode-grid{display:grid;gap:13px}.mode-card{width:100%;text-align:left;border:0;border-radius:24px;padding:20px;color:var(--ink);box-shadow:var(--shadow);background:#fff}.mode-card.battle{background:linear-gradient(145deg,#eaf7ff,#fff)}.mode-card.secret{background:linear-gradient(145deg,#fff0f4,#fff)}.mode-card h2{font-size:28px;margin:3px 0 8px}.mode-card p{margin:0 0 13px;color:#526076;line-height:1.6;font-weight:750}.mode-kicker{font-size:11px;letter-spacing:.15em;color:#147ad4;font-weight:1000}.mode-card.secret .mode-kicker{color:#c93455}.mini-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;font-weight:900;color:#4e5b70}.mini-flow span{padding:6px 8px;border-radius:999px;background:rgba(255,255,255,.88);border:1px solid #dde5ed}
 .setup-section h2{margin:0 0 3px;font-size:20px}.setup-section p{margin:0;color:var(--muted);font-size:12px;font-weight:750}.section-row{display:flex;justify-content:space-between;gap:10px;align-items:center}.small-btn{border:1px solid #d6e0e9;background:#fff;border-radius:12px;padding:8px 11px;color:#506076;font-weight:900}.danger-text{color:#b32c42}.member-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.member-chip{padding:7px 9px;border:1px solid #dde5ed;border-radius:999px;background:#fff;font-size:12px;font-weight:850}
 .choice-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.choice-chip{min-height:44px;border:2px solid #dbe4ed;border-radius:13px;background:#fff;color:#56657a;font-weight:1000}.choice-chip.selected{border-color:#55b2ee;background:#e9f6ff;color:#126fbd}
@@ -40,3 +40,17 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #ffb4
   .big-answers button{min-height:145px}.battle-result-row{grid-template-columns:minmax(0,1fr) auto}.battle-result-row em{grid-column:1}.battle-result-row b{grid-column:2}.battle-result-row strong{grid-column:2;grid-row:1}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* Raise Minna wa Docchi title logo to match Nise Transfer Student */
+@media(max-width:520px){
+  .title-content .game-logo{
+    transform:translateY(-72px);
+    margin-bottom:-52px;
+  }
+}
+@media(max-height:700px){
+  .title-content .game-logo{
+    transform:translateY(-54px);
+    margin-bottom:-36px;
+  }
+}
