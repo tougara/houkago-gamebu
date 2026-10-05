@@ -626,3 +626,27 @@ body.registry-open{overflow:hidden}
     max-height:none;
   }
 }
+
+/* Kankaku Meter prototype card */
+.game-card-art-meter{
+  min-height:230px;
+  background:
+    radial-gradient(circle at 25% 18%,rgba(255,255,255,.9),transparent 24%),
+    radial-gradient(circle at 82% 25%,rgba(255,221,105,.65),transparent 24%),
+    linear-gradient(150deg,#7b70e7,#4d8fe8 52%,#63c2ca);
+}
+.game-card-art-meter::before{
+  content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(24,32,62,.16));z-index:1;
+}
+.meter-card-logo{
+  position:relative;z-index:2;display:grid;justify-items:center;color:#fff;text-align:center;
+  text-shadow:0 5px 16px rgba(28,33,78,.28);
+}
+.meter-card-logo span{font-size:72px;line-height:.8;font-weight:1000}
+.meter-card-logo strong{font-size:clamp(38px,8vw,64px);line-height:1.05;font-weight:1000;letter-spacing:-.04em}
+.game-card-art-meter .status-ribbon{z-index:3}
+@media(max-width:520px){
+  .game-card-art-meter{min-height:210px}
+  .meter-card-logo span{font-size:58px}
+  .meter-card-logo strong{font-size:42px}
+}
