@@ -166,7 +166,10 @@ function predictScreen(){
   '<section class="predict-card"><h2>この答えはみんなの中で……</h2><div class="predict-grid"><button data-predict="majority"><strong>多数派</strong><span>多い方だと思う</span></button><button data-predict="minority"><strong>少数派</strong><span>少ない方だと思う</span></button></div></section>';
 }
 function coverScreen(){
-  return '<section class="cover-screen"><div class="checkmark">✓</div><h1>回答しました</h1><p>今の答えはもう表示されません。</p><button class="btn yellow full" data-next-voter>'+((state.voter+1)>=state.playerCount?'結果を見る':'画面を伏せて次の人へ')+'</button></section>';
+  return '<section class="cover-screen"><div class="checkmark">✓</div><h1>回答しました</h1><p>今の答えはもう表示されません。</p><button class="btn yellow full" data-next-voter>'+((state.voter+1)>=state.playerCount?'全員の回答完了へ':'画面を伏せて次の人へ')+'</button></section>';
+}
+function allAnsweredScreen(){
+  return '<section class="all-answered-screen"><div class="all-done-icon">✓</div><span class="all-done-kicker">ALL ANSWERED</span><h1>全員の回答が<br>終わりました！</h1><p>ここからはみんなで画面を見てOK。<br>結果を確認しましょう。</p><button class="btn yellow full" data-show-result>結果を見る</button></section>';
 }
 function battleResultScreen(){
   const r=state.roundResult,q=state.currentQuestion;
@@ -199,7 +202,7 @@ function finalScreen(){
 function screenHtml(){
   return ({
     title:titleScreen,mode:modeScreen,setup:setupScreen,options:optionsScreen,members:membersScreen,custom:customScreen,rules:rulesScreen,
-    question:questionScreen,pass:passScreen,answer:answerScreen,predict:predictScreen,cover:coverScreen,
+    question:questionScreen,pass:passScreen,answer:answerScreen,predict:predictScreen,cover:coverScreen,allAnswered:allAnsweredScreen,
     result:()=>state.mode==='battle'?battleResultScreen():secretResultScreen(),final:finalScreen
   }[state.screen]||titleScreen)();
 }
@@ -215,7 +218,7 @@ function go(screen,{push=true}={}){
   render();
 }
 function safeBack(){
-  if(state.gameStarted&&['pass','answer','predict','cover','result'].includes(state.screen)){
+  if(state.gameStarted&&['pass','answer','predict','cover','allAnswered','result'].includes(state.screen)){
     alert('秘密回答が始まったあとは、前の画面には戻れません。');
     return;
   }
@@ -279,7 +282,7 @@ function nextVoter(){
   state.voter++;
   if(state.voter>=state.playerCount){
     finalizeRound();
-    go('result');
+    go('allAnswered',{push:false});
   }else{
     go('pass',{push:false});
   }
@@ -389,6 +392,7 @@ function bind(){
   document.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>answer(b.dataset.answer)));
   document.querySelectorAll('[data-predict]').forEach(b=>b.addEventListener('click',()=>predict(b.dataset.predict)));
   document.querySelector('[data-next-voter]')?.addEventListener('click',nextVoter);
+  document.querySelector('[data-show-result]')?.addEventListener('click',()=>go('result',{push:false}));
   document.querySelector('[data-next-round]')?.addEventListener('click',nextRound);
   document.querySelector('[data-replay]')?.addEventListener('click',replay);
 }
