@@ -23,7 +23,7 @@ function topicScreen(){const q=state.topic;return topNav()+heading((state.round+
 function passScreen(){const p=state.players[state.revealIndex];return '<section class="privacy-card"><div class="avatar">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さんに<br>スマホを渡してね</h2><p>ほかの人は画面を見ないでください。</p><button class="btn yellow hold-btn" data-hold><i></i><span>長押しして数字を見る</span></button></section>'}
 function numberScreen(){const p=state.players[state.revealIndex],q=state.topic,n=state.numbers[state.revealIndex];return '<section class="number-card"><div class="avatar">'+esc(p.icon)+'</div><strong>'+esc(p.name)+'さんの数字</strong><div class="secret-number">'+n+'</div><div class="number-scale">1 ←────→ 100</div><div class="number-tip">お題「'+esc(q.q)+'」に合わせて、この数字くらいだと思う答えを口頭で考えてね。数字そのものは言わないで！</div><button class="btn full" data-remember>覚えた！</button></section>'}
 function readyScreen(){return '<section class="ready-screen"><div class="done-icon">✓</div><h1>全員、数字を<br>確認しました！</h1><p>ここからはみんなで画面を見てOK。<br>一人ずつ、お題に合う答えを口頭で発表してね。</p><button class="btn yellow full" data-arrange>並べる画面へ</button></section>'}
-function arrangeScreen(){const q=state.topic;return topNav()+heading('みんなで順番を決めよう','上が小さい数字、下が大きい数字')+'<section class="card topic-card arrange-topic" style="padding:14px"><span class="topic-tag">'+esc(q.category)+'</span><h2 style="font-size:22px;margin:8px 0">'+esc(q.q)+'</h2><div class="arrange-scale"><div class="arrange-scale-end low"><small>1</small><strong>'+esc(q.low)+'</strong></div><div class="arrange-scale-arrow">↓</div><div class="arrange-scale-end high"><small>100</small><strong>'+esc(q.high)+'</strong></div></div></section><p class="arrange-help">カードを2枚タップすると入れ替え。↑↓でも動かせます。</p><div class="order-axis top"><span>1</span><strong>小さい数字</strong><b>↓</b></div><div class="order-list">'+state.order.map((pi,pos)=>{const p=state.players[pi];return '<div class="order-row '+(state.selectedOrder===pos?'selected':'')+'"><span class="order-rank">'+(pos+1)+'</span><button class="order-person" data-order="'+pos+'">'+esc(p.icon)+' '+esc(p.name)+'</button><button class="move-btn" data-up="'+pos+'" '+(pos===0?'disabled':'')+'>↑</button><button class="move-btn" data-down="'+pos+'" '+(pos===state.order.length-1?'disabled':'')+'>↓</button></div>'}).join('')+'</div><div class="order-axis bottom"><span>100</span><strong>大きい数字</strong></div><button class="btn yellow full" style="margin-top:13px" data-confirm>これで決定！</button>'}
+function arrangeScreen(){const q=state.topic;return topNav()+heading('みんなで順番を決めよう','上が小さい数字、下が大きい数字')+'<section class="card topic-card arrange-topic" style="padding:14px"><span class="topic-tag">'+esc(q.category)+'</span><h2 style="font-size:22px;margin:8px 0">'+esc(q.q)+'</h2><div class="arrange-scale"><div class="arrange-scale-end low"><small>1</small><strong>'+esc(q.low)+'</strong></div><div class="arrange-scale-arrow">↓</div><div class="arrange-scale-end high"><small>100</small><strong>'+esc(q.high)+'</strong></div></div></section><p class="arrange-help">↑↓で順番を調整。名前をタップすると、忘れたときだけ自分の数字を再確認できます。</p><div class="order-axis top"><span>1</span><strong>小さい数字</strong><b>↓</b></div><div class="order-list">'+state.order.map((pi,pos)=>{const p=state.players[pi];return '<div class="order-row"><span class="order-rank">'+(pos+1)+'</span><button class="order-person recheck-person" data-recheck="'+pi+'"><span>'+esc(p.icon)+' '+esc(p.name)+'</span><small>タップで数字を再確認</small></button><button class="move-btn" data-up="'+pos+'" '+(pos===0?'disabled':'')+'>↑</button><button class="move-btn" data-down="'+pos+'" '+(pos===state.order.length-1?'disabled':'')+'>↓</button></div>'}).join('')+'</div><div class="order-axis bottom"><span>100</span><strong>大きい数字</strong></div><button class="btn yellow full" style="margin-top:13px" data-confirm>これで決定！</button>'}
 function calculateResult(){const correct=[...state.players.keys()].sort((a,b)=>state.numbers[a]-state.numbers[b]);const rank=new Map(correct.map((p,i)=>[p,i]));const seq=state.order.map(p=>rank.get(p));let inv=0;for(let i=0;i<seq.length;i++)for(let j=i+1;j<seq.length;j++)if(seq[i]>seq[j])inv++;const max=seq.length*(seq.length-1)/2;state.roundScore=max?Math.round(100*(1-inv/max)):100;state.totalScore+=state.roundScore}
 function resultScreen(){const correct=[...state.players.keys()].sort((a,b)=>state.numbers[a]-state.numbers[b]);const score=state.roundScore;const msg=score===100?'PERFECT！ 全員の感覚がつながった！':score>=80?'おしい！ かなり合ってる！':score>=55?'いい感じ！ あと少し！':'感覚バラバラ！ それも面白い！';return topNav()+heading((state.round+1)+'ラウンド目の結果',msg)+'<div class="result-score"><strong>'+score+'</strong><span>/ 100点</span></div><section class="card"><h2>正しい順番</h2><div class="reveal-list">'+correct.map((pi,i)=>'<div class="reveal-row"><b>'+(i+1)+'</b><span>'+esc(state.players[pi].icon)+' '+esc(state.players[pi].name)+'</span><strong>'+state.numbers[pi]+'</strong></div>').join('')+'</div><div class="fact">答えに正解はありません。数字に合わせてどんな言葉を選んだか、その違いを楽しむゲームです。</div></section><button class="btn full" data-next-round>'+(state.round+1>=state.roundCount?'最終結果を見る':'次のお題へ')+'</button>'}
 function finalScreen(){const max=state.roundCount*100,pct=Math.round(state.totalScore/max*100);const title=pct>=90?'感覚シンクロ部！':pct>=75?'かなり通じ合ってる！':pct>=55?'いいチーム！':'もっと知り合えるかも！';return '<section class="final-screen"><div class="done-icon">★</div><h1>'+esc(title)+'</h1><div class="result-score"><strong>'+state.totalScore+'</strong><span>/ '+max+'点</span></div><p>数字を言わずにここまで合わせられた！<br>もう一度やると、違う感覚が見つかるかも。</p><div class="stack" style="width:min(420px,100%)"><button class="btn yellow full" data-replay>同じ設定でもう一度</button><button class="btn secondary full" data-title>タイトルへ</button></div></section>'}
@@ -41,6 +41,50 @@ function swapOrder(a,b){[state.order[a],state.order[b]]=[state.order[b],state.or
 function confirmOrder(){calculateResult();go('result')}
 function nextRound(){if(state.round+1>=state.roundCount){state.gameStarted=false;go('final');return}state.round++;newRound()}
 function addCustom(){const q=document.getElementById('cq')?.value.trim(),low=document.getElementById('cl')?.value.trim(),high=document.getElementById('ch')?.value.trim();if(!q||!low||!high){alert('お題・1・100のイメージを全部入力してください。');return}const a=customItems();a.push({q,low,high});saveCustom(a);render()}
+function closeRecheck(){document.querySelector('.recheck-backdrop')?.remove()}
+function showRecheckFirst(playerIndex){
+  closeRecheck();
+  const p=state.players[playerIndex];
+  if(!p)return;
+  const wrap=document.createElement('div');
+  wrap.className='recheck-backdrop';
+  wrap.innerHTML='<section class="recheck-modal"><div class="recheck-avatar">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さん本人ですか？</h2><p>数字は本人だけが確認してください。</p><div class="recheck-actions"><button class="btn secondary" data-recheck-cancel>違う</button><button class="btn" data-recheck-next>本人です</button></div></section>';
+  document.body.appendChild(wrap);
+  wrap.querySelector('[data-recheck-cancel]').addEventListener('click',closeRecheck);
+  wrap.querySelector('[data-recheck-next]').addEventListener('click',()=>showRecheckSecond(playerIndex));
+}
+function showRecheckSecond(playerIndex){
+  closeRecheck();
+  const p=state.players[playerIndex];
+  if(!p)return;
+  const wrap=document.createElement('div');
+  wrap.className='recheck-backdrop';
+  wrap.innerHTML='<section class="recheck-modal"><div class="recheck-warning">もう一度確認</div><h2>本当に数字を見ますか？</h2><p>忘れてしまったときだけ使ってね。<br>周りの人は画面から目をそらしてください。</p><div class="recheck-actions"><button class="btn secondary" data-recheck-cancel>やめる</button><button class="btn" data-recheck-ready>'+esc(p.name)+'さんが見る</button></div></section>';
+  document.body.appendChild(wrap);
+  wrap.querySelector('[data-recheck-cancel]').addEventListener('click',closeRecheck);
+  wrap.querySelector('[data-recheck-ready]').addEventListener('click',()=>showRecheckHold(playerIndex));
+}
+function showRecheckHold(playerIndex){
+  closeRecheck();
+  const p=state.players[playerIndex],n=state.numbers[playerIndex];
+  if(!p||n==null)return;
+  const wrap=document.createElement('div');
+  wrap.className='recheck-backdrop privacy';
+  wrap.innerHTML='<section class="recheck-modal recheck-private"><div class="recheck-avatar">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さんだけ見てね</h2><p>長押ししている間に、周りの人は画面を見ないでください。</p><button class="btn yellow hold-btn recheck-hold" data-recheck-hold><i></i><span>長押しして数字を見る</span></button><button class="recheck-text-btn" data-recheck-cancel>やめる</button></section>';
+  document.body.appendChild(wrap);
+  wrap.querySelector('[data-recheck-cancel]').addEventListener('click',closeRecheck);
+  bindHold(wrap.querySelector('[data-recheck-hold]'),()=>showRecheckNumber(playerIndex));
+}
+function showRecheckNumber(playerIndex){
+  closeRecheck();
+  const p=state.players[playerIndex],n=state.numbers[playerIndex];
+  if(!p||n==null)return;
+  const wrap=document.createElement('div');
+  wrap.className='recheck-backdrop privacy';
+  wrap.innerHTML='<section class="recheck-modal recheck-private"><div class="recheck-avatar">'+esc(p.icon)+'</div><strong>'+esc(p.name)+'さんの数字</strong><div class="recheck-number">'+n+'</div><p>覚えたら、すぐ閉じてスマホをみんなに戻してね。</p><button class="btn full" data-recheck-close>覚えた！ 閉じる</button></section>';
+  document.body.appendChild(wrap);
+  wrap.querySelector('[data-recheck-close]').addEventListener('click',closeRecheck);
+}
 function bindHold(btn,fn){if(!btn)return;let t=null;const start=()=>{btn.classList.add('holding');t=setTimeout(()=>{t=null;btn.classList.remove('holding');fn()},LONG_PRESS_MS)};const cancel=()=>{if(t)clearTimeout(t);t=null;btn.classList.remove('holding')};btn.addEventListener('pointerdown',start);btn.addEventListener('pointerup',cancel);btn.addEventListener('pointerleave',cancel);btn.addEventListener('pointercancel',cancel);btn.addEventListener('contextmenu',e=>e.preventDefault())}
 function bind(){
 document.querySelector('[data-back]')?.addEventListener('click',safeBack);
@@ -59,7 +103,7 @@ document.querySelector('[data-secret-start]')?.addEventListener('click',()=>go('
 bindHold(document.querySelector('[data-hold]'),()=>go('number'));
 document.querySelector('[data-remember]')?.addEventListener('click',remember);
 document.querySelector('[data-arrange]')?.addEventListener('click',()=>go('arrange'));
-document.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>{const p=Number(b.dataset.order);if(state.selectedOrder==null){state.selectedOrder=p;render()}else if(state.selectedOrder===p){state.selectedOrder=null;render()}else swapOrder(state.selectedOrder,p)}));
+document.querySelectorAll('[data-recheck]').forEach(b=>b.addEventListener('click',()=>showRecheckFirst(Number(b.dataset.recheck))));
 document.querySelectorAll('[data-up]').forEach(b=>b.addEventListener('click',()=>{const p=Number(b.dataset.up);if(p>0)swapOrder(p,p-1)}));
 document.querySelectorAll('[data-down]').forEach(b=>b.addEventListener('click',()=>{const p=Number(b.dataset.down);if(p<state.order.length-1)swapOrder(p,p+1)}));
 document.querySelector('[data-confirm]')?.addEventListener('click',confirmOrder);
