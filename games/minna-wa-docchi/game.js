@@ -93,8 +93,8 @@ function titleScreen(){
 function modeScreen(){
   return topNav()+logo()+heading('モードをえらぶ','遊び方がちがう2つのモード')+
   '<div class="mode-grid">'+
-    '<button class="mode-card battle" data-mode="battle"><span class="mode-kicker">MODE 1</span><h2>よみあいバトル</h2><p>自分の答えが「多数派」か「少数派」か予想してポイント勝負！</p><div class="mini-flow"><span>A/Bに回答</span><b>→</b><span>多数派？少数派？</span><b>→</b><span>当たれば1点</span></div></button>'+
-    '<button class="mode-card secret" data-mode="secret"><span class="mode-kicker">MODE 2</span><h2>ひみつ投票</h2><p>誰がどっちを選んだかは最後まで秘密。人数だけ見て盛り上がろう！</p><div class="mini-flow"><span>匿名で回答</span><b>→</b><span>A○人 / B○人</span><b>→</b><span>正体は秘密</span></div></button>'+
+    '<section class="mode-card battle"><span class="mode-kicker">MODE 1</span><h2>よみあいバトル</h2><p>自分の答えが「多数派」か「少数派」か予想してポイント勝負！</p><div class="mini-flow"><span>A/Bに回答</span><b>→</b><span>多数派？少数派？</span><b>→</b><span>当たれば1点</span></div><button class="mode-start-btn battle" data-mode="battle">よみあいバトルで遊ぶ</button></section>'+
+    '<section class="mode-card secret"><span class="mode-kicker">MODE 2</span><h2>ひみつ投票</h2><p>誰がどっちを選んだかは最後まで秘密。人数だけ見て盛り上がろう！</p><div class="mini-flow"><span>匿名で回答</span><b>→</b><span>A○人 / B○人</span><b>→</b><span>正体は秘密</span></div><button class="mode-start-btn secret" data-mode="secret">ひみつ投票で遊ぶ</button></section>'+
   '</div>';
 }
 function setupScreen(){
