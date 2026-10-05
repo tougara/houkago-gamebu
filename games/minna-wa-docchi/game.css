@@ -237,3 +237,17 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #ffb4
   width:min(420px,100%);
   min-height:58px;
 }
+
+/* Title navigation matches Nise Transfer Student */
+.screen-title .top-nav{
+  margin-bottom:10px;
+}
+.screen-title .title-card{
+  min-height:calc(100vh - 78px);
+}
+@media(max-width:520px){
+  .screen-title .nav-pill{
+    padding:9px 12px;
+    font-size:12px;
+  }
+}
