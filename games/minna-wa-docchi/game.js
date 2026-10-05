@@ -99,21 +99,25 @@ function modeScreen(){
 }
 function setupScreen(){
   loadPlayers();
+  return topNav()+logo()+heading(modeLabel()+'の設定','まずはメンバーと問題数を決めよう')+
+  '<section class="card setup-section setup-members"><div class="section-row"><div><h2>参加メンバー</h2><p>'+state.playerCount+'人で遊びます</p></div><button class="small-btn" data-edit-members>変更</button></div><div class="member-chips">'+state.players.map(avatarChip).join('')+'</div></section>'+
+  '<section class="card setup-section setup-rounds"><h2>何問遊ぶ？</h2><div class="choice-row">'+[3,5,7,10].map(n=>'<button class="choice-chip '+(state.roundCount===n?'selected':'')+'" data-round-count="'+n+'">'+n+'問</button>').join('')+'</div></section>'+
+  '<button class="btn full" data-next-options>ジャンル・お題設定へ</button>';
+}
+function optionsScreen(){
   const cats=categoriesForMode();
   const customN=customItems().length;
   const activePool=questionPool().length;
-  return topNav()+logo()+heading(modeLabel()+'の設定','ここだけ決めればすぐ遊べる')+
-  '<section class="card setup-section"><div class="section-row"><div><h2>参加メンバー</h2><p>'+state.playerCount+'人で遊びます</p></div><button class="small-btn" data-edit-members>変更</button></div><div class="member-chips">'+state.players.map(avatarChip).join('')+'</div></section>'+
-  '<section class="card setup-section"><h2>何問遊ぶ？</h2><div class="choice-row">'+[3,5,7,10].map(n=>'<button class="choice-chip '+(state.roundCount===n?'selected':'')+'" data-round-count="'+n+'">'+n+'問</button>').join('')+'</div></section>'+
-  '<section class="card setup-section"><div class="section-row"><div><h2>ジャンル</h2><p>複数選べます</p></div><button class="small-btn" data-select-all>全部</button></div>'+
-    '<div class="category-grid">'+cats.map(cat=>'<button class="category-chip '+(state.selectedCategories.has(cat)?'selected':'')+' '+(SENSITIVE_SECRET.has(cat)?'deep':'')+'" data-category="'+esc(cat)+'">'+esc(cat)+(SENSITIVE_SECRET.has(cat)?'<small>任意</small>':'')+'</button>').join('')+'</div>'+
-    (state.mode==='secret'?'<p class="deep-note">「恋バナ」「ちょっとディープ」は最初はOFF。遊びたい時だけ選べます。</p>':'')+
+  return topNav()+heading('ジャンル・お題','遊びたいジャンルとオリジナル質問を設定')+
+  '<section class="card options-card"><div class="section-row compact"><div><h2>ジャンル</h2><p>複数選べます</p></div><button class="small-btn compact" data-select-all>全部</button></div>'+
+    '<div class="category-grid compact">'+cats.map(cat=>'<button class="category-chip '+(state.selectedCategories.has(cat)?'selected':'')+' '+(SENSITIVE_SECRET.has(cat)?'deep':'')+'" data-category="'+esc(cat)+'">'+esc(cat)+(SENSITIVE_SECRET.has(cat)?'<small>任意</small>':'')+'</button>').join('')+'</div>'+
+    (state.mode==='secret'?'<p class="deep-note compact">「恋バナ」「ちょっとディープ」は最初はOFF</p>':'')+
   '</section>'+
-  '<section class="card setup-section"><div class="section-row"><div><h2>マイお題</h2><p>保存中 '+customN+'問</p></div><button class="small-btn" data-go-custom>編集</button></div>'+
-    '<label class="switch-row '+(!customN?'disabled':'')+'"><input type="checkbox" data-custom-toggle '+(state.includeCustom&&customN?'checked':'')+' '+(!customN?'disabled':'')+'><span>オリジナル質問も混ぜる</span></label>'+
+  '<section class="card options-card custom-quick"><div class="section-row compact"><div><h2>問題を考える</h2><p>保存中 <span data-custom-count>'+customN+'</span>問</p></div><button class="small-btn compact" data-go-custom>一覧</button></div>'+
+    '<div class="quick-question-form"><input id="customQ" maxlength="70" placeholder="質問を書く"><div><input id="customA" maxlength="30" placeholder="A"><input id="customB" maxlength="30" placeholder="B"><button type="button" class="quick-add-btn" data-add-custom>追加</button></div></div>'+
+    '<label class="switch-row compact '+(!customN?'disabled':'')+'"><input type="checkbox" data-custom-toggle '+(state.includeCustom&&customN?'checked':'')+' '+(!customN?'disabled':'')+'><span>マイお題も混ぜる</span></label>'+
   '</section>'+
-  '<div class="pool-count">この設定で出るお題：<strong>'+activePool+'問</strong></div>'+
-  '<button class="btn full" data-start-game '+(activePool?'':'disabled')+'>この設定でスタート</button>';
+  '<div class="options-footer"><div class="pool-count">この設定で出るお題：<strong data-pool-count>'+activePool+'問</strong></div><button class="btn full" data-start-game '+(activePool?'':'disabled')+'>この設定でスタート</button></div>';
 }
 function membersScreen(){
   loadPlayers();
@@ -194,7 +198,7 @@ function finalScreen(){
 
 function screenHtml(){
   return ({
-    title:titleScreen,mode:modeScreen,setup:setupScreen,members:membersScreen,custom:customScreen,rules:rulesScreen,
+    title:titleScreen,mode:modeScreen,setup:setupScreen,options:optionsScreen,members:membersScreen,custom:customScreen,rules:rulesScreen,
     question:questionScreen,pass:passScreen,answer:answerScreen,predict:predictScreen,cover:coverScreen,
     result:()=>state.mode==='battle'?battleResultScreen():secretResultScreen(),final:finalScreen
   }[state.screen]||titleScreen)();
@@ -244,7 +248,7 @@ function newRound(){
   state.secretCounts={a:0,b:0};
   state.roundResult=null;
   state.currentQuestion=drawQuestion();
-  if(!state.currentQuestion){alert('選んだジャンルにお題がありません。設定を見直してください。');state.gameStarted=false;go('setup');return;}
+  if(!state.currentQuestion){alert('選んだジャンルにお題がありません。設定を見直してください。');state.gameStarted=false;go('options');return;}
   go('question',{push:false});
 }
 function acceptQuestion(){
@@ -306,6 +310,13 @@ function replay(){
   state.history=[];
   startGame();
 }
+function refreshOptionsSummary(){
+  const pool=questionPool().length;
+  const count=document.querySelector('[data-pool-count]');
+  if(count)count.textContent=pool+'問';
+  const start=document.querySelector('[data-start-game]');
+  if(start)start.disabled=pool===0;
+}
 function addCustom(){
   const q=document.getElementById('customQ')?.value.trim();
   const a=document.getElementById('customA')?.value.trim();
@@ -314,6 +325,7 @@ function addCustom(){
   const items=customItems();
   items.push({q,a,b,category:'マイお題'});
   saveCustom(items);
+  if(state.screen==='options')state.includeCustom=true;
   render();
 }
 function editMemberCount(n){
@@ -348,9 +360,21 @@ function bind(){
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>chooseMode(b.dataset.mode)));
   document.querySelector('[data-edit-members]')?.addEventListener('click',()=>go('members'));
   document.querySelectorAll('[data-round-count]').forEach(b=>b.addEventListener('click',()=>{state.roundCount=Number(b.dataset.roundCount);render()}));
-  document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{const c=b.dataset.category;if(state.selectedCategories.has(c))state.selectedCategories.delete(c);else state.selectedCategories.add(c);render()}));
-  document.querySelector('[data-select-all]')?.addEventListener('click',()=>{state.selectedCategories=new Set(categoriesForMode());render()});
-  document.querySelector('[data-custom-toggle]')?.addEventListener('change',e=>{state.includeCustom=e.target.checked;render()});
+  document.querySelector('[data-next-options]')?.addEventListener('click',()=>go('options'));
+  document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{
+    const c=b.dataset.category;
+    if(state.selectedCategories.has(c))state.selectedCategories.delete(c);else state.selectedCategories.add(c);
+    b.classList.toggle('selected',state.selectedCategories.has(c));
+    refreshOptionsSummary();
+  }));
+  document.querySelector('[data-select-all]')?.addEventListener('click',()=>{
+    const cats=categoriesForMode();
+    const allOn=cats.every(c=>state.selectedCategories.has(c));
+    state.selectedCategories=allOn?new Set():new Set(cats);
+    document.querySelectorAll('[data-category]').forEach(b=>b.classList.toggle('selected',state.selectedCategories.has(b.dataset.category)));
+    refreshOptionsSummary();
+  });
+  document.querySelector('[data-custom-toggle]')?.addEventListener('change',e=>{state.includeCustom=e.target.checked;refreshOptionsSummary()});
   document.querySelector('[data-start-game]')?.addEventListener('click',startGame);
   document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>editMemberCount(Number(b.dataset.memberCount))));
   document.querySelectorAll('[data-member-name]').forEach(input=>input.addEventListener('change',()=>{const i=Number(input.dataset.memberName);updateMember(i,{name:input.value||('プレイヤー'+(i+1))});render()}));
