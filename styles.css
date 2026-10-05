@@ -630,13 +630,10 @@ body.registry-open{overflow:hidden}
 /* Kankaku Meter prototype card */
 .game-card-art-meter{
   min-height:230px;
-  background:
-    radial-gradient(circle at 25% 18%,rgba(255,255,255,.9),transparent 24%),
-    radial-gradient(circle at 82% 25%,rgba(255,221,105,.65),transparent 24%),
-    linear-gradient(150deg,#7b70e7,#4d8fe8 52%,#63c2ca);
+  background:url("../nise_transfer_student_background_9x16.png") center 44%/cover no-repeat;
 }
 .game-card-art-meter::before{
-  content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(24,32,62,.16));z-index:1;
+  content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.04),rgba(20,31,54,.18));z-index:1;
 }
 .meter-card-logo-img{
   position:relative;z-index:2;width:min(530px,96%);max-height:210px;object-fit:contain;
