@@ -196,7 +196,7 @@ function screenHtml(){
   return ({
     title:titleScreen,mode:modeScreen,setup:setupScreen,members:membersScreen,custom:customScreen,rules:rulesScreen,
     question:questionScreen,pass:passScreen,answer:answerScreen,predict:predictScreen,cover:coverScreen,
-    result:()=>state.mode==='battle'?battleResultScreen():secretResultScreen,final:finalScreen
+    result:()=>state.mode==='battle'?battleResultScreen():secretResultScreen(),final:finalScreen
   }[state.screen]||titleScreen)();
 }
 function render(){
