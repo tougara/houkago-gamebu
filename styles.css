@@ -612,3 +612,17 @@ body.registry-open{overflow:hidden}
   .docchi-title-hero{min-height:350px;margin-top:12px;border-radius:22px;padding:22px 14px 24px}
   .docchi-title-logo{width:96%;max-height:200px}
 }
+
+
+/* Balance Minna wa Docchi logo with Nise Transfer Student card */
+.games-select-section .game-card-art-docchi img{
+  width:min(530px,100%);
+  max-height:none;
+  object-fit:contain;
+}
+@media(max-width:520px){
+  .games-select-section .game-card-art-docchi img{
+    width:100%;
+    max-height:none;
+  }
+}
