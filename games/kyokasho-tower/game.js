@@ -77,30 +77,48 @@ function renderBoard(opts={}){
   const key=opts.subjectKey||null;
   const interactive=!!opts.interactive;
   const b=bottomBounds();
-  if(!b.len)return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 0 / 8冊</span></div><div class="board-empty">まだ教科書はありません。<br>最初の1冊を置こう。</div></section>';
   const legal=key?legalPositionsForSubject(key):[];
-  const legalUpper=new Set(legal.filter(p=>p.level>0).map(p=>boardKey(p.level,p.x)));
-  const existing=[...state.board.keys()].map(k=>k.split(',').map(Number));
-  let maxLevel=Math.max(0,...existing.map(v=>v[0]),...legal.filter(p=>p.level>0).map(p=>p.level));
+  const legalSet=new Set(legal.map(p=>boardKey(p.level,p.x)));
+
+  if(!b.len){
+    const first=interactive&&key
+      ? '<div class="tower-row"><div class="tower-cell"><button class="tower-slot first-slot" data-place-level="0" data-place-x="0" aria-label="最初の1冊をここに置く">＋</button></div></div>'
+      : '<div class="board-empty">まだ教科書はありません。<br>最初の1冊を置こう。</div>';
+    return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 0 / 8冊</span></div><div class="tower-board '+(interactive?'first-placement':'')+'">'+first+'</div></section>';
+  }
+
+  const fixed=b.len===8;
+  const maxLevel=fixed?7:Math.max(0,b.len-1);
   const rows=[];
+
   for(let level=maxLevel;level>=0;level--){
-    const maxX=b.max-level;
-    if(maxX<b.min)continue;
+    let rowMin=b.min;
+    let rowMax=b.max-level;
+    if(level===0&&interactive&&!fixed){
+      rowMin=b.min-1;
+      rowMax=b.max+1;
+    }
+    if(rowMax<rowMin)continue;
+
     const cells=[];
-    for(let x=b.min;x<=maxX;x++){
+    for(let x=rowMin;x<=rowMax;x++){
       const card=getCard(level,x);
+      const canPlace=interactive&&legalSet.has(boardKey(level,x));
       if(card){
         const d=subject(card);
         cells.push('<div class="tower-cell"><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
-      }else if(interactive&&legalUpper.has(boardKey(level,x))){
+      }else if(canPlace){
         cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+x+'" aria-label="ここに置く">＋</button></div>');
+      }else if(level>0||fixed){
+        cells.push('<div class="tower-cell"><span class="tower-frame" aria-hidden="true"></span></div>');
       }else{
         cells.push('<div class="tower-cell"><span class="tower-empty"></span></div>');
       }
     }
     rows.push('<div class="tower-row">'+cells.join('')+'</div>');
   }
-  return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board">'+rows.join('')+'</div></section>';
+
+  return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board '+(fixed?'tower-fixed':'tower-growing')+'">'+rows.join('')+'</div></section>';
 }
 function renderPlacementPreview(level,x,key){
   const preview=new Map(state.board);
@@ -109,8 +127,10 @@ function renderPlacementPreview(level,x,key){
   const bottom=positions.filter(v=>v[0]===0).map(v=>v[1]).sort((a,b)=>a-b);
   const min=bottom.length?bottom[0]:x;
   const max=bottom.length?bottom[bottom.length-1]:x;
-  const maxLevel=Math.max(0,...positions.map(v=>v[0]));
+  const fixed=bottom.length===8;
+  const maxLevel=fixed?7:Math.max(0,bottom.length-1);
   const rows=[];
+
   for(let row=maxLevel;row>=0;row--){
     const maxX=max-row;
     if(maxX<min)continue;
@@ -122,12 +142,12 @@ function renderPlacementPreview(level,x,key){
         const chosen=row===level&&cx===x;
         cells.push('<div class="tower-cell '+(chosen?'preview-target':'')+'">'+(chosen?'<span class="preview-here">ここ</span>':'')+'<img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
       }else{
-        cells.push('<div class="tower-cell"><span class="tower-empty"></span></div>');
+        cells.push('<div class="tower-cell"><span class="tower-frame" aria-hidden="true"></span></div>');
       }
     }
     rows.push('<div class="tower-row">'+cells.join('')+'</div>');
   }
-  return '<div class="place-preview-board"><div class="place-preview-meta"><strong>置いたあとのタワー</strong><span>光っている場所に置きます</span></div><div class="tower-board">'+rows.join('')+'</div></div>';
+  return '<div class="place-preview-board"><div class="place-preview-meta"><strong>置いたあとのタワー</strong><span>光っている場所に置きます</span></div><div class="tower-board '+(fixed?'tower-fixed':'tower-growing')+'">'+rows.join('')+'</div></div>';
 }
 function titleScreen(){
   return topNav()+'<section class="title-card">'+logo()+'<p class="title-copy">5教科を積んで、手札をなくせ！</p><div class="stack"><button class="btn yellow full" data-start-title>ゲームをはじめる</button><button class="btn secondary full" data-rules>あそびかた</button><button class="btn secondary full" data-books>教科書を見る</button></div></section>';
@@ -186,13 +206,11 @@ function handScreen(){
     '<section class="card hand-private"><div class="private-head"><div class="avatar large">'+esc(p.icon)+'</div><h2>あなたの手札</h2><p>教科書を選ぶと、この手札画面はすぐ隠れます。</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;return '<button class="hand-book '+(playable?'playable':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+'><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'なし':(playable?'置ける':'置けない'))+'</span></button>'}).join('')+'</div></section>';
 }
 function boardScreen(){
-  const d=subject(state.selectedSubject),legal=legalPositionsForSubject(d.key),base=legal.filter(p=>p.level===0);
-  let actions='';
-  if(base.length){
-    if(base.length===1&&base[0].kind==='first')actions='<div class="base-actions one"><button class="btn yellow" data-place-base="0,0">最初の1冊を置く</button></div>';
-    else actions='<div class="base-actions">'+base.map(p=>'<button class="btn secondary" data-place-base="'+p.level+','+p.x+'">'+(p.kind==='left'?'← 左に置く':'右に置く →')+'</button>').join('')+'</div>';
-  }
-  return topNav()+heading(d.label+'をどこに置く？','ここからはみんなで画面を見てOK。置ける場所だけ選べます')+'<div class="subject-selected"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>'+d.label+'</strong><span>選んだ教科書</span></div></div>'+renderBoard({interactive:true,subjectKey:d.key})+actions+'<button class="btn secondary full" data-reselect>教科書を選び直す</button>';
+  const d=subject(state.selectedSubject);
+  return topNav()+heading(d.label+'をどこに置く？','＋が出ている場所をタップして置こう')+
+    '<div class="subject-selected"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>'+d.label+'</strong><span>選んだ教科書</span></div></div>'+
+    renderBoard({interactive:true,subjectKey:d.key})+
+    '<button class="btn secondary full" data-reselect>教科書を選び直す</button>';
 }
 function noMoveScreen(){
   const i=state.currentPlayer,p=state.players[i],remain=handTotal(i);
@@ -364,7 +382,6 @@ function bind(){
   bindHold(document.querySelector('[data-hold-hand]'),openHand);
   document.querySelectorAll('[data-pick-subject]').forEach(b=>b.addEventListener('click',()=>pickSubject(b.dataset.pickSubject)));
   document.querySelectorAll('[data-place-level]').forEach(b=>b.addEventListener('click',()=>showPlaceConfirm(Number(b.dataset.placeLevel),Number(b.dataset.placeX))));
-  document.querySelectorAll('[data-place-base]').forEach(b=>b.addEventListener('click',()=>{const [l,x]=b.dataset.placeBase.split(',').map(Number);showPlaceConfirm(l,x)}));
   document.querySelector('[data-reselect]')?.addEventListener('click',()=>{state.selectedSubject=null;go('pass',{push:false})});
   document.querySelector('[data-drop-out]')?.addEventListener('click',dropOut);
   document.querySelector('[data-continue-turn]')?.addEventListener('click',continueTurn);
