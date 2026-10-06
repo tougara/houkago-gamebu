@@ -51,3 +51,26 @@ img{max-width:100%;display:block}
   .icon-pick{grid-template-columns:repeat(5,1fr)}
   .result-row{grid-template-columns:minmax(0,1fr) auto}.result-row .total{grid-column:2;grid-row:1 / span 2}.result-row .change{grid-column:1}
 }
+
+/* Kyokasho Tower mobile-flow refinements */
+.board-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;margin:0 0 12px;padding:12px 14px;border:1px solid #dfe5eb;border-radius:17px;background:rgba(255,255,255,.94);box-shadow:0 7px 18px rgba(31,43,62,.08)}
+.board-summary span{font-size:12px;color:#6d788b;font-weight:900}
+.board-summary strong{grid-row:1 / span 2;grid-column:2;font-size:24px}
+.board-summary em{font-style:normal;font-size:13px;color:#58667a;font-weight:900}
+.screen-pass .privacy-card{min-height:330px}
+.screen-hand{--tile:clamp(28px,7.5vw,43px)}
+.screen-hand .board-card{padding:10px 6px 12px;margin-bottom:10px}
+.screen-hand .board-meta{padding-bottom:5px}
+.screen-hand .tower-board{min-height:80px;padding:4px 0}
+.screen-hand .hand-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.screen-hand .hand-book{min-height:142px;display:grid;grid-template-columns:1fr auto;grid-template-areas:"img count" "name name" "status status";justify-items:center;align-content:center;gap:2px 6px;padding:9px;text-align:center}
+.screen-hand .hand-book img{grid-area:img;width:72px;height:72px}
+.screen-hand .hand-book strong{grid-area:name;font-size:18px}
+.screen-hand .hand-book b{grid-area:count;align-self:start;font-size:21px}
+.screen-hand .hand-book span{grid-area:status;margin:1px 0 0;font-size:11px}
+@media(max-width:350px){
+  .screen-hand .hand-grid{grid-template-columns:1fr}
+  .screen-hand .hand-book{min-height:105px;grid-template-columns:62px minmax(0,1fr) auto;grid-template-areas:"img name count" "img status count";justify-items:start;text-align:left}
+  .screen-hand .hand-book img{width:58px;height:58px}
+  .screen-hand .hand-book b{align-self:center}
+}
