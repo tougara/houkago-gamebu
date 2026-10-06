@@ -199,7 +199,12 @@ function go(screen,{push=true,preserveScroll=false,scrollY=window.scrollY}={}){
 function doBackOne(){
   if(state.gameStarted){
     if(state.screen==='hand'||state.screen==='board'||state.screen==='noMove'){state.selectedSubject=null;state.screen='pass';render();return}
-    if(state.screen==='pass'){state.screen='roundIntro';render();return}
+    if(state.screen==='pass'){
+      const untouched=state.board.size===0&&state.currentPlayer===state.startPlayer&&state.roundOutcomes.every(x=>x===null);
+      if(untouched){state.screen='roundIntro';render()}
+      else alert('前の人の手番には戻れません。今の手番から続けてください。');
+      return
+    }
     if(state.screen==='roundIntro'){state.gameStarted=false;state.screen='setup';render();return}
     if(state.screen==='turnEnd'||state.screen==='roundResult'){alert('確定した手番や結果は元に戻せません。');return}
   }
