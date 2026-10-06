@@ -209,11 +209,16 @@ function screenHtml(){
     result:()=>state.mode==='battle'?battleResultScreen():secretResultScreen(),final:finalScreen
   }[state.screen]||titleScreen)();
 }
-function render(){
+function render({preserveScroll=false,scrollY=window.scrollY}={}){
   app.className='docchi-app screen-'+state.screen;
   app.innerHTML=screenHtml();
   bind();
-  window.scrollTo({top:0,behavior:'auto'});
+  if(preserveScroll){
+    window.scrollTo({top:scrollY,behavior:'auto'});
+    requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:'auto'}));
+  }else{
+    window.scrollTo({top:0,behavior:'auto'});
+  }
 }
 function go(screen,{push=true}={}){
   if(push&&state.screen!==screen)state.history.push(state.screen);
@@ -379,7 +384,7 @@ function bind(){
   document.querySelectorAll('[data-go-custom]').forEach(b=>b.addEventListener('click',()=>go('custom')));
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>chooseMode(b.dataset.mode)));
   document.querySelector('[data-edit-members]')?.addEventListener('click',()=>go('members'));
-  document.querySelectorAll('[data-round-count]').forEach(b=>b.addEventListener('click',()=>{state.roundCount=Number(b.dataset.roundCount);render()}));
+  document.querySelectorAll('[data-round-count]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;state.roundCount=Number(b.dataset.roundCount);render({preserveScroll:true,scrollY:y})}));
   document.querySelector('[data-next-options]')?.addEventListener('click',()=>go('options'));
   document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{
     const c=b.dataset.category;
