@@ -82,7 +82,7 @@ function renderBoard(opts={}){
 
   if(!b.len){
     const first=interactive&&key
-      ? '<div class="tower-row"><div class="tower-cell"><button class="tower-slot first-slot" data-place-level="0" data-place-x="0" aria-label="最初の1冊をここに置く">＋</button></div></div>'
+      ? '<div class="tower-row"><div class="tower-cell"><button class="tower-slot first-slot" data-place-level="0" data-place-x="0" aria-label="最初の1冊をここに置く"><span aria-hidden="true">＋</span></button></div></div>'
       : '<div class="board-empty">まだ教科書はありません。<br>最初の1冊を置こう。</div>';
     return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 0 / 8冊</span></div><div class="tower-board '+(interactive?'first-placement':'')+'">'+first+'</div></section>';
   }
@@ -108,7 +108,7 @@ function renderBoard(opts={}){
         const d=subject(card);
         cells.push('<div class="tower-cell"><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
       }else if(canPlace){
-        cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+x+'" aria-label="ここに置く">＋</button></div>');
+        cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+x+'" aria-label="ここに置く"><span aria-hidden="true">＋</span></button></div>');
       }else if(level>0||fixed){
         cells.push('<div class="tower-cell"><span class="tower-frame" aria-hidden="true"></span></div>');
       }else{
