@@ -14,7 +14,7 @@ const state={
   screen:'title',history:[],gameStarted:false,
   playerCount:4,players:[],penalties:[],
   round:0,totalRounds:4,startPlayer:0,currentPlayer:0,
-  hands:[],board:new Map(),active:[],roundOutcomes:[],
+  hands:[],board:new Map(),active:[],roundOutcomes:[],movesMade:0,
   selectedSubject:null,lastEvent:null,rulePage:0
 };
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -144,13 +144,19 @@ function roundIntroScreen(){
   const fiveNote=state.playerCount===5?'<p class="setup-note" style="margin-top:8px">5人プレイでは、余った1冊を最初から土台に置いてスタートします。</p>':'';
   return topNav()+heading((state.round+1)+' / '+state.totalRounds+'ラウンド','教科書を配りました')+currentScoresStrip()+'<section class="card round-hero">'+logo()+'<div class="start-player"><div class="avatar large">'+esc(p.icon)+'</div><span>今回のスタート</span><strong>'+esc(p.name)+'さん</strong></div><p class="setup-note">手札は本人だけが見ます。スマホを順番に回して遊ぼう。</p>'+fiveNote+'</section><button class="btn yellow full" data-begin-round>ラウンドをはじめる</button>';
 }
+function boardSummary(){
+  const b=bottomBounds(),total=state.board.size;
+  return '<section class="board-summary"><span>現在のタワー</span><strong>'+total+'冊</strong><em>土台 '+b.len+' / 8冊</em></section>';
+}
 function passScreen(){
   const p=state.players[state.currentPlayer];
-  return topNav()+heading((state.round+1)+' / '+state.totalRounds+'ラウンド','現在のタワーをみんなで確認')+currentScoresStrip()+renderBoard()+'<section class="privacy-card"><div><div class="avatar large">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さんに<br>スマホを渡してください</h2><p>手札は本人だけが見てね。</p><button class="btn yellow hold-btn" data-hold-hand><span>長押しして手札を見る</span><i></i></button></div></section>';
+  return topNav()+heading((state.round+1)+' / '+state.totalRounds+'ラウンド','次の人にスマホを渡そう')+currentScoresStrip()+boardSummary()+'<section class="privacy-card"><div><div class="avatar large">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さんに<br>スマホを渡してください</h2><p>手札は本人だけが見てね。</p><button class="btn yellow hold-btn" data-hold-hand><span>長押しして手札を見る</span><i></i></button></div></section>';
 }
 function handScreen(){
   const i=state.currentPlayer,p=state.players[i],hand=state.hands[i];
-  return topNav()+heading(esc(p.name)+'さんの手札','置く教科書を1種類選んでね')+'<section class="card hand-private"><div class="private-head"><div class="avatar large">'+esc(p.icon)+'</div><h2>あなたの手札</h2><p>この画面はほかの人に見せないでね。</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;return '<button class="hand-book '+(playable?'playable':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+'><img src="'+s.image+'" alt="'+s.label+'"><div><strong>'+s.label+'</strong><span>'+(n===0?'手札になし':(playable?'置けます':'今は置けません'))+'</span></div><b>×'+n+'</b></button>'}).join('')+'</div></section>';
+  return topNav()+heading(esc(p.name)+'さんの手札','本人だけでタワーと手札を確認してね')+
+    renderBoard()+
+    '<section class="card hand-private"><div class="private-head"><div class="avatar large">'+esc(p.icon)+'</div><h2>あなたの手札</h2><p>教科書を選ぶと、この手札画面はすぐ隠れます。</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;return '<button class="hand-book '+(playable?'playable':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+'><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'手札になし':(playable?'置けます':'今は置けません'))+'</span></button>'}).join('')+'</div></section>';
 }
 function boardScreen(){
   const d=subject(state.selectedSubject),legal=legalPositionsForSubject(d.key),base=legal.filter(p=>p.level===0);
@@ -159,7 +165,7 @@ function boardScreen(){
     if(base.length===1&&base[0].kind==='first')actions='<div class="base-actions one"><button class="btn yellow" data-place-base="0,0">最初の1冊を置く</button></div>';
     else actions='<div class="base-actions">'+base.map(p=>'<button class="btn secondary" data-place-base="'+p.level+','+p.x+'">'+(p.kind==='left'?'← 左に置く':'右に置く →')+'</button>').join('')+'</div>';
   }
-  return topNav()+heading(d.label+'をどこに置く？','置ける場所だけ選べます')+'<div class="subject-selected"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>'+d.label+'</strong><span>選んだ教科書</span></div></div>'+renderBoard({interactive:true,subjectKey:d.key})+actions+'<button class="btn secondary full" data-reselect>教科書を選び直す</button>';
+  return topNav()+heading(d.label+'をどこに置く？','ここからはみんなで画面を見てOK。置ける場所だけ選べます')+'<div class="subject-selected"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>'+d.label+'</strong><span>選んだ教科書</span></div></div>'+renderBoard({interactive:true,subjectKey:d.key})+actions+'<button class="btn secondary full" data-reselect>教科書を選び直す</button>';
 }
 function noMoveScreen(){
   const i=state.currentPlayer,p=state.players[i],remain=handTotal(i);
@@ -201,7 +207,7 @@ function doBackOne(){
   if(state.gameStarted){
     if(state.screen==='hand'||state.screen==='board'||state.screen==='noMove'){state.selectedSubject=null;state.screen='pass';render();return}
     if(state.screen==='pass'){
-      const untouched=state.board.size===0&&state.currentPlayer===state.startPlayer&&state.roundOutcomes.every(x=>x===null);
+      const untouched=state.movesMade===0&&state.currentPlayer===state.startPlayer&&state.roundOutcomes.every(x=>x===null);
       if(untouched){state.screen='roundIntro';render()}
       else alert('前の人の手番には戻れません。今の手番から続けてください。');
       return
@@ -241,6 +247,7 @@ function startRound(){
   state.board=new Map();
   state.active=Array(state.playerCount).fill(true);
   state.roundOutcomes=Array(state.playerCount).fill(null);
+  state.movesMade=0;
   state.selectedSubject=null;state.lastEvent=null;
   state.hands=Array.from({length:state.playerCount},()=>makeEmptyHand());
   const deck=makeDeck();
@@ -281,7 +288,7 @@ function commitPlace(level,x){
   const key=state.selectedSubject,i=state.currentPlayer,d=subject(key);
   const legal=legalPositionsForSubject(key).some(p=>p.level===level&&p.x===x);
   if(!legal||!state.hands[i][key])return;
-  setCard(level,x,key);state.hands[i][key]--;state.selectedSubject=null;
+  setCard(level,x,key);state.hands[i][key]--;state.movesMade++;state.selectedSubject=null;
   let title=d.label+'を置きました！',detail='タワーが1冊高くなりました。',icon='📚';
   if(handTotal(i)===0){
     const returned=Math.min(2,state.penalties[i]);
