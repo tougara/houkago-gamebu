@@ -145,7 +145,11 @@ function questionScreen(){
   return topNav()+heading((state.round+1)+' / '+state.roundCount+'問','まずは全員でお題を確認')+
   '<section class="question-card"><span class="question-category '+(sensitive?'deep':'')+'">'+esc(q.category)+'</span><h2>'+esc(q.q)+'</h2><div class="answer-preview"><div><small>A</small><strong>'+esc(q.a)+'</strong></div><b>VS</b><div><small>B</small><strong>'+esc(q.b)+'</strong></div></div></section>'+
   (sensitive?'<p class="sensitive-note">少し踏み込んだお題です。答えにくければ別のお題に変えてOK。</p>':'')+
-  '<div class="stack"><button class="btn full" data-accept-question>このお題でいく</button><button class="btn secondary full" data-change-question>別のお題にする</button></div>';
+  '<div class="stack"><button class="btn full" data-accept-question>このお題でいく</button><button class="btn secondary full" data-change-question>別のお題にする</button><button class="btn secondary full" data-compose-question>お題を考える</button></div>';
+}
+function composeQuestionScreen(){
+  return topNav()+heading('お題を考える',modeLabel()+'で使う2択を作ろう')+
+  '<section class="card custom-form"><label>質問<input id="roundQ" maxlength="70" placeholder="例：放課後に行くなら？"></label><div class="custom-two"><label>A<input id="roundA" maxlength="30" placeholder="公園"></label><label>B<input id="roundB" maxlength="30" placeholder="友達の家"></label></div><button class="btn full" data-use-round-question>このお題で遊ぶ</button></section>';
 }
 function passScreen(){
   const p=state.players[state.voter];
@@ -201,7 +205,7 @@ function finalScreen(){
 function screenHtml(){
   return ({
     title:titleScreen,mode:modeScreen,setup:setupScreen,options:optionsScreen,members:membersScreen,custom:customScreen,rules:rulesScreen,
-    question:questionScreen,pass:passScreen,answer:answerScreen,predict:predictScreen,cover:coverScreen,allAnswered:allAnsweredScreen,
+    question:questionScreen,composeQuestion:composeQuestionScreen,pass:passScreen,answer:answerScreen,predict:predictScreen,cover:coverScreen,allAnswered:allAnsweredScreen,
     result:()=>state.mode==='battle'?battleResultScreen():secretResultScreen(),final:finalScreen
   }[state.screen]||titleScreen)();
 }
@@ -263,6 +267,15 @@ function changeQuestion(){
   const q=drawQuestion();
   if(q)state.currentQuestion=q;
   render();
+}
+function useRoundQuestion(){
+  const q=document.getElementById('roundQ')?.value.trim();
+  const a=document.getElementById('roundA')?.value.trim();
+  const b=document.getElementById('roundB')?.value.trim();
+  if(!q||!a||!b){alert('質問・A・Bを全部入力してください。');return;}
+  state.currentQuestion={q,a,b,category:'みんなのお題',custom:true};
+  if(state.history[state.history.length-1]==='question')state.history.pop();
+  go('question',{push:false});
 }
 function answer(choice){
   if(state.mode==='battle'){
@@ -392,6 +405,8 @@ function bind(){
   document.querySelector('[data-clear-custom]')?.addEventListener('click',()=>{if(confirm('マイお題を全部消しますか？')){saveCustom([]);render()}});
   document.querySelector('[data-accept-question]')?.addEventListener('click',acceptQuestion);
   document.querySelector('[data-change-question]')?.addEventListener('click',changeQuestion);
+  document.querySelector('[data-compose-question]')?.addEventListener('click',()=>go('composeQuestion'));
+  document.querySelector('[data-use-round-question]')?.addEventListener('click',useRoundQuestion);
   bindHold(document.querySelector('[data-hold-answer]'),()=>go('answer'));
   document.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>answer(b.dataset.answer)));
   document.querySelectorAll('[data-predict]').forEach(b=>b.addEventListener('click',()=>predict(b.dataset.predict)));
