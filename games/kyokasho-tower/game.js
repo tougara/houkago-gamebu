@@ -102,6 +102,33 @@ function renderBoard(opts={}){
   }
   return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board">'+rows.join('')+'</div></section>';
 }
+function renderPlacementPreview(level,x,key){
+  const preview=new Map(state.board);
+  preview.set(boardKey(level,x),key);
+  const positions=[...preview.keys()].map(k=>k.split(',').map(Number));
+  const bottom=positions.filter(v=>v[0]===0).map(v=>v[1]).sort((a,b)=>a-b);
+  const min=bottom.length?bottom[0]:x;
+  const max=bottom.length?bottom[bottom.length-1]:x;
+  const maxLevel=Math.max(0,...positions.map(v=>v[0]));
+  const rows=[];
+  for(let row=maxLevel;row>=0;row--){
+    const maxX=max-row;
+    if(maxX<min)continue;
+    const cells=[];
+    for(let cx=min;cx<=maxX;cx++){
+      const k=preview.get(boardKey(row,cx));
+      if(k){
+        const d=subject(k);
+        const chosen=row===level&&cx===x;
+        cells.push('<div class="tower-cell '+(chosen?'preview-target':'')+'">'+(chosen?'<span class="preview-here">ここ</span>':'')+'<img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
+      }else{
+        cells.push('<div class="tower-cell"><span class="tower-empty"></span></div>');
+      }
+    }
+    rows.push('<div class="tower-row">'+cells.join('')+'</div>');
+  }
+  return '<div class="place-preview-board"><div class="place-preview-meta"><strong>置いたあとのタワー</strong><span>光っている場所に置きます</span></div><div class="tower-board">'+rows.join('')+'</div></div>';
+}
 function titleScreen(){
   return topNav()+'<section class="title-card">'+logo()+'<p class="title-copy">5教科を積んで、手札をなくせ！</p><div class="stack"><button class="btn yellow full" data-start-title>ゲームをはじめる</button><button class="btn secondary full" data-rules>あそびかた</button><button class="btn secondary full" data-books>教科書を見る</button></div></section>';
 }
@@ -278,7 +305,10 @@ function pickSubject(key){
 function showPlaceConfirm(level,x){
   const d=subject(state.selectedSubject);
   const wrap=document.createElement('div');wrap.className='modal-backdrop place-confirm';
-  wrap.innerHTML='<section class="modal"><img src="'+d.image+'" alt="'+d.label+'" style="width:92px;height:92px;object-fit:contain;margin:0 auto 6px"><h2>ここに置きますか？</h2><p>'+d.label+'の教科書を置きます。置いたあとは元に戻せません。</p><div class="modal-actions"><button class="btn secondary" data-place-cancel>選び直す</button><button class="btn" data-place-ok>ここに置く</button></div></section>';
+  wrap.innerHTML='<section class="modal place-confirm-modal">'+
+    '<div class="place-preview-pane">'+renderPlacementPreview(level,x,d.key)+'</div>'+
+    '<div class="place-confirm-sheet"><div class="place-confirm-title"><img src="'+d.image+'" alt="'+d.label+'"><div><h2>ここに置きますか？</h2><p>'+d.label+'を光っている場所に置きます。</p></div></div><div class="modal-actions"><button class="btn secondary" data-place-cancel>選び直す</button><button class="btn" data-place-ok>ここに置く</button></div></div>'+
+  '</section>';
   document.body.appendChild(wrap);
   wrap.querySelector('[data-place-cancel]').addEventListener('click',()=>wrap.remove());
   wrap.querySelector('[data-place-ok]').addEventListener('click',()=>{wrap.remove();commitPlace(level,x)});
