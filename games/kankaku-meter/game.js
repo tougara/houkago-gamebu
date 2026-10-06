@@ -118,7 +118,7 @@ document.querySelectorAll('[data-member-avatar]').forEach(b=>b.addEventListener(
 document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.memberIcon);playersApi?.setPlayer?.(i,{icon:b.dataset.icon});state.memberIconTarget=null;loadPlayers();render()}));
 document.querySelectorAll('[data-member-name]').forEach(input=>input.addEventListener('input',()=>{const i=Number(input.dataset.memberName);playersApi?.setPlayer?.(i,{name:input.value||('プレイヤー'+(i+1))});loadPlayers()}));
 document.querySelector('[data-members-done]')?.addEventListener('click',()=>{state.memberIconTarget=null;loadPlayers();safeBack()});
-document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{state.difficulty=b.dataset.difficulty;render()}));
+document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;state.difficulty=b.dataset.difficulty;render({preserveScroll:true,scrollY:y})}));
 document.querySelector('[data-next-categories]')?.addEventListener('click',()=>go('categories'));
 document.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click',()=>{const c=b.dataset.cat;if(state.selectedCategories.has(c))state.selectedCategories.delete(c);else state.selectedCategories.add(c);b.classList.toggle('selected',state.selectedCategories.has(c));refreshPool()}));
 document.querySelector('[data-all]')?.addEventListener('click',()=>{const cats=Object.keys(DB),on=cats.every(c=>state.selectedCategories.has(c));state.selectedCategories=on?new Set():new Set(cats);document.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('selected',state.selectedCategories.has(b.dataset.cat)));refreshPool()});
