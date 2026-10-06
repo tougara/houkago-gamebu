@@ -79,21 +79,10 @@ function showRecheckFirst(playerIndex){
   if(!p)return;
   const wrap=document.createElement('div');
   wrap.className='recheck-backdrop';
-  wrap.innerHTML='<section class="recheck-modal"><div class="recheck-avatar">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さん本人ですか？</h2><p>数字は本人だけが確認してください。</p><div class="recheck-actions"><button class="btn secondary" data-recheck-cancel>違う</button><button class="btn" data-recheck-next>本人です</button></div></section>';
+  wrap.innerHTML='<section class="recheck-modal"><div class="recheck-avatar">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さん本人ですか？</h2><p>忘れてしまったときだけ使ってね。<br>数字は本人だけが確認してください。</p><div class="recheck-actions"><button class="btn secondary" data-recheck-cancel>違う</button><button class="btn" data-recheck-next>本人です</button></div></section>';
   document.body.appendChild(wrap);
   wrap.querySelector('[data-recheck-cancel]').addEventListener('click',closeRecheck);
-  wrap.querySelector('[data-recheck-next]').addEventListener('click',()=>showRecheckSecond(playerIndex));
-}
-function showRecheckSecond(playerIndex){
-  closeRecheck();
-  const p=state.players[playerIndex];
-  if(!p)return;
-  const wrap=document.createElement('div');
-  wrap.className='recheck-backdrop';
-  wrap.innerHTML='<section class="recheck-modal"><div class="recheck-warning">もう一度確認</div><h2>本当に数字を見ますか？</h2><p>忘れてしまったときだけ使ってね。<br>周りの人は画面から目をそらしてください。</p><div class="recheck-actions"><button class="btn secondary" data-recheck-cancel>やめる</button><button class="btn" data-recheck-ready>'+esc(p.name)+'さんが見る</button></div></section>';
-  document.body.appendChild(wrap);
-  wrap.querySelector('[data-recheck-cancel]').addEventListener('click',closeRecheck);
-  wrap.querySelector('[data-recheck-ready]').addEventListener('click',()=>showRecheckHold(playerIndex));
+  wrap.querySelector('[data-recheck-next]').addEventListener('click',()=>showRecheckHold(playerIndex));
 }
 function showRecheckHold(playerIndex){
   closeRecheck();
