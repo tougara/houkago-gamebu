@@ -156,7 +156,7 @@ function handScreen(){
   const i=state.currentPlayer,p=state.players[i],hand=state.hands[i];
   return topNav()+heading(esc(p.name)+'さんの手札','本人だけでタワーと手札を確認してね')+
     renderBoard()+
-    '<section class="card hand-private"><div class="private-head"><div class="avatar large">'+esc(p.icon)+'</div><h2>あなたの手札</h2><p>教科書を選ぶと、この手札画面はすぐ隠れます。</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;return '<button class="hand-book '+(playable?'playable':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+'><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'手札になし':(playable?'置けます':'今は置けません'))+'</span></button>'}).join('')+'</div></section>';
+    '<section class="card hand-private"><div class="private-head"><div class="avatar large">'+esc(p.icon)+'</div><h2>あなたの手札</h2><p>教科書を選ぶと、この手札画面はすぐ隠れます。</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;return '<button class="hand-book '+(playable?'playable':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+'><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'なし':(playable?'置ける':'置けない'))+'</span></button>'}).join('')+'</div></section>';
 }
 function boardScreen(){
   const d=subject(state.selectedSubject),legal=legalPositionsForSubject(d.key),base=legal.filter(p=>p.level===0);
