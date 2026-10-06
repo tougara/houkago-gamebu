@@ -141,7 +141,8 @@ function booksScreen(){
 }
 function roundIntroScreen(){
   const p=state.players[state.startPlayer];
-  return topNav()+heading((state.round+1)+' / '+state.totalRounds+'ラウンド','36冊を配りました')+currentScoresStrip()+'<section class="card round-hero">'+logo()+'<div class="start-player"><div class="avatar large">'+esc(p.icon)+'</div><span>今回のスタート</span><strong>'+esc(p.name)+'さん</strong></div><p class="setup-note">手札は本人だけが見ます。スマホを順番に回して遊ぼう。</p></section><button class="btn yellow full" data-begin-round>ラウンドをはじめる</button>';
+  const fiveNote=state.playerCount===5?'<p class="setup-note" style="margin-top:8px">5人プレイでは、余った1冊を最初から土台に置いてスタートします。</p>':'';
+  return topNav()+heading((state.round+1)+' / '+state.totalRounds+'ラウンド','教科書を配りました')+currentScoresStrip()+'<section class="card round-hero">'+logo()+'<div class="start-player"><div class="avatar large">'+esc(p.icon)+'</div><span>今回のスタート</span><strong>'+esc(p.name)+'さん</strong></div><p class="setup-note">手札は本人だけが見ます。スマホを順番に回して遊ぼう。</p>'+fiveNote+'</section><button class="btn yellow full" data-begin-round>ラウンドをはじめる</button>';
 }
 function passScreen(){
   const p=state.players[state.currentPlayer];
@@ -243,6 +244,10 @@ function startRound(){
   state.selectedSubject=null;state.lastEvent=null;
   state.hands=Array.from({length:state.playerCount},()=>makeEmptyHand());
   const deck=makeDeck();
+  if(state.playerCount===5){
+    const opening=deck.pop();
+    setCard(0,0,opening);
+  }
   deck.forEach((key,idx)=>{const p=(state.startPlayer+idx)%state.playerCount;state.hands[p][key]++});
   state.screen='roundIntro';render();
 }
