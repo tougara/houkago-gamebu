@@ -342,3 +342,98 @@ img{max-width:100%;display:block}
   .place-confirm-title h2{font-size:19px}
   .place-confirm-title p{font-size:11px}
 }
+
+/* Board placement: all legal positions are tapped directly on the pyramid */
+.tower-frame{
+  width:calc(var(--tile) - 7px);
+  height:calc(var(--tile) - 7px);
+  border:2px solid #d7e0e9;
+  border-radius:10px;
+  background:rgba(255,255,255,.42);
+  display:block;
+}
+.tower-slot{
+  position:relative;
+  border:2px solid #44a9ea;
+  background:linear-gradient(145deg,#f5fcff,#dff4ff);
+  box-shadow:0 3px 0 #9bcdea,0 0 0 2px rgba(255,255,255,.8);
+  animation:towerSlotPulse .95s ease-in-out infinite alternate;
+}
+.tower-slot::after{
+  content:"";
+  position:absolute;
+  inset:-5px;
+  border:2px solid rgba(55,166,232,.22);
+  border-radius:13px;
+}
+@keyframes towerSlotPulse{
+  from{transform:scale(.97)}
+  to{transform:scale(1.04)}
+}
+.first-placement{
+  min-height:150px;
+  align-content:end;
+  padding-bottom:12px;
+}
+.first-slot{
+  width:calc(var(--tile) + 2px);
+  height:calc(var(--tile) + 2px);
+  font-size:27px;
+}
+.screen-board{
+  --tile:clamp(28px,8.9vw,43px);
+}
+.screen-board .screen-heading{
+  margin:10px 0 9px;
+}
+.screen-board .screen-heading h1{
+  font-size:clamp(24px,6.5vw,34px);
+  margin-bottom:3px;
+}
+.screen-board .screen-heading p{
+  font-size:12px;
+}
+.screen-board .subject-selected{
+  margin:0 0 7px;
+  gap:7px;
+}
+.screen-board .subject-selected img{
+  width:46px;
+  height:46px;
+}
+.screen-board .subject-selected strong{
+  font-size:19px;
+}
+.screen-board .board-card{
+  padding:9px 4px 10px;
+  margin-bottom:9px;
+}
+.screen-board .board-meta{
+  padding:0 7px 5px;
+}
+.screen-board .tower-board{
+  gap:0;
+  min-height:0;
+  padding:3px 0 4px;
+}
+.screen-board .tower-row{
+  gap:0;
+  min-height:var(--tile);
+}
+.screen-board .btn.full[data-reselect]{
+  min-height:48px;
+}
+.tower-fixed{
+  gap:0;
+}
+.place-preview-board .tower-frame{
+  border-color:#d2dbe5;
+  background:rgba(255,255,255,.5);
+}
+
+@media(max-width:390px){
+  .screen-board{--tile:clamp(27px,8.65vw,36px)}
+  .screen-board .tower-cell{width:var(--tile);height:var(--tile)}
+  .screen-board .subject-selected img{width:42px;height:42px}
+  .screen-board .subject-selected strong{font-size:18px}
+}
