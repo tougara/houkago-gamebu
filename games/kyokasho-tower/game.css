@@ -1097,3 +1097,29 @@ img{max-width:100%;display:block}
     min-height:44px;
   }
 }
+
+
+/* Growing pyramid: only confirmed height is shown until the 8-book base is complete */
+.screen-pass .tower-board,
+.screen-hand .tower-board,
+.screen-noMove .tower-board{
+  align-content:end;
+}
+.growing-pyramid .tower-board{
+  align-content:end;
+}
+.growing-pyramid .tower-row{
+  min-height:var(--tile);
+}
+.growing-pyramid .tower-frame{
+  width:calc(var(--tile) - 6px);
+  height:calc(var(--tile) - 6px);
+}
+.growing-pyramid .tower-book{
+  width:calc(var(--tile) - 2px);
+  height:calc(var(--tile) - 2px);
+}
+.growing-pyramid .tower-slot{
+  width:calc(var(--tile) - 6px);
+  height:calc(var(--tile) - 6px);
+}
