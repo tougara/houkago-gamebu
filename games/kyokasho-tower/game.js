@@ -94,36 +94,20 @@ function renderBoard(opts={}){
   const legal=key?legalPositionsForSubject(key):[];
   const legalSet=new Set(legal.map(p=>boardKey(p.level,p.x)));
 
-  if(!b.len){
-    let first='<div class="board-empty">まだ教科書はありません。<br>最初の1冊を置こう。</div>';
-    if(interactive&&key){
-      const d=subject(key);
-      const isPreview=preview&&preview.level===0&&preview.x===0;
-      first=isPreview
-        ? '<div class="tower-row"><div class="tower-cell tower-preview-choice"><span class="inline-preview-here">ここ</span><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div></div>'
-        : '<div class="tower-row"><div class="tower-cell"><button class="tower-slot first-slot" data-place-level="0" data-place-x="0" aria-label="最初の1冊をここに置く"><span aria-hidden="true">＋</span></button></div></div>';
-    }
-    return '<section class="card board-card '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+(key?subject(key).label+'を置ける場所':'教科書タワー')+'</span><span>土台 0 / 8冊</span></div><div class="tower-board '+(interactive?'first-placement':'')+'">'+first+'</div></section>';
-  }
-
-  const fixed=b.len===8;
-  const maxLevel=fixed?7:Math.max(0,b.len-1);
+  // Until the base reaches 8 books, keep the currently-built segment centered
+  // inside the final 8-slot base. When it reaches 8, logical and display x align.
+  const displayOffset=b.len===8?(-b.min):(b.len?Math.floor((8-b.len)/2)-b.min:3);
   const rows=[];
 
-  for(let level=maxLevel;level>=0;level--){
-    let rowMin=b.min;
-    let rowMax=b.max-level;
-    if(level===0&&interactive&&!fixed){
-      rowMin=b.min-1;
-      rowMax=b.max+1;
-    }
-    if(rowMax<rowMin)continue;
-
+  for(let level=7;level>=0;level--){
     const cells=[];
-    for(let x=rowMin;x<=rowMax;x++){
-      const card=getCard(level,x);
-      const canPlace=interactive&&legalSet.has(boardKey(level,x));
-      const isPreview=interactive&&key&&preview&&preview.level===level&&preview.x===x;
+    const rowCount=8-level;
+    for(let displayX=0;displayX<rowCount;displayX++){
+      const logicalX=displayX-displayOffset;
+      const card=getCard(level,logicalX);
+      const canPlace=interactive&&legalSet.has(boardKey(level,logicalX));
+      const isPreview=interactive&&key&&preview&&preview.level===level&&preview.x===logicalX;
+
       if(card){
         const d=subject(card);
         cells.push('<div class="tower-cell"><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
@@ -131,17 +115,16 @@ function renderBoard(opts={}){
         const d=subject(key);
         cells.push('<div class="tower-cell tower-preview-choice"><span class="inline-preview-here">ここ</span><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
       }else if(canPlace){
-        cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+x+'" aria-label="ここに置く"><span aria-hidden="true">＋</span></button></div>');
-      }else if(level>0||fixed){
-        cells.push('<div class="tower-cell"><span class="tower-frame" aria-hidden="true"></span></div>');
+        cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+logicalX+'" aria-label="ここに置く"><span aria-hidden="true">＋</span></button></div>');
       }else{
-        cells.push('<div class="tower-cell"><span class="tower-empty"></span></div>');
+        cells.push('<div class="tower-cell"><span class="tower-frame" aria-hidden="true"></span></div>');
       }
     }
-    rows.push('<div class="tower-row">'+cells.join('')+'</div>');
+    rows.push('<div class="tower-row" data-level="'+level+'">'+cells.join('')+'</div>');
   }
 
-  return '<section class="card board-card '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+(key?subject(key).label+'を置ける場所':'教科書タワー')+'</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board '+(fixed?'tower-fixed':'tower-growing')+'">'+rows.join('')+'</div></section>';
+  const label=key?subject(key).label+'を置ける場所':'教科書タワー';
+  return '<section class="card board-card fixed-pyramid '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+label+'</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board tower-fixed">'+rows.join('')+'</div></section>';
 }
 function renderPlacementPreview(level,x,key){
   const preview=new Map(state.board);
@@ -218,9 +201,14 @@ function boardSummary(){
   const b=bottomBounds(),total=state.board.size;
   return '<section class="board-summary"><span>現在のタワー</span><strong>'+total+'冊</strong><em>土台 '+b.len+' / 8冊</em></section>';
 }
+function playStatus(label){
+  return '<div class="play-status"><strong>'+(state.round+1)+' / '+state.totalRounds+'ラウンド</strong><span>'+esc(label)+'</span></div>'+currentScoresStrip();
+}
 function passScreen(){
   const p=state.players[state.currentPlayer];
-  return topNav()+heading((state.round+1)+' / '+state.totalRounds+'ラウンド','次の人にスマホを渡そう')+currentScoresStrip()+boardSummary()+'<section class="privacy-card"><div><div class="avatar large">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さんに<br>スマホを渡してください</h2><p>手札は本人だけが見てね。</p><button class="btn yellow hold-btn" data-hold-hand><span>長押しして手札を見る</span><i></i></button></div></section>';
+  return topNav()+playStatus('次の人にスマホを渡そう')+
+    renderBoard()+
+    '<section class="privacy-card compact-pass"><div class="compact-pass-main"><div class="avatar pass-avatar">'+esc(p.icon)+'</div><div class="compact-pass-copy"><h2>'+esc(p.name)+'さんにスマホを渡してください</h2><p>手札は本人だけが見てね。</p></div></div><button class="btn yellow hold-btn" data-hold-hand><span>長押しして手札を見る</span><i></i></button></section>';
 }
 function inlinePlaceControls(){
   const key=state.selectedSubject;
@@ -237,7 +225,7 @@ function handScreen(){
   const help=selectedKey
     ? (state.pendingPlace?'置き場所を確認して、この画面で決定してね。':'選んだ教科書を置ける場所が、タワー上で光っています。')
     : '教科書を選ぶと、置ける場所がタワー上で光ります。';
-  return topNav()+heading(esc(p.name)+'さんの手札','本人だけでタワーと手札を確認してね')+
+  return topNav()+playStatus(esc(p.name)+'さんの手札')+
     renderBoard({interactive:!!selectedKey,subjectKey:selectedKey,previewPlace:state.pendingPlace})+
     inlinePlaceControls()+
     '<section class="card hand-private"><div class="private-head"><div class="private-title"><div class="avatar hand-avatar">'+esc(p.icon)+'</div><h2>あなたの手札</h2></div><p>'+help+'</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;const selected=selectedKey===s.key;return '<button class="hand-book '+(playable?'playable ':'')+(selected?'selected':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+' aria-pressed="'+(selected?'true':'false')+'"><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'なし':(selected?'選択中':(playable?'置ける':'置けない')))+'</span></button>'}).join('')+'</div></section>';
@@ -251,7 +239,8 @@ function boardScreen(){
 }
 function noMoveScreen(){
   const i=state.currentPlayer,p=state.players[i],remain=handTotal(i);
-  return topNav()+heading(esc(p.name)+'さん','置ける教科書がありません')+'<section class="card no-move-card"><div class="avatar large">'+esc(p.icon)+'</div><h2>このラウンドはここまで</h2><p class="setup-note">残った手札がペナルティになります。</p><div class="penalty-big">+'+remain+'点</div><button class="btn danger full" data-drop-out>ラウンドを抜ける</button></section>';
+  return topNav()+playStatus(esc(p.name)+'さんの手番')+renderBoard()+
+    '<section class="card no-move-card compact-no-move"><div class="compact-pass-main"><div class="avatar pass-avatar">'+esc(p.icon)+'</div><div class="compact-pass-copy"><h2>置ける教科書がありません</h2><p>残り'+remain+'冊がペナルティになります。</p></div></div><div class="penalty-big">+'+remain+'点</div><button class="btn danger full" data-drop-out>このラウンドを抜ける</button></section>';
 }
 function turnEndScreen(){
   const e=state.lastEvent||{};
@@ -374,27 +363,54 @@ function commitPlace(level,x){
   const key=state.selectedSubject,i=state.currentPlayer,d=subject(key);
   const legal=legalPositionsForSubject(key).some(p=>p.level===level&&p.x===x);
   if(!legal||!state.hands[i][key])return;
-  setCard(level,x,key);state.hands[i][key]--;state.movesMade++;state.selectedSubject=null;state.pendingPlace=null;
-  let title=d.label+'を置きました！',detail='タワーが1冊高くなりました。',icon='📚';
+
+  setCard(level,x,key);
+  state.hands[i][key]--;
+  state.movesMade++;
+  state.selectedSubject=null;
+  state.pendingPlace=null;
+
   if(handTotal(i)===0){
     const returned=Math.min(2,state.penalties[i]);
-    state.penalties[i]-=returned;state.active[i]=false;
+    state.penalties[i]-=returned;
+    state.active[i]=false;
     state.roundOutcomes[i]={kind:'clear',returned,delta:-returned};
-    title='手札を全部出した！';detail=returned?'ペナルティを'+returned+'点減らしました。':'手札クリア！ ペナルティはありません。';icon='✨';
   }
-  state.lastEvent={title,detail,icon};go('turnEnd',{push:false});
+
+  const next=nextActiveFrom(i);
+  if(next<0){
+    go('roundResult',{push:false});
+    return;
+  }
+  state.currentPlayer=next;
+  state.lastEvent=null;
+  go('pass',{push:false});
 }
 function dropOut(){
   const i=state.currentPlayer,remain=handTotal(i);
-  state.penalties[i]+=remain;state.active[i]=false;
+  state.penalties[i]+=remain;
+  state.active[i]=false;
   state.roundOutcomes[i]={kind:'stuck',remaining:remain,delta:remain};
-  state.lastEvent={title:'このラウンドはここまで',detail:'残り'+remain+'冊で +'+remain+'点のペナルティ。',icon:'📕'};
-  go('turnEnd',{push:false});
+
+  const next=nextActiveFrom(i);
+  if(next<0){
+    go('roundResult',{push:false});
+    return;
+  }
+  state.currentPlayer=next;
+  state.selectedSubject=null;
+  state.pendingPlace=null;
+  state.lastEvent=null;
+  go('pass',{push:false});
 }
 function continueTurn(){
   const next=nextActiveFrom(state.currentPlayer);
   if(next<0){go('roundResult',{push:false});return}
-  state.currentPlayer=next;state.selectedSubject=null;state.pendingPlace=null;state.lastEvent=null;go('pass',{push:false});
+  state.currentPlayer=next;
+  state.selectedSubject=null;
+  state.pendingPlace=null;
+  state.lastEvent=null;
+  go('pass',{push:false});
 }
 function nextRound(){
   if(state.round+1>=state.totalRounds){state.gameStarted=false;state.screen='final';render();return}
