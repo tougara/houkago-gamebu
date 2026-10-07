@@ -657,3 +657,123 @@ img{max-width:100%;display:block}
     height:68px !important;
   }
 }
+
+
+/* Rules screen: fit every how-to page in one viewport without scrolling */
+.screen-rules{
+  min-height:100dvh;
+  height:100dvh;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
+  align-content:stretch;
+  gap:7px;
+  padding-top:10px;
+  padding-bottom:10px;
+}
+.screen-rules .top-nav{
+  margin:0;
+}
+.screen-rules .nav-pill{
+  padding:8px 12px;
+  min-height:40px;
+}
+.screen-rules .screen-heading{
+  margin:2px 0 0;
+}
+.screen-rules .screen-heading h1{
+  font-size:clamp(27px,4.7dvh,36px);
+  margin-bottom:2px;
+  line-height:1.08;
+}
+.screen-rules .screen-heading p{
+  font-size:clamp(13px,2.15dvh,17px);
+  line-height:1.25;
+}
+.screen-rules .rule-progress{
+  margin:0;
+  font-size:clamp(14px,2.1dvh,18px);
+  line-height:1.2;
+}
+.screen-rules .rule-card{
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:minmax(105px,1fr) auto auto;
+  align-content:stretch;
+  gap:7px;
+  margin:0;
+  padding:11px 13px;
+}
+.screen-rules .rule-visual{
+  min-height:0;
+  height:100%;
+  max-height:none;
+  margin:0;
+  padding:8px 10px;
+  border-radius:17px;
+}
+.screen-rules .rule-card h2{
+  margin:0;
+  font-size:clamp(21px,3.1dvh,28px);
+  line-height:1.22;
+}
+.screen-rules .rule-card p{
+  margin:0;
+  font-size:clamp(12px,1.9dvh,16px);
+  line-height:1.45;
+}
+.screen-rules > .grid2{
+  gap:8px;
+}
+.screen-rules > .grid2 .btn{
+  min-height:46px;
+  padding:9px 12px;
+}
+.screen-rules .rule-visual .mini-books img{
+  width:clamp(38px,7.4dvh,52px);
+  height:clamp(38px,7.4dvh,52px);
+}
+.screen-rules .rule-base-row img{
+  width:clamp(38px,7.4dvh,52px);
+  height:clamp(38px,7.4dvh,52px);
+}
+.screen-rules .rule-upper-book{
+  width:clamp(54px,9.5dvh,68px) !important;
+  height:clamp(54px,9.5dvh,68px) !important;
+}
+@media(max-height:700px){
+  .screen-rules{
+    gap:5px;
+    padding-top:7px;
+    padding-bottom:7px;
+  }
+  .screen-rules .nav-pill{
+    min-height:36px;
+    padding:6px 10px;
+    font-size:12px;
+  }
+  .screen-rules .screen-heading h1{
+    font-size:26px;
+  }
+  .screen-rules .screen-heading p{
+    font-size:13px;
+  }
+  .screen-rules .rule-card{
+    grid-template-rows:minmax(90px,1fr) auto auto;
+    gap:5px;
+    padding:9px 11px;
+  }
+  .screen-rules .rule-card h2{
+    font-size:20px;
+  }
+  .screen-rules .rule-card p{
+    font-size:12px;
+    line-height:1.38;
+  }
+  .screen-rules > .grid2 .btn{
+    min-height:42px;
+    padding:7px 10px;
+  }
+}
