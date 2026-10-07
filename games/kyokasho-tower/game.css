@@ -371,7 +371,7 @@ img{max-width:100%;display:block}
 .tower-slot span{
   display:block;
   line-height:1;
-  transform:translateY(-2px);
+  transform:translateY(-3px);
 }
 .first-placement{
   min-height:150px;
