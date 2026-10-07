@@ -122,8 +122,27 @@ img{max-width:100%;display:block}
 .game-card-art-nise{background:url("../nise_transfer_student_background_9x16.png") center 46%/cover no-repeat}
 .game-card-art-nise::before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.10),rgba(255,255,255,.06) 55%,rgba(255,255,255,.18));z-index:1}
 .game-card-body{padding:22px}
-.game-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.game-meta span{font-size:12px;font-weight:800;background:#eef6ff;color:#185c9e;border-radius:999px;padding:6px 10px}
+.game-meta{
+  display:flex;
+  gap:clamp(5px,1.5vw,8px);
+  flex-wrap:nowrap;
+  align-items:center;
+  margin-bottom:12px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.game-meta::-webkit-scrollbar{display:none}
+.game-meta span{
+  flex:0 0 auto;
+  white-space:nowrap;
+  font-size:clamp(10px,2.7vw,12px);
+  font-weight:800;
+  background:#eef6ff;
+  color:#185c9e;
+  border-radius:999px;
+  padding:6px clamp(7px,2vw,10px);
+}
 .game-card h2,.game-card h3{font-size:26px;margin:0 0 9px}
 .game-card p{color:var(--muted);line-height:1.7;margin:0 0 20px}
 .play-button{width:100%;border-color:#fff;background:linear-gradient(180deg,#47a8ff,#157cde);color:#fff;box-shadow:0 6px 0 #0759ac,0 12px 24px rgba(15,87,162,.2)}
