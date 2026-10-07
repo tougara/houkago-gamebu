@@ -287,7 +287,7 @@ function go(screen,{push=true,preserveScroll=false,scrollY=window.scrollY}={}){
 }
 function doBackOne(){
   if(state.gameStarted){
-    if(state.screen==='hand'||state.screen==='board'||state.screen==='noMove'){state.selectedSubject=null;state.screen='pass';render();return}
+    if(state.screen==='hand'||state.screen==='board'||state.screen==='noMove'){state.selectedSubject=null;state.pendingPlace=null;state.screen='pass';render();return}
     if(state.screen==='pass'){
       const untouched=state.movesMade===0&&state.currentPlayer===state.startPlayer&&state.roundOutcomes.every(x=>x===null);
       if(untouched){state.screen='roundIntro';render()}
@@ -359,6 +359,7 @@ function pickSubject(key){
   state.selectedSubject=state.selectedSubject===key?null:key;
   state.pendingPlace=null;
   render({preserveScroll:true,scrollY:window.scrollY});
+  if(state.selectedSubject)requestAnimationFrame(()=>document.querySelector('.board-card')?.scrollIntoView({behavior:'smooth',block:'start'}));
 }
 function showPlaceConfirm(level,x){
   const key=state.selectedSubject;
@@ -367,6 +368,7 @@ function showPlaceConfirm(level,x){
   if(!legal)return;
   state.pendingPlace={level,x};
   render({preserveScroll:true,scrollY:window.scrollY});
+  requestAnimationFrame(()=>document.querySelector('.inline-place-confirm')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
 }
 function commitPlace(level,x){
   const key=state.selectedSubject,i=state.currentPlayer,d=subject(key);
