@@ -1123,3 +1123,70 @@ img{max-width:100%;display:block}
   width:calc(var(--tile) - 6px);
   height:calc(var(--tile) - 6px);
 }
+
+
+/* Hand selection state stays inside the hand card to prevent layout shift */
+.screen-hand .hand-private .private-head{
+  min-height:86px;
+  display:grid;
+  align-content:start;
+  gap:6px;
+}
+.screen-hand .private-title{
+  margin-bottom:0;
+}
+.hand-state-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+}
+.hand-state-text{
+  margin:0;
+  color:#c9d3e0;
+  font-size:clamp(10px,2.7vw,13px);
+  font-weight:800;
+  line-height:1.25;
+  text-align:center;
+}
+.hand-state-row .hand-state-text{
+  text-align:left;
+}
+.hand-clear{
+  border:0;
+  border-radius:10px;
+  background:rgba(255,255,255,.12);
+  color:#eef3f8;
+  min-height:32px;
+  padding:5px 9px;
+  font-weight:950;
+  font-size:11px;
+}
+.hand-confirm-inline{
+  min-height:34px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+.hand-confirm-inline .btn{
+  min-height:34px;
+  padding:5px 7px;
+  font-size:12px;
+  border-radius:11px;
+  box-shadow:none;
+}
+.screen-hand > .inline-selection-status,
+.screen-hand > .inline-place-confirm{
+  display:none !important;
+}
+@media(max-height:760px){
+  .screen-hand .hand-private .private-head{
+    min-height:80px;
+    gap:5px;
+  }
+  .hand-confirm-inline .btn{
+    min-height:32px;
+    font-size:11px;
+  }
+}
