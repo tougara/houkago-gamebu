@@ -234,23 +234,21 @@ function passScreen(){
 }
 function inlinePlaceControls(){
   const key=state.selectedSubject;
-  if(!key)return '';
+  if(!key){
+    return '<p class="hand-state-text">教科書を選ぶと、置ける場所がタワー上で光ります。</p>';
+  }
   const d=subject(key);
   if(!state.pendingPlace){
-    return '<section class="inline-selection-status"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>'+d.label+'を選択中</strong><span>上のタワーで光っている「＋」を押してね</span></div><button type="button" class="inline-clear" data-clear-subject>やめる</button></section>';
+    return '<div class="hand-state-row"><p class="hand-state-text">'+d.label+'を選択中。光っている「＋」を押して置く場所を選んでね。</p><button type="button" class="hand-clear" data-clear-subject>やめる</button></div>';
   }
-  return '<section class="inline-place-confirm"><div class="inline-place-title"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>ここに置きますか？</strong><span>'+d.label+'を「ここ」の位置に置きます。</span></div></div><div class="inline-place-actions"><button type="button" class="btn secondary" data-place-cancel>場所を選び直す</button><button type="button" class="btn yellow" data-place-ok>ここに置く</button></div></section>';
+  return '<div class="hand-confirm-inline"><button type="button" class="btn secondary" data-place-cancel>場所を選び直す</button><button type="button" class="btn yellow" data-place-ok>ここに置く</button></div>';
 }
 function handScreen(){
   const i=state.currentPlayer,p=state.players[i],hand=state.hands[i];
   const selectedKey=state.selectedSubject;
-  const help=selectedKey
-    ? (state.pendingPlace?'置き場所を確認して、この画面で決定してね。':'選んだ教科書を置ける場所が、タワー上で光っています。')
-    : '教科書を選ぶと、置ける場所がタワー上で光ります。';
   return topNav()+playStatus(esc(p.name)+'さんの手札')+
     renderBoard({interactive:!!selectedKey,subjectKey:selectedKey,previewPlace:state.pendingPlace})+
-    inlinePlaceControls()+
-    '<section class="card hand-private"><div class="private-head"><div class="private-title"><div class="avatar hand-avatar">'+esc(p.icon)+'</div><h2>あなたの手札</h2></div><p>'+help+'</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;const selected=selectedKey===s.key;return '<button class="hand-book '+(playable?'playable ':'')+(selected?'selected':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+' aria-pressed="'+(selected?'true':'false')+'"><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'なし':(selected?'選択中':(playable?'置ける':'置けない')))+'</span></button>'}).join('')+'</div></section>';
+    '<section class="card hand-private"><div class="private-head"><div class="private-title"><div class="avatar hand-avatar">'+esc(p.icon)+'</div><h2>あなたの手札</h2></div>'+inlinePlaceControls()+'</div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;const selected=selectedKey===s.key;return '<button class="hand-book '+(playable?'playable ':'')+(selected?'selected':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+' aria-pressed="'+(selected?'true':'false')+'"><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'なし':(selected?'選択中':(playable?'置ける':'置けない')))+'</span></button>'}).join('')+'</div></section>';
 }
 function boardScreen(){
   const d=subject(state.selectedSubject);
