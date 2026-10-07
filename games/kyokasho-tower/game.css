@@ -777,3 +777,175 @@ img{max-width:100%;display:block}
     padding:7px 10px;
   }
 }
+
+
+/* Hand screen rebalance: large pyramid area + compact hand panel */
+.screen-hand{
+  --tile:clamp(30px,8.3vw,44px);
+}
+.screen-hand .board-card{
+  min-height:44dvh;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  padding:11px 7px 12px;
+  margin-bottom:8px;
+}
+.screen-hand .board-meta{
+  padding:0 8px 6px;
+}
+.screen-hand .tower-board{
+  min-height:0;
+  height:100%;
+  align-content:center;
+  padding:4px 0 6px;
+}
+.screen-hand .first-placement{
+  min-height:0;
+  height:100%;
+  align-content:center;
+  padding-bottom:0;
+}
+.screen-hand .hand-private{
+  padding:10px 8px 9px;
+  margin-bottom:8px;
+  border-radius:20px;
+}
+.screen-hand .hand-private .private-head{
+  margin-bottom:7px;
+  text-align:left;
+}
+.screen-hand .private-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  margin-bottom:3px;
+}
+.screen-hand .hand-avatar{
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+  margin:0;
+  font-size:25px;
+  border-width:2px;
+}
+.screen-hand .private-head h2{
+  margin:0;
+  font-size:clamp(23px,6vw,30px);
+  line-height:1.1;
+}
+.screen-hand .private-head p{
+  margin:0;
+  text-align:center;
+  font-size:clamp(11px,3vw,14px);
+  line-height:1.35;
+}
+.screen-hand .hand-grid{
+  gap:4px;
+}
+.screen-hand .hand-book{
+  min-height:96px;
+  height:96px;
+  padding:4px 1px;
+  gap:0;
+  border-radius:12px;
+  grid-template-areas:
+    "img"
+    "name"
+    "count"
+    "status";
+  align-content:center;
+}
+.screen-hand .hand-book img{
+  width:clamp(34px,9vw,44px);
+  height:clamp(34px,9vw,44px);
+}
+.screen-hand .hand-book strong{
+  font-size:clamp(10px,2.9vw,13px);
+  line-height:1.05;
+}
+.screen-hand .hand-book b{
+  font-size:clamp(14px,3.8vw,17px);
+  line-height:1.05;
+}
+.screen-hand .hand-book span{
+  font-size:clamp(8px,2.2vw,10px);
+  line-height:1;
+  margin-top:1px;
+}
+.screen-hand .inline-selection-status,
+.screen-hand .inline-place-confirm{
+  margin:0 0 8px;
+}
+.screen-hand .inline-selection-status{
+  min-height:62px;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:7px;
+  padding:7px 8px;
+}
+.screen-hand .inline-selection-status img,
+.screen-hand .inline-place-title img{
+  width:40px;
+  height:40px;
+}
+.screen-hand .inline-selection-status strong,
+.screen-hand .inline-place-title strong{
+  font-size:14px;
+}
+.screen-hand .inline-selection-status span,
+.screen-hand .inline-place-title span{
+  font-size:10px;
+  line-height:1.3;
+}
+.screen-hand .inline-clear{
+  min-height:34px;
+  padding:6px 8px;
+}
+.screen-hand .inline-place-confirm{
+  padding:8px;
+}
+.screen-hand .inline-place-title{
+  grid-template-columns:42px minmax(0,1fr);
+  gap:7px;
+  margin-bottom:7px;
+}
+.screen-hand .inline-place-actions .btn{
+  min-height:40px;
+  padding:7px 7px;
+}
+@media(max-height:760px){
+  .screen-hand .board-card{
+    min-height:40dvh;
+  }
+  .screen-hand .hand-book{
+    min-height:88px;
+    height:88px;
+  }
+  .screen-hand .hand-avatar{
+    width:40px;
+    height:40px;
+    flex-basis:40px;
+    font-size:23px;
+  }
+}
+@media(max-width:350px){
+  .screen-hand .hand-grid{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  .screen-hand .hand-book{
+    min-height:86px;
+    height:86px;
+    grid-template-columns:1fr;
+    grid-template-areas:"img" "name" "count" "status";
+    justify-items:center;
+    text-align:center;
+    padding:3px 1px;
+  }
+  .screen-hand .hand-book img{
+    width:32px;
+    height:32px;
+  }
+  .screen-hand .hand-book strong{font-size:9px}
+  .screen-hand .hand-book b{font-size:13px}
+  .screen-hand .hand-book span{font-size:7px}
+}
