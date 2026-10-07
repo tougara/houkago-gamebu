@@ -15,13 +15,26 @@ const state={
   playerCount:4,players:[],penalties:[],
   round:0,totalRounds:4,startPlayer:0,currentPlayer:0,
   hands:[],board:new Map(),active:[],roundOutcomes:[],movesMade:0,
-  selectedSubject:null,lastEvent:null,rulePage:0
+  selectedSubject:null,pendingPlace:null,lastEvent:null,rulePage:0
 };
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function clampPlayers(n){n=Number(n)||4;return Math.max(3,Math.min(6,Math.round(n)))}
+const PLAYER_COUNT_KEY='houkago_kyokasho_tower_player_count_v1';
+function clampPlayers(n){n=Number(n)||4;return Math.max(2,Math.min(6,Math.round(n)))}
+function loadTowerPlayerCount(fallback=4){
+  try{
+    const saved=localStorage.getItem(PLAYER_COUNT_KEY);
+    if(saved!==null)return clampPlayers(saved);
+  }catch(e){}
+  return clampPlayers(fallback);
+}
+function saveTowerPlayerCount(n){
+  const count=clampPlayers(n);
+  try{localStorage.setItem(PLAYER_COUNT_KEY,String(count))}catch(e){}
+  return count;
+}
 function loadPlayers(){
   const d=playersApi?.load?.();
-  state.playerCount=clampPlayers(d?.activeCount||4);
+  state.playerCount=loadTowerPlayerCount(d?.activeCount||4);
   if(d)state.players=d.players.slice(0,state.playerCount).map(x=>({...x}));
   else state.players=Array.from({length:state.playerCount},(_,i)=>({name:'プレイヤー'+(i+1),icon:'🙂'}));
   state.totalRounds=state.playerCount;
@@ -76,15 +89,21 @@ function currentScoresStrip(){
 function renderBoard(opts={}){
   const key=opts.subjectKey||null;
   const interactive=!!opts.interactive;
+  const preview=opts.previewPlace||null;
   const b=bottomBounds();
   const legal=key?legalPositionsForSubject(key):[];
   const legalSet=new Set(legal.map(p=>boardKey(p.level,p.x)));
 
   if(!b.len){
-    const first=interactive&&key
-      ? '<div class="tower-row"><div class="tower-cell"><button class="tower-slot first-slot" data-place-level="0" data-place-x="0" aria-label="最初の1冊をここに置く"><span aria-hidden="true">＋</span></button></div></div>'
-      : '<div class="board-empty">まだ教科書はありません。<br>最初の1冊を置こう。</div>';
-    return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 0 / 8冊</span></div><div class="tower-board '+(interactive?'first-placement':'')+'">'+first+'</div></section>';
+    let first='<div class="board-empty">まだ教科書はありません。<br>最初の1冊を置こう。</div>';
+    if(interactive&&key){
+      const d=subject(key);
+      const isPreview=preview&&preview.level===0&&preview.x===0;
+      first=isPreview
+        ? '<div class="tower-row"><div class="tower-cell tower-preview-choice"><span class="inline-preview-here">ここ</span><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div></div>'
+        : '<div class="tower-row"><div class="tower-cell"><button class="tower-slot first-slot" data-place-level="0" data-place-x="0" aria-label="最初の1冊をここに置く"><span aria-hidden="true">＋</span></button></div></div>';
+    }
+    return '<section class="card board-card '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+(key?subject(key).label+'を置ける場所':'教科書タワー')+'</span><span>土台 0 / 8冊</span></div><div class="tower-board '+(interactive?'first-placement':'')+'">'+first+'</div></section>';
   }
 
   const fixed=b.len===8;
@@ -104,9 +123,13 @@ function renderBoard(opts={}){
     for(let x=rowMin;x<=rowMax;x++){
       const card=getCard(level,x);
       const canPlace=interactive&&legalSet.has(boardKey(level,x));
+      const isPreview=interactive&&key&&preview&&preview.level===level&&preview.x===x;
       if(card){
         const d=subject(card);
         cells.push('<div class="tower-cell"><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
+      }else if(isPreview){
+        const d=subject(key);
+        cells.push('<div class="tower-cell tower-preview-choice"><span class="inline-preview-here">ここ</span><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
       }else if(canPlace){
         cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+x+'" aria-label="ここに置く"><span aria-hidden="true">＋</span></button></div>');
       }else if(level>0||fixed){
@@ -118,7 +141,7 @@ function renderBoard(opts={}){
     rows.push('<div class="tower-row">'+cells.join('')+'</div>');
   }
 
-  return '<section class="card board-card"><div class="board-meta"><span>教科書タワー</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board '+(fixed?'tower-fixed':'tower-growing')+'">'+rows.join('')+'</div></section>';
+  return '<section class="card board-card '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+(key?subject(key).label+'を置ける場所':'教科書タワー')+'</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board '+(fixed?'tower-fixed':'tower-growing')+'">'+rows.join('')+'</div></section>';
 }
 function renderPlacementPreview(level,x,key){
   const preview=new Map(state.board);
@@ -154,7 +177,7 @@ function titleScreen(){
 }
 function setupScreen(){
   loadPlayers();
-  return topNav()+heading('ゲーム設定','3〜6人で教科書タワーを作ろう')+
+  return topNav()+heading('ゲーム設定','2〜6人で教科書タワーを作ろう')+
     '<section class="card"><div class="section-row"><div><h2>参加メンバー</h2><p>'+state.playerCount+'人で遊びます</p></div><button class="small-btn" data-edit-members>変更</button></div><div class="member-chips">'+state.players.map(memberChip).join('')+'</div></section>'+
     '<section class="card"><h2 style="margin:0 0 7px">ラウンド数</h2><p class="setup-note">全員が1回ずつスタートできるよう、人数と同じ回数で遊びます。</p><span class="round-badge">全'+state.playerCount+'ラウンド</span></section>'+
     '<button class="btn yellow full" data-start-game>ゲームをはじめる</button>';
@@ -162,8 +185,8 @@ function setupScreen(){
 function membersScreen(){
   loadPlayers();
   const used=state.players.map(p=>p.icon);
-  return topNav()+heading('参加メンバー','名前・アイコン・人数は放課後ゲーム部で共通')+
-    '<section class="card"><h2 style="margin-top:0">何人で遊ぶ？</h2><div class="grid2">'+[3,4,5,6].map(n=>'<button class="btn '+(state.playerCount===n?'':'secondary')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
+  return topNav()+heading('参加メンバー','名前・アイコンは放課後ゲーム部で共通')+
+    '<section class="card"><h2 style="margin-top:0">何人で遊ぶ？</h2><div class="grid2">'+[2,3,4,5,6].map(n=>'<button class="btn '+(state.playerCount===n?'':'secondary')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
     '<div class="stack">'+state.players.map((p,i)=>'<section class="card player-card"><div class="player-line"><div class="avatar">'+esc(p.icon)+'</div><input data-member-name="'+i+'" maxlength="12" value="'+esc(p.name)+'" aria-label="プレイヤー'+(i+1)+'の名前"></div><div class="icon-pick">'+(playersApi?.ICONS||[]).map(ic=>'<button class="icon-btn '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+ic+'" '+(p.icon!==ic&&used.includes(ic)?'disabled':'')+'>'+ic+'</button>').join('')+'</div></section>').join('')+'</div>'+
     '<button class="btn full" data-members-done>登録をおわる</button>';
 }
@@ -199,11 +222,25 @@ function passScreen(){
   const p=state.players[state.currentPlayer];
   return topNav()+heading((state.round+1)+' / '+state.totalRounds+'ラウンド','次の人にスマホを渡そう')+currentScoresStrip()+boardSummary()+'<section class="privacy-card"><div><div class="avatar large">'+esc(p.icon)+'</div><h2>'+esc(p.name)+'さんに<br>スマホを渡してください</h2><p>手札は本人だけが見てね。</p><button class="btn yellow hold-btn" data-hold-hand><span>長押しして手札を見る</span><i></i></button></div></section>';
 }
+function inlinePlaceControls(){
+  const key=state.selectedSubject;
+  if(!key)return '';
+  const d=subject(key);
+  if(!state.pendingPlace){
+    return '<section class="inline-selection-status"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>'+d.label+'を選択中</strong><span>上のタワーで光っている「＋」を押してね</span></div><button type="button" class="inline-clear" data-clear-subject>やめる</button></section>';
+  }
+  return '<section class="inline-place-confirm"><div class="inline-place-title"><img src="'+d.image+'" alt="'+d.label+'"><div><strong>ここに置きますか？</strong><span>'+d.label+'を「ここ」の位置に置きます。</span></div></div><div class="inline-place-actions"><button type="button" class="btn secondary" data-place-cancel>場所を選び直す</button><button type="button" class="btn yellow" data-place-ok>ここに置く</button></div></section>';
+}
 function handScreen(){
   const i=state.currentPlayer,p=state.players[i],hand=state.hands[i];
+  const selectedKey=state.selectedSubject;
+  const help=selectedKey
+    ? (state.pendingPlace?'置き場所を確認して、この画面で決定してね。':'選んだ教科書を置ける場所が、タワー上で光っています。')
+    : '教科書を選ぶと、置ける場所がタワー上で光ります。';
   return topNav()+heading(esc(p.name)+'さんの手札','本人だけでタワーと手札を確認してね')+
-    renderBoard()+
-    '<section class="card hand-private"><div class="private-head"><div class="avatar large">'+esc(p.icon)+'</div><h2>あなたの手札</h2><p>教科書を選ぶと、この手札画面はすぐ隠れます。</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;return '<button class="hand-book '+(playable?'playable':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+'><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'なし':(playable?'置ける':'置けない'))+'</span></button>'}).join('')+'</div></section>';
+    renderBoard({interactive:!!selectedKey,subjectKey:selectedKey,previewPlace:state.pendingPlace})+
+    inlinePlaceControls()+
+    '<section class="card hand-private"><div class="private-head"><div class="avatar large">'+esc(p.icon)+'</div><h2>あなたの手札</h2><p>'+help+'</p></div><div class="hand-grid">'+SUBJECTS.map(s=>{const n=hand[s.key]||0;const playable=n>0&&legalPositionsForSubject(s.key).length>0;const selected=selectedKey===s.key;return '<button class="hand-book '+(playable?'playable ':'')+(selected?'selected':'')+'" data-pick-subject="'+s.key+'" '+(!playable?'disabled':'')+' aria-pressed="'+(selected?'true':'false')+'"><img src="'+s.image+'" alt="'+s.label+'"><strong>'+s.label+'</strong><b>×'+n+'</b><span>'+(n===0?'なし':(selected?'選択中':(playable?'置ける':'置けない')))+'</span></button>'}).join('')+'</div></section>';
 }
 function boardScreen(){
   const d=subject(state.selectedSubject);
@@ -275,7 +312,7 @@ function showNavConfirm(type){
   wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove()});
 }
 function editMemberCount(n){
-  playersApi?.setActiveCount?.(n);
+  saveTowerPlayerCount(n);
   loadPlayers();
   render({preserveScroll:true,scrollY:window.scrollY});
 }
@@ -293,7 +330,7 @@ function startRound(){
   state.active=Array(state.playerCount).fill(true);
   state.roundOutcomes=Array(state.playerCount).fill(null);
   state.movesMade=0;
-  state.selectedSubject=null;state.lastEvent=null;
+  state.selectedSubject=null;state.pendingPlace=null;state.lastEvent=null;
   state.hands=Array.from({length:state.playerCount},()=>makeEmptyHand());
   const deck=makeDeck();
   if(state.playerCount===5){
@@ -303,7 +340,7 @@ function startRound(){
   deck.forEach((key,idx)=>{const p=(state.startPlayer+idx)%state.playerCount;state.hands[p][key]++});
   state.screen='roundIntro';render();
 }
-function beginRound(){state.currentPlayer=state.startPlayer;state.selectedSubject=null;go('pass',{push:false})}
+function beginRound(){state.currentPlayer=state.startPlayer;state.selectedSubject=null;state.pendingPlace=null;go('pass',{push:false})}
 function bindHold(btn,fn){
   if(!btn)return;let timer=null;
   const start=()=>{btn.classList.add('holding');timer=setTimeout(()=>{timer=null;btn.classList.remove('holding');fn()},LONG_PRESS_MS)};
@@ -312,31 +349,30 @@ function bindHold(btn,fn){
 }
 function openHand(){
   state.selectedSubject=null;
+  state.pendingPlace=null;
   if(playerHasMove(state.currentPlayer))go('hand',{push:false});
   else go('noMove',{push:false});
 }
 function pickSubject(key){
   const hand=state.hands[state.currentPlayer];
   if(!hand||!hand[key]||!legalPositionsForSubject(key).length)return;
-  state.selectedSubject=key;go('board',{push:false});
+  state.selectedSubject=state.selectedSubject===key?null:key;
+  state.pendingPlace=null;
+  render({preserveScroll:true,scrollY:window.scrollY});
 }
 function showPlaceConfirm(level,x){
-  const d=subject(state.selectedSubject);
-  const wrap=document.createElement('div');wrap.className='modal-backdrop place-confirm';
-  wrap.innerHTML='<section class="modal place-confirm-modal">'+
-    '<div class="place-preview-pane">'+renderPlacementPreview(level,x,d.key)+'</div>'+
-    '<div class="place-confirm-sheet"><div class="place-confirm-title"><img src="'+d.image+'" alt="'+d.label+'"><div><h2>ここに置きますか？</h2><p>'+d.label+'を光っている場所に置きます。</p></div></div><div class="modal-actions"><button class="btn secondary" data-place-cancel>選び直す</button><button class="btn" data-place-ok>ここに置く</button></div></div>'+
-  '</section>';
-  document.body.appendChild(wrap);
-  wrap.querySelector('[data-place-cancel]').addEventListener('click',()=>wrap.remove());
-  wrap.querySelector('[data-place-ok]').addEventListener('click',()=>{wrap.remove();commitPlace(level,x)});
-  wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove()});
+  const key=state.selectedSubject;
+  if(!key)return;
+  const legal=legalPositionsForSubject(key).some(p=>p.level===level&&p.x===x);
+  if(!legal)return;
+  state.pendingPlace={level,x};
+  render({preserveScroll:true,scrollY:window.scrollY});
 }
 function commitPlace(level,x){
   const key=state.selectedSubject,i=state.currentPlayer,d=subject(key);
   const legal=legalPositionsForSubject(key).some(p=>p.level===level&&p.x===x);
   if(!legal||!state.hands[i][key])return;
-  setCard(level,x,key);state.hands[i][key]--;state.movesMade++;state.selectedSubject=null;
+  setCard(level,x,key);state.hands[i][key]--;state.movesMade++;state.selectedSubject=null;state.pendingPlace=null;
   let title=d.label+'を置きました！',detail='タワーが1冊高くなりました。',icon='📚';
   if(handTotal(i)===0){
     const returned=Math.min(2,state.penalties[i]);
@@ -356,7 +392,7 @@ function dropOut(){
 function continueTurn(){
   const next=nextActiveFrom(state.currentPlayer);
   if(next<0){go('roundResult',{push:false});return}
-  state.currentPlayer=next;state.selectedSubject=null;state.lastEvent=null;go('pass',{push:false});
+  state.currentPlayer=next;state.selectedSubject=null;state.pendingPlace=null;state.lastEvent=null;go('pass',{push:false});
 }
 function nextRound(){
   if(state.round+1>=state.totalRounds){state.gameStarted=false;state.screen='final';render();return}
@@ -370,7 +406,7 @@ function bind(){
   document.querySelector('[data-rules]')?.addEventListener('click',()=>{state.rulePage=0;go('rules')});
   document.querySelector('[data-books]')?.addEventListener('click',()=>go('books'));
   document.querySelector('[data-edit-members]')?.addEventListener('click',()=>go('members'));
-  document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;playersApi?.setActiveCount?.(Number(b.dataset.memberCount));loadPlayers();render({preserveScroll:true,scrollY:y})}));
+  document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;saveTowerPlayerCount(Number(b.dataset.memberCount));loadPlayers();render({preserveScroll:true,scrollY:y})}));
   document.querySelectorAll('[data-member-name]').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.memberName);updateMember(i,{name:inp.value||('プレイヤー'+(i+1))})}));
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;updateMember(Number(b.dataset.memberIcon),{icon:b.dataset.icon});render({preserveScroll:true,scrollY:y})}));
   document.querySelector('[data-members-done]')?.addEventListener('click',()=>{loadPlayers();go('setup')});
@@ -382,7 +418,10 @@ function bind(){
   bindHold(document.querySelector('[data-hold-hand]'),openHand);
   document.querySelectorAll('[data-pick-subject]').forEach(b=>b.addEventListener('click',()=>pickSubject(b.dataset.pickSubject)));
   document.querySelectorAll('[data-place-level]').forEach(b=>b.addEventListener('click',()=>showPlaceConfirm(Number(b.dataset.placeLevel),Number(b.dataset.placeX))));
-  document.querySelector('[data-reselect]')?.addEventListener('click',()=>{state.selectedSubject=null;go('pass',{push:false})});
+  document.querySelector('[data-place-cancel]')?.addEventListener('click',()=>{state.pendingPlace=null;render({preserveScroll:true,scrollY:window.scrollY})});
+  document.querySelector('[data-place-ok]')?.addEventListener('click',()=>{const p=state.pendingPlace;if(p)commitPlace(p.level,p.x)});
+  document.querySelector('[data-clear-subject]')?.addEventListener('click',()=>{state.selectedSubject=null;state.pendingPlace=null;render({preserveScroll:true,scrollY:window.scrollY})});
+  document.querySelector('[data-reselect]')?.addEventListener('click',()=>{state.selectedSubject=null;state.pendingPlace=null;go('hand',{push:false})});
   document.querySelector('[data-drop-out]')?.addEventListener('click',dropOut);
   document.querySelector('[data-continue-turn]')?.addEventListener('click',continueTurn);
   document.querySelector('[data-next-round]')?.addEventListener('click',nextRound);
