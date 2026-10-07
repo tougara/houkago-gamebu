@@ -605,3 +605,55 @@ img{max-width:100%;display:block}
     font-size:12px;
   }
 }
+
+
+/* Rule visual fixes: keep arrows inline and textbook sizes equal */
+.rule-base-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  flex-wrap:nowrap;
+  white-space:nowrap;
+}
+.rule-base-row img{
+  flex:0 0 auto;
+  width:clamp(42px,10.5vw,58px);
+  height:clamp(42px,10.5vw,58px);
+  object-fit:contain;
+}
+.rule-arrow{
+  flex:0 0 auto;
+  display:block;
+  font-size:clamp(25px,7vw,34px);
+  font-weight:1000;
+  line-height:1;
+  color:#1b254b;
+}
+.rule-upper-visual{
+  display:grid;
+  justify-items:center;
+  gap:6px;
+}
+.rule-upper-bottom{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+}
+.rule-upper-book{
+  width:76px !important;
+  height:76px !important;
+  object-fit:contain;
+}
+@media(max-width:520px){
+  .rule-base-row{gap:3px}
+  .rule-base-row img{
+    width:clamp(40px,10.2vw,48px);
+    height:clamp(40px,10.2vw,48px);
+  }
+  .rule-upper-book{
+    width:68px !important;
+    height:68px !important;
+  }
+}
