@@ -86,6 +86,7 @@ function nextActiveFrom(i){
 function currentScoresStrip(){
   return '<div class="score-strip">'+state.players.map((p,i)=>'<span class="score-chip">'+esc(p.icon)+' '+esc(p.name)+' '+(state.penalties[i]||0)+'点</span>').join('')+'</div>';
 }
+
 function renderBoard(opts={}){
   const key=opts.subjectKey||null;
   const interactive=!!opts.interactive;
@@ -94,19 +95,40 @@ function renderBoard(opts={}){
   const legal=key?legalPositionsForSubject(key):[];
   const legalSet=new Set(legal.map(p=>boardKey(p.level,p.x)));
 
-  // Until the base reaches 8 books, keep the currently-built segment centered
-  // inside the final 8-slot base. When it reaches 8, logical and display x align.
-  const displayOffset=b.len===8?(-b.min):(b.len?Math.floor((8-b.len)/2)-b.min:3);
+  if(!b.len){
+    let first='<div class="tower-row"><div class="tower-cell"><span class="tower-frame" aria-hidden="true"></span></div></div>';
+    if(interactive&&key){
+      const d=subject(key);
+      const isPreview=preview&&preview.level===0&&preview.x===0;
+      first=isPreview
+        ? '<div class="tower-row"><div class="tower-cell tower-preview-choice"><span class="inline-preview-here">ここ</span><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div></div>'
+        : '<div class="tower-row"><div class="tower-cell"><button class="tower-slot first-slot" data-place-level="0" data-place-x="0" aria-label="最初の1冊をここに置く"><span aria-hidden="true">＋</span></button></div></div>';
+    }
+    const label=key?subject(key).label+'を置ける場所':'教科書タワー';
+    return '<section class="card board-card growing-pyramid '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+label+'</span><span>土台 0 / 8冊</span></div><div class="tower-board">'+first+'</div></section>';
+  }
+
+  const fixed=b.len===8;
+  const maxLevel=b.len-1;
   const rows=[];
 
-  for(let level=7;level>=0;level--){
+  for(let level=maxLevel;level>=0;level--){
+    let rowMin=b.min;
+    let rowMax=b.max-level;
+
+    // 土台8冊がそろうまでは、最下段だけ左右どちらにも伸ばせる。
+    if(level===0&&interactive&&!fixed){
+      rowMin=b.min-1;
+      rowMax=b.max+1;
+    }
+
+    if(rowMax<rowMin)continue;
+
     const cells=[];
-    const rowCount=8-level;
-    for(let displayX=0;displayX<rowCount;displayX++){
-      const logicalX=displayX-displayOffset;
-      const card=getCard(level,logicalX);
-      const canPlace=interactive&&legalSet.has(boardKey(level,logicalX));
-      const isPreview=interactive&&key&&preview&&preview.level===level&&preview.x===logicalX;
+    for(let x=rowMin;x<=rowMax;x++){
+      const card=getCard(level,x);
+      const canPlace=interactive&&legalSet.has(boardKey(level,x));
+      const isPreview=interactive&&key&&preview&&preview.level===level&&preview.x===x;
 
       if(card){
         const d=subject(card);
@@ -115,7 +137,7 @@ function renderBoard(opts={}){
         const d=subject(key);
         cells.push('<div class="tower-cell tower-preview-choice"><span class="inline-preview-here">ここ</span><img class="tower-book" src="'+d.image+'" alt="'+d.label+'"></div>');
       }else if(canPlace){
-        cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+logicalX+'" aria-label="ここに置く"><span aria-hidden="true">＋</span></button></div>');
+        cells.push('<div class="tower-cell"><button class="tower-slot" data-place-level="'+level+'" data-place-x="'+x+'" aria-label="ここに置く"><span aria-hidden="true">＋</span></button></div>');
       }else{
         cells.push('<div class="tower-cell"><span class="tower-frame" aria-hidden="true"></span></div>');
       }
@@ -124,7 +146,7 @@ function renderBoard(opts={}){
   }
 
   const label=key?subject(key).label+'を置ける場所':'教科書タワー';
-  return '<section class="card board-card fixed-pyramid '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+label+'</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board tower-fixed">'+rows.join('')+'</div></section>';
+  return '<section class="card board-card '+(fixed?'fixed-pyramid':'growing-pyramid')+' '+(interactive?'board-selecting':'')+'"><div class="board-meta"><span>'+label+'</span><span>土台 '+b.len+' / 8冊</span></div><div class="tower-board '+(fixed?'tower-fixed':'tower-growing')+'">'+rows.join('')+'</div></section>';
 }
 function renderPlacementPreview(level,x,key){
   const preview=new Map(state.board);
