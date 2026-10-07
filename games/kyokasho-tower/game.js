@@ -198,8 +198,8 @@ const RULES=[
 ];
 function ruleVisual(kind){
   if(kind==='goal')return '<div class="rule-visual"><div class="mini-books">'+SUBJECTS.map(s=>'<img src="'+s.image+'" alt="'+s.label+'">').join('')+'</div></div>';
-  if(kind==='base')return '<div class="rule-visual"><div class="mini-books"><span style="font-size:28px">←</span>'+SUBJECTS.slice(0,4).map(s=>'<img src="'+s.image+'" alt="">').join('')+'<span style="font-size:28px">→</span></div></div>';
-  if(kind==='upper')return '<div class="rule-visual"><div style="display:grid;justify-items:center"><img src="../../textbook_math.png" alt="算数"><div style="display:flex;gap:4px"><img style="width:72px;height:72px;object-fit:contain" src="../../textbook_japanese.png" alt="国語"><img style="width:72px;height:72px;object-fit:contain" src="../../textbook_math.png" alt="算数"></div></div></div>';
+  if(kind==='base')return '<div class="rule-visual"><div class="rule-base-row"><span class="rule-arrow">←</span>'+SUBJECTS.slice(0,4).map(s=>'<img src="'+s.image+'" alt="">').join('')+'<span class="rule-arrow">→</span></div></div>';
+  if(kind==='upper')return '<div class="rule-visual"><div class="rule-upper-visual"><img class="rule-upper-book" src="../../textbook_math.png" alt="算数"><div class="rule-upper-bottom"><img class="rule-upper-book" src="../../textbook_japanese.png" alt="国語"><img class="rule-upper-book" src="../../textbook_math.png" alt="算数"></div></div></div>';
   return '<div class="rule-visual"><div style="font-size:46px;font-weight:1000;color:#d44">+3</div><div style="font-size:22px;font-weight:950">／</div><div style="font-size:46px;font-weight:1000;color:#26925d">−2</div></div>';
 }
 function rulesScreen(){
