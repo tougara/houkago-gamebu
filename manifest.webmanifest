@@ -1,0 +1,19 @@
+{
+  "name": "放課後ゲーム部",
+  "short_name": "放課後ゲーム部",
+  "description": "スマホ1台でみんなで遊ぼう！",
+  "lang": "ja",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff7e9",
+  "theme_color": "#ffb63e",
+  "icons": [
+    {
+      "src": "/houkago_gamebu_app_icon_logo_based.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
