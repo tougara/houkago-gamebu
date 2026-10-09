@@ -99,8 +99,8 @@ function titleScreen(){
 function modeScreen(){
   return topNav()+heading('モードを選ぼう','遊び方に合わせて2つのモードから選べます')+
   '<div class="mode-grid">'+
-    '<button class="mode-card free" data-mode="free"><span class="mode-badge">勝敗なし</span><strong>みんなでジェスチャー</strong><span>全員が順番に挑戦。みんなで何問正解できるか楽しもう！</span></button>'+
-    '<button class="mode-card team" data-mode="team"><span class="mode-badge">2チーム対戦</span><strong>チームバトル</strong><span>2チームに分かれて、制限時間内の合計正解数で勝負！</span></button>'+
+    '<button class="mode-card free" data-mode="free"><div class="mode-badge-row"><span class="mode-badge">勝敗なし</span><span class="mode-players">2〜10人</span></div><strong>みんなでジェスチャー</strong><span>全員が順番に挑戦。みんなで何問正解できるか楽しもう！</span></button>'+
+    '<button class="mode-card team" data-mode="team"><div class="mode-badge-row"><span class="mode-badge">2チーム対戦</span><span class="mode-players">4〜10人</span></div><strong>チームバトル</strong><span>2チームに分かれて、制限時間内の合計正解数で勝負！</span></button>'+
   '</div>';
 }
 function membersScreen(){
