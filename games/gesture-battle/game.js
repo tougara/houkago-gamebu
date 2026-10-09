@@ -205,10 +205,12 @@ function topicScreen(){
 function playScreen(){
   const p=currentPlayer(),t=currentTeam(),q=state.currentPrompt||drawPrompt();
   state.currentPrompt=q;
-  return '<section class="play-screen">'+
-    '<div class="play-top"><div class="left">'+(t?'<span>'+teamName(t)+'</span>':'<span>みんなでジェスチャー</span>')+'<strong>'+esc(p.icon)+' '+esc(p.name)+'</strong></div><div class="timer-wrap"><span class="timer" id="timerValue">'+state.timeLeft+'</span></div><div class="right"><span>正解</span><strong><span id="turnScore">'+state.turnScore+'</span>問</strong></div></div>'+
+  const len=[...q.word].length;
+  const promptSizeClass=len>=11?' very-long':len>=7?' long':'';
+  return topNav()+'<section class="play-screen">'+
+    '<div class="play-top"><div class="left">'+(t?'<span>'+teamName(t)+'</span>':'<span>みんなでジェスチャー</span>')+'<strong>'+esc(p.icon)+' '+esc(p.name)+'</strong></div><div class="timer-wrap"><small>のこり</small><span class="timer" id="timerValue">'+state.timeLeft+'</span></div><div class="right"><span>正解</span><strong><span id="turnScore">'+state.turnScore+'</span>問</strong></div></div>'+
     scoreStrip()+
-    '<div class="prompt-stage prompt-concealed" id="promptStage"><small>ジェスチャーで伝えよう！</small><div class="prompt-word" id="promptWord">'+esc(q.word)+'</div><span class="prompt-category" id="promptCategory">'+esc(q.category)+'</span></div>'+
+    '<div class="prompt-stage prompt-concealed" id="promptStage"><small>ジェスチャーで伝えよう！</small><div class="prompt-word'+promptSizeClass+'" id="promptWord">'+esc(q.word)+'</div><span class="prompt-category" id="promptCategory">'+esc(q.category)+'</span></div>'+
     '<div class="play-actions"><button class="play-btn pass" data-pass>パス</button><button class="play-btn correct" data-correct>正解！ +1</button></div>'+
     '<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">3</div></div>'+
   '</section>';
@@ -306,7 +308,13 @@ function nextPrompt(correct){
   if(correct){state.turnScore++;const s=document.getElementById('turnScore');if(s)s.textContent=state.turnScore}else state.passes++;
   state.currentPrompt=drawPrompt();
   const w=document.getElementById('promptWord'),c=document.getElementById('promptCategory');
-  if(w)w.textContent=state.currentPrompt.word;if(c)c.textContent=state.currentPrompt.category;
+  if(w){
+    w.textContent=state.currentPrompt.word;
+    const len=[...state.currentPrompt.word].length;
+    w.classList.toggle('long',len>=7&&len<11);
+    w.classList.toggle('very-long',len>=11);
+  }
+  if(c)c.textContent=state.currentPrompt.category;
 }
 function finishTurn(){
   if(!state.playing&&state.timeLeft>0)return;
