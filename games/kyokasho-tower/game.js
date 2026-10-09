@@ -488,5 +488,6 @@ function bind(){
   document.querySelector('[data-to-title]')?.addEventListener('click',()=>{resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.history=[];state.screen='title';render()});
 }
 loadPlayers();render();
+window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })()
