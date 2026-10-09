@@ -317,6 +317,11 @@ function navConfirm(type){
 }
 function afterMembers(){
   loadPlayers();
+  if(state.memberReturn==='title'){
+    state.memberReturn='flow';
+    go('title',{push:false});
+    return;
+  }
   if(state.mode==='team'){
     if(state.playerCount<4){alert('チームバトルは4人以上で遊んでください。');return}
     setupTeamsBalanced();go('teams');
