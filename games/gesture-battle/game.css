@@ -86,3 +86,126 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
     grid-template-columns:1fr;
   }
 }
+
+
+/* Settings 2 compact single-screen layout 2026-10-09 */
+.screen-settings2{
+  padding-bottom:max(10px,env(safe-area-inset-bottom));
+}
+.screen-settings2 .screen-heading{
+  margin:4px 0 8px;
+}
+.screen-settings2 .screen-heading h1{
+  font-size:clamp(27px,7vw,32px);
+  line-height:1.05;
+  margin-bottom:3px;
+}
+.screen-settings2 .screen-heading p{
+  font-size:12px;
+  line-height:1.2;
+}
+.screen-settings2 .settings-progress{
+  width:min(180px,56%);
+  margin:4px auto 9px;
+  gap:6px;
+}
+.screen-settings2 .settings-progress span{
+  height:5px;
+}
+.screen-settings2 .card{
+  padding:12px 12px 10px;
+  margin-bottom:8px;
+  border-radius:21px;
+}
+.screen-settings2 .card h2{
+  font-size:clamp(22px,6vw,25px);
+  line-height:1.1;
+  margin-bottom:6px;
+}
+.screen-settings2 .section-row{
+  margin-bottom:5px;
+  align-items:center;
+}
+.screen-settings2 .section-row p,
+.screen-settings2 [data-pool-count]{
+  font-size:11px;
+  line-height:1.2;
+}
+.screen-settings2 .setting-row{
+  margin-top:6px;
+}
+.screen-settings2 .segmented{
+  gap:7px;
+}
+.screen-settings2 .seg-btn{
+  min-height:58px;
+  padding:7px 5px;
+  font-size:16px;
+  line-height:1.05;
+  border-radius:15px;
+}
+.screen-settings2 .small-btn{
+  min-height:44px;
+  padding:0 12px;
+  font-size:16px;
+  border-radius:14px;
+}
+.screen-settings2 .category-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+  margin-top:7px!important;
+}
+.screen-settings2 .category-btn{
+  min-height:50px;
+  padding:5px 3px;
+  font-size:13px;
+  line-height:1.05;
+  border-radius:14px;
+}
+.screen-settings2 .settings-bottom-actions{
+  grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+  gap:8px;
+  margin-top:3px;
+}
+.screen-settings2 .settings-bottom-actions .btn{
+  min-height:56px;
+  font-size:17px;
+  border-radius:18px;
+}
+@media(max-height:760px){
+  .screen-settings2 .screen-heading{
+    margin-top:2px;
+    margin-bottom:6px;
+  }
+  .screen-settings2 .screen-heading h1{
+    font-size:25px;
+  }
+  .screen-settings2 .card{
+    padding:10px;
+    margin-bottom:7px;
+  }
+  .screen-settings2 .card h2{
+    font-size:20px;
+  }
+  .screen-settings2 .seg-btn{
+    min-height:52px;
+    font-size:15px;
+  }
+  .screen-settings2 .category-btn{
+    min-height:44px;
+    font-size:12px;
+  }
+  .screen-settings2 .settings-bottom-actions .btn{
+    min-height:52px;
+    font-size:16px;
+  }
+}
+@media(max-width:380px){
+  .screen-settings2 .category-grid{
+    gap:6px;
+  }
+  .screen-settings2 .category-btn{
+    font-size:12px;
+  }
+}
