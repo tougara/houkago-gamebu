@@ -1,6 +1,7 @@
 (()=>{
 const app=document.getElementById('app');
 const playersApi=window.HoukagoPlayers;
+const settingsApi=window.HoukagoSettings;
 const SOLO_KEY='houkago_pitadome_solo_player_v1';
 const RANK_KEY='houkago_pitadome_rankings_v1';
 
@@ -456,11 +457,9 @@ function stopRound(){
   state.resultValue=Math.round(state.value);
   state.error=Math.abs(state.resultValue-state.target);
   state.tier=tierForError(state.error);state.comment=commentForTier(state.tier);
-  if(navigator.vibrate){
-    if(state.tier==='perfect')navigator.vibrate([28,22,70]);
-    else if(state.tier==='excellent')navigator.vibrate([24,18,45]);
-    else if(state.tier==='great')navigator.vibrate(24);
-  }
+  if(state.tier==='perfect')settingsApi?.vibrate?.([28,22,70]);
+  else if(state.tier==='excellent')settingsApi?.vibrate?.([24,18,45]);
+  else if(state.tier==='great')settingsApi?.vibrate?.(24);
   state.baseScore=scoreForError(state.error);
   const prevCombo=state.combo;
   if(state.error<=3)state.combo+=state.error===0?2:1;
