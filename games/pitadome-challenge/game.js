@@ -39,7 +39,7 @@ function saveSoloIndex(i){
 }
 function cleanRankEntry(x,i){
   return {
-    id:String(x?.id||('legacy_'+i+'_'+Date.now())),
+    id:String(x?.id||('legacy_'+i+'_'+(Number(x?.score)||0)+'_'+(Number(x?.round)||0)+'_'+(Number(x?.at)||0))),
     name:String(x?.name||'プレイヤー').slice(0,12),
     icon:String(x?.icon||'🏅'),
     score:Math.max(0,Number(x?.score)||0),
@@ -118,24 +118,44 @@ function go(screen,{push=true}={}){
   if(push&&state.screen!==screen)state.history.push(state.screen);
   state.screen=screen;render();
 }
-function doBackOne(){
+function returnTo(screen){
   stopMotion();
+  if(state.history[state.history.length-1]===screen)state.history.pop();
+  state.screen=screen;render();
+}
+function doBackOne(){
   if(state.gameStarted&&(state.screen==='play'||state.screen==='roundResult')){showLeaveConfirm('back');return}
+  stopMotion();
+  if(state.screen==='final'){state.history=['title'];state.screen='mode';render();return}
   if(state.history.length){state.screen=state.history.pop();render();return}
   location.href='../';
 }
 function goHome(){
   if(state.gameStarted&&(state.screen==='play'||state.screen==='roundResult')){showLeaveConfirm('home');return}
+  stopMotion();
   location.href='../';
 }
 function showLeaveConfirm(type){
   document.querySelector('.leave-confirm')?.remove();
+  const resumePlay=state.screen==='play';
+  const restartCountdown=resumePlay&&state.needsOpeningCountdown;
+  stopMotion();
   const w=document.createElement('div');
   w.className='countdown-overlay leave-confirm';
   w.innerHTML='<div class="card" style="width:min(430px,90%);text-align:center"><h2>ゲームを中断しますか？</h2><p style="margin:8px 0 14px">現在のスコアはランキングに保存されません。</p><div class="stack"><button class="btn secondary full" data-leave-cancel>続ける</button><button class="btn full" data-leave-ok>中断する</button></div></div>';
-  document.querySelector('.play-wrap')?.appendChild(w) || document.body.appendChild(w);
-  w.querySelector('[data-leave-cancel]')?.addEventListener('click',()=>w.remove());
-  w.querySelector('[data-leave-ok]')?.addEventListener('click',()=>{state.gameStarted=false;w.remove();if(type==='home')location.href='../';else{state.screen='title';state.history=[];render()}});
+  document.body.appendChild(w);
+  w.querySelector('[data-leave-cancel]')?.addEventListener('click',()=>{
+    w.remove();
+    if(resumePlay){
+      if(restartCountdown)startCountdown();
+      else startMotion();
+    }
+  });
+  w.querySelector('[data-leave-ok]')?.addEventListener('click',()=>{
+    stopMotion();state.gameStarted=false;w.remove();
+    if(type==='home')location.href='../';
+    else{state.screen='title';state.history=[];render()}
+  });
 }
 function titleScreen(){
   loadPlayer();
@@ -184,7 +204,7 @@ function rulesScreen(){
       '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>最初だけ3・2・1で開始。指が触れた瞬間に停止し、次ラウンドからはカウントダウンなしで始まります。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>近さを連続させてCOMBO</strong><span>誤差3以内が続くほど得点倍率UP。PERFECTはコンボ+2。</span></div></section>'+
     '</div>'+
-    '<section class="card mode-help"><div><strong>かんたん</strong><p>1〜100固定。10ごとに数字を表示し、目標の近くは隠れません。速度とエンドレスの合格範囲も少しやさしめです。</p></div><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>前半は基本を覚え、後半ほど変化が増える全10ラウンド。FINALは上限200＋複合ギミック。</p></div><div><strong>エンドレス</strong><p>序盤は遊びやすく、10ラウンドごとに少しずつ難化。中盤から高速、後半は複合ギミックと超高速が登場します。</p></div></section>'+
+    '<section class="card mode-help"><div><strong>かんたん</strong><p>1〜100固定。10ごとに数字を表示し、目標の近くは隠れません。速度とエンドレスの合格範囲も少しやさしめです。</p></div><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>かんたんは1〜100のまま少しずつ変化。通常は後半ほど難しくなり、FINALで上限200＋複合ギミック。</p></div><div><strong>エンドレス</strong><p>かんたんも少しずつ速度と仕掛けが増加。通常は中盤から高速、後半は複合ギミックと超高速が登場します。</p></div></section>'+
     '<button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
 function randomRef(maxValue=100){
@@ -301,7 +321,7 @@ function easyEndlessStage(round){
 function easyEndlessProfile(round){
   const s=easyEndlessStage(round),p=baseProfile();
   p.minValue=1;p.maxValue=100;p.refPoint=50;p.speed=s.speed;p.safeLimit=s.safe;p.gimmicks=[];p.stageName=s.stage;
-  if(round<=3){p.gimmicks=['基本'];return p}
+  if(round<=5){p.gimmicks=['基本'];return p}
   const pool=round<=15?['wide','short','fast']:['wide','short','blind','accel','change','reverse','fast'];
   shuffle(pool).slice(0,Math.max(1,s.count)).forEach(k=>applyGimmick(p,k));
   if(p.barScale<.7)p.barScale=.72;
@@ -366,7 +386,9 @@ function prepareRound(){
   keepEasyTargetVisible();
 }
 function stageBreakRound(){
-  return state.mode==='endless'&&[1,6,11,16,21,31].includes(state.round);
+  if(state.mode!=='endless')return false;
+  const breaks=state.difficulty==='easy'?[1,6,11,21,31,41]:[1,6,11,16,21,31,41];
+  return breaks.includes(state.round);
 }
 function quietGaugeHtml(){
   return '<div class="quiet-row"><div class="quiet-copy"><span>静ゲージ</span><strong>'+state.quietGauge+'%</strong></div><div class="quiet-track"><i style="width:'+state.quietGauge+'%"></i></div>'+(state.mushinActive?'<span class="mushin-badge">無心 ×1.5</span>':'')+'</div>';
@@ -404,7 +426,8 @@ function tierForError(e){
   if(e===1)return'excellent';
   if(e<=3)return'great';
   if(e<=5)return'good';
-  if(e<=10)return'safe';
+  const safeEdge=state.mode==='endless'?state.safeLimit:10;
+  if(e<=safeEdge)return'safe';
   return'miss';
 }
 function commentForTier(t){
@@ -472,10 +495,11 @@ function sparkHtml(){
   return '<div class="hit-fx" aria-hidden="true"><div class="impact-rays">'+rays+'</div><div class="hit-ring ring-a"></div><div class="hit-ring ring-b"></div><div class="spark-burst">'+sparks+'</div><div class="petal-burst">'+petals+'</div></div>';
 }
 function roundResultScreen(){
+  const diffLabel=state.difficulty==='easy'?'かんたん':'通常';
   const lifeLost=state.mode==='endless'&&state.error>state.safeLimit&&!state.lifeProtected;
   const bonus=state.roundScore-state.baseScore;
   const comboText=state.combo>1?'<div class="combo-result '+(state.combo>=10?'combo-fever':state.combo>=5?'combo-hot':'')+'">'+(state.combo>=10?'<b>COMBO BURST!</b> ':'')+state.combo+' COMBO <span>×'+state.comboMultiplier.toFixed(1)+'</span></div>':'';
-  return topNav()+heading('ラウンド結果',state.mode==='ten'?'10ラウンドの合計点に挑戦':'難易度はまだ上がる')+
+  return topNav()+heading('ラウンド結果',(state.mode==='ten'?'10ラウンド':'エンドレス')+'・'+diffLabel)+
     '<section class="card result-card tier-'+state.tier+'">'+sparkHtml()+
       '<div class="result-kicker">ROUND '+state.round+'</div><div class="hit-word">'+state.comment+'</div>'+
       comboText+
@@ -494,9 +518,10 @@ function finishGame(){
   state.gameStarted=false;addRankingEntry();go('final',{push:false});
 }
 function finalScreen(){
+  const diffLabel=state.difficulty==='easy'?'かんたん':'通常';
   const avg=state.roundErrors.length?(state.roundErrors.reduce((a,b)=>a+b,0)/state.roundErrors.length).toFixed(1):'0.0';
   const best=bestScore(state.mode==='ten'?'ten':'endless',state.difficulty);
-  return topNav()+heading('チャレンジ終了',state.mode==='ten'?'10ラウンド完走！':'限界まで挑戦しました')+
+  return topNav()+heading('チャレンジ終了',(state.mode==='ten'?'10ラウンド完走！':'限界まで挑戦しました')+'・'+diffLabel)+
     '<section class="card final-card">'+(state.newRecord?'<div class="new-record">NEW RECORD！</div>':'')+
     '<div class="result-kicker">TOTAL SCORE</div><div class="final-score">'+state.score+'</div>'+
     '<div class="record-grid">'+
@@ -629,12 +654,12 @@ function bind(){
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;go('difficulty')}));
   document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>beginGame(state.mode,b.dataset.difficulty)));
   document.querySelectorAll('[data-solo-player]').forEach(b=>b.addEventListener('click',()=>{saveSoloIndex(Number(b.dataset.soloPlayer));render()}));
-  document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberReturn='playerSelect';go('members')});
-  document.querySelector('[data-player-done]')?.addEventListener('click',()=>{loadPlayer();go(state.memberReturn==='title'?'title':'mode',{push:false})});
+  document.querySelector('[data-edit-members]')?.addEventListener('click',()=>go('members'));
+  document.querySelector('[data-player-done]')?.addEventListener('click',()=>{loadPlayer();returnTo(state.memberReturn==='title'?'title':'mode')});
   document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{playersApi?.setActiveCount?.(Number(b.dataset.memberCount));render()}));
   document.querySelectorAll('[data-member-name]').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.memberName);playersApi?.setPlayer?.(i,{name:inp.value||('プレイヤー'+(i+1))});render()}));
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{playersApi?.setPlayer?.(Number(b.dataset.memberIcon),{icon:b.dataset.icon});render()}));
-  document.querySelector('[data-members-done]')?.addEventListener('click',()=>go('playerSelect',{push:false}));
+  document.querySelector('[data-members-done]')?.addEventListener('click',()=>returnTo('playerSelect'));
   const stopBtn=document.querySelector('[data-stop]');
   stopBtn?.addEventListener('pointerdown',e=>{e.preventDefault();stopRound()},{passive:false});
   const nextBtn=document.querySelector('[data-next-round]');
@@ -643,12 +668,12 @@ function bind(){
     nextBtn.addEventListener('click',nextRound);
   }
   document.querySelector('[data-replay]')?.addEventListener('click',()=>beginGame(state.mode,state.difficulty));
-  document.querySelector('[data-change-mode]')?.addEventListener('click',()=>{state.history=[];state.screen='mode';render()});
+  document.querySelector('[data-change-mode]')?.addEventListener('click',()=>{state.history=['title'];state.screen='mode';render()});
   document.querySelectorAll('[data-rank-mode]').forEach(b=>b.addEventListener('click',()=>{state.rankMode=b.dataset.rankMode;state.rankEdit=false;render()}));
   document.querySelectorAll('[data-rank-difficulty]').forEach(b=>b.addEventListener('click',()=>{state.rankDifficulty=b.dataset.rankDifficulty;state.rankEdit=false;render()}));
   document.querySelector('[data-rank-edit]')?.addEventListener('click',()=>{state.rankEdit=!state.rankEdit;render()});
   document.querySelectorAll('[data-rank-delete]').forEach(b=>b.addEventListener('click',()=>{if(confirm('この記録を削除しますか？')){deleteRankEntry(state.rankMode,state.rankDifficulty,b.dataset.rankDelete);render()}}));
-  document.querySelector('[data-rank-clear]')?.addEventListener('click',()=>{if(confirm('このモードのランキングをすべて削除しますか？')){clearRankings(state.rankMode,state.rankDifficulty);state.rankEdit=false;render()}});
+  document.querySelector('[data-rank-clear]')?.addEventListener('click',()=>{if(confirm('このランキングをすべて削除しますか？')){clearRankings(state.rankMode,state.rankDifficulty);state.rankEdit=false;render()}});
   document.querySelector('[data-rank-back]')?.addEventListener('click',doBackOne);
 }
 loadPlayer();render();
