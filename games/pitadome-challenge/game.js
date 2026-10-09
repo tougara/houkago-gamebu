@@ -160,7 +160,7 @@ function membersScreen(){
 function rulesScreen(){
   return topNav()+heading('あそびかた','止めるだけ。でもラウンドごとに条件が変わる！')+
     '<div class="rules-list">'+
-      '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように0〜100の目標が出ます。</span></div></section>'+
+      '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように目標が出ます。後半は上限150・200のラウンドもあります。</span></div></section>'+
       '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・超光速・上限150/200などが登場します。</span></div></section>'+
       '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>最初だけ3・2・1で開始。指が触れた瞬間に停止し、次ラウンドからはカウントダウンなしで始まります。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>近さを連続させてCOMBO</strong><span>誤差3以内が続くほど得点倍率UP。PERFECTはコンボ+2。</span></div></section>'+
