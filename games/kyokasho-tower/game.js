@@ -33,8 +33,9 @@ function saveTowerPlayerCount(n){
   return count;
 }
 function loadPlayers(){
-  const d=playersApi?.load?.();
+  let d=playersApi?.load?.();
   state.playerCount=clampPlayers(d?.activeCount||4);
+  if(d&&state.playerCount!==d.activeCount){playersApi?.setActiveCount?.(state.playerCount);d=playersApi?.load?.()}
   if(d)state.players=d.players.slice(0,state.playerCount).map(x=>({...x}));
   else state.players=Array.from({length:state.playerCount},(_,i)=>({name:'プレイヤー'+(i+1),icon:'🙂'}));
   state.totalRounds=state.playerCount;
