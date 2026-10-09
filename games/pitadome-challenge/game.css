@@ -758,3 +758,262 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     font-size:17px;
   }
 }
+
+
+/*爽快ヒット演出 2026-10-10 */
+.pitadome-app.screen-roundResult{
+  position:relative;
+  isolation:isolate;
+}
+.pitadome-app.screen-roundResult> *{
+  position:relative;
+  z-index:2;
+}
+.pitadome-app.screen-roundResult::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  opacity:0;
+}
+.pitadome-app.screen-roundResult.tier-screen-perfect::before{
+  background:
+    radial-gradient(circle at 50% 43%,rgba(255,255,235,.96) 0 7%,rgba(255,225,120,.70) 17%,rgba(255,187,45,.20) 38%,transparent 63%),
+    linear-gradient(110deg,transparent 32%,rgba(255,255,220,.50) 49%,transparent 65%);
+  animation:fullPerfectFlash .92s ease-out;
+}
+.pitadome-app.screen-roundResult.tier-screen-excellent::before{
+  background:radial-gradient(circle at 50% 43%,rgba(255,244,190,.72),rgba(255,189,55,.18) 35%,transparent 62%);
+  animation:fullExcellentFlash .72s ease-out;
+}
+.pitadome-app.screen-roundResult.tier-screen-great::before{
+  background:radial-gradient(circle at 50% 43%,rgba(255,225,150,.40),transparent 55%);
+  animation:fullGreatFlash .58s ease-out;
+}
+.tier-screen-perfect .result-card{
+  animation:impactShakeStrong .52s cubic-bezier(.22,.9,.26,1);
+  box-shadow:0 0 0 2px rgba(255,226,139,.42),0 0 42px rgba(255,190,55,.34),var(--shadow);
+}
+.tier-screen-excellent .result-card{
+  animation:impactShake .42s ease-out;
+  box-shadow:0 0 32px rgba(255,191,62,.24),var(--shadow);
+}
+.tier-screen-great .result-card{
+  animation:impactNudge .36s ease-out;
+}
+.hit-fx{
+  overflow:hidden;
+}
+.impact-rays,
+.spark-burst,
+.petal-burst{
+  position:absolute;
+  left:50%;
+  top:39%;
+  width:1px;
+  height:1px;
+}
+.impact-ray{
+  --angle:calc(var(--i) * 20deg);
+  position:absolute;
+  left:0;
+  top:0;
+  width:4px;
+  height:105px;
+  border-radius:999px;
+  background:linear-gradient(to top,rgba(255,255,255,0),rgba(255,244,190,.95),rgba(255,190,48,0));
+  transform-origin:2px 4px;
+  opacity:0;
+  animation:rayBurst .62s ease-out both;
+  animation-delay:calc(var(--i) * 4ms);
+}
+.tier-excellent .impact-ray{height:80px;opacity:.75}
+.tier-great .impact-ray{height:62px}
+.hit-ring{
+  position:absolute;
+  left:50%;
+  top:39%;
+  border:4px solid rgba(255,239,172,.92);
+  border-radius:50%;
+  opacity:0;
+  pointer-events:none;
+}
+.ring-a{
+  width:70px;
+  height:70px;
+  animation:ringBurstA .72s ease-out;
+}
+.ring-b{
+  width:44px;
+  height:44px;
+  border-width:2px;
+  border-color:rgba(255,255,235,.88);
+  animation:ringBurstB .82s .06s ease-out;
+}
+.spark-piece{
+  --angle:calc(var(--i) * 20deg);
+  position:absolute;
+  width:8px;
+  height:28px;
+  border-radius:999px;
+  background:linear-gradient(#fffbd8,#ffc43d 58%,#d7820b);
+  box-shadow:0 0 10px rgba(255,216,90,.70);
+  transform-origin:4px 3px;
+  opacity:0;
+  animation:sparkBlast .82s ease-out both;
+  animation-delay:calc(var(--i) * 6ms);
+}
+.petal-piece{
+  --angle:calc(var(--i) * 17deg);
+  position:absolute;
+  width:10px;
+  height:6px;
+  border-radius:80% 20% 70% 30%;
+  background:linear-gradient(135deg,#fff0ef,#f4a8bb);
+  box-shadow:0 0 7px rgba(255,209,219,.55);
+  opacity:0;
+  animation:petalBlast 1.05s ease-out both;
+  animation-delay:calc(var(--i) * 9ms);
+}
+.tier-excellent .petal-piece:nth-child(n+13),
+.tier-great .petal-piece:nth-child(n+9){
+  display:none;
+}
+.score-slam{
+  transform-origin:center;
+  animation:scoreSlam .55s .06s cubic-bezier(.18,1.6,.35,1) both;
+}
+.tier-perfect .score-slam{
+  text-shadow:0 0 14px rgba(255,255,220,.92),0 0 34px rgba(255,201,78,.70),0 5px 18px rgba(0,0,0,.35);
+}
+.combo-result.combo-hot{
+  animation:comboPulse .58s ease-out;
+  box-shadow:0 0 18px rgba(255,203,76,.24);
+}
+.combo-result.combo-fever{
+  color:#fff4bf;
+  border-color:rgba(255,226,115,.82);
+  background:linear-gradient(90deg,rgba(141,83,14,.62),rgba(255,201,57,.34),rgba(141,83,14,.62));
+  box-shadow:0 0 26px rgba(255,197,48,.42);
+  animation:comboBurst .78s cubic-bezier(.2,1.45,.3,1);
+}
+.combo-result.combo-fever b{
+  color:#ffd64c;
+  letter-spacing:.05em;
+}
+.final-new-record .final-card{
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 0 0 2px rgba(255,223,120,.35),0 0 38px rgba(255,190,50,.28),var(--shadow);
+}
+.final-new-record .final-card::before{
+  content:"";
+  position:absolute;
+  inset:-30%;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,220,.38) 49%,transparent 60%);
+  transform:translateX(-65%);
+  animation:recordSweep 1.05s .12s ease-out both;
+  pointer-events:none;
+}
+.final-new-record .final-score{
+  animation:recordScorePop .72s cubic-bezier(.16,1.5,.32,1);
+  text-shadow:0 0 18px rgba(255,224,119,.52),0 5px 18px rgba(0,0,0,.30);
+}
+@keyframes fullPerfectFlash{
+  0%{opacity:0}
+  8%{opacity:1}
+  22%{opacity:.18}
+  34%{opacity:.82}
+  100%{opacity:0}
+}
+@keyframes fullExcellentFlash{
+  0%{opacity:0}
+  14%{opacity:.82}
+  100%{opacity:0}
+}
+@keyframes fullGreatFlash{
+  0%{opacity:0}
+  18%{opacity:.52}
+  100%{opacity:0}
+}
+@keyframes impactShakeStrong{
+  0%{transform:translate3d(0,0,0) scale(.985)}
+  18%{transform:translate3d(-5px,2px,0) scale(1.012)}
+  34%{transform:translate3d(5px,-2px,0) scale(1.006)}
+  50%{transform:translate3d(-3px,1px,0)}
+  68%{transform:translate3d(2px,-1px,0)}
+  100%{transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes impactShake{
+  0%{transform:translateX(0)}
+  28%{transform:translateX(-3px)}
+  52%{transform:translateX(3px)}
+  76%{transform:translateX(-1px)}
+  100%{transform:translateX(0)}
+}
+@keyframes impactNudge{
+  0%{transform:scale(.99)}
+  45%{transform:scale(1.008)}
+  100%{transform:scale(1)}
+}
+@keyframes rayBurst{
+  0%{opacity:0;transform:rotate(var(--angle)) translateY(-14px) scaleY(.15)}
+  18%{opacity:1}
+  100%{opacity:0;transform:rotate(var(--angle)) translateY(-96px) scaleY(1.35)}
+}
+@keyframes ringBurstA{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(.18)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(6.2)}
+}
+@keyframes ringBurstB{
+  0%{opacity:.95;transform:translate(-50%,-50%) scale(.2)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(8)}
+}
+@keyframes sparkBlast{
+  0%{opacity:1;transform:rotate(var(--angle)) translateY(-16px) scale(.35)}
+  55%{opacity:1}
+  100%{opacity:0;transform:rotate(var(--angle)) translateY(-145px) scale(1.05)}
+}
+@keyframes petalBlast{
+  0%{opacity:0;transform:rotate(var(--angle)) translateY(-18px) rotate(0deg) scale(.4)}
+  16%{opacity:1}
+  100%{opacity:0;transform:rotate(var(--angle)) translateY(-160px) rotate(270deg) scale(1)}
+}
+@keyframes scoreSlam{
+  0%{opacity:0;transform:scale(1.65)}
+  55%{opacity:1;transform:scale(.92)}
+  78%{transform:scale(1.08)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes comboPulse{
+  0%{transform:scale(.82);opacity:.45}
+  65%{transform:scale(1.08);opacity:1}
+  100%{transform:scale(1)}
+}
+@keyframes comboBurst{
+  0%{transform:scale(.68);opacity:0}
+  48%{transform:scale(1.14);opacity:1}
+  70%{transform:scale(.97)}
+  100%{transform:scale(1)}
+}
+@keyframes recordSweep{
+  0%{transform:translateX(-70%)}
+  100%{transform:translateX(70%)}
+}
+@keyframes recordScorePop{
+  0%{opacity:.2;transform:scale(.68)}
+  62%{opacity:1;transform:scale(1.09)}
+  100%{transform:scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pitadome-app.screen-roundResult::before,
+  .tier-screen-perfect .result-card,
+  .tier-screen-excellent .result-card,
+  .tier-screen-great .result-card,
+  .impact-ray,.ring-a,.ring-b,.spark-piece,.petal-piece,
+  .score-slam,.combo-result.combo-hot,.combo-result.combo-fever,
+  .final-new-record .final-card::before,.final-new-record .final-score{
+    animation:none!important;
+  }
+}
