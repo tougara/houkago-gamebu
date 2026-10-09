@@ -11,7 +11,7 @@ const state={
   lives:3,target:50,value:0,error:0,resultValue:0,
   baseScore:0,roundScore:0,comment:'',tier:'normal',
   running:false,countdownId:null,rafId:null,lastTs:0,dir:1,phase:0,speed:42,reverseBucket:-1,
-  movement:'normal',barScale:.86,refPoint:50,blind:false,blindStart:36,blindEnd:62,
+  movement:'normal',barScale:.86,maxValue:100,refPoint:50,blind:false,blindStart:36,blindEnd:62,
   safeLimit:10,gimmicks:[],stageName:'一ノ境',
   roundErrors:[],newRecord:false,
   combo:0,maxCombo:0,comboMultiplier:1,
@@ -161,16 +161,16 @@ function rulesScreen(){
   return topNav()+heading('あそびかた','止めるだけ。でもラウンドごとに条件が変わる！')+
     '<div class="rules-list">'+
       '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように0〜100の目標が出ます。</span></div></section>'+
-      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転などが登場します。</span></div></section>'+
+      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・超光速・上限150/200などが登場します。</span></div></section>'+
       '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>最初だけ3・2・1で開始。指が触れた瞬間に停止し、次ラウンドからはカウントダウンなしで始まります。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>近さを連続させてCOMBO</strong><span>誤差3以内が続くほど得点倍率UP。PERFECTはコンボ+2。</span></div></section>'+
     '</div>'+
     '<section class="card mode-help"><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>10種類の仕掛けを攻略するスコアアタック。FINALは複数ギミック。</p></div><div><strong>エンドレス</strong><p>進むほど合格範囲が狭くなり、複数ギミックが重なります。</p></div></section>'+
     '<button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
-function randomRef(){
-  const choices=[22,28,33,38,62,67,72,78];
-  return choices[Math.floor(Math.random()*choices.length)];
+function randomRef(maxValue=100){
+  const ratios=[.22,.28,.33,.38,.62,.67,.72,.78];
+  return Math.round(maxValue*ratios[Math.floor(Math.random()*ratios.length)]);
 }
 function randomBlind(){
   const width=18+Math.floor(Math.random()*11);
@@ -178,13 +178,16 @@ function randomBlind(){
   return{start,end:start+width};
 }
 function baseProfile(){
-  return{speed:34,movement:'normal',barScale:.86,refPoint:50,blind:false,blindStart:36,blindEnd:62,safeLimit:10,gimmicks:['基本']};
+  return{speed:34,movement:'normal',barScale:.86,maxValue:100,refPoint:50,blind:false,blindStart:36,blindEnd:62,safeLimit:10,gimmicks:['基本']};
 }
 function applyGimmick(p,key){
   if(key==='fast'){p.speed+=14;p.gimmicks.push('高速')}
+  if(key==='hyper'){p.speed=Math.max(p.speed,150);p.movement='hyper';p.gimmicks.push('超光速')}
   if(key==='short'){p.barScale=.58;p.gimmicks.push('短尺')}
   if(key==='wide'){p.barScale=1;p.gimmicks.push('長尺')}
-  if(key==='ref'){p.refPoint=randomRef();p.gimmicks.push('基準変化')}
+  if(key==='range150'){p.maxValue=150;p.gimmicks.push('上限150')}
+  if(key==='range200'){p.maxValue=200;p.gimmicks.push('上限200')}
+  if(key==='ref'){p.refPoint=randomRef(p.maxValue);p.gimmicks.push('基準変化')}
   if(key==='blind'){const b=randomBlind();p.blind=true;p.blindStart=b.start;p.blindEnd=b.end;p.gimmicks.push('隠し')}
   if(key==='change'){p.movement='change';p.gimmicks.push('変速')}
   if(key==='accel'){p.movement='accel';p.gimmicks.push('加速')}
@@ -198,48 +201,56 @@ function tenProfile(round){
   if(round===4){p.speed=44;applyGimmick(p,'ref')}
   if(round===5){p.speed=50;applyGimmick(p,'change')}
   if(round===6){p.speed=50;applyGimmick(p,'blind')}
-  if(round===7){p.speed=60;applyGimmick(p,'wide');p.gimmicks.unshift('高速')}
-  if(round===8){p.speed=56;applyGimmick(p,'reverse')}
-  if(round===9){p.speed=64;applyGimmick(p,'blind');p.gimmicks.unshift('高速')}
+  if(round===7){p.speed=58;applyGimmick(p,'wide');p.gimmicks.unshift('高速')}
+  if(round===8){p.speed=60;applyGimmick(p,'range150');applyGimmick(p,'ref')}
+  if(round===9){p.speed=150;applyGimmick(p,'hyper')}
   if(round===10){
-    p.speed=66;p.gimmicks=['FINAL'];
+    p.speed=72;p.gimmicks=['FINAL'];applyGimmick(p,'range200');
     const picks=shuffle(['short','blind','ref','change','reverse']).slice(0,2);
     picks.forEach(k=>applyGimmick(p,k));
   }
   return p;
 }
 function endlessStage(round){
-  if(round<=5)return{stage:'一ノ境',safe:10,count:0,speed:34+(round-1)*2};
-  if(round<=10)return{stage:'二ノ境',safe:9,count:1,speed:45+(round-6)*2};
-  if(round<=15)return{stage:'三ノ境',safe:8,count:2,speed:54+(round-11)*2};
-  if(round<=20)return{stage:'四ノ境',safe:7,count:2,speed:64+(round-16)*2};
-  if(round<=30)return{stage:'修羅ノ境',safe:6,count:3,speed:75+Math.min(15,(round-21)*1.7)};
-  return{stage:'極ノ境',safe:5,count:3,speed:91+Math.min(24,(round-31)*1.2)};
+  if(round<=5)return{stage:'一ノ境',safe:10,count:0,speed:34+(round-1)*2,maxValue:100,hyper:0};
+  if(round<=10)return{stage:'二ノ境',safe:9,count:1,speed:45+(round-6)*2,maxValue:round>=8?150:100,hyper:0};
+  if(round<=15)return{stage:'三ノ境',safe:8,count:2,speed:56+(round-11)*2,maxValue:150,hyper:0};
+  if(round<=20)return{stage:'四ノ境',safe:7,count:2,speed:66+(round-16)*2,maxValue:round>=18?200:150,hyper:0};
+  if(round<=30)return{stage:'修羅ノ境',safe:6,count:3,speed:76+Math.min(14,(round-21)*1.5),maxValue:200,hyper:.28};
+  return{stage:'極ノ境',safe:5,count:3,speed:92+Math.min(24,(round-31)*1.15),maxValue:200,hyper:.48};
 }
 function endlessProfile(round){
   const s=endlessStage(round),p=baseProfile();
-  p.speed=s.speed;p.safeLimit=s.safe;p.gimmicks=[];p.stageName=s.stage;
-  if(round<=2){p.gimmicks=['基本'];return p}
+  p.speed=s.speed;p.safeLimit=s.safe;p.maxValue=s.maxValue;p.gimmicks=[];p.stageName=s.stage;
+  if(p.maxValue===150)p.gimmicks.push('上限150');
+  if(p.maxValue===200)p.gimmicks.push('上限200');
+  if(round<=2){p.gimmicks.push('基本');return p}
   const pool=round<=10?['short','wide','ref','fast']:round<=15?['short','ref','blind','accel','change']:['short','wide','ref','blind','accel','change','reverse','fast'];
   const count=Math.max(1,s.count);
   shuffle(pool).slice(0,count).forEach(k=>applyGimmick(p,k));
   if(round>=11&&p.movement==='normal')applyGimmick(p,round%2?'accel':'change');
+  if(s.hyper&&Math.random()<s.hyper)applyGimmick(p,'hyper');
   p.gimmicks=[...new Set(p.gimmicks)];
   return p;
 }
 function newTarget(){
-  let n=10+Math.floor(Math.random()*81);
-  if(Math.abs(n-state.target)<10)n=10+((n+27)%81);
-  state.target=n;
+  const margin=Math.max(10,Math.round(state.maxValue*.08));
+  const span=Math.max(1,state.maxValue-margin*2+1);
+  let n=margin+Math.floor(Math.random()*span);
+  const minGap=Math.max(10,Math.round(state.maxValue*.08));
+  if(Math.abs(n-state.target)<minGap)n=margin+((n+Math.round(state.maxValue*.27))%span);
+  state.target=clamp(n,margin,state.maxValue-margin);
 }
 function prepareRound(){
   state.mushinActive=state.mushinReady;state.mushinReady=false;
   const p=state.mode==='ten'?tenProfile(state.round):endlessProfile(state.round);
-  state.speed=p.speed;state.movement=p.movement;state.barScale=p.barScale;state.refPoint=p.refPoint;
+  state.speed=p.speed;state.movement=p.movement;state.barScale=p.barScale;state.maxValue=p.maxValue||100;state.refPoint=p.refPoint;
+  if(state.gimmicks?.includes?.('基準変化')||p.gimmicks.includes('基準変化'))state.refPoint=randomRef(state.maxValue);
+  else if(state.refPoint===50&&state.maxValue!==100)state.refPoint=Math.round(state.maxValue/2);
   state.blind=p.blind;state.blindStart=p.blindStart;state.blindEnd=p.blindEnd;state.safeLimit=p.safeLimit;
   state.gimmicks=[...p.gimmicks];state.stageName=p.stageName||'十番勝負';
   if(state.mushinActive)state.gimmicks.push('無心');
-  state.value=Math.random()<.5?0:100;state.dir=state.value===0?1:-1;state.phase=Math.random()*Math.PI*2;
+  state.value=Math.random()<.5?0:state.maxValue;state.dir=state.value===0?1:-1;state.phase=Math.random()*Math.PI*2;
   state.lastTs=0;state.reverseBucket=-1;state.error=0;state.baseScore=0;state.roundScore=0;state.comment='';state.resultValue=0;
   state.comboMultiplier=1;state.charmEarnedThisRound=false;state.lifeProtected=false;
   newTarget();
@@ -263,7 +274,7 @@ function playScreen(){
     quietGaugeHtml()+
     (stageBreakRound()?'<div class="stage-banner"><small>LEVEL UP</small><strong>'+esc(state.stageName)+'</strong></div>':'')+
     '<div class="target-wrap"><div class="target-label">この数字をねらえ</div><div class="target-number">'+state.target+'<small>をねらえ！</small></div><div class="gimmick-row">'+state.gimmicks.map(g=>'<span>'+esc(g)+'</span>').join('')+'</div></div>'+
-    '<div class="meter-zone"><div class="meter-shell" style="width:'+Math.round(state.barScale*100)+'%"><div class="meter-track"><div class="meter-line"></div>'+blind+'<div class="meter-cursor" id="meterCursor"></div></div><div class="meter-labels"><span style="left:0%">0</span><span style="left:'+state.refPoint+'%">'+state.refPoint+'</span><span style="left:100%">100</span></div></div></div>'+
+    '<div class="meter-zone"><div class="meter-shell" style="width:'+Math.round(state.barScale*100)+'%"><div class="meter-track"><div class="meter-line"></div>'+blind+'<div class="meter-cursor" id="meterCursor"></div></div><div class="meter-labels"><span style="left:0%">0</span><span style="left:'+(state.refPoint/state.maxValue*100)+'%">'+state.refPoint+'</span><span style="left:100%">'+state.maxValue+'</span></div></div></div>'+
     '<button class="stop-btn" data-stop '+(state.needsOpeningCountdown?'disabled':'')+'>STOP！</button>'+
     (state.needsOpeningCountdown?'<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">3</div></div>':'')+
   '</section></div>';
@@ -432,13 +443,15 @@ function startMotion(){
       const bucket=Math.floor(state.phase/1.9);
       if(bucket!==state.reverseBucket&&bucket>0){state.reverseBucket=bucket;state.dir*=-1}
     }
-    state.value+=state.dir*state.speed*mult*dt;
-    if(state.value>=100){state.value=100;state.dir=-1}
+    const rangeScale=state.maxValue/100;
+    state.value+=state.dir*state.speed*rangeScale*mult*dt;
+    if(state.value>=state.maxValue){state.value=state.maxValue;state.dir=-1}
     if(state.value<=0){state.value=0;state.dir=1}
     const cursor=document.getElementById('meterCursor');
     if(cursor){
-      cursor.style.left=state.value+'%';
-      cursor.classList.toggle('blind',state.blind&&state.value>=state.blindStart&&state.value<=state.blindEnd);
+      const pct=(state.value/state.maxValue)*100;
+      cursor.style.left=pct+'%';
+      cursor.classList.toggle('blind',state.blind&&pct>=state.blindStart&&pct<=state.blindEnd);
     }
     state.rafId=requestAnimationFrame(step);
   };
