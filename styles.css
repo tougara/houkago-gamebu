@@ -697,3 +697,26 @@ body.registry-open{overflow:hidden}
     transform:scale(1.08);
   }
 }
+
+
+/* Home logo scale-up 2026-10-09 */
+.home-page .hero-logo-wrap{
+  top:20%;
+  width:98%;
+  max-width:760px;
+}
+.home-page .site-logo{
+  width:100%;
+  max-width:none;
+  max-height:40dvh;
+  object-fit:contain;
+}
+@media(max-width:767px){
+  .home-page .hero-logo-wrap{
+    top:16%;
+    width:99%;
+  }
+  .home-page .site-logo{
+    max-height:36dvh;
+  }
+}
