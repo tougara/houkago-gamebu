@@ -143,7 +143,8 @@ function customScreen(){
 function rulesScreen(){
   return topNav()+logo()+heading('あそびかた','どちらもスマホ1台を順番に回して遊びます')+
   '<section class="card rule-card"><span class="mode-kicker">MODE 1</span><h2>よみあいバトル</h2><div class="rule-step"><b>1</b><span>全員でお題を見る</span></div><div class="rule-step"><b>2</b><span>1人ずつA/Bに秘密で回答</span></div><div class="rule-step"><b>3</b><span>自分の答えが多数派か少数派か予想</span></div><div class="rule-step"><b>4</b><span>予想が当たれば1点。同数は全員0点</span></div></section>'+
-  '<section class="card rule-card secret"><span class="mode-kicker">MODE 2</span><h2>ひみつ投票</h2><div class="rule-step"><b>1</b><span>全員でお題を見る</span></div><div class="rule-step"><b>2</b><span>1人ずつ匿名でA/Bに回答</span></div><div class="rule-step"><b>3</b><span>結果は「A○人 / B○人」だけ発表</span></div><div class="rule-step"><b>4</b><span>誰がどちらを選んだかはゲーム内で記録・表示しない</span></div></section>';
+  '<section class="card rule-card secret"><span class="mode-kicker">MODE 2</span><h2>ひみつ投票</h2><div class="rule-step"><b>1</b><span>全員でお題を見る</span></div><div class="rule-step"><b>2</b><span>1人ずつ匿名でA/Bに回答</span></div><div class="rule-step"><b>3</b><span>結果は「A○人 / B○人」だけ発表</span></div><div class="rule-step"><b>4</b><span>誰がどちらを選んだかはゲーム内で記録・表示しない</span></div></section>'+
+  '<button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
 function questionScreen(){
   const q=state.currentQuestion;
