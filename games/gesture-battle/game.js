@@ -231,7 +231,8 @@ function playScreen(){
   const len=[...q.word].length;
   const promptSizeClass=len>=11?' very-long':len>=7?' long':'';
   return topNav()+'<section class="play-screen">'+
-    '<div class="play-top"><div class="left">'+(t?'<span>'+teamName(t)+'</span>':'<span>みんなでジェスチャー</span>')+'<strong>'+esc(p.icon)+' '+esc(p.name)+'</strong></div><div class="timer-wrap"><small>のこり</small><span class="timer" id="timerValue">'+state.timeLeft+'</span></div><div class="right"><span>正解</span><strong><span id="turnScore">'+state.turnScore+'</span>問</strong></div></div>'+
+    '<div class="play-status-row"><div class="play-player">'+(t?'<span>'+teamName(t)+'</span>':'<span>みんなでジェスチャー</span>')+'<strong>'+esc(p.icon)+' '+esc(p.name)+'</strong></div><div class="play-correct"><span>正解</span><strong><span id="turnScore">'+state.turnScore+'</span>問</strong></div></div>'+
+    '<div class="timer-wrap"><small>のこり</small><span class="timer" id="timerValue">'+state.timeLeft+'</span></div>'+
     scoreStrip(true)+
     '<div class="prompt-stage prompt-concealed" id="promptStage"><small>ジェスチャーで伝えよう！</small><div class="prompt-word'+promptSizeClass+'" id="promptWord">'+esc(q.word)+'</div><span class="prompt-category" id="promptCategory">'+esc(q.category)+'</span></div>'+
     '<div class="play-actions"><button class="play-btn pass" data-pass>パス</button><button class="play-btn correct" data-correct>正解！ +1</button></div>'+
@@ -309,7 +310,7 @@ function startTurn(){
     n--;
     if(n>0){if(num)num.textContent=n;return}
     clearInterval(state.countdownId);state.countdownId=null;
-    if(num)num.textContent='START!';
+    if(num){num.textContent='START!';num.classList.add('start-text')}
     setTimeout(()=>{
       if(overlay)overlay.remove();
       document.getElementById('promptStage')?.classList.remove('prompt-concealed');
