@@ -1,5 +1,6 @@
 (function(){
   const api=window.HoukagoPlayers;if(!api)return;
+  const resumeApi=window.HoukagoResume;
   const openBtn=document.getElementById('openPlayerRegistry');
   const overlay=document.getElementById('playerRegistryOverlay');
   const closeBtn=document.getElementById('closePlayerRegistry');
@@ -30,4 +31,6 @@
     const i=Number(input.dataset.memberName);api.setPlayer(i,{name:input.value||('プレイヤー'+(i+1))});render();
   });
   window.addEventListener('storage',e=>{if(e.key===api.KEY&&!overlay.hidden)render()});
+  resumeApi?.mountLatest?.('#homeResumeSlot');
+  window.addEventListener('houkago-resume-change',()=>resumeApi?.mountLatest?.('#homeResumeSlot'));
 })();
