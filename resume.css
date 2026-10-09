@@ -1,0 +1,35 @@
+/* 放課後ゲーム部：途中ゲーム復帰 */
+body.hg-resume-open{overflow:hidden!important}
+.hg-resume-backdrop{
+  position:fixed;inset:0;z-index:11000;display:grid;place-items:center;
+  padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));
+  background:rgba(7,17,31,.82);backdrop-filter:blur(7px)
+}
+.hg-resume-modal{
+  width:min(500px,100%);padding:20px;border-radius:26px;background:#fffdf8;color:#17213b;
+  box-shadow:0 26px 74px rgba(0,0,0,.4);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif
+}
+.hg-resume-kicker{display:block;color:#167be8;font-size:11px;font-weight:1000;letter-spacing:.16em}
+.hg-resume-modal h2{margin:5px 0 14px;font-size:27px;line-height:1.15}
+.hg-resume-game{display:grid;gap:5px;padding:15px;border:1px solid #e2e7ee;border-radius:18px;background:#f7f9fc}
+.hg-resume-game strong{font-size:19px}
+.hg-resume-game span{color:#59677d;font-size:13px;font-weight:800;line-height:1.45}
+.hg-resume-game small{color:#8994a5;font-size:10px;font-weight:800}
+.hg-resume-actions{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin-top:14px}
+.hg-resume-actions button{min-height:54px;border-radius:15px;font:1000 15px/1 system-ui,-apple-system,sans-serif}
+.hg-resume-new{border:1px solid #d4dce7;background:#fff;color:#56647a}
+.hg-resume-continue{border:2px solid #fff0a8;background:linear-gradient(180deg,#ffe86a,#ffbb23);color:#2e1d00;box-shadow:0 5px 0 #b96908}
+.hg-resume-slot{width:min(82%,520px);margin:0 auto}
+.hg-resume-slot[hidden]{display:none}
+.hg-resume-home-card{
+  display:grid;gap:2px;text-decoration:none;text-align:left;padding:11px 15px;border-radius:18px;
+  border:2px solid rgba(255,255,255,.95);background:rgba(13,40,69,.88);color:#fff;
+  box-shadow:0 6px 0 rgba(5,26,49,.55),0 12px 22px rgba(0,0,0,.17)
+}
+.hg-resume-home-card>span{font-size:11px;font-weight:1000;color:#ffe36a;letter-spacing:.06em}
+.hg-resume-home-card>strong{font-size:16px}
+.hg-resume-home-card>small{font-size:10px;color:#d8e5f3;font-weight:800}
+@media(max-width:420px){
+  .hg-resume-modal{padding:16px}
+  .hg-resume-actions{grid-template-columns:1fr}
+}
