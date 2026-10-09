@@ -5,7 +5,7 @@ const SOLO_KEY='houkago_pitadome_solo_player_v1';
 const RANK_KEY='houkago_pitadome_rankings_v1';
 
 const state={
-  screen:'title',history:[],gameStarted:false,mode:null,needsOpeningCountdown:true,
+  screen:'title',history:[],gameStarted:false,mode:null,difficulty:'normal',needsOpeningCountdown:true,
   soloIndex:0,player:null,memberReturn:'title',
   round:1,totalRounds:10,score:0,perfects:0,
   lives:3,target:50,value:0,error:0,resultValue:0,
@@ -17,7 +17,7 @@ const state={
   combo:0,maxCombo:0,comboMultiplier:1,
   quietGauge:0,mushinReady:false,mushinActive:false,
   charm:0,charmEarnedThisRound:false,lifeProtected:false,
-  rankMode:'ten',rankEdit:false
+  rankMode:'ten',rankDifficulty:'normal',rankEdit:false
 };
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -49,14 +49,19 @@ function cleanRankEntry(x,i){
     at:Number(x?.at)||0
   };
 }
+function rankKey(mode,difficulty='normal'){
+  return mode+(difficulty==='easy'?'Easy':'Normal');
+}
 function loadRankings(){
   try{
     const raw=JSON.parse(localStorage.getItem(RANK_KEY)||'{}');
     return {
-      ten:Array.isArray(raw.ten)?raw.ten.map(cleanRankEntry):[],
-      endless:Array.isArray(raw.endless)?raw.endless.map(cleanRankEntry):[]
+      tenNormal:Array.isArray(raw.tenNormal)?raw.tenNormal.map(cleanRankEntry):(Array.isArray(raw.ten)?raw.ten.map(cleanRankEntry):[]),
+      tenEasy:Array.isArray(raw.tenEasy)?raw.tenEasy.map(cleanRankEntry):[],
+      endlessNormal:Array.isArray(raw.endlessNormal)?raw.endlessNormal.map(cleanRankEntry):(Array.isArray(raw.endless)?raw.endless.map(cleanRankEntry):[]),
+      endlessEasy:Array.isArray(raw.endlessEasy)?raw.endlessEasy.map(cleanRankEntry):[]
     };
-  }catch(e){return{ten:[],endless:[]}}
+  }catch(e){return{tenNormal:[],tenEasy:[],endlessNormal:[],endlessEasy:[]}}
 }
 function sortRanking(mode,arr){
   const a=[...arr];
@@ -65,13 +70,18 @@ function sortRanking(mode,arr){
   return a.slice(0,10);
 }
 function saveRankings(r){
-  const clean={ten:sortRanking('ten',r.ten||[]),endless:sortRanking('endless',r.endless||[])};
+  const clean={
+    tenNormal:sortRanking('ten',r.tenNormal||[]),
+    tenEasy:sortRanking('ten',r.tenEasy||[]),
+    endlessNormal:sortRanking('endless',r.endlessNormal||[]),
+    endlessEasy:sortRanking('endless',r.endlessEasy||[])
+  };
   try{localStorage.setItem(RANK_KEY,JSON.stringify(clean))}catch(e){}
   return clean;
 }
-function bestScore(mode){
-  const r=loadRankings();
-  return sortRanking(mode,r[mode]||[])[0]?.score||0;
+function bestScore(mode,difficulty='normal'){
+  const r=loadRankings(),key=rankKey(mode,difficulty);
+  return sortRanking(mode,r[key]||[])[0]?.score||0;
 }
 function addRankingEntry(){
   loadPlayer();
@@ -82,20 +92,21 @@ function addRankingEntry(){
     name:state.player.name,icon:state.player.icon,score:state.score,
     round:state.round,perfects:state.perfects,avgError:Number(avg.toFixed(2)),at:Date.now()
   };
-  const key=state.mode==='ten'?'ten':'endless';
-  const before=sortRanking(key,r[key]||[]);
+  const key=rankKey(state.mode,state.difficulty);
+  const before=sortRanking(state.mode,r[key]||[]);
   const oldBest=before[0]?.score||0;
-  r[key]=sortRanking(key,[...before,entry]);
+  r[key]=sortRanking(state.mode,[...before,entry]);
   saveRankings(r);
   state.newRecord=state.score>oldBest;
 }
-function deleteRankEntry(mode,id){
-  const r=loadRankings();
-  r[mode]=(r[mode]||[]).filter(x=>x.id!==id);
+function deleteRankEntry(mode,difficulty,id){
+  const r=loadRankings(),key=rankKey(mode,difficulty);
+  r[key]=(r[key]||[]).filter(x=>x.id!==id);
   saveRankings(r);
 }
-function clearRankings(mode){
-  const r=loadRankings();r[mode]=[];saveRankings(r);
+function clearRankings(mode,difficulty){
+  const r=loadRankings(),key=rankKey(mode,difficulty);
+  r[key]=[];saveRankings(r);
 }
 function stopMotion(){
   state.running=false;
@@ -134,13 +145,21 @@ function titleScreen(){
 }
 function modeScreen(){
   loadPlayer();
-  const tenBest=bestScore('ten'),endBest=bestScore('endless');
   return topNav()+heading('モードを選ぼう','短く遊ぶか、限界まで挑むか')+
     '<section class="card player-card"><div class="player-main"><div class="player-avatar">'+esc(state.player.icon)+'</div><div><small style="color:#cbd4df;font-weight:900">今回のプレイヤー</small><strong style="display:block">'+esc(state.player.name)+'</strong></div></div><button class="small-btn" data-change-player>変更</button></section>'+
     '<div class="mode-grid">'+
-      '<button class="mode-card" data-mode="ten"><div class="mode-badges"><span class="mode-badge">約1〜2分</span><span class="mode-badge">全10ラウンド</span></div><strong>10ラウンドチャレンジ</strong><span>毎ラウンド条件が変化。10回の合計点で自己ベストを狙おう。BEST '+tenBest+'点</span></button>'+
-      '<button class="mode-card" data-mode="endless"><div class="mode-badges"><span class="mode-badge">ENDLESS</span><span class="mode-badge">ライフ3</span></div><strong>エンドレスチャレンジ</strong><span>進むほど速度・視界・合格範囲が厳しくなる。BEST '+endBest+'点</span></button>'+
+      '<button class="mode-card" data-mode="ten"><div class="mode-badges"><span class="mode-badge">約1〜2分</span><span class="mode-badge">全10ラウンド</span></div><strong>10ラウンドチャレンジ</strong><span>10回の合計点で自己ベストを狙おう。</span></button>'+
+      '<button class="mode-card" data-mode="endless"><div class="mode-badges"><span class="mode-badge">ENDLESS</span><span class="mode-badge">ライフ3</span></div><strong>エンドレスチャレンジ</strong><span>ライフがなくなるまで、どこまで続けられるか挑戦。</span></button>'+
     '</div><button class="btn secondary full" style="margin-top:12px" data-ranking>ハイスコアランキング</button>';
+}
+function difficultyScreen(){
+  const modeLabel=state.mode==='ten'?'10ラウンドチャレンジ':'エンドレスチャレンジ';
+  const easyBest=bestScore(state.mode,'easy'),normalBest=bestScore(state.mode,'normal');
+  return topNav()+heading('むずかしさを選ぼう',modeLabel)+
+    '<div class="mode-grid difficulty-grid">'+
+      '<button class="mode-card easy-mode-card" data-difficulty="easy"><div class="mode-badges"><span class="mode-badge">小学校低学年にもおすすめ</span><span class="mode-badge">1〜100固定</span></div><strong>かんたん</strong><span>10ごとに数字が見える。目標の近くは隠れない。速度も少しやさしめ。BEST '+easyBest+'点</span></button>'+
+      '<button class="mode-card" data-difficulty="normal"><div class="mode-badges"><span class="mode-badge">いつものルール</span></div><strong>通常</strong><span>上限変化・隠し・高速など、すべてのギミックが登場。BEST '+normalBest+'点</span></button>'+
+    '</div>';
 }
 function playerSelectScreen(){
   const d=playersApi?.load?.();
