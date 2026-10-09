@@ -10,11 +10,13 @@
   <meta name="apple-mobile-web-app-title" content="放課後ゲーム部" />
   <title>ゲームをえらぶ｜放課後ゲーム部</title>
   <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../settings.css" />
 </head>
 <body class="games-page">
   <main class="site-shell games-shell game-browser">
     <header class="games-header browser-header">
       <a class="back-link" href="../">← トップへ</a>
+      <button class="games-settings-btn" type="button" data-hg-settings-open>⚙ 共通設定</button>
       <div class="section-heading compact-heading">
         <span class="eyebrow">GAME SELECT</span>
         <h1>ゲームをえらぶ</h1>
@@ -135,6 +137,7 @@
     <p class="game-count-note"><span id="gameCount">0</span>件を表示中</p>
   </main>
 
+  <script src="../settings.js"></script>
   <script>
     (() => {
       const filters=[...document.querySelectorAll('[data-game-filter]')];
