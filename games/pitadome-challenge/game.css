@@ -629,3 +629,132 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
   color:#3a2700 !important;
   box-shadow:0 4px 0 #ca850f,0 7px 16px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.65) !important;
 }
+
+
+/* Large-number emphasis while keeping one-screen layout 2026-10-10 */
+/* プレイ中：余白は残しつつ、狙う数字を主役に戻す */
+.screen-play .target-number{
+  font-size:clamp(72px,20vw,104px);
+  line-height:.84;
+  letter-spacing:-.025em;
+}
+.screen-play .target-number small{
+  font-size:.18em;
+  margin-left:5px;
+}
+.screen-play .target-label{
+  font-size:12px;
+}
+.screen-play .meter-labels span{
+  font-size:13px;
+}
+.screen-play .combo-chip b{
+  font-size:19px;
+}
+.screen-play .quiet-copy strong{
+  font-size:13px;
+}
+
+/* ラウンド結果：以前の迫力を戻す */
+.screen-roundResult .hit-word{
+  margin:4px 0 1px;
+  font-size:clamp(42px,11vw,62px);
+  line-height:.92;
+}
+.screen-roundResult .tier-perfect .hit-word{
+  font-size:clamp(50px,13vw,72px);
+}
+.screen-roundResult .result-main{
+  margin:5px 0 4px;
+  font-size:clamp(68px,18vw,96px);
+  line-height:.86;
+}
+.screen-roundResult .result-main small{
+  font-size:.24em;
+}
+.screen-roundResult .result-kicker{
+  font-size:12px;
+}
+.screen-roundResult .result-stats{
+  margin-top:9px;
+}
+.screen-roundResult .result-stat{
+  padding:9px 4px;
+}
+.screen-roundResult .result-stat small{
+  font-size:10px;
+}
+.screen-roundResult .result-stat strong{
+  margin-top:2px;
+  font-size:clamp(20px,5.8vw,28px);
+}
+.screen-roundResult .combo-result{
+  font-size:15px;
+  padding:5px 10px;
+}
+
+/* 最終結果：TOTAL SCOREをしっかり大きく */
+.screen-final .result-kicker{
+  font-size:13px;
+}
+.screen-final .final-score{
+  margin:6px 0 10px;
+  font-size:clamp(84px,23vw,120px);
+  line-height:.82;
+  letter-spacing:-.035em;
+}
+.screen-final .record-grid{
+  margin-top:10px;
+  gap:6px;
+}
+.screen-final .record-box{
+  padding:9px 4px;
+}
+.screen-final .record-box small{
+  font-size:9px;
+}
+.screen-final .record-box strong{
+  margin-top:3px;
+  font-size:clamp(18px,5vw,24px);
+}
+
+/* 小さい画面でも数字を縮めすぎない。代わりに周辺余白を削る */
+@media(max-height:700px){
+  .screen-play .target-number{
+    font-size:clamp(62px,18vw,82px);
+  }
+  .screen-play .target-label{
+    font-size:10px;
+  }
+  .screen-play .meter-labels span{
+    font-size:11px;
+  }
+  .screen-roundResult .result-card,
+  .screen-final .final-card{
+    padding-top:5px;
+    padding-bottom:5px;
+  }
+  .screen-roundResult .hit-word{
+    font-size:38px;
+  }
+  .screen-roundResult .tier-perfect .hit-word{
+    font-size:46px;
+  }
+  .screen-roundResult .result-main{
+    font-size:60px;
+  }
+  .screen-roundResult .result-stat strong{
+    font-size:18px;
+  }
+  .screen-final .final-score{
+    font-size:72px;
+    margin:3px 0 6px;
+  }
+  .screen-final .record-box{
+    padding-top:5px;
+    padding-bottom:5px;
+  }
+  .screen-final .record-box strong{
+    font-size:17px;
+  }
+}
