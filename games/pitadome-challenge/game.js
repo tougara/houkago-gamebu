@@ -407,7 +407,7 @@ function playScreen(){
       (endless?'<div class="hud-chip life-row">LIFE '+Array.from({length:3},(_,i)=>i<state.lives?'♥':'♡').join(' ')+'　SAFE ±'+state.safeLimit+(state.charm?'　護符':'')+'</div>':'<div class="hud-chip player-mini">'+esc(player.icon)+' '+esc(player.name)+'</div>')+
     '</div>'+
     quietGaugeHtml()+
-    (stageBreakRound()?'<div class="stage-banner"><small>'+stageBannerLabel()+'</small><strong>'+esc(state.stageName)+'</strong></div>':'')+
+    '<div class="stage-banner '+(stageBreakRound()?'is-visible':'is-placeholder')+'"><small>'+(stageBreakRound()?stageBannerLabel():'　')+'</small><strong>'+(stageBreakRound()?esc(state.stageName):'　')+'</strong></div>'+
     '<div class="target-wrap"><div class="target-label">この数字をねらえ</div><div class="target-number">'+state.target+'<small>をねらえ！</small></div><div class="gimmick-row">'+(state.difficulty==='easy'?'<span class="easy-badge">かんたん</span>':'')+state.gimmicks.map(g=>'<span>'+esc(g)+'</span>').join('')+'</div></div>'+
     '<div class="meter-zone"><div class="meter-shell" style="width:'+Math.round(state.barScale*100)+'%"><div class="meter-track"><div class="meter-line"></div>'+blind+'<div class="meter-cursor" id="meterCursor"></div></div>'+meterLabelsHtml()+'</div></div>'+
     '<button class="stop-btn" data-stop '+(state.needsOpeningCountdown?'disabled':'')+'>STOP！</button>'+
