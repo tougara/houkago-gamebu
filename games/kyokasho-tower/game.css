@@ -17,11 +17,11 @@ button,input{font:inherit}
 button{cursor:pointer}
 button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #ffbd26;outline-offset:2px}
 img{max-width:100%;display:block}
-.tower-app{width:min(720px,100%);margin:0 auto;min-height:100vh;padding:14px 14px 48px;background:linear-gradient(rgba(249,251,255,.93),rgba(255,250,240,.97)),url("../../nise_transfer_student_background_9x16.png") center/cover fixed}
+.tower-app{width:min(720px,100%);margin:0 auto;min-height:100vh;padding:14px 14px 48px;background:linear-gradient(rgba(249,251,255,.93),rgba(255,250,240,.97)),url("../../kyokasho_tower_background.png") center/cover fixed}
 .top-nav{display:flex;justify-content:space-between;gap:8px;margin-bottom:10px}
 .nav-pill{border:1px solid #d8dee7;background:rgba(255,255,255,.94);color:var(--ink);border-radius:999px;padding:9px 13px;font-size:13px;font-weight:900;box-shadow:0 4px 14px rgba(30,42,60,.07)}
 .screen-heading{text-align:center;margin:18px 0 16px}.screen-heading h1{font-size:clamp(28px,7vw,38px);margin:0 0 7px}.screen-heading p{margin:0;color:var(--muted);font-weight:800;line-height:1.55}
-.title-card{position:relative;overflow:hidden;min-height:calc(100vh - 76px);border-radius:28px;padding:26px 18px;display:grid;align-content:center;text-align:center;background:linear-gradient(to bottom,rgba(11,23,43,.03) 12%,rgba(11,23,43,.13) 52%,rgba(11,23,43,.48) 100%),url("../../nise_transfer_student_background_9x16.png") center 47%/cover no-repeat;color:#fff;box-shadow:var(--shadow)}
+.title-card{position:relative;overflow:hidden;min-height:calc(100vh - 76px);border-radius:28px;padding:26px 18px;display:grid;align-content:center;text-align:center;background:linear-gradient(to bottom,rgba(11,23,43,.03) 12%,rgba(11,23,43,.13) 52%,rgba(11,23,43,.48) 100%),url("../../kyokasho_tower_background.png") center 47%/cover no-repeat;color:#fff;box-shadow:var(--shadow)}
 .title-card>*{position:relative;z-index:1}
 .title-logo{width:min(620px,98%);max-height:280px;object-fit:contain;margin:0 auto 12px;filter:drop-shadow(0 10px 18px rgba(16,30,58,.3))}
 .title-copy{margin:8px auto 20px;padding:10px 15px;border-radius:17px;background:rgba(30,38,58,.46);font-weight:900;line-height:1.7;max-width:520px;text-shadow:0 2px 7px rgba(0,0,0,.5);backdrop-filter:blur(3px)}
