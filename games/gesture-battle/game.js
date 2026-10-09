@@ -105,12 +105,15 @@ function modeScreen(){
 }
 function membersScreen(){
   loadPlayers();
-  const nums=[];for(let n=minPlayers();n<=10;n++)nums.push(n);
-  const used=state.players.map(p=>p.icon);
-  return topNav()+heading('メンバーを選ぶ',state.mode==='team'?'チームバトルは4〜10人':'みんなでジェスチャーは2〜10人')+
-    '<section class="card"><h2>何人で遊ぶ？</h2><div class="count-grid">'+nums.map(n=>'<button class="choice-btn '+(state.playerCount===n?'selected':'')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
-    '<div class="member-edit-list">'+state.players.map((p,i)=>'<section class="member-edit-card"><button class="member-avatar-btn" data-member-avatar="'+i+'" aria-label="'+esc(p.name)+'のアイコンを変更">'+esc(p.icon)+'</button><div class="member-edit-main"><label>プレイヤー'+(i+1)+'<input data-member-name="'+i+'" maxlength="12" value="'+esc(p.name)+'"></label><div class="member-icon-picker '+(state.memberIconTarget===i?'open':'')+'">'+(playersApi?.ICONS||[]).map(ic=>'<button class="member-icon-choice '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+ic+'" '+(p.icon!==ic&&used.includes(ic)?'disabled':'')+'>'+ic+'</button>').join('')+'</div></div></section>').join('')+'</div>'+
-    '<button class="btn full" data-members-done>このメンバーで決定</button>';
+  return topNav()+playersApi.renderEditor({
+    min:minPlayers(),
+    max:10,
+    count:state.playerCount,
+    players:state.players,
+    title:'参加メンバー',
+    subtitle:state.mode==='team'?'チームバトルは4〜10人':'みんなでジェスチャーは2〜10人',
+    doneLabel:'このメンバーで決定'
+  });
 }
 function setupTeamsBalanced(){
   const ids=shuffle([...Array(state.playerCount).keys()]);
