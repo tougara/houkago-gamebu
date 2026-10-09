@@ -1,7 +1,7 @@
 (function(){
   const KEY='houkago_gamebu_players_v1';
   const ICONS=['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','👽','🤖','👻'];
-  const MIN_COUNT=3,MAX_COUNT=10;
+  const MIN_COUNT=2,MAX_COUNT=10;
   function clampCount(n){n=Number(n);if(!Number.isFinite(n))n=4;return Math.max(MIN_COUNT,Math.min(MAX_COUNT,Math.round(n)))}
   function fallbackPlayer(i){return {name:'プレイヤー'+(i+1),icon:ICONS[i%ICONS.length]}}
   function cleanPlayer(p,i){const fb=fallbackPlayer(i);const name=String(p&&p.name||'').trim().slice(0,12)||fb.name;const icon=ICONS.includes(p&&p.icon)?p.icon:fb.icon;return {name,icon}}
