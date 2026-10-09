@@ -1272,3 +1272,57 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     font-size:7px;
   }
 }
+
+
+/* Pitadome stability fixes 2026-10-10 */
+/* 中断確認はどの画面でも必ず全画面を覆う */
+.leave-confirm{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  border-radius:0!important;
+  z-index:9999!important;
+  padding:16px;
+  background:rgba(2,10,17,.84)!important;
+}
+
+/* 新しい火花演出が旧 .spark-burst i より確実に優先されるようにする */
+.spark-burst .spark-piece{
+  --angle:calc(var(--i) * 20deg);
+  position:absolute;
+  width:8px;
+  height:28px;
+  border-radius:999px;
+  background:linear-gradient(#fffbd8,#ffc43d 58%,#d7820b);
+  box-shadow:0 0 10px rgba(255,216,90,.70);
+  transform-origin:4px 3px;
+  opacity:0;
+  animation:sparkBlast .82s ease-out both;
+  animation-delay:calc(var(--i) * 6ms);
+}
+
+/* かんたんモードの10刻み目盛りは小画面でも潰れにくくする */
+.screen-play .easy-meter-labels{
+  width:100%;
+}
+@media(max-width:360px){
+  .screen-play .easy-meter-labels span{
+    font-size:7px;
+  }
+  .screen-play .easy-meter-labels span::before{
+    height:5px;
+  }
+}
+
+/* 結果画面で複数ボーナスが重なっても1画面内に残す */
+@media(max-height:760px){
+  .screen-roundResult .bonus-notice,
+  .screen-roundResult .note{
+    padding:4px 6px;
+    margin-top:3px;
+    font-size:8px;
+    line-height:1.1;
+  }
+}
