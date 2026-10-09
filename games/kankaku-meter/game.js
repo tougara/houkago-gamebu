@@ -173,5 +173,6 @@ document.querySelector('[data-add-custom]')?.addEventListener('click',addCustom)
 document.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{const a=customItems();a.splice(Number(b.dataset.delete),1);saveCustom(a);render()}));
 }
 loadPlayers();render();
+window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
