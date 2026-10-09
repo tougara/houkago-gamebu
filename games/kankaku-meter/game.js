@@ -1,5 +1,7 @@
 (()=>{
 const app=document.getElementById('app');
+const resumeApi=window.HoukagoResume;
+const RESUME_ID='kankaku-meter';
 const DB=window.KANKAKU_QUESTIONS||{};
 const playersApi=window.HoukagoPlayers;
 const CUSTOM_KEY='houkago_kankaku_custom_v1';
@@ -44,7 +46,19 @@ function rulesScreen(){return topNav()+heading('あそびかた','数字を言�
 function composeTopicScreen(){const q=state.topic||{q:'',low:'',high:''};return topNav()+heading('お題を考える','このラウンドだけ、自分たちのお題で遊べます')+'<section class="card custom-form"><label>お題<input id="tq" maxlength="60" value="'+esc(q.category==='みんなのお題'?q.q:'')+'" placeholder="例：もらったらうれしいプレゼント"></label><div class="custom-two"><label>1のイメージ<input id="tl" maxlength="30" value="'+esc(q.category==='みんなのお題'?q.low:'')+'" placeholder="例：いらない"></label><label>100のイメージ<input id="th" maxlength="30" value="'+esc(q.category==='みんなのお題'?q.high:'')+'" placeholder="例：最高にうれしい"></label></div><button class="btn full" data-use-composed-topic>このお題で遊ぶ</button></section>'}
 function customScreen(){const items=customItems();return topNav()+heading('マイお題','自分たちだけの感覚テーマを作ろう')+'<section class="card custom-form"><label>お題<input id="cq" maxlength="60" placeholder="例：旅行で行きたい場所"></label><div class="custom-two"><label>1のイメージ<input id="cl" maxlength="30" placeholder="行きたくない"></label><label>100のイメージ<input id="ch" maxlength="30" placeholder="今すぐ行きたい"></label></div><button class="btn full" data-add-custom>追加する</button></section><section class="card"><h2>保存したお題 '+items.length+'問</h2>'+(items.length?'<div class="custom-list">'+items.map((x,i)=>'<div class="custom-item"><div><strong>'+esc(x.q)+'</strong><span>1：'+esc(x.low)+' / 100：'+esc(x.high)+'</span></div><button data-delete="'+i+'">削除</button></div>').join('')+'</div>':'<p>まだマイお題はありません。</p>')+'</section>'}
 function screenHtml(){return({title:titleScreen,setup:setupScreen,members:membersScreen,categories:categoriesScreen,topic:topicScreen,composeTopic:composeTopicScreen,pass:passScreen,number:numberScreen,ready:readyScreen,arrange:arrangeScreen,orderConfirm:orderConfirmScreen,result:resultScreen,final:finalScreen,rules:rulesScreen,custom:customScreen}[state.screen]||titleScreen)()}
-function render({preserveScroll=false,scrollY=window.scrollY}={}){app.className='meter-app screen-'+state.screen;app.innerHTML=screenHtml();bind();if(preserveScroll){window.scrollTo({top:scrollY,behavior:'auto'});requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:'auto'}))}else{window.scrollTo({top:0,behavior:'auto'})}}
+function resumeSnapshot(){
+  const s={...state};
+  if(s.screen==='number')s.screen='pass';
+  return s;
+}
+function persistResume(){
+  if(state.gameStarted)resumeApi?.save?.(RESUME_ID,{title:'感覚メーター',path:'/games/kankaku-meter/',summary:'ROUND '+(state.round+1)+' / '+state.roundCount},resumeSnapshot());
+  else if(state.screen==='final')resumeApi?.clear?.(RESUME_ID);
+}
+function restoreResume(saved){
+  Object.assign(state,saved);state.gameStarted=true;render();
+}
+function render({preserveScroll=false,scrollY=window.scrollY}={}){app.className='meter-app screen-'+state.screen;app.innerHTML=screenHtml();bind();if(preserveScroll){window.scrollTo({top:scrollY,behavior:'auto'});requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:'auto'}))}else{window.scrollTo({top:0,behavior:'auto'})}persistResume()}
 function go(s,{push=true}={}){if(push&&state.screen!==s)state.history.push(state.screen);state.screen=s;render()}
 function doBackOne(){
   if(!state.gameStarted){if(state.history.length){state.screen=state.history.pop();render()}else{location.href='../'};return}
@@ -70,7 +84,7 @@ function showNavConfirm(type){
   wrap.innerHTML='<section class="recheck-modal"><div class="recheck-warning">ゲームの途中です</div><h2>'+(isHome?'ゲームをやめますか？':'1個前にもどりますか？')+'</h2><p>'+(isHome?'今のラウンドをやめて、ゲームをえらぶ画面へ戻ります。':backText)+'</p><div class="recheck-actions"><button class="btn secondary" data-nav-cancel>ゲームにもどる</button><button class="btn" data-nav-ok>ほんとにもどる</button></div></section>';
   document.body.appendChild(wrap);
   wrap.querySelector('[data-nav-cancel]').addEventListener('click',()=>wrap.remove());
-  wrap.querySelector('[data-nav-ok]').addEventListener('click',()=>{wrap.remove();if(isHome)location.href='../';else doBackOne()});
+  wrap.querySelector('[data-nav-ok]').addEventListener('click',()=>{wrap.remove();if(isHome){resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;location.href='../'}else doBackOne()});
   wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove()})
 }
 function safeBack(){showNavConfirm('back')}
@@ -154,9 +168,10 @@ document.querySelector('[data-finalize-order]')?.addEventListener('click',finali
 document.querySelectorAll('[data-result-reveal]').forEach(b=>b.addEventListener('click',()=>{const pi=Number(b.dataset.resultReveal);state.resultRevealed.add(pi);render()}));
 document.querySelector('[data-next-round]')?.addEventListener('click',nextRound);
 document.querySelector('[data-replay]')?.addEventListener('click',()=>{state.history=[];beginGame()});
-document.querySelector('[data-title]')?.addEventListener('click',()=>{state.gameStarted=false;state.history=[];go('title',{push:false})});
+document.querySelector('[data-title]')?.addEventListener('click',()=>{resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.history=[];go('title',{push:false})});
 document.querySelector('[data-add-custom]')?.addEventListener('click',addCustom);
 document.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{const a=customItems();a.splice(Number(b.dataset.delete),1);saveCustom(a);render()}));
 }
 loadPlayers();render();
+resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
