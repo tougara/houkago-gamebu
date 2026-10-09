@@ -663,6 +663,8 @@ body.registry-open{overflow:hidden}
   .game-card-art-meter{min-height:210px}
   .meter-card-logo-img{width:100%;max-height:190px}
 }
+/* Enlarge only the Kankaku Meter logo in the game selection card. */
+.game-card-art-meter .meter-card-logo-img{transform:scale(1.4);transform-origin:center}
 
 
 /* Kyokasho Tower */
