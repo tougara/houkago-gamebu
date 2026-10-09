@@ -5,7 +5,7 @@ const SOLO_KEY='houkago_pitadome_solo_player_v1';
 const RANK_KEY='houkago_pitadome_rankings_v1';
 
 const state={
-  screen:'title',history:[],gameStarted:false,mode:null,
+  screen:'title',history:[],gameStarted:false,mode:null,needsOpeningCountdown:true,
   soloIndex:0,player:null,memberReturn:'title',
   round:1,totalRounds:10,score:0,perfects:0,
   lives:3,target:50,value:0,error:0,resultValue:0,
@@ -162,7 +162,7 @@ function rulesScreen(){
     '<div class="rules-list">'+
       '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように0〜100の目標が出ます。</span></div></section>'+
       '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転などが登場します。</span></div></section>'+
-      '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>指が触れた瞬間に停止。目標に近いほど高得点です。</span></div></section>'+
+      '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>最初だけ3・2・1で開始。指が触れた瞬間に停止し、次ラウンドからはカウントダウンなしで始まります。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>近さを連続させてCOMBO</strong><span>誤差3以内が続くほど得点倍率UP。PERFECTはコンボ+2。</span></div></section>'+
     '</div>'+
     '<section class="card mode-help"><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>10種類の仕掛けを攻略するスコアアタック。FINALは複数ギミック。</p></div><div><strong>エンドレス</strong><p>進むほど合格範囲が狭くなり、複数ギミックが重なります。</p></div></section>'+
@@ -264,8 +264,8 @@ function playScreen(){
     (stageBreakRound()?'<div class="stage-banner"><small>LEVEL UP</small><strong>'+esc(state.stageName)+'</strong></div>':'')+
     '<div class="target-wrap"><div class="target-label">この数字をねらえ</div><div class="target-number">'+state.target+'<small>をねらえ！</small></div><div class="gimmick-row">'+state.gimmicks.map(g=>'<span>'+esc(g)+'</span>').join('')+'</div></div>'+
     '<div class="meter-zone"><div class="meter-shell" style="width:'+Math.round(state.barScale*100)+'%"><div class="meter-track"><div class="meter-line"></div>'+blind+'<div class="meter-cursor" id="meterCursor"></div></div><div class="meter-labels"><span style="left:0%">0</span><span style="left:'+state.refPoint+'%">'+state.refPoint+'</span><span style="left:100%">100</span></div></div></div>'+
-    '<button class="stop-btn" data-stop disabled>STOP！</button>'+
-    '<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">3</div></div>'+
+    '<button class="stop-btn" data-stop '+(state.needsOpeningCountdown?'disabled':'')+'>STOP！</button>'+
+    (state.needsOpeningCountdown?'<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">3</div></div>':'')+
   '</section></div>';
 }
 function scoreForError(e){
@@ -358,7 +358,7 @@ function roundResultScreen(){
       (state.charmEarnedThisRound?'<div class="bonus-notice charm-notice">10 COMBO達成！ 護符を獲得</div>':'')+
       (state.lifeProtected?'<div class="bonus-notice charm-notice">護符がミスを防いだ！</div>':'')+
       (lifeLost?'<div class="note">SAFE ±'+state.safeLimit+'を超えたためライフ−1。</div>':'')+
-    '</section><button class="btn full" data-next-round>'+(isGameOver()?'結果を見る':'次のラウンドへ')+'</button>';
+    '</section><button class="btn full" data-next-round disabled>'+(isGameOver()?'結果を見る':'次のラウンドへ')+'</button>';
 }
 function isGameOver(){return state.mode==='ten'?state.round>=10:state.lives<=0}
 function finishGame(){
@@ -398,10 +398,13 @@ function screenHtml(){
 function render(){
   app.className='pitadome-app screen-'+state.screen;
   app.innerHTML=screenHtml();bind();window.scrollTo({top:0,behavior:'auto'});
-  if(state.screen==='play')startCountdown();
+  if(state.screen==='play'){
+    if(state.needsOpeningCountdown)startCountdown();
+    else requestAnimationFrame(()=>startMotion());
+  }
 }
 function beginGame(mode=state.mode){
-  loadPlayer();state.mode=mode;state.history=[];state.gameStarted=true;state.round=1;state.score=0;state.perfects=0;
+  loadPlayer();state.mode=mode;state.history=[];state.gameStarted=true;state.round=1;state.score=0;state.perfects=0;state.needsOpeningCountdown=true;
   state.lives=3;state.roundErrors=[];state.newRecord=false;state.combo=0;state.maxCombo=0;state.quietGauge=0;state.mushinReady=false;state.mushinActive=false;state.charm=0;
   prepareRound();state.screen='play';render();
 }
@@ -412,7 +415,7 @@ function startCountdown(){
   const tick=()=>{
     if(n>1){n--;if(num)num.textContent=n;state.countdownId=setTimeout(tick,650);return}
     if(num){num.textContent='START!';num.classList.add('start-text')}
-    state.countdownId=setTimeout(()=>{overlay?.remove();if(stopBtn)stopBtn.disabled=false;startMotion()},420);
+    state.countdownId=setTimeout(()=>{state.needsOpeningCountdown=false;overlay?.remove();if(stopBtn)stopBtn.disabled=false;startMotion()},420);
   };
   state.countdownId=setTimeout(tick,650);
 }
@@ -467,7 +470,11 @@ function bind(){
   document.querySelector('[data-members-done]')?.addEventListener('click',()=>go('playerSelect',{push:false}));
   const stopBtn=document.querySelector('[data-stop]');
   stopBtn?.addEventListener('pointerdown',e=>{e.preventDefault();stopRound()},{passive:false});
-  document.querySelector('[data-next-round]')?.addEventListener('click',nextRound);
+  const nextBtn=document.querySelector('[data-next-round]');
+  if(nextBtn){
+    setTimeout(()=>{if(nextBtn.isConnected)nextBtn.disabled=false},700);
+    nextBtn.addEventListener('click',nextRound);
+  }
   document.querySelector('[data-replay]')?.addEventListener('click',()=>beginGame(state.mode));
   document.querySelector('[data-change-mode]')?.addEventListener('click',()=>{state.history=[];state.screen='mode';render()});
   document.querySelectorAll('[data-rank-mode]').forEach(b=>b.addEventListener('click',()=>{state.rankMode=b.dataset.rankMode;state.rankEdit=false;render()}));
