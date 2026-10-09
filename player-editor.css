@@ -1,0 +1,24 @@
+.shared-player-editor{display:grid;gap:12px}
+.shared-player-heading{text-align:center;margin:4px 0 2px}
+.shared-player-heading h1{margin:0 0 5px;font-size:clamp(28px,7.5vw,40px);line-height:1.1;color:inherit}
+.shared-player-heading p{margin:0;color:#667085;font-weight:800;line-height:1.45}
+.shared-player-card{background:#fff;border:1px solid #dfe6ef;border-radius:22px;padding:14px;box-shadow:0 10px 28px rgba(25,40,70,.10);min-width:0;overflow:hidden}
+.shared-player-card h2{margin:0 0 10px;font-size:clamp(23px,6vw,31px)}
+.shared-count-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.shared-count-btn{min-width:0;min-height:58px;border:2px solid #dce4ed;border-radius:16px;background:#fff;color:#526077;font:inherit;font-weight:1000;font-size:18px}
+.shared-count-btn.selected{background:#eaf5ff;border-color:#2994ea;color:#0c62ae}
+.shared-player-list{display:grid;gap:10px}
+.shared-player-row{display:grid;gap:10px}
+.shared-player-main{display:grid;grid-template-columns:64px minmax(0,1fr);gap:11px;align-items:center;min-width:0}
+.shared-player-avatar{width:60px;height:60px;border:2px solid #dce4ed;border-radius:18px;background:#f7f9fc;display:grid;place-items:center;font-size:32px}
+.shared-player-main label{display:grid;gap:5px;min-width:0;color:#667085;font-weight:950}
+.shared-player-main label span{font-size:12px}
+.shared-player-main input{width:100%;min-width:0;border:2px solid #dce4ed;border-radius:13px;padding:10px 12px;font:inherit;font-size:17px;font-weight:850;color:#15223a;background:#fff}
+.shared-icon-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;width:100%;min-width:0}
+.shared-icon-btn{width:100%;min-width:0;aspect-ratio:1/1;min-height:46px;padding:0;border:2px solid #dfe5ed;border-radius:13px;background:#fff;font:inherit;font-size:22px;display:grid;place-items:center}
+.shared-icon-btn.selected{border-color:#2994ea;background:#eaf5ff}
+.shared-icon-btn:disabled{opacity:.30;filter:grayscale(.25);cursor:not-allowed}
+.shared-player-note{margin:0;text-align:center;color:#667085;font-size:12px;font-weight:850}
+.shared-player-done{width:100%;min-height:58px;border:0;border-radius:18px;padding:13px 16px;background:linear-gradient(180deg,#269aff,#0c60cc);color:#fff;font:inherit;font-size:18px;font-weight:1000;box-shadow:0 5px 0 #06438f}
+.shared-player-done:active{transform:translateY(3px);box-shadow:0 2px 0 #06438f}
+@media(max-width:380px){.shared-count-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.shared-icon-grid{gap:6px}.shared-icon-btn{font-size:20px;min-height:42px}.shared-player-main{grid-template-columns:58px minmax(0,1fr)}.shared-player-avatar{width:54px;height:54px}}
