@@ -64,7 +64,7 @@ add('動き','normal',[
 
 const CATEGORY_ORDER=['動物','スポーツ','日常','学校','職業','食べ物','もの','動き'];
 const state={
-  screen:'title',history:[],gameStarted:false,mode:null,
+  screen:'title',history:[],gameStarted:false,mode:null,memberReturn:'flow',
   playerCount:4,players:[],memberIconTarget:null,
   teams:{orange:[],lime:[]},timeLimit:60,difficulty:'mix',
   selectedCategories:new Set(CATEGORY_ORDER),
@@ -204,7 +204,7 @@ function finalScreen(){
   if(state.mode==='team'){
     const a=state.teamScores.orange,b=state.teamScores.lime;
     const winner=a===b?'引き分け！':(a>b?'オレンジチーム WIN！':'ライムチーム WIN！');
-    return topNav()+'<div class="final-wrap"><section class="winner-card"><div class="winner-crown">🏆</div><h1>'+winner+'</h1><div class="team-total-board"><div class="team-total orange"><span>オレンジ</span><strong>'+a+'</strong><span>点</span></div><div class="team-total lime"><span>ライム</span><strong>'+b+'</strong><span>点</span></div></div><p>MVP：'+mvp.map(x=>esc(x.p.icon)+' '+esc(x.p.name)+' '+x.score+'問').join(' / ')+'</p></section><section class="card"><h2>個人スコア</h2><div class="ranking">'+rankingRows()+'</div></section><div class="stack"><button class="btn yellow full" data-replay>同じチームでもう一度</button><button class="btn secondary full" data-change-team>チームを変えて再戦</button><button class="btn secondary full" data-title>タイトルへ</button></div></div>';
+    return topNav()+'<div class="final-wrap"><section class="winner-card"><div class="winner-crown">🏆</div><h1>'+winner+'</h1><div class="team-total-board"><div class="team-total orange"><span>オレンジ</span><strong>'+a+'</strong><span>点</span></div><div class="team-total lime"><span>ライム</span><strong>'+b+'</strong><span>点</span></div></div><p>全員の結果は下で確認できます。</p></section><section class="card"><h2>個人スコア</h2><div class="ranking">'+rankingRows()+'</div></section><div class="stack"><button class="btn yellow full" data-replay>同じチームでもう一度</button><button class="btn secondary full" data-change-team>チームを変えて再戦</button><button class="btn secondary full" data-title>タイトルへ</button></div></div>';
   }
   const total=state.scores.reduce((a,b)=>a+b,0);
   return topNav()+'<div class="final-wrap"><section class="total-highlight"><span>みんなで正解した数</span><strong>'+total+'</strong><span>問！</span></section><section class="card"><h2>みんなの結果</h2><div class="ranking">'+rankingRows()+'</div><p style="text-align:center;margin-top:10px">MVP：'+mvp.map(x=>esc(x.p.icon)+' '+esc(x.p.name)+' '+x.score+'問').join(' / ')+'</p></section><div class="stack"><button class="btn yellow full" data-replay>同じ設定でもう一度</button><button class="btn secondary full" data-title>タイトルへ</button></div></div>';
@@ -333,8 +333,8 @@ function bind(){
   document.querySelector('[data-home]')?.addEventListener('click',()=>navConfirm('home'));
   document.querySelector('[data-start-title]')?.addEventListener('click',()=>{state.history=[];go('mode',{push:false})});
   document.querySelector('[data-rules]')?.addEventListener('click',()=>go('rules'));
-  document.querySelector('[data-members-direct]')?.addEventListener('click',()=>{state.mode=state.mode||'free';state.memberIconTarget=null;go('members')});
-  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;loadPlayers();if(state.mode==='team'&&state.playerCount<4){playersApi?.setActiveCount?.(4);loadPlayers()}state.memberIconTarget=null;go('members')}));
+  document.querySelector('[data-members-direct]')?.addEventListener('click',()=>{state.mode=state.mode||'free';state.memberReturn='title';state.memberIconTarget=null;go('members')});
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;state.memberReturn='flow';loadPlayers();if(state.mode==='team'&&state.playerCount<4){playersApi?.setActiveCount?.(4);loadPlayers()}state.memberIconTarget=null;go('members')}));
   document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{playersApi?.setActiveCount?.(Number(b.dataset.memberCount));state.memberIconTarget=null;loadPlayers();render()}));
   document.querySelectorAll('[data-member-avatar]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.memberAvatar);state.memberIconTarget=state.memberIconTarget===i?null:i;render()}));
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.memberIcon);playersApi?.setPlayer?.(i,{icon:b.dataset.icon});state.memberIconTarget=null;loadPlayers();render()}));
@@ -347,7 +347,7 @@ function bind(){
   document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{state.difficulty=b.dataset.difficulty;render()}));
   document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{const c=b.dataset.category;if(state.selectedCategories.has(c)){if(state.selectedCategories.size>1)state.selectedCategories.delete(c)}else state.selectedCategories.add(c);render()}));
   document.querySelector('[data-toggle-all]')?.addEventListener('click',()=>{const all=CATEGORY_ORDER.every(c=>state.selectedCategories.has(c));state.selectedCategories=all?new Set([CATEGORY_ORDER[0]]):new Set(CATEGORY_ORDER);render()});
-  document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberIconTarget=null;go('members')});
+  document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberReturn='flow';state.memberIconTarget=null;go('members')});
   document.querySelector('[data-begin]')?.addEventListener('click',beginGame);
   document.querySelector('[data-show-topic]')?.addEventListener('click',()=>{state.currentPrompt=drawPrompt();go('topic',{push:false})});
   document.querySelector('[data-start-turn]')?.addEventListener('click',startTurn);
