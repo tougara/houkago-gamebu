@@ -25,7 +25,7 @@ img{max-width:100%;display:block}
 .title-card>*{position:relative;z-index:1}
 .title-logo{width:min(620px,98%);max-height:280px;object-fit:contain;margin:0 auto 12px;filter:drop-shadow(0 10px 18px rgba(16,30,58,.3))}
 /* Only the title screen logo moves upward; in-game round logos stay unchanged. */
-.title-card > .title-logo{transform:translateY(calc(-1 * clamp(52px,10dvh,86px)))}
+.title-card > .title-logo{transform:translateY(clamp(-86px,-10dvh,-52px))}
 .title-copy{margin:8px auto 20px;padding:10px 15px;border-radius:17px;background:rgba(30,38,58,.46);font-weight:900;line-height:1.7;max-width:520px;text-shadow:0 2px 7px rgba(0,0,0,.5);backdrop-filter:blur(3px)}
 .card{background:rgba(255,253,249,.97);border:1px solid rgba(219,215,207,.95);border-radius:23px;padding:17px;box-shadow:var(--shadow);margin-bottom:13px}
 .stack{display:grid;gap:12px}
