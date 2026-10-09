@@ -452,7 +452,7 @@ function bind(){
   document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;const count=saveTowerPlayerCount(Number(b.dataset.memberCount));playersApi?.setActiveCount?.(count);loadPlayers();render({preserveScroll:true,scrollY:y})}));
   document.querySelectorAll('[data-member-name]').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.memberName);updateMember(i,{name:inp.value||('プレイヤー'+(i+1))})}));
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;updateMember(Number(b.dataset.memberIcon),{icon:b.dataset.icon});render({preserveScroll:true,scrollY:y})}));
-  document.querySelector('[data-members-done]')?.addEventListener('click',()=>{loadPlayers();go('setup')});
+  document.querySelector('[data-members-done]')?.addEventListener('click',()=>{loadPlayers();if(state.history[state.history.length-1]==='setup')state.history.pop();state.screen='setup';render()});
   document.querySelector('[data-start-game]')?.addEventListener('click',startGame);
   document.querySelector('[data-rule-prev]')?.addEventListener('click',()=>{if(state.rulePage>0){state.rulePage--;render({preserveScroll:true,scrollY:window.scrollY})}});
   document.querySelector('[data-rule-next]')?.addEventListener('click',()=>{if(state.rulePage<RULES.length-1){state.rulePage++;render({preserveScroll:true,scrollY:window.scrollY})}else go('setup')});
