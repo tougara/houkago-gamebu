@@ -1430,3 +1430,270 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     font-size:17px;
   }
 }
+
+
+/* Unified play/result geometry 2026-10-10 */
+.pitadome-app{
+  --pita-action-h:84px;
+  --pita-meter-track-h:54px;
+  --pita-meter-line-h:12px;
+  --pita-meter-label-h:26px;
+}
+
+/* 10ラウンド / エンドレス / かんたん / 通常でプレイ画面の縦位置を完全共通化 */
+.screen-play .play-panel{
+  display:grid;
+  grid-template-rows:
+    auto
+    auto
+    auto
+    38px
+    178px
+    118px
+    var(--pita-action-h)
+    minmax(0,1fr);
+  gap:4px;
+  align-content:stretch;
+}
+.screen-play .hud,
+.screen-play .sub-hud,
+.screen-play .quiet-row{
+  margin:0;
+}
+.screen-play .stage-banner{
+  box-sizing:border-box;
+  height:38px;
+  min-height:38px;
+  padding:3px 8px;
+  display:grid;
+  align-content:center;
+  overflow:hidden;
+}
+.screen-play .stage-banner.is-placeholder{
+  visibility:hidden;
+}
+.screen-play .stage-banner small{
+  line-height:1;
+}
+.screen-play .stage-banner strong{
+  line-height:1.05;
+}
+.screen-play .target-wrap{
+  height:178px;
+  min-height:178px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  align-items:center;
+  overflow:visible;
+  padding-top:5px;
+}
+.screen-play .target-label{
+  flex:0 0 auto;
+}
+.screen-play .target-number{
+  flex:0 0 auto;
+}
+.screen-play .gimmick-row{
+  flex:0 0 22px;
+  min-height:22px;
+  margin-top:5px;
+  align-items:center;
+}
+.screen-play .meter-zone{
+  box-sizing:border-box;
+  height:118px;
+  min-height:118px;
+  margin:0;
+  padding:12px 0 0;
+  display:grid;
+  place-items:start center;
+  align-content:start;
+  overflow:visible;
+}
+.screen-play .meter-shell{
+  box-sizing:border-box;
+  height:calc(var(--pita-meter-track-h) + var(--pita-meter-label-h));
+  min-height:calc(var(--pita-meter-track-h) + var(--pita-meter-label-h));
+}
+.screen-play .meter-track{
+  height:var(--pita-meter-track-h);
+  min-height:var(--pita-meter-track-h);
+}
+.screen-play .meter-track .meter-line{
+  height:var(--pita-meter-line-h);
+}
+.screen-play .meter-track .meter-cursor{
+  top:3px;
+  height:48px;
+  width:6px;
+}
+.screen-play .blind-zone{
+  top:16px;
+  height:22px;
+}
+.screen-play .meter-labels,
+.screen-play .easy-meter-labels{
+  height:var(--pita-meter-label-h)!important;
+  min-height:var(--pita-meter-label-h)!important;
+  margin-top:0;
+}
+.screen-play .meter-labels span{
+  font-size:13px;
+  line-height:1;
+}
+.screen-play .easy-meter-labels span{
+  font-size:9px;
+}
+.screen-play .stop-btn{
+  box-sizing:border-box;
+  width:100%;
+  height:var(--pita-action-h)!important;
+  min-height:var(--pita-action-h)!important;
+  max-height:var(--pita-action-h)!important;
+  margin:0!important;
+  align-self:start;
+  border-radius:24px;
+  font-size:clamp(38px,10vw,54px);
+}
+
+/* ラウンド結果も全モードで同じカード位置・同じ主ボタン高さ */
+.pitadome-app.screen-roundResult{
+  --pita-result-card-h:min(57dvh,470px);
+  grid-template-rows:auto auto var(--pita-result-card-h) var(--pita-action-h) minmax(0,1fr);
+  gap:6px;
+  align-content:stretch;
+}
+.screen-roundResult .result-card{
+  box-sizing:border-box;
+  width:100%;
+  height:var(--pita-result-card-h)!important;
+  min-height:var(--pita-result-card-h)!important;
+  max-height:var(--pita-result-card-h)!important;
+  margin:0;
+  overflow:hidden;
+}
+.screen-roundResult > [data-next-round]{
+  box-sizing:border-box;
+  width:100%;
+  height:var(--pita-action-h)!important;
+  min-height:var(--pita-action-h)!important;
+  max-height:var(--pita-action-h)!important;
+  margin:0!important;
+  border-radius:24px;
+  font-size:clamp(21px,5.8vw,29px);
+}
+
+/* 「もう一度！」も同じ主ボタン規格 */
+.screen-final > .stack [data-replay],
+.pitadome-app [data-start-title]{
+  box-sizing:border-box;
+  height:var(--pita-action-h)!important;
+  min-height:var(--pita-action-h)!important;
+  max-height:var(--pita-action-h)!important;
+}
+
+/* 主ボタンはすべて同一の黄色 */
+.pitadome-app [data-stop],
+.pitadome-app [data-start-title],
+.pitadome-app [data-next-round],
+.pitadome-app [data-replay]{
+  background:linear-gradient(180deg,#fff98f 0%,#ffe34d 40%,#ffc31f 74%,#f3a300 100%)!important;
+  border:2px solid #fff2ad!important;
+  color:#201400!important;
+  box-shadow:
+    0 7px 0 #b96c04,
+    0 11px 22px rgba(0,0,0,.24),
+    inset 0 2px 0 rgba(255,255,255,.82)!important;
+}
+.pitadome-app [data-stop]:disabled,
+.pitadome-app [data-next-round]:disabled{
+  opacity:.97!important;
+  background:linear-gradient(180deg,#fff9a2 0%,#ffe66b 48%,#ffc63c 100%)!important;
+}
+
+/* 低いスマホでも全モード同じ比率で縮小し、スクロールさせない */
+@media(max-height:760px){
+  .pitadome-app{
+    --pita-action-h:72px;
+    --pita-meter-track-h:50px;
+    --pita-meter-label-h:24px;
+  }
+  .screen-play .play-panel{
+    grid-template-rows:auto auto auto 32px 150px 104px var(--pita-action-h) minmax(0,1fr);
+    gap:3px;
+  }
+  .screen-play .stage-banner{
+    height:32px;
+    min-height:32px;
+    padding:2px 6px;
+  }
+  .screen-play .target-wrap{
+    height:150px;
+    min-height:150px;
+    padding-top:2px;
+  }
+  .screen-play .meter-zone{
+    height:104px;
+    min-height:104px;
+    padding-top:8px;
+  }
+  .screen-play .meter-track .meter-cursor{
+    height:44px;
+    top:3px;
+  }
+  .screen-play .blind-zone{
+    top:15px;
+    height:20px;
+  }
+  .screen-play .meter-labels span{
+    font-size:11px;
+  }
+  .screen-play .easy-meter-labels span{
+    font-size:8px;
+  }
+  .screen-play .stop-btn{
+    font-size:36px;
+  }
+  .pitadome-app.screen-roundResult{
+    --pita-result-card-h:min(56dvh,410px);
+  }
+  .screen-roundResult > [data-next-round]{
+    font-size:19px;
+  }
+}
+@media(max-height:680px){
+  .pitadome-app{
+    --pita-action-h:64px;
+    --pita-meter-track-h:46px;
+    --pita-meter-label-h:22px;
+  }
+  .screen-play .play-panel{
+    grid-template-rows:auto auto auto 28px 128px 92px var(--pita-action-h) minmax(0,1fr);
+  }
+  .screen-play .stage-banner{
+    height:28px;
+    min-height:28px;
+  }
+  .screen-play .target-wrap{
+    height:128px;
+    min-height:128px;
+  }
+  .screen-play .meter-zone{
+    height:92px;
+    min-height:92px;
+    padding-top:6px;
+  }
+  .screen-play .meter-track .meter-cursor{
+    height:40px;
+  }
+  .screen-play .stop-btn{
+    font-size:32px;
+  }
+  .pitadome-app.screen-roundResult{
+    --pita-result-card-h:min(55dvh,360px);
+  }
+  .screen-roundResult > [data-next-round]{
+    font-size:17px;
+  }
+}
