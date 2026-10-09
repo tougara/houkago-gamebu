@@ -130,18 +130,45 @@ function teamScreen(){
     '<div class="team-actions"><button class="btn secondary" data-shuffle-teams>ランダムで分ける</button><button class="btn" data-team-done '+(!teamsValid()?'disabled':'')+'>このチームで決定</button></div>'+
     (!teamsValid()?'<p class="team-note">各チーム2人以上、人数差は1人までにしてください。</p>':'');
 }
-function settingsScreen(){
+function settings1Screen(){
+  return topNav()+heading('ゲーム設定','1 / 2　参加メンバーと制限時間')+
+    '<div class="settings-progress"><span class="active"></span><span></span></div>'+
+    '<section class="card"><div class="section-row"><div><h2>参加メンバー</h2><p>'+state.playerCount+'人で遊びます</p></div><button class="small-btn" data-edit-members>変更</button></div><div class="member-chips">'+state.players.map(memberChip).join('')+'</div></section>'+
+    '<section class="card"><h2>制限時間</h2><p>1人のジェスチャー時間</p><div class="setting-row"><div class="segmented">'+[30,45,60].map(n=>'<button class="seg-btn '+(state.timeLimit===n?'selected':'')+'" data-time="'+n+'" aria-pressed="'+(state.timeLimit===n?'true':'false')+'">'+n+'秒</button>').join('')+'</div></div></section>'+
+    '<button class="btn yellow full" data-settings-next>次へ　お題を設定</button>';
+}
+function settings2Screen(){
   const poolCount=filteredPool().length;
-  return topNav()+heading('ゲーム設定','遊びやすい設定を選んでスタート')+
-    '<section class="card"><h2>制限時間</h2><div class="setting-row"><div class="segmented">'+[30,45,60].map(n=>'<button class="seg-btn '+(state.timeLimit===n?'selected':'')+'" data-time="'+n+'">'+n+'秒</button>').join('')+'</div></div></section>'+
+  return topNav()+heading('お題設定','2 / 2　難しさとジャンル')+
+    '<div class="settings-progress"><span class="active"></span><span class="active"></span></div>'+
     '<section class="card"><h2>お題の難しさ</h2><div class="setting-row"><div class="segmented">'+
-      '<button class="seg-btn '+(state.difficulty==='easy'?'selected':'')+'" data-difficulty="easy">やさしい</button>'+
-      '<button class="seg-btn '+(state.difficulty==='normal'?'selected':'')+'" data-difficulty="normal">ふつう</button>'+
-      '<button class="seg-btn '+(state.difficulty==='mix'?'selected':'')+'" data-difficulty="mix">ごちゃまぜ</button>'+
+      '<button class="seg-btn '+(state.difficulty==='easy'?'selected':'')+'" data-difficulty="easy" aria-pressed="'+(state.difficulty==='easy'?'true':'false')+'">やさしい</button>'+
+      '<button class="seg-btn '+(state.difficulty==='normal'?'selected':'')+'" data-difficulty="normal" aria-pressed="'+(state.difficulty==='normal'?'true':'false')+'">ふつう</button>'+
+      '<button class="seg-btn '+(state.difficulty==='mix'?'selected':'')+'" data-difficulty="mix" aria-pressed="'+(state.difficulty==='mix'?'true':'false')+'">ごちゃまぜ</button>'+
     '</div></div></section>'+
-    '<section class="card"><div class="section-row"><div><h2>お題ジャンル</h2><p>'+poolCount+'問から出題</p></div><button class="small-btn" data-toggle-all>全部</button></div><div class="category-grid" style="margin-top:10px">'+CATEGORY_ORDER.map(c=>'<button class="category-btn '+(state.selectedCategories.has(c)?'selected':'')+'" data-category="'+c+'">'+c+'</button>').join('')+'</div></section>'+
-    '<section class="card"><div class="section-row"><div><h2>参加メンバー</h2><p>'+state.playerCount+'人</p></div><button class="small-btn" data-edit-members>変更</button></div><div class="member-chips">'+state.players.map(memberChip).join('')+'</div></section>'+
-    '<button class="btn yellow full" data-begin '+(poolCount<10?'disabled':'')+'>ゲームスタート</button>';
+    '<section class="card"><div class="section-row"><div><h2>お題ジャンル</h2><p data-pool-count>'+poolCount+'問から出題</p></div><button class="small-btn" data-toggle-all aria-pressed="'+(CATEGORY_ORDER.every(c=>state.selectedCategories.has(c))?'true':'false')+'">全部</button></div><div class="category-grid" style="margin-top:10px">'+CATEGORY_ORDER.map(c=>'<button class="category-btn '+(state.selectedCategories.has(c)?'selected':'')+'" data-category="'+c+'" aria-pressed="'+(state.selectedCategories.has(c)?'true':'false')+'">'+c+'</button>').join('')+'</div></section>'+
+    '<div class="settings-bottom-actions"><button class="btn secondary" data-settings-prev>前へ</button><button class="btn yellow" data-begin '+(poolCount<10?'disabled':'')+'>ゲームスタート</button></div>';
+}
+function updateSettingsUI(){
+  document.querySelectorAll('[data-time]').forEach(b=>{
+    const on=Number(b.dataset.time)===state.timeLimit;
+    b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));
+  });
+  document.querySelectorAll('[data-difficulty]').forEach(b=>{
+    const on=b.dataset.difficulty===state.difficulty;
+    b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));
+  });
+  document.querySelectorAll('[data-category]').forEach(b=>{
+    const on=state.selectedCategories.has(b.dataset.category);
+    b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on));
+  });
+  const poolCount=filteredPool().length;
+  const countEl=document.querySelector('[data-pool-count]');
+  if(countEl)countEl.textContent=poolCount+'問から出題';
+  const begin=document.querySelector('[data-begin]');
+  if(begin)begin.disabled=poolCount<10;
+  const allBtn=document.querySelector('[data-toggle-all]');
+  if(allBtn)allBtn.setAttribute('aria-pressed',String(CATEGORY_ORDER.every(c=>state.selectedCategories.has(c))));
 }
 function rulesScreen(){
   return topNav()+heading('あそびかた','動きだけでお題を伝えよう！')+
@@ -295,7 +322,7 @@ function replaySame(){
 
 function screenHtml(){
   return ({
-    title:titleScreen,mode:modeScreen,members:membersScreen,teams:teamScreen,settings:settingsScreen,
+    title:titleScreen,mode:modeScreen,members:membersScreen,teams:teamScreen,settings1:settings1Screen,settings2:settings2Screen,
     rules:rulesScreen,handoff:handoffScreen,topic:topicScreen,play:playScreen,turnResult:turnResultScreen,final:finalScreen
   }[state.screen]||titleScreen)();
 }
@@ -324,10 +351,16 @@ function afterMembers(){
     go('title',{push:false});
     return;
   }
+  if(state.memberReturn==='settings1'){
+    state.memberReturn='flow';
+    if(state.mode==='team'&&!teamsValid())setupTeamsBalanced();
+    go('settings1',{push:false});
+    return;
+  }
   if(state.mode==='team'){
     if(state.playerCount<4){alert('チームバトルは4人以上で遊んでください。');return}
     setupTeamsBalanced();go('teams');
-  }else go('settings');
+  }else go('settings1');
 }
 function moveTeam(player,from){
   const to=from==='orange'?'lime':'orange';
@@ -350,12 +383,23 @@ function bind(){
   document.querySelector('[data-members-done]')?.addEventListener('click',afterMembers);
   document.querySelectorAll('[data-move-team]').forEach(b=>b.addEventListener('click',()=>moveTeam(Number(b.dataset.player),b.dataset.moveTeam)));
   document.querySelector('[data-shuffle-teams]')?.addEventListener('click',()=>{setupTeamsBalanced();render()});
-  document.querySelector('[data-team-done]')?.addEventListener('click',()=>{if(teamsValid())go('settings')});
-  document.querySelectorAll('[data-time]').forEach(b=>b.addEventListener('click',()=>{state.timeLimit=Number(b.dataset.time);render()}));
-  document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{state.difficulty=b.dataset.difficulty;render()}));
-  document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{const c=b.dataset.category;if(state.selectedCategories.has(c)){if(state.selectedCategories.size>1)state.selectedCategories.delete(c)}else state.selectedCategories.add(c);render()}));
-  document.querySelector('[data-toggle-all]')?.addEventListener('click',()=>{const all=CATEGORY_ORDER.every(c=>state.selectedCategories.has(c));state.selectedCategories=all?new Set([CATEGORY_ORDER[0]]):new Set(CATEGORY_ORDER);render()});
-  document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberReturn='flow';state.memberIconTarget=null;go('members')});
+  document.querySelector('[data-team-done]')?.addEventListener('click',()=>{if(teamsValid())go('settings1')});
+  document.querySelectorAll('[data-time]').forEach(b=>b.addEventListener('click',()=>{state.timeLimit=Number(b.dataset.time);updateSettingsUI()}));
+  document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{state.difficulty=b.dataset.difficulty;updateSettingsUI()}));
+  document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{
+    const cat=b.dataset.category;
+    if(state.selectedCategories.has(cat)){if(state.selectedCategories.size>1)state.selectedCategories.delete(cat)}
+    else state.selectedCategories.add(cat);
+    updateSettingsUI();
+  }));
+  document.querySelector('[data-toggle-all]')?.addEventListener('click',()=>{
+    const all=CATEGORY_ORDER.every(cat=>state.selectedCategories.has(cat));
+    state.selectedCategories=all?new Set([CATEGORY_ORDER[0]]):new Set(CATEGORY_ORDER);
+    updateSettingsUI();
+  });
+  document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberReturn='settings1';state.memberIconTarget=null;go('members')});
+  document.querySelector('[data-settings-next]')?.addEventListener('click',()=>go('settings2'));
+  document.querySelector('[data-settings-prev]')?.addEventListener('click',doBackOne);
   document.querySelector('[data-begin]')?.addEventListener('click',beginGame);
   document.querySelector('[data-show-topic]')?.addEventListener('click',()=>{state.currentPrompt=drawPrompt();go('topic',{push:false})});
   document.querySelector('[data-start-turn]')?.addEventListener('click',startTurn);
