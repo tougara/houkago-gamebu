@@ -47,7 +47,9 @@
       <button class="game-filter" type="button" data-game-filter="会話">会話</button>
       <button class="game-filter" type="button" data-game-filter="協力">協力</button>
       <button class="game-filter" type="button" data-game-filter="戦略">戦略</button>
-      <button class="game-filter" type="button" data-game-filter="パーティー">パーティー</button>\n      <button class="game-filter" type="button" data-game-filter="2人対戦">2人対戦</button>
+      <button class="game-filter" type="button" data-game-filter="パーティー">パーティー</button>
+      <button class="game-filter" type="button" data-game-filter="1人">1人</button>
+      <button class="game-filter" type="button" data-game-filter="2人対戦">2人対戦</button>
     </nav>
 
     <section class="compact-game-grid" aria-label="ゲーム一覧">
@@ -106,6 +108,17 @@
         </div>
       </a>
 
+      <a class="compact-game-card" href="pitadome-challenge/" data-categories="1人 反射 スコアアタック" data-game-card>
+        <div class="compact-game-art pitadome-card-art">
+          <img src="../pitadome_challenge_logo.png" alt="" />
+          <span class="game-feel">集中</span>
+        </div>
+        <div class="compact-game-body">
+          <h2>ピタ止めチャレンジ</h2>
+          <div class="compact-tags"><span>1人</span><span>タイミング</span></div>
+        </div>
+      </a>
+
       <div class="compact-game-card coming-card" data-categories="2人対戦" data-game-card aria-label="2人対戦ゲーム 準備中">
         <div class="compact-game-art coming-art">
           <span class="coming-badge">準備中</span>
@@ -119,7 +132,7 @@
       </div>
     </section>
 
-    <p class="game-count-note"><span id="gameCount">6</span>件のゲームを表示中</p>
+    <p class="game-count-note"><span id="gameCount">7</span>件のゲームを表示中</p>
   </main>
 
   <script>
