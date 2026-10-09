@@ -323,7 +323,7 @@ function doBackOne(){
       else alert('前の人の手番には戻れません。今の手番から続けてください。');
       return
     }
-    if(state.screen==='roundIntro'){state.gameStarted=false;state.screen='setup';render();return}
+    if(state.screen==='roundIntro'){resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.screen='setup';render();return}
     if(state.screen==='turnEnd'||state.screen==='roundResult'){alert('確定した手番や結果は元に戻せません。');return}
   }
   if(state.history.length){state.screen=state.history.pop();render()}
