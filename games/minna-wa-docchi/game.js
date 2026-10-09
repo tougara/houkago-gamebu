@@ -120,11 +120,15 @@ function optionsScreen(){
 }
 function membersScreen(){
   loadPlayers();
-  const icons=playersApi?.ICONS||['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹'];
-  return topNav()+heading('参加メンバー','ここで変えると他のゲームにも反映されます')+
-  '<section class="card"><h2>人数</h2><div class="count-grid">'+Array.from({length:8},(_,i)=>i+3).map(n=>'<button class="choice-chip '+(state.playerCount===n?'selected':'')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
-  '<div class="member-edit-list">'+state.players.map((p,i)=>'<section class="card member-edit"><div class="member-line"><div class="member-avatar">'+esc(p.icon)+'</div><label>'+(i+1)+'人目<input maxlength="12" value="'+esc(p.name)+'" data-member-name="'+i+'"></label></div><div class="icon-grid">'+icons.map(ic=>'<button class="icon-choice '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+ic+'">'+ic+'</button>').join('')+'</div></section>').join('')+'</div>'+
-  '<button class="btn full" data-members-done>このメンバーでOK</button>';
+  return topNav()+playersApi.renderEditor({
+    min:3,
+    max:10,
+    count:state.playerCount,
+    players:state.players,
+    title:'参加メンバー',
+    subtitle:'名前とアイコンは放課後ゲーム部で共通です',
+    doneLabel:'このメンバーでOK'
+  });
 }
 function customScreen(){
   const items=customItems();
