@@ -47,3 +47,42 @@ button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus
 .mode-badge-row .mode-badge{margin-bottom:0}
 .mode-players{display:inline-flex!important;width:max-content;padding:5px 9px;border-radius:999px;background:#f1f4f8;color:#526078;font-size:10px!important;font-weight:1000!important}
 .mode-card.team .mode-players{background:#eef8d9;color:#517412}
+
+
+/* Two-step settings layout */
+.settings-progress{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  width:min(220px,62%);
+  margin:0 auto 13px;
+}
+.settings-progress span{
+  height:6px;
+  border-radius:999px;
+  background:#d9e2ec;
+}
+.settings-progress span.active{
+  background:linear-gradient(90deg,#2d9bf0,#0d63c4);
+}
+.settings-bottom-actions{
+  display:grid;
+  grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);
+  gap:9px;
+  align-items:stretch;
+}
+.settings-bottom-actions .btn{
+  width:100%;
+}
+.screen-settings1 .card,
+.screen-settings2 .card{
+  margin-bottom:12px;
+}
+.screen-settings1 .member-chips{
+  margin-top:12px;
+}
+@media(max-width:380px){
+  .settings-bottom-actions{
+    grid-template-columns:1fr;
+  }
+}
