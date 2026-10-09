@@ -13,7 +13,7 @@ const ROLE_DEFS={
   collaborator:{name:'秘密の協力者',side:'fake',image:'../../role_secret_collaborator.png',max:1,desc:'ニセモノサイドですが、ニセ転校生そのものではありません。ニセ転校生が見つからなければ一緒に勝利します。誰がニセ転校生かは知りません。'},
   trickster:{name:'いたずらっ子',side:'trick',image:'../../role_trickster.png',max:1,desc:'クセモノサイドです。休み時間の行動はありません。最終投票で自分が最多票の判定対象になれば、クセモノサイドの単独勝利です。'}
 };
-const PLAYER_ICONS=window.HoukagoPlayers?.ICONS||['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','👽','🤖','👻'];
+const PLAYER_ICONS=window.HoukagoPlayers?.ICONS||['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','🦍','🦄','👻'];
 const SHARED_PLAYERS=window.HoukagoPlayers?.load?.()||null;
 const BASIC_ROLE_KEYS=['classmate','fake','president','swapper'];
 const ADVANCED_ROLE_KEYS=['observer','dayDuty','collaborator','trickster'];
@@ -76,14 +76,17 @@ function doNavAction(type){if(type==='back')backOne();else window.location.href=
 function confirmNav(type){
   if(!state.gameStarted){doNavAction(type);return;}
   document.querySelector('.nav-confirm-backdrop')?.remove();
+  const timerWasRunning=!!state.timerId;
+  if(timerWasRunning)stopTimer();
   const wrap=document.createElement('div');
   wrap.className='modal-backdrop nav-confirm-backdrop';
   const isTop=type==='top';
+  const cancel=()=>{wrap.remove();if(timerWasRunning&&state.screen==='discussion')toggleTimer();};
   wrap.innerHTML=`<div class="modal nav-confirm-modal"><h2>ほんとにもどる？</h2><p>${isTop?'ゲームを途中でやめて、ゲームをえらぶ画面へもどります。':'ゲームの途中です。1個前の画面にもどります。'}</p><div class="grid2"><button type="button" class="btn secondary" id="cancelNav">ゲームにもどる</button><button type="button" class="btn danger" id="confirmNav">ほんとにもどる</button></div></div>`;
   document.body.appendChild(wrap);
-  document.getElementById('cancelNav').addEventListener('click',()=>wrap.remove());
+  document.getElementById('cancelNav').addEventListener('click',cancel);
   document.getElementById('confirmNav').addEventListener('click',()=>{wrap.remove();doNavAction(type);});
-  wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove();});
+  wrap.addEventListener('click',e=>{if(e.target===wrap)cancel();});
 }
 function confirmCardChoice(title,message,onConfirm){
   document.querySelector('.card-choice-confirm')?.remove();
@@ -232,6 +235,6 @@ function bind(){
   let observed=[];document.querySelectorAll('[data-observer-card]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.observerCard);if(observed.includes(i)){observed=observed.filter(x=>x!==i);b.classList.remove('table-card-observer-selected');}else if(observed.length<2){observed.push(i);b.classList.add('table-card-observer-selected');}const status=document.getElementById('observerStatus');if(status)status.textContent=observed.length+' / 2人選択';const c=document.getElementById('observerCheck');if(c)c.disabled=observed.length!==2;}));document.getElementById('observerCheck')?.addEventListener('click',()=>{const same=ROLE_DEFS[state.initialRoles[observed[0]]].side===ROLE_DEFS[state.initialRoles[observed[1]]].side,p=document.querySelector('.observer-action-card')||document.querySelector('.card.stack');p.innerHTML=`<div class="role-reveal observer-result"><h2>${same?'同じサイドです':'ちがうサイドです'}</h2><p><strong>${esc(state.players[observed[0]].name)}さん</strong> と <strong>${esc(state.players[observed[1]].name)}さん</strong></p><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('revealNext'));});
   document.querySelectorAll('[data-swap-card]').forEach(b=>b.addEventListener('click',()=>{const t=Number(b.dataset.swapCard),me=state.nightIndex;confirmCardChoice('このカードでよろしいですか？',esc(state.players[t].name)+'さんと席替えします。',()=>{[state.finalRoles[me],state.finalRoles[t]]=[state.finalRoles[t],state.finalRoles[me]];const myRole=state.finalRoles[me],theirRole=state.finalRoles[t],board=document.querySelector('.table-board'),p=document.querySelector('.card.stack');if(board)board.outerHTML=gameBoard({useFinal:true,facePlayers:[me,t],selfPlayer:me,swapPlayers:[t]});p.innerHTML=`<div class="role-reveal"><h2>${esc(state.players[t].name)}さんと交換しました</h2><p><strong>黄色の枠が自分の新しいカード</strong><br><strong>水色の枠が交換相手のカード</strong>です。</p><div class="swap-result-cards"><div><span>自分の新しい役職</span><img class="role-card-large role-detail-trigger" data-role-detail="${myRole}" src="${ROLE_DEFS[myRole].image}" alt="${ROLE_DEFS[myRole].name}"><strong>${ROLE_DEFS[myRole].name}</strong></div><div><span>${esc(state.players[t].name)}さん</span><img class="role-card-large role-detail-trigger" data-role-detail="${theirRole}" src="${ROLE_DEFS[theirRole].image}" alt="${ROLE_DEFS[theirRole].name}"><strong>${ROLE_DEFS[theirRole].name}</strong></div></div><p class="role-desc">交換された相手には、交換されたことは知らされません。</p><button class="btn full" id="nightDone">確認した</button></div>`;document.getElementById('nightDone').addEventListener('click',()=>queueCover('revealNext'));});}));document.getElementById('noSwap')?.addEventListener('click',()=>queueCover('revealNext'));
   document.getElementById('timerToggle')?.addEventListener('click',toggleTimer);document.getElementById('plus60')?.addEventListener('click',()=>adjustDiscussionTimer(60));document.getElementById('plus10')?.addEventListener('click',()=>adjustDiscussionTimer(10));document.getElementById('minus60')?.addEventListener('click',()=>adjustDiscussionTimer(-60));document.getElementById('minus10')?.addEventListener('click',()=>adjustDiscussionTimer(-10));document.getElementById('toVote')?.addEventListener('click',()=>{stopTimer();state.voteIndex=0;state.votes=[];go('votePass');});bindHold('holdVote',()=>go('vote'));document.querySelectorAll('[data-vote-card]').forEach(b=>b.addEventListener('click',()=>{const t=Number(b.dataset.voteCard);confirmCardChoice('このカードに投票しますか？',esc(state.players[t].name)+'さんに投票します。',()=>{state.votes[state.voteIndex]=t;queueCover('voteNext');});}));
-  document.getElementById('showResult')?.addEventListener('click',()=>go('result'));document.getElementById('restartSame')?.addEventListener('click',()=>{state.navHistory=[];startGame();});document.getElementById('restartRoles')?.addEventListener('click',()=>{state.gameStarted=false;state.navHistory=[];go('roles');});
+  document.getElementById('showResult')?.addEventListener('click',()=>{state.gameStarted=false;go('result');});document.getElementById('restartSame')?.addEventListener('click',()=>{state.navHistory=[];state.screen='roles';startGame();});document.getElementById('restartRoles')?.addEventListener('click',()=>{state.gameStarted=false;state.navHistory=[];state.screen='roles';render();});
 }
 setBaseRoles();ensurePlayers();render();
