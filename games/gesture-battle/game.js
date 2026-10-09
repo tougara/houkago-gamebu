@@ -354,6 +354,7 @@ function afterMembers(){
   if(state.memberReturn==='settings1'){
     state.memberReturn='flow';
     if(state.mode==='team'&&!teamsValid())setupTeamsBalanced();
+    if(state.history[state.history.length-1]==='settings1')state.history.pop();
     go('settings1',{push:false});
     return;
   }
@@ -393,8 +394,7 @@ function bind(){
     updateSettingsUI();
   }));
   document.querySelector('[data-toggle-all]')?.addEventListener('click',()=>{
-    const all=CATEGORY_ORDER.every(cat=>state.selectedCategories.has(cat));
-    state.selectedCategories=all?new Set([CATEGORY_ORDER[0]]):new Set(CATEGORY_ORDER);
+    state.selectedCategories=new Set(CATEGORY_ORDER);
     updateSettingsUI();
   });
   document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberReturn='settings1';state.memberIconTarget=null;go('members')});
