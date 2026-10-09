@@ -1,5 +1,7 @@
 (()=>{
 const app=document.getElementById('app');
+const resumeApi=window.HoukagoResume;
+const RESUME_ID='minna-wa-docchi';
 const DB=window.DOCCHI_QUESTIONS;
 const playersApi=window.HoukagoPlayers;
 const CUSTOM_KEY='houkago_docchi_custom_v1';
@@ -218,6 +220,18 @@ function screenHtml(){
     result:()=>state.mode==='battle'?battleResultScreen():secretResultScreen(),final:finalScreen
   }[state.screen]||titleScreen)();
 }
+function resumeSnapshot(){
+  const s={...state};
+  if(s.screen==='answer'||s.screen==='predict')s.screen='pass';
+  return s;
+}
+function persistResume(){
+  if(state.gameStarted)resumeApi?.save?.(RESUME_ID,{title:'みんなはどっち？',path:'/games/minna-wa-docchi/',summary:'ROUND '+(state.round+1)+' / '+state.roundCount},resumeSnapshot());
+  else if(state.screen==='final')resumeApi?.clear?.(RESUME_ID);
+}
+function restoreResume(saved){
+  Object.assign(state,saved);state.gameStarted=true;render();
+}
 function render({preserveScroll=false,scrollY=window.scrollY}={}){
   app.className='docchi-app screen-'+state.screen;
   app.innerHTML=screenHtml();
@@ -228,6 +242,7 @@ function render({preserveScroll=false,scrollY=window.scrollY}={}){
   }else{
     window.scrollTo({top:0,behavior:'auto'});
   }
+  persistResume();
 }
 function go(screen,{push=true}={}){
   if(push&&state.screen!==screen)state.history.push(state.screen);
@@ -252,6 +267,7 @@ function safeBack(){
 }
 function goGameList(){
   if(state.gameStarted&&!confirm('ゲームを途中でやめて、ゲーム一覧にもどりますか？'))return;
+  if(state.gameStarted){resumeApi?.clear?.(RESUME_ID);state.gameStarted=false}
   window.location.href='../';
 }
 function chooseMode(mode){
@@ -444,4 +460,5 @@ function bind(){
 }
 loadPlayers();
 render();
+resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
