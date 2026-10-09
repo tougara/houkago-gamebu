@@ -12,78 +12,122 @@
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body class="games-page">
-  <main class="site-shell games-shell">
-    <header class="games-header">
+  <main class="site-shell games-shell game-browser">
+    <header class="games-header browser-header">
       <a class="back-link" href="../">← トップへ</a>
-      <div class="section-heading">
+      <div class="section-heading compact-heading">
         <span class="eyebrow">GAME SELECT</span>
         <h1>ゲームをえらぶ</h1>
-        <p>みんなで遊びたいゲームを選んでね。</p>
+        <p>人数や遊び方から、今やりたいゲームを選ぼう。</p>
       </div>
     </header>
 
-    <section class="games-section games-select-section" aria-label="ゲーム一覧">
-      <article class="game-card">
-        <div class="game-card-art game-card-art-nise">
+    <section class="featured-game" aria-label="おすすめゲーム">
+      <div class="featured-label">おすすめゲーム</div>
+      <a class="featured-card" href="nise-transfer-student/">
+        <div class="featured-art featured-art-nise">
           <img src="../nise_transfer_student_logo.png" alt="ニセ転校生を探せ！" />
         </div>
-        <div class="game-card-body">
-          <div class="game-meta">
-            <span>3〜10人</span><span>約5〜10分</span><span>推理</span><span>正体隠匿</span>
+        <div class="featured-info">
+          <div class="featured-copy">
+            <strong>ニセ転校生を探せ！</strong>
+            <span>役職の情報と話し合いでニセモノを見つけよう</span>
           </div>
+          <div class="featured-meta">
+            <span>3〜10人</span><span>推理</span><span>正体隠匿</span>
+          </div>
+          <span class="featured-open">くわしく見る</span>
+        </div>
+      </a>
+    </section>
+
+    <nav class="game-filters" aria-label="ゲームカテゴリー">
+      <button class="game-filter selected" type="button" data-game-filter="all">すべて</button>
+      <button class="game-filter" type="button" data-game-filter="推理">推理</button>
+      <button class="game-filter" type="button" data-game-filter="会話">会話</button>
+      <button class="game-filter" type="button" data-game-filter="協力">協力</button>
+      <button class="game-filter" type="button" data-game-filter="戦略">戦略</button>
+      <button class="game-filter" type="button" data-game-filter="2人対戦">2人対戦</button>
+    </nav>
+
+    <section class="compact-game-grid" aria-label="ゲーム一覧">
+      <a class="compact-game-card" href="nise-transfer-student/" data-categories="推理 正体隠匿" data-game-card>
+        <div class="compact-game-art game-card-art-nise">
+          <img src="../nise_transfer_student_logo.png" alt="" />
+          <span class="game-feel">盛り上がる</span>
+        </div>
+        <div class="compact-game-body">
           <h2>ニセ転校生を探せ！</h2>
-          <p>クラスにまぎれたニセ転校生を、役職の情報と話し合いで見つけよう。</p>
-          <a class="play-button" href="nise-transfer-student/">このゲームで遊ぶ</a>
+          <div class="compact-tags"><span>3〜10人</span><span>推理</span></div>
         </div>
-      </article>
+      </a>
 
-      <article class="game-card">
-        <div class="game-card-art game-card-art-docchi">
-          <img src="../minna_wa_docchi_logo.png" alt="みんなはどっち？" />
+      <a class="compact-game-card" href="minna-wa-docchi/" data-categories="会話 2択" data-game-card>
+        <div class="compact-game-art game-card-art-docchi">
+          <img src="../minna_wa_docchi_logo.png" alt="" />
+          <span class="game-feel">みんなでワイワイ</span>
         </div>
-        <div class="game-card-body">
-          <div class="game-meta">
-            <span>3〜10人</span><span>スマホ1台</span><span>2択</span><span>会話</span>
-          </div>
+        <div class="compact-game-body">
           <h2>みんなはどっち？</h2>
-          <p>2択にこっそり答えて、友達の考えを読んだり、匿名の結果だけで盛り上がったりするゲーム。2つのモードで遊べます。</p>
-          <a class="play-button" href="minna-wa-docchi/">このゲームで遊ぶ</a>
+          <div class="compact-tags"><span>3〜10人</span><span>会話</span></div>
         </div>
-      </article>
+      </a>
 
-      <article class="game-card">
-        <div class="game-card-art game-card-art-meter">
-          <img class="meter-card-logo-img" src="../kankaku_meter_logo.png" alt="感覚メーター" />
+      <a class="compact-game-card" href="kankaku-meter/" data-categories="協力 会話" data-game-card>
+        <div class="compact-game-art game-card-art-meter">
+          <img class="meter-card-logo-img" src="../kankaku_meter_logo.png" alt="" />
+          <span class="game-feel">協力</span>
         </div>
-        <div class="game-card-body">
-          <div class="game-meta">
-            <span>3〜10人</span><span>スマホ1台</span><span>協力</span><span>会話</span>
-          </div>
+        <div class="compact-game-body">
           <h2>感覚メーター</h2>
-          <p>秘密の数字を言わず、ことばの感覚だけでみんなの順番をそろえる協力ゲーム。</p>
-          <a class="play-button" href="kankaku-meter/">このゲームで遊ぶ</a>
+          <div class="compact-tags"><span>3〜10人</span><span>協力</span></div>
         </div>
-      </article>
+      </a>
 
-      <article class="game-card">
-        <div class="game-card-art game-card-art-tower">
-          <img class="tower-card-logo-img" src="../kyokasho_tower_logo.png" alt="教科書タワー" />
+      <a class="compact-game-card" href="kyokasho-tower/" data-categories="戦略 カード" data-game-card>
+        <div class="compact-game-art game-card-art-tower">
+          <img class="tower-card-logo-img" src="../kyokasho_tower_logo.png" alt="" />
+          <span class="game-feel">じっくり</span>
         </div>
-        <div class="game-card-body">
-          <div class="game-meta">
-            <span>2〜6人</span><span>スマホ1台</span><span>戦略</span><span>カード</span>
-          </div>
+        <div class="compact-game-body">
           <h2>教科書タワー</h2>
-          <p>国語・算数・理科・社会・英語の教科書を積んで、手札を全部なくそう。置き場所を考える読み合いゲーム。</p>
-          <a class="play-button" href="kyokasho-tower/">このゲームで遊ぶ</a>
+          <div class="compact-tags"><span>2〜6人</span><span>戦略</span></div>
         </div>
-      </article>
+      </a>
 
-      <div class="coming-soon" aria-label="今後ゲームを追加予定">
-        <strong>さらにゲームを追加予定</strong>
-        <span>放課後にスマホ1台で遊べるゲームを順番に増やしていきます。</span>
+      <div class="compact-game-card coming-card" data-categories="2人対戦" data-game-card aria-label="2人対戦ゲーム 準備中">
+        <div class="compact-game-art coming-art">
+          <span class="coming-badge">準備中</span>
+          <div class="coming-controller">🎮</div>
+          <strong>2人対戦ゲーム</strong>
+        </div>
+        <div class="compact-game-body">
+          <h2>新しいゲーム</h2>
+          <div class="compact-tags"><span>2人</span><span>2人対戦</span></div>
+        </div>
       </div>
     </section>
+
+    <p class="game-count-note"><span id="gameCount">5</span>件のゲームを表示中</p>
   </main>
+
+  <script>
+    (() => {
+      const filters=[...document.querySelectorAll('[data-game-filter]')];
+      const cards=[...document.querySelectorAll('[data-game-card]')];
+      const count=document.getElementById('gameCount');
+      filters.forEach(btn=>btn.addEventListener('click',()=>{
+        const value=btn.dataset.gameFilter;
+        filters.forEach(x=>x.classList.toggle('selected',x===btn));
+        let visible=0;
+        cards.forEach(card=>{
+          const show=value==='all'||(card.dataset.categories||'').split(' ').includes(value);
+          card.hidden=!show;
+          if(show)visible++;
+        });
+        count.textContent=visible;
+      }));
+    })();
+  </script>
 </body>
 </html>
