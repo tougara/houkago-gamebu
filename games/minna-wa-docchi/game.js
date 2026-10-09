@@ -33,7 +33,9 @@ function loadPlayers(){
   const d=playersApi?.load?.();
   if(d){
     state.playerCount=Math.max(3,Math.min(10,Number(d.activeCount)||4));
-    state.players=d.players.slice(0,state.playerCount).map(x=>({...x}));
+    if(state.playerCount!==d.activeCount)playersApi?.setActiveCount?.(state.playerCount);
+    const fresh=playersApi?.load?.()||d;
+    state.players=fresh.players.slice(0,state.playerCount).map(x=>({...x}));
   }else{
     state.players=Array.from({length:state.playerCount},(_,i)=>({name:'プレイヤー'+(i+1),icon:'🙂'}));
   }
