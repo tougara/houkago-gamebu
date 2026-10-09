@@ -245,7 +245,11 @@ function startMotion(){
     if(state.value>=100){state.value=100;state.dir=-1}
     if(state.value<=0){state.value=0;state.dir=1}
     const cursor=document.getElementById('meterCursor');
-    if(cursor)cursor.style.left='calc(12px + '+state.value+'% * (100% - 24px) / 100)';
+    if(cursor){
+      const wrap=cursor.parentElement;
+      const usable=Math.max(0,(wrap?.clientWidth||0)-24);
+      cursor.style.left=(12+usable*(state.value/100))+'px';
+    }
     state.rafId=requestAnimationFrame(step);
   };
   state.rafId=requestAnimationFrame(step);
