@@ -339,7 +339,8 @@ function bind(){
   document.querySelector('[data-back]')?.addEventListener('click',()=>navConfirm('back'));
   document.querySelector('[data-home]')?.addEventListener('click',()=>navConfirm('home'));
   document.querySelector('[data-start-title]')?.addEventListener('click',()=>{state.history=[];go('mode',{push:false})});
-  document.querySelector('[data-rules]')?.addEventListener('click',()=>go('rules'));\n  document.querySelector('[data-rules-back]')?.addEventListener('click',doBackOne);
+  document.querySelector('[data-rules]')?.addEventListener('click',()=>go('rules'));
+  document.querySelector('[data-rules-back]')?.addEventListener('click',doBackOne);
   document.querySelector('[data-members-direct]')?.addEventListener('click',()=>{state.mode=state.mode||'free';state.memberReturn='title';state.memberIconTarget=null;go('members')});
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;state.memberReturn='flow';loadPlayers();if(state.mode==='team'&&state.playerCount<4){playersApi?.setActiveCount?.(4);loadPlayers()}state.memberIconTarget=null;go('members')}));
   document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{playersApi?.setActiveCount?.(Number(b.dataset.memberCount));state.memberIconTarget=null;loadPlayers();render()}));
