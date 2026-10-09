@@ -135,7 +135,7 @@ function settings1Screen(){
     '<div class="settings-progress"><span class="active"></span><span></span></div>'+
     '<section class="card"><div class="section-row"><div><h2>参加メンバー</h2><p>'+state.playerCount+'人で遊びます</p></div><button class="small-btn" data-edit-members>変更</button></div><div class="member-chips">'+state.players.map(memberChip).join('')+'</div></section>'+
     '<section class="card"><h2>制限時間</h2><p>1人のジェスチャー時間</p><div class="setting-row"><div class="segmented">'+[30,45,60].map(n=>'<button class="seg-btn '+(state.timeLimit===n?'selected':'')+'" data-time="'+n+'" aria-pressed="'+(state.timeLimit===n?'true':'false')+'">'+n+'秒</button>').join('')+'</div></div></section>'+
-    '<button class="btn yellow full" data-settings-next>次へ　お題を設定</button>';
+    '<button class="btn yellow full" data-settings-next>'+(state.mode==='team'?'次へ　チームを決める':'次へ　お題を設定')+'</button>';
 }
 function settings2Screen(){
   const poolCount=filteredPool().length;
@@ -388,7 +388,7 @@ function bind(){
   document.querySelector('[data-rules]')?.addEventListener('click',()=>go('rules'));
   document.querySelector('[data-rules-back]')?.addEventListener('click',doBackOne);
   document.querySelector('[data-members-direct]')?.addEventListener('click',()=>{state.mode=state.mode||'free';state.memberReturn='title';state.memberIconTarget=null;go('members')});
-  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;state.memberReturn='flow';loadPlayers();if(state.mode==='team'&&state.playerCount<4){playersApi?.setActiveCount?.(4);loadPlayers()}state.memberIconTarget=null;go('members')}));
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;state.memberReturn='flow';loadPlayers();if(state.mode==='team'&&state.playerCount<4){playersApi?.setActiveCount?.(4);loadPlayers()}state.teams={orange:[],lime:[]};state.memberIconTarget=null;go('settings1')}));
   document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{playersApi?.setActiveCount?.(Number(b.dataset.memberCount));state.memberIconTarget=null;loadPlayers();render()}));
   document.querySelectorAll('[data-member-avatar]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.memberAvatar);state.memberIconTarget=state.memberIconTarget===i?null:i;render()}));
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.memberIcon);playersApi?.setPlayer?.(i,{icon:b.dataset.icon});state.memberIconTarget=null;loadPlayers();render()}));
@@ -396,7 +396,7 @@ function bind(){
   document.querySelector('[data-members-done]')?.addEventListener('click',afterMembers);
   document.querySelectorAll('[data-move-team]').forEach(b=>b.addEventListener('click',()=>moveTeam(Number(b.dataset.player),b.dataset.moveTeam)));
   document.querySelector('[data-shuffle-teams]')?.addEventListener('click',()=>{setupTeamsBalanced();render()});
-  document.querySelector('[data-team-done]')?.addEventListener('click',()=>{if(teamsValid())go('settings1')});
+  document.querySelector('[data-team-done]')?.addEventListener('click',()=>{if(teamsValid())go('settings2')});
   document.querySelectorAll('[data-time]').forEach(b=>b.addEventListener('click',()=>{state.timeLimit=Number(b.dataset.time);updateSettingsUI()}));
   document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{state.difficulty=b.dataset.difficulty;updateSettingsUI()}));
   document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{
@@ -410,7 +410,7 @@ function bind(){
     updateSettingsUI();
   });
   document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberReturn='settings1';state.memberIconTarget=null;go('members')});
-  document.querySelector('[data-settings-next]')?.addEventListener('click',()=>go('settings2'));
+  document.querySelector('[data-settings-next]')?.addEventListener('click',()=>{if(state.mode==='team'){setupTeamsBalanced();go('teams')}else go('settings2')});
   document.querySelector('[data-settings-prev]')?.addEventListener('click',doBackOne);
   document.querySelector('[data-begin]')?.addEventListener('click',beginGame);
   document.querySelector('[data-show-topic]')?.addEventListener('click',()=>{state.currentPrompt=drawPrompt();go('topic',{push:false})});
