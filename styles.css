@@ -668,7 +668,7 @@ body.registry-open{overflow:hidden}
 /* Kyokasho Tower */
 .game-card-art-tower{
   min-height:230px;
-  background:url("../nise_transfer_student_background_9x16.png") center 45%/cover no-repeat;
+  background:url("../kyokasho_tower_background.png") center 45%/cover no-repeat;
 }
 .game-card-art-tower::before{
   content:"";position:absolute;inset:0;
