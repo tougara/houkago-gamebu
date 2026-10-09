@@ -10,7 +10,7 @@ const state={
   round:1,totalRounds:10,score:0,perfects:0,
   lives:3,target:50,value:0,error:0,resultValue:0,
   baseScore:0,roundScore:0,comment:'',tier:'normal',
-  running:false,countdownId:null,rafId:null,lastTs:0,dir:1,phase:0,speed:42,reverseBucket:-1,
+  running:false,countdownId:null,rafId:null,lastTs:0,dir:1,phase:0,speed:42,reverseBucket:-1,legIndex:0,reversePhase:0,reverseBaseDir:1,
   movement:'normal',barScale:.86,minValue:0,maxValue:100,refPoint:50,blind:false,blindStart:36,blindEnd:62,
   safeLimit:10,gimmicks:[],stageName:'一ノ境',
   roundErrors:[],newRecord:false,
@@ -180,7 +180,7 @@ function rulesScreen(){
   return topNav()+heading('あそびかた','止めるだけ。でもラウンドごとに条件が変わる！')+
     '<div class="rules-list">'+
       '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように目標が出ます。かんたんは1〜100固定、通常は後半に150・200も登場します。</span></div></section>'+
-      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・上限150/200などが登場。高速よりさらに速い「超高速」は後半だけの特別ギミックです。</span></div></section>'+
+      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・上限150/200などが登場。反転は一定の往復リズムの中で時々切り返し、高速よりさらに速い「超高速」は後半だけ登場します。</span></div></section>'+
       '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>最初だけ3・2・1で開始。指が触れた瞬間に停止し、次ラウンドからはカウントダウンなしで始まります。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>近さを連続させてCOMBO</strong><span>誤差3以内が続くほど得点倍率UP。PERFECTはコンボ+2。</span></div></section>'+
     '</div>'+
@@ -360,7 +360,7 @@ function prepareRound(){
   state.gimmicks=[...p.gimmicks];state.stageName=p.stageName||'十番勝負';
   if(state.mushinActive)state.gimmicks.push('無心');
   state.value=Math.random()<.5?state.minValue:state.maxValue;state.dir=state.value===state.minValue?1:-1;state.phase=Math.random()*Math.PI*2;
-  state.lastTs=0;state.reverseBucket=-1;state.error=0;state.baseScore=0;state.roundScore=0;state.comment='';state.resultValue=0;
+  state.lastTs=0;state.reverseBucket=-1;state.legIndex=0;state.reversePhase=0;state.reverseBaseDir=state.dir;state.error=0;state.baseScore=0;state.roundScore=0;state.comment='';state.resultValue=0;
   state.comboMultiplier=1;state.charmEarnedThisRound=false;state.lifeProtected=false;
   newTarget();
   keepEasyTargetVisible();
@@ -558,15 +558,48 @@ function startMotion(){
     let mult=1;
     if(state.movement==='accel')mult=.78+Math.min(.95,state.phase*.09);
     if(state.movement==='change')mult=.68+.68*(.5+.5*Math.sin(state.phase*2.2));
-    if(state.movement==='reverse'){
-      const bucket=Math.floor(state.phase/1.9);
-      if(bucket!==state.reverseBucket&&bucket>0){state.reverseBucket=bucket;state.dir*=-1}
-    }
     const range=state.maxValue-state.minValue;
     const rangeScale=range/100;
     state.value+=state.dir*state.speed*rangeScale*mult*dt;
-    if(state.value>=state.maxValue){state.value=state.maxValue;state.dir=-1}
-    if(state.value<=state.minValue){state.value=state.minValue;state.dir=1}
+
+    // 「反転」は完全ランダムにせず、端まで往復する規則的な動きを基本にする。
+    // 1本おきの往復だけ、70%→35%（または30%→65%）の切り返しを1回入れる。
+    // その後は必ず元の方向へ戻って端まで到達するので、同じ側だけで動き続けない。
+    if(state.value>=state.maxValue){
+      state.value=state.maxValue;
+      state.dir=-1;
+      state.legIndex++;
+      state.reversePhase=0;
+      state.reverseBaseDir=-1;
+    }else if(state.value<=state.minValue){
+      state.value=state.minValue;
+      state.dir=1;
+      state.legIndex++;
+      state.reversePhase=0;
+      state.reverseBaseDir=1;
+    }else if(state.movement==='reverse' && state.legIndex%2===1){
+      const pct=((state.value-state.minValue)/range)*100;
+      if(state.reversePhase===0){
+        if(state.dir===1 && pct>=70){
+          state.reverseBaseDir=1;
+          state.dir=-1;
+          state.reversePhase=1;
+        }else if(state.dir===-1 && pct<=30){
+          state.reverseBaseDir=-1;
+          state.dir=1;
+          state.reversePhase=1;
+        }
+      }else if(state.reversePhase===1){
+        if(state.reverseBaseDir===1 && pct<=35){
+          state.dir=1;
+          state.reversePhase=2;
+        }else if(state.reverseBaseDir===-1 && pct>=65){
+          state.dir=-1;
+          state.reversePhase=2;
+        }
+      }
+    }
+
     const cursor=document.getElementById('meterCursor');
     if(cursor){
       const pct=((state.value-state.minValue)/range)*100;
