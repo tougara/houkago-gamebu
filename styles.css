@@ -743,3 +743,14 @@ body.registry-open{overflow:hidden}
     max-height:34dvh;
   }
 }
+
+
+/* Home logo move further down 2026-10-09 */
+.home-page .hero-logo-wrap{
+  top:27%;
+}
+@media(max-width:767px){
+  .home-page .hero-logo-wrap{
+    top:25%;
+  }
+}
