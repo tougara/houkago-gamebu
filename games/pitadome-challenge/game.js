@@ -10,7 +10,7 @@ const state={
   round:1,totalRounds:10,score:0,perfects:0,perfectStreak:0,maxPerfectStreak:0,
   lives:3,target:50,value:0,error:0,roundScore:0,comment:'',resultValue:0,
   running:false,countdownId:null,rafId:null,lastTs:0,dir:1,phase:0,speed:42,
-  movement:'normal',roundErrors:[],newRecord:false
+  movement:'normal',roundErrors:[],newRecord:false,reverseBucket:-1
 };
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -74,8 +74,9 @@ function titleScreen(){
     '<div class="stack"><button class="btn full" data-start-title>ゲームをはじめる</button><button class="btn secondary full" data-rules>あそびかた</button><button class="btn secondary full" data-player-select>プレイヤーを選ぶ</button></div></section>';
 }
 function modeScreen(){
-  const r=loadRecords();
+  const r=loadRecords();loadPlayer();
   return topNav()+heading('モードを選ぼう','短く遊ぶか、限界まで挑むか')+
+    '<section class="card player-card"><div class="player-main"><div class="player-avatar">'+esc(state.player.icon)+'</div><div><small style="color:#cbd4df;font-weight:900">今回のプレイヤー</small><strong style="display:block">'+esc(state.player.name)+'</strong></div></div><button class="small-btn" data-change-player>変更</button></section>'+
     '<div class="mode-grid">'+
       '<button class="mode-card" data-mode="ten"><div class="mode-badges"><span class="mode-badge">約1〜2分</span><span class="mode-badge">全10ラウンド</span></div><strong>10ラウンドチャレンジ</strong><span>10回の合計点で自己ベストを狙おう。BEST '+r.tenBest+'点</span></button>'+
       '<button class="mode-card" data-mode="endless"><div class="mode-badges"><span class="mode-badge">ENDLESS</span><span class="mode-badge">ライフ3</span></div><strong>エンドレスチャレンジ</strong><span>ミス3回で終了。難易度は少しずつ上がる。BEST '+r.endBest+'点 / ROUND '+r.endRound+'</span></button>'+
@@ -125,7 +126,7 @@ function newTarget(){
 function prepareRound(){
   const d=difficultyForRound(state.round);
   state.speed=d.speed;state.movement=d.movement;state.value=Math.random()<.5?0:100;state.dir=state.value===0?1:-1;state.phase=Math.random()*Math.PI*2;
-  state.lastTs=0;state.error=0;state.roundScore=0;state.comment='';state.resultValue=0;newTarget();
+  state.lastTs=0;state.reverseBucket=-1;state.error=0;state.roundScore=0;state.comment='';state.resultValue=0;newTarget();
 }
 function playScreen(){
   const endless=state.mode==='endless';
@@ -240,7 +241,10 @@ function startMotion(){
     let mult=1;
     if(state.movement==='accel')mult=.82+Math.min(.7,state.phase*.08);
     if(state.movement==='change')mult=.86+.34*(.5+.5*Math.sin(state.phase*2.25));
-    if(state.movement==='reverse'&&Math.sin(state.phase*1.55)>0.985)state.dir*=-1;
+    if(state.movement==='reverse'){
+      const bucket=Math.floor(state.phase/2.15);
+      if(bucket!==state.reverseBucket&&bucket>0){state.reverseBucket=bucket;state.dir*=-1}
+    }
     state.value+=state.dir*state.speed*mult*dt;
     if(state.value>=100){state.value=100;state.dir=-1}
     if(state.value<=0){state.value=0;state.dir=1}
@@ -265,6 +269,7 @@ function bind(){
   document.querySelector('[data-rules]')?.addEventListener('click',()=>go('rules'));
   document.querySelector('[data-rules-back]')?.addEventListener('click',doBackOne);
   document.querySelector('[data-player-select]')?.addEventListener('click',()=>{state.memberReturn='title';go('playerSelect')});
+  document.querySelector('[data-change-player]')?.addEventListener('click',()=>{state.memberReturn='mode';go('playerSelect')});
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>beginGame(b.dataset.mode)));
   document.querySelectorAll('[data-solo-player]').forEach(b=>b.addEventListener('click',()=>{saveSoloIndex(Number(b.dataset.soloPlayer));render()}));
   document.querySelector('[data-edit-members]')?.addEventListener('click',()=>{state.memberReturn='playerSelect';go('members')});
