@@ -302,9 +302,9 @@ function render(){stopTimers();app.className='gesture-app screen-'+state.screen;
 function go(s,{push=true}={}){if(push&&state.screen!==s)state.history.push(state.screen);state.screen=s;render()}
 function doBackOne(){
   stopTimers();
-  if(state.screen==='play'){state.screen='topic';state.gameStarted=false;render();return}
+  if(state.screen==='play'){state.screen='topic';render();return}
   if(state.history.length){state.screen=state.history.pop();render();return}
-  state.screen='title';render();
+  location.href='../';
 }
 function navConfirm(type){
   if(!state.gameStarted){if(type==='home')location.href='../';else doBackOne();return}
@@ -313,12 +313,13 @@ function navConfirm(type){
   wrap.innerHTML='<section class="recheck-modal"><span class="warning">ゲームの途中です</span><h2>'+(type==='home'?'ゲームをやめますか？':'1個前にもどりますか？')+'</h2><p>'+(type==='home'?'今のゲームを終了して、ゲーム一覧へ戻ります。':'今の手番の進行はリセットされます。')+'</p><div class="recheck-actions"><button class="btn secondary" data-cancel>ゲームにもどる</button><button class="btn danger" data-ok>ほんとにもどる</button></div></section>';
   document.body.appendChild(wrap);
   wrap.querySelector('[data-cancel]').addEventListener('click',()=>wrap.remove());
-  wrap.querySelector('[data-ok]').addEventListener('click',()=>{stopTimers();state.gameStarted=false;wrap.remove();if(type==='home')location.href='../';else doBackOne()});
+  wrap.querySelector('[data-ok]').addEventListener('click',()=>{stopTimers();wrap.remove();if(type==='home'){state.gameStarted=false;location.href='../'}else doBackOne()});
 }
 function afterMembers(){
   loadPlayers();
   if(state.memberReturn==='title'){
     state.memberReturn='flow';
+    state.history=[];
     go('title',{push:false});
     return;
   }
