@@ -185,10 +185,30 @@ function rulesScreen(){
     '<section class="card"><h2>2つのモード</h2><p><strong>みんなでジェスチャー：</strong>全員で正解数を積み上げます。<br><strong>チームバトル：</strong>2チームの合計正解数で勝負します。</p></section>'+
     '<button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
-function scoreStrip(){
-  if(state.mode==='team')return '<div class="score-strip"><span class="score-chip orange">オレンジ '+state.teamScores.orange+'点</span><span class="score-chip lime">ライム '+state.teamScores.lime+'点</span></div>';
-  const total=state.scores.reduce((a,b)=>a+b,0);
-  return '<div class="score-strip"><span class="score-chip">みんなの合計 '+total+'問</span></div>';
+function scoreStrip(live=false){
+  if(state.mode==='team'){
+    let orange=state.teamScores.orange,lime=state.teamScores.lime;
+    if(live){
+      const t=currentTeam();
+      if(t==='orange')orange+=state.turnScore;
+      if(t==='lime')lime+=state.turnScore;
+    }
+    return '<div class="score-strip"><span class="score-chip orange">オレンジ <b id="orangeScoreValue">'+orange+'</b>点</span><span class="score-chip lime">ライム <b id="limeScoreValue">'+lime+'</b>点</span></div>';
+  }
+  const total=state.scores.reduce((a,b)=>a+b,0)+(live?state.turnScore:0);
+  return '<div class="score-strip"><span class="score-chip">みんなの合計 <b id="freeScoreValue">'+total+'</b>問</span></div>';
+}
+function refreshLiveScore(){
+  if(state.mode==='team'){
+    const t=currentTeam();
+    const orange=state.teamScores.orange+(t==='orange'?state.turnScore:0);
+    const lime=state.teamScores.lime+(t==='lime'?state.turnScore:0);
+    const o=document.getElementById('orangeScoreValue'),l=document.getElementById('limeScoreValue');
+    if(o)o.textContent=orange;if(l)l.textContent=lime;
+  }else{
+    const el=document.getElementById('freeScoreValue');
+    if(el)el.textContent=state.scores.reduce((a,b)=>a+b,0)+state.turnScore;
+  }
 }
 function handoffScreen(){
   const p=currentPlayer(),t=currentTeam();
@@ -212,7 +232,7 @@ function playScreen(){
   const promptSizeClass=len>=11?' very-long':len>=7?' long':'';
   return topNav()+'<section class="play-screen">'+
     '<div class="play-top"><div class="left">'+(t?'<span>'+teamName(t)+'</span>':'<span>みんなでジェスチャー</span>')+'<strong>'+esc(p.icon)+' '+esc(p.name)+'</strong></div><div class="timer-wrap"><small>のこり</small><span class="timer" id="timerValue">'+state.timeLeft+'</span></div><div class="right"><span>正解</span><strong><span id="turnScore">'+state.turnScore+'</span>問</strong></div></div>'+
-    scoreStrip()+
+    scoreStrip(true)+
     '<div class="prompt-stage prompt-concealed" id="promptStage"><small>ジェスチャーで伝えよう！</small><div class="prompt-word'+promptSizeClass+'" id="promptWord">'+esc(q.word)+'</div><span class="prompt-category" id="promptCategory">'+esc(q.category)+'</span></div>'+
     '<div class="play-actions"><button class="play-btn pass" data-pass>パス</button><button class="play-btn correct" data-correct>正解！ +1</button></div>'+
     '<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">3</div></div>'+
@@ -308,7 +328,7 @@ function startClock(){
 }
 function nextPrompt(correct){
   if(!state.playing)return;
-  if(correct){state.turnScore++;const s=document.getElementById('turnScore');if(s)s.textContent=state.turnScore}else state.passes++;
+  if(correct){state.turnScore++;const s=document.getElementById('turnScore');if(s)s.textContent=state.turnScore;refreshLiveScore()}else state.passes++;
   state.currentPrompt=drawPrompt();
   const w=document.getElementById('promptWord'),c=document.getElementById('promptCategory');
   if(w){
