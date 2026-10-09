@@ -720,3 +720,26 @@ body.registry-open{overflow:hidden}
     max-height:36dvh;
   }
 }
+
+
+/* Home logo balance-down 2026-10-09 */
+.home-page .hero-logo-wrap{
+  top:23%;
+  width:96%;
+  max-width:760px;
+}
+.home-page .site-logo{
+  width:100%;
+  max-width:none;
+  max-height:37dvh;
+  object-fit:contain;
+}
+@media(max-width:767px){
+  .home-page .hero-logo-wrap{
+    top:21%;
+    width:97%;
+  }
+  .home-page .site-logo{
+    max-height:34dvh;
+  }
+}
