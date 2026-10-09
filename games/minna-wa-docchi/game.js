@@ -256,6 +256,7 @@ function safeBack(){
   }
   if(state.gameStarted&&state.screen==='question'){
     if(!confirm('ゲーム設定にもどりますか？\n今のゲームは終了します。'))return;
+    resumeApi?.clear?.(RESUME_ID);
     state.gameStarted=false;
     state.history=['mode','setup'];
     state.screen='options';
