@@ -9,6 +9,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="apple-mobile-web-app-title" content="放課後ゲーム部" />
   <title>放課後ゲーム部｜スマホ1台でみんなで遊ぼう！</title>
+  <link rel="stylesheet" href="player-editor.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="home-page">
@@ -30,14 +31,10 @@
   <div class="player-registry-overlay" id="playerRegistryOverlay" hidden>
     <section class="player-registry-modal" role="dialog" aria-modal="true" aria-labelledby="registryTitle">
       <div class="player-registry-head">
-        <div><span class="eyebrow">PLAYER REGISTRY</span><h2 id="registryTitle">いつものメンバー</h2><p>ここで登録した名前とアイコンは、放課後ゲーム部のゲームで共通して使えます。</p></div>
+        <div><span class="eyebrow">PLAYER REGISTRY</span><h2 id="registryTitle">いつものメンバー</h2><p>ここで登録した内容は、放課後ゲーム部の全ゲームで共通して使われます。</p></div>
         <button type="button" class="registry-close" id="closePlayerRegistry" aria-label="閉じる">×</button>
       </div>
-      <div class="registry-block"><strong>遊ぶ人数</strong><div class="registry-count-choices" id="registryCountChoices"></div></div>
-      <p class="registry-summary" id="registrySummary"></p>
-      <div class="registry-player-list" id="registryPlayerList"></div>
-      <div class="registry-save-note">変更内容はこの端末に自動保存されます。</div>
-      <button type="button" class="primary-cta registry-done" id="finishPlayerRegistry">登録をおわる</button>
+      <div id="sharedPlayerEditorHost"></div>
     </section>
   </div>
   <script src="player-registry.js"></script>
