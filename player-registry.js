@@ -9,16 +9,20 @@
   function normalize(raw){
     raw=raw&&typeof raw==='object'?raw:{};
     const src=Array.isArray(raw.players)?raw.players:[];
-    const players=[],used=new Set();
+    const activeCount=clampCount(raw.activeCount);
+    const players=[],usedActive=new Set();
     for(let i=0;i<MAX_COUNT;i++){
       const fb=fallbackPlayer(i);
       const name=cleanName(src[i]&&src[i].name,i);
       let icon=migrateIcon(src[i]&&src[i].icon);
-      if(!ICONS.includes(icon)||used.has(icon))icon=ICONS.find(x=>!used.has(x))||fb.icon;
-      used.add(icon);
+      if(!ICONS.includes(icon))icon=fb.icon;
+      if(i<activeCount){
+        if(usedActive.has(icon))icon=ICONS.find(x=>!usedActive.has(x))||fb.icon;
+        usedActive.add(icon);
+      }
       players.push({name,icon});
     }
-    return {version:2,activeCount:clampCount(raw.activeCount),players};
+    return {version:2,activeCount,players};
   }
   function load(){try{return normalize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(e){return normalize(null)}}
   function save(data){const clean=normalize(data);try{localStorage.setItem(KEY,JSON.stringify(clean))}catch(e){}window.dispatchEvent(new CustomEvent('houkago-players-changed',{detail:clean}));return clean}
@@ -28,8 +32,8 @@
     const data=load(),next=Object.assign({},data.players[index],patch||{});
     next.name=cleanName(next.name,index);
     next.icon=migrateIcon(next.icon);
-    if(ICONS.includes(next.icon)){
-      const duplicate=data.players.some((p,i)=>i!==index&&p.icon===next.icon);
+    if(ICONS.includes(next.icon)&&index<data.activeCount){
+      const duplicate=data.players.slice(0,data.activeCount).some((p,i)=>i!==index&&p.icon===next.icon);
       if(duplicate)return data;
     }
     data.players[index]=next;
