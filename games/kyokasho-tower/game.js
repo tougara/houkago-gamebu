@@ -214,7 +214,7 @@ function ruleVisual(kind){
 }
 function rulesScreen(){
   const r=RULES[state.rulePage];
-  return topNav()+heading('あそびかた','4つだけ覚えればOK')+'<div class="rule-progress">'+(state.rulePage+1)+' / '+RULES.length+'</div><section class="card rule-card">'+ruleVisual(r.visual)+'<h2>'+r.title+'</h2><p>'+r.text+'</p></section><div class="grid2"><button class="btn secondary" data-rule-prev '+(state.rulePage===0?'disabled':'')+'>前へ</button><button class="btn" data-rule-next>'+(state.rulePage===RULES.length-1?'ゲーム設定へ':'次へ')+'</button></div>';
+  return topNav()+heading('あそびかた','4つだけ覚えればOK')+'<div class="rule-progress">'+(state.rulePage+1)+' / '+RULES.length+'</div><section class="card rule-card">'+ruleVisual(r.visual)+'<h2>'+r.title+'</h2><p>'+r.text+'</p></section><div class="grid2"><button class="btn secondary" data-rule-prev '+(state.rulePage===0?'disabled':'')+'>前へ</button><button class="btn" data-rule-next>'+(state.rulePage===RULES.length-1?'ゲーム設定へ':'次へ')+'</button></div><button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
 function booksScreen(){
   return topNav()+heading('教科書','5教科・全部で36冊')+'<section class="card"><div class="book-grid">'+SUBJECTS.map(s=>'<div class="book-info"><img src="'+s.image+'" alt="'+s.label+'"><div><strong>'+s.label+'</strong><span>'+s.count+'冊</span></div></div>').join('')+'</div></section><button class="btn full" data-books-back>もどる</button>';
@@ -456,6 +456,7 @@ function bind(){
   document.querySelector('[data-start-game]')?.addEventListener('click',startGame);
   document.querySelector('[data-rule-prev]')?.addEventListener('click',()=>{if(state.rulePage>0){state.rulePage--;render({preserveScroll:true,scrollY:window.scrollY})}});
   document.querySelector('[data-rule-next]')?.addEventListener('click',()=>{if(state.rulePage<RULES.length-1){state.rulePage++;render({preserveScroll:true,scrollY:window.scrollY})}else go('setup')});
+  document.querySelector('[data-rules-back]')?.addEventListener('click',doBackOne);
   document.querySelector('[data-books-back]')?.addEventListener('click',doBackOne);
   document.querySelector('[data-begin-round]')?.addEventListener('click',beginRound);
   bindHold(document.querySelector('[data-hold-hand]'),openHand);
