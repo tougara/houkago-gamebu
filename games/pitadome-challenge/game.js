@@ -7,10 +7,10 @@ const RANK_KEY='houkago_pitadome_rankings_v1';
 const state={
   screen:'title',history:[],gameStarted:false,mode:null,difficulty:'normal',needsOpeningCountdown:true,
   soloIndex:0,player:null,memberReturn:'title',
-  round:1,totalRounds:10,score:0,perfects:0,
+  round:1,score:0,perfects:0,
   lives:3,target:50,value:0,error:0,resultValue:0,
   baseScore:0,roundScore:0,comment:'',tier:'normal',
-  running:false,countdownId:null,rafId:null,lastTs:0,dir:1,phase:0,speed:42,reverseBucket:-1,legIndex:0,reversePhase:0,reverseBaseDir:1,
+  running:false,countdownId:null,rafId:null,lastTs:0,dir:1,phase:0,speed:42,legIndex:0,reversePhase:0,reverseBaseDir:1,
   movement:'normal',barScale:.86,minValue:0,maxValue:100,refPoint:50,blind:false,blindStart:36,blindEnd:62,
   safeLimit:10,gimmicks:[],stageName:'一ノ境',
   roundErrors:[],newRecord:false,
@@ -266,7 +266,7 @@ function endlessProfile(round){
   if(p.maxValue===150)p.gimmicks.push('上限150');
   if(p.maxValue===200)p.gimmicks.push('上限200');
 
-  if(round<=3){
+  if(round<=5){
     p.gimmicks.push('基本');
     return p;
   }
@@ -380,7 +380,7 @@ function prepareRound(){
   state.gimmicks=[...p.gimmicks];state.stageName=p.stageName||'十番勝負';
   if(state.mushinActive)state.gimmicks.push('無心');
   state.value=Math.random()<.5?state.minValue:state.maxValue;state.dir=state.value===state.minValue?1:-1;state.phase=Math.random()*Math.PI*2;
-  state.lastTs=0;state.reverseBucket=-1;state.legIndex=0;state.reversePhase=0;state.reverseBaseDir=state.dir;state.error=0;state.baseScore=0;state.roundScore=0;state.comment='';state.resultValue=0;
+  state.lastTs=0;state.legIndex=0;state.reversePhase=0;state.reverseBaseDir=state.dir;state.error=0;state.baseScore=0;state.roundScore=0;state.comment='';state.resultValue=0;
   state.comboMultiplier=1;state.charmEarnedThisRound=false;state.lifeProtected=false;
   newTarget();
   keepEasyTargetVisible();
@@ -389,6 +389,9 @@ function stageBreakRound(){
   if(state.mode!=='endless')return false;
   const breaks=state.difficulty==='easy'?[1,6,11,21,31,41]:[1,6,11,16,21,31,41];
   return breaks.includes(state.round);
+}
+function stageBannerLabel(){
+  return state.round===1?'START':'LEVEL UP';
 }
 function quietGaugeHtml(){
   return '<div class="quiet-row"><div class="quiet-copy"><span>静ゲージ</span><strong>'+state.quietGauge+'%</strong></div><div class="quiet-track"><i style="width:'+state.quietGauge+'%"></i></div>'+(state.mushinActive?'<span class="mushin-badge">無心 ×1.5</span>':'')+'</div>';
@@ -404,7 +407,7 @@ function playScreen(){
       (endless?'<div class="hud-chip life-row">LIFE '+Array.from({length:3},(_,i)=>i<state.lives?'♥':'♡').join(' ')+'　SAFE ±'+state.safeLimit+(state.charm?'　護符':'')+'</div>':'<div class="hud-chip player-mini">'+esc(player.icon)+' '+esc(player.name)+'</div>')+
     '</div>'+
     quietGaugeHtml()+
-    (stageBreakRound()?'<div class="stage-banner"><small>LEVEL UP</small><strong>'+esc(state.stageName)+'</strong></div>':'')+
+    (stageBreakRound()?'<div class="stage-banner"><small>'+stageBannerLabel()+'</small><strong>'+esc(state.stageName)+'</strong></div>':'')+
     '<div class="target-wrap"><div class="target-label">この数字をねらえ</div><div class="target-number">'+state.target+'<small>をねらえ！</small></div><div class="gimmick-row">'+(state.difficulty==='easy'?'<span class="easy-badge">かんたん</span>':'')+state.gimmicks.map(g=>'<span>'+esc(g)+'</span>').join('')+'</div></div>'+
     '<div class="meter-zone"><div class="meter-shell" style="width:'+Math.round(state.barScale*100)+'%"><div class="meter-track"><div class="meter-line"></div>'+blind+'<div class="meter-cursor" id="meterCursor"></div></div>'+meterLabelsHtml()+'</div></div>'+
     '<button class="stop-btn" data-stop '+(state.needsOpeningCountdown?'disabled':'')+'>STOP！</button>'+
