@@ -1355,3 +1355,11 @@ h1,h2,h3,p{margin-top:0}
   .simple-win-card strong{font-size:10.5px}
   .simple-win-card span{font-size:9px}
 }
+
+
+/* Participant summary in role settings 2026-10-09 */
+.section-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.section-row h2{margin:0 0 4px}.section-row p{margin:0;color:#667085;font-weight:800}
+.small-btn{border:1px solid #d8e0e9;background:#fff;color:#344054;border-radius:12px;padding:8px 12px;font-weight:950}
+.member-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.member-chip{display:inline-flex;align-items:center;gap:4px;padding:7px 9px;border:1px solid #dce3ec;border-radius:999px;background:#fff;font-size:12px;font-weight:900}
