@@ -34,7 +34,7 @@ function saveTowerPlayerCount(n){
 }
 function loadPlayers(){
   const d=playersApi?.load?.();
-  state.playerCount=loadTowerPlayerCount(d?.activeCount||4);
+  state.playerCount=clampPlayers(d?.activeCount||4);
   if(d)state.players=d.players.slice(0,state.playerCount).map(x=>({...x}));
   else state.players=Array.from({length:state.playerCount},(_,i)=>({name:'プレイヤー'+(i+1),icon:'🙂'}));
   state.totalRounds=state.playerCount;
@@ -448,7 +448,7 @@ function bind(){
   document.querySelector('[data-rules]')?.addEventListener('click',()=>{state.rulePage=0;go('rules')});
   document.querySelector('[data-books]')?.addEventListener('click',()=>go('books'));
   document.querySelector('[data-edit-members]')?.addEventListener('click',()=>go('members'));
-  document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;saveTowerPlayerCount(Number(b.dataset.memberCount));loadPlayers();render({preserveScroll:true,scrollY:y})}));
+  document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;const count=saveTowerPlayerCount(Number(b.dataset.memberCount));playersApi?.setActiveCount?.(count);loadPlayers();render({preserveScroll:true,scrollY:y})}));
   document.querySelectorAll('[data-member-name]').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.memberName);updateMember(i,{name:inp.value||('プレイヤー'+(i+1))})}));
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{const y=window.scrollY;updateMember(Number(b.dataset.memberIcon),{icon:b.dataset.icon});render({preserveScroll:true,scrollY:y})}));
   document.querySelector('[data-members-done]')?.addEventListener('click',()=>{loadPlayers();go('setup')});
