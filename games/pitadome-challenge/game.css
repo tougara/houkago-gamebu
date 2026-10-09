@@ -1697,3 +1697,64 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     font-size:17px;
   }
 }
+
+
+/* Main action fixed-height position sync 2026-10-10 */
+/*
+  STOP → 次のラウンドへ を押し進めても主ボタンの位置が跳ねないよう、
+  画面基準の同じY座標・同じ高さを使う。
+  「次のラウンドへ」の現在位置を基準にSTOPを合わせる。
+*/
+.pitadome-app{
+  --pita-main-action-top:68dvh;
+}
+
+/* プレイ中とラウンド結果で主ボタンの位置・高さ・幅を完全共通化 */
+.screen-play [data-stop],
+.screen-roundResult > [data-next-round]{
+  position:fixed!important;
+  top:var(--pita-main-action-top)!important;
+  left:18px!important;
+  right:18px!important;
+  bottom:auto!important;
+  width:auto!important;
+  height:var(--pita-action-h)!important;
+  min-height:var(--pita-action-h)!important;
+  max-height:var(--pita-action-h)!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  z-index:40;
+  border-radius:24px!important;
+}
+
+/* STOPだけ文字が大きくてもボタン外形は変えない */
+.screen-play [data-stop]{
+  font-size:clamp(36px,9vw,48px)!important;
+  line-height:1!important;
+  padding:0 18px!important;
+}
+.screen-roundResult > [data-next-round]{
+  font-size:clamp(20px,5.5vw,27px)!important;
+  line-height:1!important;
+  padding:0 18px!important;
+}
+
+/* 固定した主ボタンに下の内容が潜り込まないよう、操作領域だけ予約 */
+.screen-play .play-panel{
+  padding-bottom:calc(var(--pita-action-h) + 12px)!important;
+}
+.screen-roundResult{
+  padding-bottom:calc(var(--pita-action-h) + 12px)!important;
+}
+
+/* 低い画面でも座標は同じ比率。ボタンだけ既存の共通高さ変数で縮小 */
+@media(max-height:760px){
+  .pitadome-app{
+    --pita-main-action-top:68dvh;
+  }
+}
+@media(max-height:680px){
+  .pitadome-app{
+    --pita-main-action-top:67dvh;
+  }
+}
