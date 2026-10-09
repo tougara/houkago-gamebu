@@ -231,7 +231,7 @@ function playScreen(){
   const len=[...q.word].length;
   const promptSizeClass=len>=11?' very-long':len>=7?' long':'';
   return topNav()+'<section class="play-screen">'+
-    '<div class="play-status-row"><div class="play-player">'+(t?'<span>'+teamName(t)+'</span>':'<span>みんなでジェスチャー</span>')+'<strong>'+esc(p.icon)+' '+esc(p.name)+'</strong></div><div class="play-correct"><span>正解</span><strong><span id="turnScore">'+state.turnScore+'</span>問</strong></div></div>'+
+    '<div class="play-status-row"><div class="play-player">'+(t?'<span>'+teamName(t)+'</span>':'<span>みんなでジェスチャー</span>')+'<strong>'+esc(p.icon)+' '+esc(p.name)+'</strong></div><div class="play-correct"><span class="play-correct-label">正解</span><strong><b id="turnScore">'+state.turnScore+'</b><em>問</em></strong></div></div>'+
     '<div class="timer-wrap"><small>のこり</small><span class="timer" id="timerValue">'+state.timeLeft+'</span></div>'+
     scoreStrip(true)+
     '<div class="prompt-stage prompt-concealed" id="promptStage"><small>ジェスチャーで伝えよう！</small><div class="prompt-word'+promptSizeClass+'" id="promptWord">'+esc(q.word)+'</div><span class="prompt-category" id="promptCategory">'+esc(q.category)+'</span></div>'+
