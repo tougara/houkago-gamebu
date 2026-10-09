@@ -1017,3 +1017,201 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     animation:none!important;
   }
 }
+
+
+/* Numbers-first layout 2026-10-10 */
+/* プレイ中：目標数字を最優先で大きく */
+.screen-play .target-number{
+  font-size:clamp(88px,24vw,128px);
+  line-height:.78;
+  margin-top:3px;
+  letter-spacing:-.04em;
+}
+.screen-play .target-number small{
+  font-size:.16em;
+  margin-left:6px;
+}
+.screen-play .target-label{
+  font-size:13px;
+  margin-bottom:2px;
+}
+.screen-play .meter-labels span{
+  font-size:15px;
+}
+
+/* ラウンド結果：獲得点数を主役に、4項目は2×2 */
+.screen-roundResult .result-card{
+  justify-content:center;
+  padding:9px 12px 10px;
+}
+.screen-roundResult .hit-word{
+  font-size:clamp(46px,12vw,68px);
+  margin:3px 0 1px;
+}
+.screen-roundResult .tier-perfect .hit-word{
+  font-size:clamp(56px,14vw,80px);
+}
+.screen-roundResult .result-main{
+  font-size:clamp(92px,25vw,138px);
+  line-height:.78;
+  margin:7px 0 5px;
+  letter-spacing:-.045em;
+}
+.screen-roundResult .result-main small{
+  font-size:.19em;
+  margin-left:5px;
+}
+.screen-roundResult .result-stats{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:10px 0 0;
+}
+.screen-roundResult .result-stat{
+  min-height:82px;
+  padding:9px 6px;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.screen-roundResult .result-stat small{
+  font-size:13px;
+  line-height:1;
+}
+.screen-roundResult .result-stat strong{
+  margin-top:5px;
+  font-size:clamp(30px,8vw,44px);
+  line-height:.95;
+}
+.screen-roundResult .result-kicker{
+  font-size:13px;
+}
+.screen-roundResult .combo-result{
+  margin-top:5px;
+}
+
+/* 最終結果：TOTAL SCOREを最大、4項目を2×2 */
+.screen-final .final-card{
+  justify-content:center;
+  padding:10px 12px;
+}
+.screen-final .result-kicker{
+  font-size:15px;
+  margin-bottom:3px;
+}
+.screen-final .final-score{
+  font-size:clamp(112px,30vw,170px);
+  line-height:.74;
+  margin:8px 0 12px;
+  letter-spacing:-.055em;
+}
+.screen-final .record-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:8px 0 0;
+}
+.screen-final .record-box{
+  min-height:78px;
+  padding:8px 6px;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.screen-final .record-box small{
+  font-size:12px;
+  line-height:1;
+}
+.screen-final .record-box strong{
+  margin-top:5px;
+  font-size:clamp(26px,7vw,40px);
+  line-height:.95;
+}
+
+/* 1画面に収めるため、周辺UIだけを圧縮 */
+.screen-roundResult .screen-heading,
+.screen-final .screen-heading{
+  margin:0;
+}
+.screen-roundResult .screen-heading h1,
+.screen-final .screen-heading h1{
+  font-size:clamp(22px,6vw,30px);
+}
+.screen-roundResult .screen-heading p,
+.screen-final .screen-heading p{
+  font-size:10px;
+}
+.screen-final > .stack{
+  gap:5px;
+}
+.screen-final > .stack .btn{
+  min-height:39px;
+  padding:6px 8px;
+  font-size:12px;
+}
+.screen-final > .stack [data-replay]{
+  min-height:47px;
+  font-size:16px;
+}
+.screen-roundResult > .btn{
+  min-height:49px;
+  font-size:17px;
+}
+
+@media(max-height:760px){
+  .screen-play .target-number{
+    font-size:clamp(78px,22vw,108px);
+  }
+  .screen-roundResult .hit-word{
+    font-size:40px;
+  }
+  .screen-roundResult .tier-perfect .hit-word{
+    font-size:48px;
+  }
+  .screen-roundResult .result-main{
+    font-size:clamp(80px,22vw,112px);
+  }
+  .screen-roundResult .result-stat{
+    min-height:68px;
+    padding:7px 4px;
+  }
+  .screen-roundResult .result-stat small{
+    font-size:11px;
+  }
+  .screen-roundResult .result-stat strong{
+    font-size:clamp(27px,7vw,36px);
+  }
+  .screen-final .final-score{
+    font-size:clamp(98px,27vw,138px);
+    margin:5px 0 8px;
+  }
+  .screen-final .record-box{
+    min-height:64px;
+    padding:6px 4px;
+  }
+  .screen-final .record-box small{
+    font-size:10px;
+  }
+  .screen-final .record-box strong{
+    font-size:clamp(23px,6.5vw,32px);
+  }
+}
+
+@media(max-height:680px){
+  .screen-roundResult .result-main{
+    font-size:74px;
+  }
+  .screen-roundResult .result-stat{
+    min-height:58px;
+  }
+  .screen-final .final-score{
+    font-size:88px;
+  }
+  .screen-final .record-box{
+    min-height:56px;
+  }
+}
