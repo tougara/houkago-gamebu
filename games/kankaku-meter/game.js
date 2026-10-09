@@ -62,7 +62,7 @@ function render({preserveScroll=false,scrollY=window.scrollY}={}){app.className=
 function go(s,{push=true}={}){if(push&&state.screen!==s)state.history.push(state.screen);state.screen=s;render()}
 function doBackOne(){
   if(!state.gameStarted){if(state.history.length){state.screen=state.history.pop();render()}else{location.href='../'};return}
-  if(state.screen==='topic'){state.gameStarted=false;state.history=['setup'];state.screen='categories';render();return}
+  if(state.screen==='topic'){resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.history=['setup'];state.screen='categories';render();return}
   if(state.screen==='number'){state.screen='pass';render();return}
   if(state.screen==='pass'){
     if(state.revealIndex>0){state.revealIndex--;state.screen='pass';render();return}
