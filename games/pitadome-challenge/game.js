@@ -693,5 +693,6 @@ function bind(){
   document.querySelector('[data-rank-back]')?.addEventListener('click',doBackOne);
 }
 loadPlayer();render();
+window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
