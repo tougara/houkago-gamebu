@@ -2,6 +2,8 @@
 const app=document.getElementById('app');
 const playersApi=window.HoukagoPlayers;
 const settingsApi=window.HoukagoSettings;
+const resumeApi=window.HoukagoResume;
+const RESUME_ID='pitadome-challenge';
 const SOLO_KEY='houkago_pitadome_solo_player_v1';
 const RANK_KEY='houkago_pitadome_rankings_v1';
 
@@ -153,7 +155,7 @@ function showLeaveConfirm(type){
     }
   });
   w.querySelector('[data-leave-ok]')?.addEventListener('click',()=>{
-    stopMotion();state.gameStarted=false;w.remove();
+    stopMotion();resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;w.remove();
     if(type==='home')location.href='../';
     else{state.screen='title';state.history=[];render()}
   });
@@ -552,6 +554,17 @@ function rankingScreen(){
 function screenHtml(){
   return({title:titleScreen,mode:modeScreen,difficulty:difficultyScreen,playerSelect:playerSelectScreen,members:membersScreen,rules:rulesScreen,play:playScreen,roundResult:roundResultScreen,final:finalScreen,ranking:rankingScreen}[state.screen]||titleScreen)();
 }
+function resumeSnapshot(){
+  const s={...state,running:false,countdownId:null,rafId:null,lastTs:0};
+  return s;
+}
+function persistResume(){
+  if(state.gameStarted)resumeApi?.save?.(RESUME_ID,{title:'ピタ止めチャレンジ',path:'/games/pitadome-challenge/',summary:(state.mode==='endless'?'エンドレス':'10ラウンド')+' ROUND '+state.round},resumeSnapshot());
+  else if(state.screen==='final')resumeApi?.clear?.(RESUME_ID);
+}
+function restoreResume(saved){
+  stopMotion();Object.assign(state,saved);state.running=false;state.countdownId=null;state.rafId=null;state.lastTs=0;state.gameStarted=true;render();
+}
 function render(){
   app.className='pitadome-app screen-'+state.screen+(state.screen==='roundResult'?' tier-screen-'+state.tier:'')+(state.screen==='final'&&state.newRecord?' final-new-record':'');
   app.innerHTML=screenHtml();bind();window.scrollTo({top:0,behavior:'auto'});
@@ -559,6 +572,7 @@ function render(){
     if(state.needsOpeningCountdown)startCountdown();
     else requestAnimationFrame(()=>startMotion());
   }
+  persistResume();
 }
 function beginGame(mode=state.mode,difficulty=state.difficulty){
   loadPlayer();state.mode=mode;state.difficulty=difficulty;state.history=[];state.gameStarted=true;state.round=1;state.score=0;state.perfects=0;state.needsOpeningCountdown=true;
@@ -679,4 +693,5 @@ function bind(){
   document.querySelector('[data-rank-back]')?.addEventListener('click',doBackOne);
 }
 loadPlayer();render();
+resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
