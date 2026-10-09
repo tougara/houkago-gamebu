@@ -344,6 +344,11 @@ function stopRound(){
   state.resultValue=Math.round(state.value);
   state.error=Math.abs(state.resultValue-state.target);
   state.tier=tierForError(state.error);state.comment=commentForTier(state.tier);
+  if(navigator.vibrate){
+    if(state.tier==='perfect')navigator.vibrate([28,22,70]);
+    else if(state.tier==='excellent')navigator.vibrate([24,18,45]);
+    else if(state.tier==='great')navigator.vibrate(24);
+  }
   state.baseScore=scoreForError(state.error);
   const prevCombo=state.combo;
   if(state.error<=3)state.combo+=state.error===0?2:1;
@@ -375,17 +380,20 @@ function stopRound(){
 }
 function sparkHtml(){
   if(!['perfect','excellent','great'].includes(state.tier))return'';
-  return '<div class="hit-fx"><div class="hit-ring"></div><div class="spark-burst">'+Array.from({length:12},(_,i)=>'<i style="--i:'+i+'"></i>').join('')+'</div></div>';
+  const rays=Array.from({length:18},(_,i)=>'<i class="impact-ray" style="--i:'+i+'"></i>').join('');
+  const sparks=Array.from({length:18},(_,i)=>'<i class="spark-piece" style="--i:'+i+'"></i>').join('');
+  const petals=Array.from({length:state.tier==='perfect'?22:12},(_,i)=>'<i class="petal-piece" style="--i:'+i+'"></i>').join('');
+  return '<div class="hit-fx" aria-hidden="true"><div class="impact-rays">'+rays+'</div><div class="hit-ring ring-a"></div><div class="hit-ring ring-b"></div><div class="spark-burst">'+sparks+'</div><div class="petal-burst">'+petals+'</div></div>';
 }
 function roundResultScreen(){
   const lifeLost=state.mode==='endless'&&state.error>state.safeLimit&&!state.lifeProtected;
   const bonus=state.roundScore-state.baseScore;
-  const comboText=state.combo>1?'<div class="combo-result">'+state.combo+' COMBO <span>×'+state.comboMultiplier.toFixed(1)+'</span></div>':'';
+  const comboText=state.combo>1?'<div class="combo-result '+(state.combo>=10?'combo-fever':state.combo>=5?'combo-hot':'')+'">'+(state.combo>=10?'<b>COMBO BURST!</b> ':'')+state.combo+' COMBO <span>×'+state.comboMultiplier.toFixed(1)+'</span></div>':'';
   return topNav()+heading('ラウンド結果',state.mode==='ten'?'10ラウンドの合計点に挑戦':'難易度はまだ上がる')+
     '<section class="card result-card tier-'+state.tier+'">'+sparkHtml()+
       '<div class="result-kicker">ROUND '+state.round+'</div><div class="hit-word">'+state.comment+'</div>'+
       comboText+
-      '<div class="result-main '+(state.tier==='perfect'?'perfect':'')+'">'+state.roundScore+'<small> POINT</small></div>'+
+      '<div class="result-main score-slam '+(state.tier==='perfect'?'perfect':'')+'">'+state.roundScore+'<small> POINT</small></div>'+
       (bonus>0?'<div class="bonus-line">基本 '+state.baseScore+' ＋ BONUS '+bonus+'</div>':'')+
       '<div class="result-stats"><div class="result-stat"><small>目標</small><strong>'+state.target+'</strong></div><div class="result-stat"><small>STOP</small><strong>'+state.resultValue+'</strong></div><div class="result-stat"><small>誤差</small><strong>'+state.error+'</strong></div><div class="result-stat"><small>合計</small><strong>'+state.score+'</strong></div></div>'+
       (state.mushinActive?'<div class="bonus-notice mushin-notice">無心ボーナス ×1.5 発動！</div>':'')+
@@ -431,7 +439,7 @@ function screenHtml(){
   return({title:titleScreen,mode:modeScreen,playerSelect:playerSelectScreen,members:membersScreen,rules:rulesScreen,play:playScreen,roundResult:roundResultScreen,final:finalScreen,ranking:rankingScreen}[state.screen]||titleScreen)();
 }
 function render(){
-  app.className='pitadome-app screen-'+state.screen;
+  app.className='pitadome-app screen-'+state.screen+(state.screen==='roundResult'?' tier-screen-'+state.tier:'')+(state.screen==='final'&&state.newRecord?' final-new-record':'');
   app.innerHTML=screenHtml();bind();window.scrollTo({top:0,behavior:'auto'});
   if(state.screen==='play'){
     if(state.needsOpeningCountdown)startCountdown();
