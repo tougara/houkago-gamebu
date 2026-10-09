@@ -132,7 +132,7 @@
       </div>
     </section>
 
-    <p class="game-count-note"><span id="gameCount">7</span>件のゲームを表示中</p>
+    <p class="game-count-note"><span id="gameCount">0</span>件を表示中</p>
   </main>
 
   <script>
@@ -140,6 +140,7 @@
       const filters=[...document.querySelectorAll('[data-game-filter]')];
       const cards=[...document.querySelectorAll('[data-game-card]')];
       const count=document.getElementById('gameCount');
+      count.textContent=cards.length;
       filters.forEach(btn=>btn.addEventListener('click',()=>{
         const value=btn.dataset.gameFilter;
         filters.forEach(x=>x.classList.toggle('selected',x===btn));
