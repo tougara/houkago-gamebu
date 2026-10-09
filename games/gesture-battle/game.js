@@ -1,5 +1,7 @@
 (()=>{
 const app=document.getElementById('app');
+const resumeApi=window.HoukagoResume;
+const RESUME_ID='gesture-battle';
 const playersApi=window.HoukagoPlayers;
 
 const DB=[];
@@ -366,7 +368,19 @@ function screenHtml(){
     rules:rulesScreen,handoff:handoffScreen,topic:topicScreen,play:playScreen,turnResult:turnResultScreen,final:finalScreen
   }[state.screen]||titleScreen)();
 }
-function render(){stopTimers();app.className='gesture-app screen-'+state.screen;app.innerHTML=screenHtml();bind();window.scrollTo({top:0,behavior:'auto'})}
+function resumeSnapshot(){
+  const s={...state,timerId:null,countdownId:null,startDelayId:null,playing:false};
+  if(s.screen==='play'){s.screen='topic';s.turnScore=0;s.passes=0;s.timeLeft=s.timeLimit}
+  return s;
+}
+function persistResume(){
+  if(state.gameStarted)resumeApi?.save?.(RESUME_ID,{title:'ジェスチャーバトル',path:'/games/gesture-battle/',summary:'手番 '+(state.turnIndex+1)+' / '+Math.max(1,state.queue.length)},resumeSnapshot());
+  else if(state.screen==='final')resumeApi?.clear?.(RESUME_ID);
+}
+function restoreResume(saved){
+  stopTimers();Object.assign(state,saved);state.timerId=null;state.countdownId=null;state.startDelayId=null;state.playing=false;state.gameStarted=true;render();
+}
+function render(){stopTimers();app.className='gesture-app screen-'+state.screen;app.innerHTML=screenHtml();bind();window.scrollTo({top:0,behavior:'auto'});persistResume()}
 function go(s,{push=true}={}){if(push&&state.screen!==s)state.history.push(state.screen);state.screen=s;render()}
 function doBackOne(){
   stopTimers();
@@ -389,7 +403,7 @@ function navConfirm(type){
   wrap.innerHTML='<section class="recheck-modal"><span class="warning">ゲームの途中です</span><h2>'+(type==='home'?'ゲームをやめますか？':'1個前にもどりますか？')+'</h2><p>'+(type==='home'?'今のゲームを終了して、ゲーム一覧へ戻ります。':'今の手番の進行はリセットされます。')+'</p><div class="recheck-actions"><button class="btn secondary" data-cancel>ゲームにもどる</button><button class="btn danger" data-ok>ほんとにもどる</button></div></section>';
   document.body.appendChild(wrap);
   wrap.querySelector('[data-cancel]').addEventListener('click',cancel);
-  wrap.querySelector('[data-ok]').addEventListener('click',()=>{stopTimers();wrap.remove();if(type==='home'){state.gameStarted=false;location.href='../'}else doBackOne()});
+  wrap.querySelector('[data-ok]').addEventListener('click',()=>{stopTimers();wrap.remove();if(type==='home'){resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;location.href='../'}else doBackOne()});
   wrap.addEventListener('click',e=>{if(e.target===wrap)cancel()});
 }
 function afterMembers(){
@@ -457,7 +471,8 @@ function bind(){
   document.querySelector('[data-next-turn]')?.addEventListener('click',advanceTurn);
   document.querySelector('[data-replay]')?.addEventListener('click',replaySame);
   document.querySelector('[data-change-team]')?.addEventListener('click',()=>{state.gameStarted=false;setupTeamsBalanced();go('teams',{push:false})});
-  document.querySelector('[data-title]')?.addEventListener('click',()=>{state.gameStarted=false;state.history=[];go('title',{push:false})});
+  document.querySelector('[data-title]')?.addEventListener('click',()=>{resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.history=[];go('title',{push:false})});
 }
 loadPlayers();render();
+resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
