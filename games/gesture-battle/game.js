@@ -70,13 +70,13 @@ const state={
   selectedCategories:new Set(CATEGORY_ORDER),
   queue:[],turnIndex:0,scores:[],teamScores:{orange:0,lime:0},
   currentPrompt:null,usedPromptIds:new Set(),turnScore:0,passes:0,
-  playing:false,timeLeft:60,timerId:null,countdownId:null,lastTurnScore:0,
+  playing:false,timeLeft:60,timerId:null,countdownId:null,startDelayId:null,lastTurnScore:0,
   extraTurnPlayer:null
 };
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function stopTimers(){if(state.timerId){clearInterval(state.timerId);state.timerId=null}if(state.countdownId){clearInterval(state.countdownId);state.countdownId=null}}
+function stopTimers(){if(state.timerId){clearInterval(state.timerId);state.timerId=null}if(state.countdownId){clearInterval(state.countdownId);state.countdownId=null}if(state.startDelayId){clearTimeout(state.startDelayId);state.startDelayId=null}}
 function loadPlayers(){
   const d=playersApi?.load?.();
   state.playerCount=Math.max(2,Math.min(10,Number(d?.activeCount)||4));
@@ -250,7 +250,9 @@ function turnResultScreen(){
     '<button class="btn full" data-next-turn>'+(next?'次の人へ':'最終結果を見る')+'</button></section>';
 }
 function rankingRows(){
-  return state.players.map((p,i)=>({i,p,score:state.scores[i]||0})).sort((a,b)=>b.score-a.score).map((x,rank)=>'<div class="rank-row"><b>'+(rank+1)+'</b><span>'+esc(x.p.icon)+' '+esc(x.p.name)+'</span><strong>'+x.score+'問</strong></div>').join('');
+  const rows=state.players.map((p,i)=>({i,p,score:state.scores[i]||0})).sort((a,b)=>b.score-a.score||a.i-b.i);
+  let lastScore=null,lastRank=0;
+  return rows.map((x,i)=>{if(x.score!==lastScore){lastRank=i+1;lastScore=x.score}return '<div class="rank-row"><b>'+lastRank+'</b><span>'+esc(x.p.icon)+' '+esc(x.p.name)+'</span><strong>'+x.score+'問</strong></div>'}).join('');
 }
 function finalScreen(){
   const maxScore=Math.max(...state.scores,0);
@@ -258,7 +260,8 @@ function finalScreen(){
   if(state.mode==='team'){
     const a=state.teamScores.orange,b=state.teamScores.lime;
     const winner=a===b?'引き分け！':(a>b?'オレンジチーム WIN！':'ライムチーム WIN！');
-    return topNav()+'<div class="final-wrap"><section class="winner-card"><div class="winner-crown">🏆</div><h1>'+winner+'</h1><div class="team-total-board"><div class="team-total orange"><span>オレンジ</span><strong>'+a+'</strong><span>点</span></div><div class="team-total lime"><span>ライム</span><strong>'+b+'</strong><span>点</span></div></div><p>全員の結果は下で確認できます。</p></section><section class="card"><h2>個人スコア</h2><div class="ranking">'+rankingRows()+'</div></section><div class="stack"><button class="btn yellow full" data-replay>同じチームでもう一度</button><button class="btn secondary full" data-change-team>チームを変えて再戦</button><button class="btn secondary full" data-title>タイトルへ</button></div></div>';
+    const extraNote=state.extraTurnPlayer!=null?'<p class="fairness-note">奇数人数のため '+esc(state.players[state.extraTurnPlayer].icon)+' '+esc(state.players[state.extraTurnPlayer].name)+'さんは追加手番1回を含みます。チーム勝敗は両チーム同じ手番数です。</p>':'';
+    return topNav()+'<div class="final-wrap"><section class="winner-card"><div class="winner-crown">🏆</div><h1>'+winner+'</h1><div class="team-total-board"><div class="team-total orange"><span>オレンジ</span><strong>'+a+'</strong><span>点</span></div><div class="team-total lime"><span>ライム</span><strong>'+b+'</strong><span>点</span></div></div><p>全員の結果は下で確認できます。</p></section><section class="card"><h2>個人スコア</h2>'+extraNote+'<div class="ranking">'+rankingRows()+'</div></section><div class="stack"><button class="btn yellow full" data-replay>同じチームでもう一度</button><button class="btn secondary full" data-change-team>チームを変えて再戦</button><button class="btn secondary full" data-title>タイトルへ</button></div></div>';
   }
   const total=state.scores.reduce((a,b)=>a+b,0);
   return topNav()+'<div class="final-wrap"><section class="total-highlight"><span>みんなで正解した数</span><strong>'+total+'</strong><span>問！</span></section><section class="card"><h2>みんなの結果</h2><div class="ranking">'+rankingRows()+'</div><p style="text-align:center;margin-top:10px">MVP：'+mvp.map(x=>esc(x.p.icon)+' '+esc(x.p.name)+' '+x.score+'問').join(' / ')+'</p></section><div class="stack"><button class="btn yellow full" data-replay>同じ設定でもう一度</button><button class="btn secondary full" data-title>タイトルへ</button></div></div>';
@@ -311,7 +314,8 @@ function startTurn(){
     if(n>0){if(num)num.textContent=n;return}
     clearInterval(state.countdownId);state.countdownId=null;
     if(num){num.textContent='START!';num.classList.add('start-text')}
-    setTimeout(()=>{
+    state.startDelayId=setTimeout(()=>{
+      state.startDelayId=null;
       if(overlay)overlay.remove();
       document.getElementById('promptStage')?.classList.remove('prompt-concealed');
       startClock();
@@ -341,7 +345,7 @@ function nextPrompt(correct){
   if(c)c.textContent=state.currentPrompt.category;
 }
 function finishTurn(){
-  if(!state.playing&&state.timeLeft>0)return;
+  if(!state.playing)return;
   stopTimers();state.playing=false;
   state.lastTurnScore=state.turnScore;
   const pi=currentPlayerIndex();state.scores[pi]=(state.scores[pi]||0)+state.turnScore;
@@ -373,11 +377,20 @@ function doBackOne(){
 function navConfirm(type){
   if(!state.gameStarted){if(type==='home')location.href='../';else doBackOne();return}
   document.querySelector('.recheck-backdrop')?.remove();
+  const wasPlaying=state.screen==='play'&&state.playing;
+  const wasCountdown=state.screen==='play'&&!state.playing&&!!(state.countdownId||state.startDelayId);
+  if(wasPlaying||wasCountdown){stopTimers();state.playing=false}
   const wrap=document.createElement('div');wrap.className='recheck-backdrop';
+  const cancel=()=>{
+    wrap.remove();
+    if(wasPlaying)startClock();
+    else if(wasCountdown)startTurn();
+  };
   wrap.innerHTML='<section class="recheck-modal"><span class="warning">ゲームの途中です</span><h2>'+(type==='home'?'ゲームをやめますか？':'1個前にもどりますか？')+'</h2><p>'+(type==='home'?'今のゲームを終了して、ゲーム一覧へ戻ります。':'今の手番の進行はリセットされます。')+'</p><div class="recheck-actions"><button class="btn secondary" data-cancel>ゲームにもどる</button><button class="btn danger" data-ok>ほんとにもどる</button></div></section>';
   document.body.appendChild(wrap);
-  wrap.querySelector('[data-cancel]').addEventListener('click',()=>wrap.remove());
+  wrap.querySelector('[data-cancel]').addEventListener('click',cancel);
   wrap.querySelector('[data-ok]').addEventListener('click',()=>{stopTimers();wrap.remove();if(type==='home'){state.gameStarted=false;location.href='../'}else doBackOne()});
+  wrap.addEventListener('click',e=>{if(e.target===wrap)cancel()});
 }
 function afterMembers(){
   loadPlayers();
