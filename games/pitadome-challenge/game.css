@@ -1326,3 +1326,107 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     line-height:1.1;
   }
 }
+
+
+/* Action position + unified yellow buttons 2026-10-10 */
+/* STOP / 次のラウンドへ / もう一度 / スタートを同じ明るい黄色に統一 */
+.pitadome-app [data-stop],
+.pitadome-app [data-start-title],
+.pitadome-app [data-next-round],
+.pitadome-app [data-replay]{
+  background:linear-gradient(180deg,#fff78f 0%,#ffe04d 42%,#ffc21f 76%,#f2a400 100%) !important;
+  color:#211500 !important;
+  border:2px solid #fff0a8 !important;
+  box-shadow:
+    0 7px 0 #b86d05,
+    0 12px 24px rgba(0,0,0,.24),
+    inset 0 2px 0 rgba(255,255,255,.78) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.38);
+}
+.pitadome-app [data-stop]:active,
+.pitadome-app [data-start-title]:active,
+.pitadome-app [data-next-round]:active,
+.pitadome-app [data-replay]:active{
+  transform:translateY(4px);
+  background:linear-gradient(180deg,#ffed69 0%,#ffd02d 50%,#f5aa00 100%) !important;
+  box-shadow:
+    0 3px 0 #a85f03,
+    0 7px 16px rgba(0,0,0,.20) !important;
+}
+.pitadome-app [data-stop]:disabled,
+.pitadome-app [data-next-round]:disabled{
+  opacity:.96 !important;
+  background:linear-gradient(180deg,#fff7a4 0%,#ffe36a 50%,#ffc83d 100%) !important;
+  color:#2d1d00 !important;
+  border-color:#fff0ad !important;
+}
+
+/* プレイ画面：ゲージ下の空白をボタンの下へ回し、STOPを大きく上へ */
+.screen-play .meter-zone{
+  flex:0 0 auto;
+  min-height:0;
+  margin-top:auto;
+  margin-bottom:0;
+  padding-top:clamp(24px,4dvh,46px);
+}
+.screen-play .stop-btn{
+  flex:0 0 auto;
+  width:100%;
+  min-height:82px;
+  height:clamp(82px,10dvh,96px);
+  margin-top:clamp(54px,8dvh,92px);
+  margin-bottom:auto;
+  border-radius:24px;
+  font-size:clamp(38px,10vw,54px);
+}
+
+/* 結果画面：カードを必要以上に縦へ伸ばさず、次ボタンを上へ */
+.pitadome-app.screen-roundResult{
+  grid-template-rows:auto auto auto auto;
+  align-content:start;
+}
+.screen-roundResult .result-card{
+  height:auto;
+  max-height:none;
+  min-height:0;
+  justify-content:center;
+}
+.screen-roundResult > [data-next-round]{
+  width:100%;
+  min-height:68px;
+  margin-top:14px;
+  margin-bottom:auto;
+  border-radius:20px;
+  font-size:clamp(20px,5.5vw,28px);
+}
+
+/* 低い画面でも位置を下げすぎない */
+@media(max-height:760px){
+  .screen-play .meter-zone{
+    padding-top:18px;
+  }
+  .screen-play .stop-btn{
+    min-height:72px;
+    height:72px;
+    margin-top:42px;
+    font-size:36px;
+  }
+  .screen-roundResult > [data-next-round]{
+    min-height:58px;
+    margin-top:10px;
+    font-size:18px;
+  }
+}
+@media(max-height:680px){
+  .screen-play .stop-btn{
+    min-height:64px;
+    height:64px;
+    margin-top:30px;
+    font-size:32px;
+  }
+  .screen-roundResult > [data-next-round]{
+    min-height:52px;
+    margin-top:8px;
+    font-size:17px;
+  }
+}
