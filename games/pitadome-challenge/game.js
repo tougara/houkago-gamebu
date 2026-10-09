@@ -161,11 +161,11 @@ function rulesScreen(){
   return topNav()+heading('あそびかた','止めるだけ。でもラウンドごとに条件が変わる！')+
     '<div class="rules-list">'+
       '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように目標が出ます。後半は上限150・200のラウンドもあります。</span></div></section>'+
-      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・上限150/200などが登場。超光速は後半だけの特別ギミックです。</span></div></section>'+
+      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・上限150/200などが登場。高速は後半だけの特別ギミックです。</span></div></section>'+
       '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>最初だけ3・2・1で開始。指が触れた瞬間に停止し、次ラウンドからはカウントダウンなしで始まります。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>近さを連続させてCOMBO</strong><span>誤差3以内が続くほど得点倍率UP。PERFECTはコンボ+2。</span></div></section>'+
     '</div>'+
-    '<section class="card mode-help"><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>前半は基本を覚え、後半ほど変化が増える全10ラウンド。FINALは上限200＋複合ギミック。</p></div><div><strong>エンドレス</strong><p>序盤は遊びやすく、10ラウンドごとに少しずつ難化。後半だけ複合ギミックと超光速が登場します。</p></div></section>'+
+    '<section class="card mode-help"><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>前半は基本を覚え、後半ほど変化が増える全10ラウンド。FINALは上限200＋複合ギミック。</p></div><div><strong>エンドレス</strong><p>序盤は遊びやすく、10ラウンドごとに少しずつ難化。後半だけ複合ギミックと高速が登場します。</p></div></section>'+
     '<button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
 function randomRef(maxValue=100){
@@ -182,7 +182,7 @@ function baseProfile(){
 }
 function applyGimmick(p,key){
   if(key==='fast'){p.speed+=14;p.gimmicks.push('高速')}
-  if(key==='hyper'){p.speed=Math.max(p.speed,118);p.movement='hyper';p.gimmicks.push('超光速')}
+  if(key==='hyper'){p.speed=Math.max(p.speed,118);p.movement='hyper';p.gimmicks.push('高速')}
   if(key==='short'){p.barScale=.58;p.gimmicks.push('短尺')}
   if(key==='wide'){p.barScale=1;p.gimmicks.push('長尺')}
   if(key==='range150'){p.maxValue=150;p.gimmicks.push('上限150')}
@@ -245,10 +245,10 @@ function endlessProfile(round){
     applyGimmick(p,Math.random()<.5?'accel':'change');
   }
 
-  // 超光速は後半のスパイス。連発しないよう確率を抑える。
+  // 高速は後半のスパイス。連発しないよう確率を抑える。
   if(s.hyper&&Math.random()<s.hyper)applyGimmick(p,'hyper');
 
-  // 極端な複合を避ける：超光速時は短尺を解除し、見切れる余地を残す。
+  // 極端な複合を避ける：高速時は短尺を解除し、見切れる余地を残す。
   if(p.movement==='hyper'&&p.barScale<.8){
     p.barScale=.9;
     p.gimmicks=p.gimmicks.filter(g=>g!=='短尺');
