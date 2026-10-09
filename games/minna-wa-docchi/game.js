@@ -203,9 +203,11 @@ function finalScreen(){
     '<section class="final-card"><div class="checkmark">✓</div><h2>最後まで匿名のまま終了</h2><p>誰がどちらを選んだかは保存・表示していません。</p></section>'+
     '<div class="stack"><button class="btn full" data-replay>同じ設定でもう一度</button><button class="btn secondary full" data-go-mode>モードを選び直す</button></div>';
   }
-  const ranking=state.players.map((p,i)=>({p,score:state.scores[i]})).sort((x,y)=>y.score-x.score);
+  const ranking=state.players.map((p,i)=>({p,i,score:state.scores[i]})).sort((x,y)=>y.score-x.score||x.i-y.i);
+  let lastScore=null,lastRank=0;
+  const rankingHtml=ranking.map((x,i)=>{if(x.score!==lastScore){lastRank=i+1;lastScore=x.score}return '<div class="rank-row rank-'+lastRank+'"><b>'+lastRank+'位</b><span>'+esc(x.p.icon)+' '+esc(x.p.name)+'</span><strong>'+x.score+'点</strong></div>'}).join('');
   return topNav()+heading('最終結果','みんなの読み合いはどうだった？')+
-  '<section class="ranking-card">'+ranking.map((x,i)=>'<div class="rank-row rank-'+(i+1)+'"><b>'+(i+1)+'位</b><span>'+esc(x.p.icon)+' '+esc(x.p.name)+'</span><strong>'+x.score+'点</strong></div>').join('')+'</section>'+
+  '<section class="ranking-card">'+rankingHtml+'</section>'+
   '<div class="stack"><button class="btn full" data-replay>同じ設定でもう一度</button><button class="btn secondary full" data-go-mode>モードを選び直す</button></div>';
 }
 
@@ -237,7 +239,14 @@ function safeBack(){
     alert('秘密回答が始まったあとは、前の画面には戻れません。');
     return;
   }
-  if(state.gameStarted&&state.screen==='question'&&!confirm('ゲーム設定にもどりますか？'))return;
+  if(state.gameStarted&&state.screen==='question'){
+    if(!confirm('ゲーム設定にもどりますか？\n今のゲームは終了します。'))return;
+    state.gameStarted=false;
+    state.history=['mode','setup'];
+    state.screen='options';
+    render();
+    return;
+  }
   if(state.history.length){state.screen=state.history.pop();render();}
   else{window.location.href='../';}
 }
@@ -329,7 +338,13 @@ function finalizeRound(){
   state.roundResult={a,b,tie,gains,majority};
 }
 function nextRound(){
-  if(state.round+1>=state.roundCount){state.gameStarted=false;go('final');return;}
+  if(state.round+1>=state.roundCount){
+    state.gameStarted=false;
+    state.history=['mode'];
+    state.screen='final';
+    render();
+    return;
+  }
   state.round++;
   newRound();
 }
@@ -411,7 +426,7 @@ function bind(){
   document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>editMemberCount(Number(b.dataset.memberCount))));
   document.querySelectorAll('[data-member-name]').forEach(input=>input.addEventListener('change',()=>{const i=Number(input.dataset.memberName);updateMember(i,{name:input.value||('プレイヤー'+(i+1))});render()}));
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{updateMember(Number(b.dataset.memberIcon),{icon:b.dataset.icon});render()}));
-  document.querySelector('[data-members-done]')?.addEventListener('click',()=>{loadPlayers();go('setup')});
+  document.querySelector('[data-members-done]')?.addEventListener('click',()=>{loadPlayers();if(state.history[state.history.length-1]==='setup')state.history.pop();state.screen='setup';render()});
   document.querySelector('[data-add-custom]')?.addEventListener('click',addCustom);
   document.querySelectorAll('[data-delete-custom]').forEach(b=>b.addEventListener('click',()=>{const items=customItems();items.splice(Number(b.dataset.deleteCustom),1);saveCustom(items);render()}));
   document.querySelector('[data-clear-custom]')?.addEventListener('click',()=>{if(confirm('マイお題を全部消しますか？')){saveCustom([]);render()}});
