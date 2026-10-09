@@ -604,3 +604,28 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     font-size:15px;
   }
 }
+
+
+/* Primary action buttons: bright yellow 2026-10-10 */
+.pitadome-app [data-start-title],
+.pitadome-app [data-next-round],
+.pitadome-app [data-replay]{
+  background:linear-gradient(180deg,#fff58a 0%,#ffd84f 46%,#ffbd1f 100%) !important;
+  color:#241700 !important;
+  border:1px solid rgba(255,245,170,.95) !important;
+  box-shadow:0 5px 0 #c97908,0 9px 20px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.75) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.35);
+}
+.pitadome-app [data-start-title]:active,
+.pitadome-app [data-next-round]:active,
+.pitadome-app [data-replay]:active{
+  transform:translateY(3px);
+  background:linear-gradient(180deg,#ffe96d 0%,#ffc935 52%,#f6a900 100%) !important;
+  box-shadow:0 2px 0 #b96d05,0 5px 12px rgba(0,0,0,.18) !important;
+}
+.pitadome-app [data-next-round]:disabled{
+  opacity:.96 !important;
+  background:linear-gradient(180deg,#fff1a0 0%,#ffdc67 50%,#ffc33a 100%) !important;
+  color:#3a2700 !important;
+  box-shadow:0 4px 0 #ca850f,0 7px 16px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.65) !important;
+}
