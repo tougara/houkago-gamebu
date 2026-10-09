@@ -573,7 +573,7 @@ body.registry-open{overflow:hidden}
 /* Official Minna wa Docchi title assets */
 .game-card-art-docchi{
   min-height:250px;
-  background:url("../minna_wa_docchi_background_9x16.png") center 47%/cover no-repeat;
+  background:url("../minna_wa_docchi_background.png") center 47%/cover no-repeat;
 }
 .game-card-art-docchi::before{
   content:"";position:absolute;inset:0;
@@ -593,7 +593,7 @@ body.registry-open{overflow:hidden}
   margin:16px 0 22px;
   border-radius:26px;
   overflow:hidden;
-  background:url("../../minna_wa_docchi_background_9x16.png") center 46%/cover no-repeat;
+  background:url("../../minna_wa_docchi_background.png") center 46%/cover no-repeat;
   box-shadow:var(--shadow);
   display:grid;
   place-items:center;
@@ -649,7 +649,7 @@ body.registry-open{overflow:hidden}
 /* Kankaku Meter prototype card */
 .game-card-art-meter{
   min-height:230px;
-  background:url("../感覚メーター専用背景.png") center 48%/cover no-repeat;
+  background:url("../kankaku_meter_background.png") center 48%/cover no-repeat;
 }
 .game-card-art-meter::before{
   content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.04),rgba(20,31,54,.18));z-index:1;
