@@ -1,5 +1,7 @@
 (()=>{
 const app=document.getElementById('app');
+const resumeApi=window.HoukagoResume;
+const RESUME_ID='kyokasho-tower';
 const playersApi=window.HoukagoPlayers;
 const LONG_PRESS_MS=550;
 const SUBJECTS=[
@@ -285,6 +287,18 @@ function finalScreen(){
 function screenHtml(){
   return ({title:titleScreen,setup:setupScreen,members:membersScreen,rules:rulesScreen,books:booksScreen,roundIntro:roundIntroScreen,pass:passScreen,hand:handScreen,board:boardScreen,noMove:noMoveScreen,turnEnd:turnEndScreen,roundResult:roundResultScreen,final:finalScreen}[state.screen]||titleScreen)();
 }
+function resumeSnapshot(){
+  const s={...state};
+  if(['hand','board','noMove'].includes(s.screen)){s.screen='pass';s.selectedSubject=null;s.pendingPlace=null}
+  return s;
+}
+function persistResume(){
+  if(state.gameStarted)resumeApi?.save?.(RESUME_ID,{title:'教科書タワー',path:'/games/kyokasho-tower/',summary:'ROUND '+(state.round+1)+' / '+state.totalRounds},resumeSnapshot());
+  else if(state.screen==='final')resumeApi?.clear?.(RESUME_ID);
+}
+function restoreResume(saved){
+  Object.assign(state,saved);state.gameStarted=true;state.selectedSubject=null;state.pendingPlace=null;render();
+}
 function render({preserveScroll=false,scrollY=window.scrollY}={}){
   app.className='tower-app screen-'+state.screen;
   app.innerHTML=screenHtml();
@@ -293,6 +307,7 @@ function render({preserveScroll=false,scrollY=window.scrollY}={}){
     window.scrollTo({top:scrollY,behavior:'auto'});
     requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:'auto'}));
   }else window.scrollTo({top:0,behavior:'auto'});
+  persistResume();
 }
 function go(screen,{push=true,preserveScroll=false,scrollY=window.scrollY}={}){
   if(push&&state.screen!==screen)state.history.push(state.screen);
@@ -322,7 +337,7 @@ function showNavConfirm(type){
   wrap.innerHTML='<section class="modal"><h2>'+(home?'ゲームをやめますか？':'1個前にもどりますか？')+'</h2><p>'+(home?'今のゲームをやめて、ゲームをえらぶ画面へ戻ります。':'秘密の手札が見えない安全な画面まで戻ります。確定済みの配置は取り消せません。')+'</p><div class="modal-actions"><button class="btn secondary" data-nav-cancel>ゲームにもどる</button><button class="btn danger" data-nav-ok>ほんとにもどる</button></div></section>';
   document.body.appendChild(wrap);
   wrap.querySelector('[data-nav-cancel]').addEventListener('click',()=>wrap.remove());
-  wrap.querySelector('[data-nav-ok]').addEventListener('click',()=>{wrap.remove();if(home)location.href='../';else doBackOne()});
+  wrap.querySelector('[data-nav-ok]').addEventListener('click',()=>{wrap.remove();if(home){resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;location.href='../'}else doBackOne()});
   wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove()});
 }
 function editMemberCount(n){
@@ -470,7 +485,8 @@ function bind(){
   document.querySelector('[data-continue-turn]')?.addEventListener('click',continueTurn);
   document.querySelector('[data-next-round]')?.addEventListener('click',nextRound);
   document.querySelector('[data-replay]')?.addEventListener('click',replay);
-  document.querySelector('[data-to-title]')?.addEventListener('click',()=>{state.gameStarted=false;state.history=[];state.screen='title';render()});
+  document.querySelector('[data-to-title]')?.addEventListener('click',()=>{resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.history=[];state.screen='title';render()});
 }
 loadPlayers();render();
+resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })()
