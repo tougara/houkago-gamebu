@@ -20,6 +20,8 @@ const ADVANCED_ROLE_KEYS=['observer','dayDuty','collaborator','trickster'];
 const roleKeys=[...BASIC_ROLE_KEYS,...ADVANCED_ROLE_KEYS];
 const ROLE_HELP_KEYS=['classmate','president','swapper','observer','dayDuty','fake','collaborator','trickster'];
 const app=document.getElementById('app');
+const resumeApi=window.HoukagoResume;
+const RESUME_ID='nise-transfer-student';
 app.addEventListener('click',e=>{const trigger=e.target.closest('[data-role-detail]');if(!trigger)return;e.preventDefault();e.stopPropagation();openModal('roleDetail:'+trigger.dataset.roleDetail);});
 const state={screen:'title',playerCount:SHARED_PLAYERS?.activeCount||3,players:[],roleCounts:{},deck:[],rest:[],initialRoles:[],finalRoles:[],revealIndex:0,nightIndex:0,voteIndex:0,votes:[],coverNext:null,timerSeconds:180,timerRemaining:180,timerId:null,modal:null,roleHelpSide:'real',ruleHelpMode:'simple',navHistory:[],gameStarted:false};
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -72,7 +74,7 @@ function topNav(){return `<div class="top-nav"><button type="button" class="back
 function stopTimer(){if(state.timerId){clearInterval(state.timerId);state.timerId=null;}}
 function go(s){stopTimer();if(state.screen!==s)state.navHistory.push(state.screen);state.screen=s;render();}
 function backOne(){stopTimer();if(state.navHistory.length){state.screen=state.navHistory.pop();render();}else{window.location.href='../';}}
-function doNavAction(type){if(type==='back')backOne();else window.location.href='../';}
+function doNavAction(type){if(type==='back')backOne();else{resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;window.location.href='../';}}
 function confirmNav(type){
   if(!state.gameStarted){doNavAction(type);return;}
   document.querySelector('.nav-confirm-backdrop')?.remove();
@@ -98,7 +100,21 @@ function confirmCardChoice(title,message,onConfirm){
   document.getElementById('confirmCardChoice').addEventListener('click',()=>{wrap.remove();onConfirm();});
   wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove();});
 }
-function render(){app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'');app.innerHTML=screenHtml();bind();if(state.modal)renderModal();}
+function resumeSnapshot(){
+  const s={...state,modal:null,timerId:null};
+  if(s.screen==='revealRole')s.screen='revealPass';
+  if(s.screen==='nightAction')s.screen='nightPass';
+  if(s.screen==='vote')s.screen='votePass';
+  return s;
+}
+function persistResume(){
+  if(state.gameStarted)resumeApi?.save?.(RESUME_ID,{title:'ニセ転校生を探せ！',path:'/games/nise-transfer-student/',summary:state.screen==='discussion'?'話し合い中':'ゲーム途中'},resumeSnapshot());
+  else if(state.screen==='result')resumeApi?.clear?.(RESUME_ID);
+}
+function restoreResume(saved){
+  stopTimer();Object.assign(state,saved);state.timerId=null;state.modal=null;state.gameStarted=true;render();
+}
+function render(){app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'');app.innerHTML=screenHtml();bind();if(state.modal)renderModal();persistResume();}
 function screenHtml(){return ({title:titleScreen,count:countScreen,players:playersScreen,roles:rolesScreen,revealPass:revealPassScreen,revealRole:revealRoleScreen,cover:coverScreen,nightIntro:nightIntroScreen,nightPass:nightPassScreen,nightAction:nightActionScreen,discussion:discussionScreen,votePass:votePassScreen,vote:voteScreen,voteComplete:voteCompleteScreen,result:resultScreen}[state.screen]||(()=>`${topNav()}<div class="card">画面エラー</div>`))();}
 function titleScreen(){return `${topNav()}<div class="card game-title-card">${brand()}<p class="subtitle">クラスにまぎれたニセ転校生を見つけよう！</p><div class="stack"><button class="btn yellow full" id="startSetup">ゲームをはじめる</button><button class="btn rules-button full" data-open="rules">あそびかた</button><button class="btn secondary full" data-open="roles">役職をみる</button></div></div>`;}
 function countScreen(){return `${topNav()}${brand()}${heading('何人で遊ぶ？','3〜10人に対応')}<div class="card stack"><div class="grid3">${[3,4,5,6,7,8,9,10].map(n=>`<button class="btn choice ${state.playerCount===n?'selected':''}" data-count="${n}">${n}人</button>`).join('')}</div><button class="btn full" id="toPlayers">つぎへ</button></div>`;}
@@ -237,4 +253,4 @@ function bind(){
   document.getElementById('timerToggle')?.addEventListener('click',toggleTimer);document.getElementById('plus60')?.addEventListener('click',()=>adjustDiscussionTimer(60));document.getElementById('plus10')?.addEventListener('click',()=>adjustDiscussionTimer(10));document.getElementById('minus60')?.addEventListener('click',()=>adjustDiscussionTimer(-60));document.getElementById('minus10')?.addEventListener('click',()=>adjustDiscussionTimer(-10));document.getElementById('toVote')?.addEventListener('click',()=>{stopTimer();state.voteIndex=0;state.votes=[];go('votePass');});bindHold('holdVote',()=>go('vote'));document.querySelectorAll('[data-vote-card]').forEach(b=>b.addEventListener('click',()=>{const t=Number(b.dataset.voteCard);confirmCardChoice('このカードに投票しますか？',esc(state.players[t].name)+'さんに投票します。',()=>{state.votes[state.voteIndex]=t;queueCover('voteNext');});}));
   document.getElementById('showResult')?.addEventListener('click',()=>{state.gameStarted=false;go('result');});document.getElementById('restartSame')?.addEventListener('click',()=>{state.navHistory=['title'];state.screen='roles';startGame();});document.getElementById('restartRoles')?.addEventListener('click',()=>{state.gameStarted=false;state.navHistory=['title'];state.screen='roles';render();});
 }
-setBaseRoles();ensurePlayers();render();
+setBaseRoles();ensurePlayers();render();resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.navHistory=[];render();}});
