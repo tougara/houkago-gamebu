@@ -189,11 +189,15 @@ function setupScreen(){
 }
 function membersScreen(){
   loadPlayers();
-  const used=state.players.map(p=>p.icon);
-  return topNav()+heading('参加メンバー','名前・アイコンは放課後ゲーム部で共通')+
-    '<section class="card"><h2 style="margin-top:0">何人で遊ぶ？</h2><div class="grid2">'+[2,3,4,5,6].map(n=>'<button class="btn '+(state.playerCount===n?'':'secondary')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
-    '<div class="stack">'+state.players.map((p,i)=>'<section class="card player-card"><div class="player-line"><div class="avatar">'+esc(p.icon)+'</div><input data-member-name="'+i+'" maxlength="12" value="'+esc(p.name)+'" aria-label="プレイヤー'+(i+1)+'の名前"></div><div class="icon-pick">'+(playersApi?.ICONS||[]).map(ic=>'<button class="icon-btn '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+ic+'" '+(p.icon!==ic&&used.includes(ic)?'disabled':'')+'>'+ic+'</button>').join('')+'</div></section>').join('')+'</div>'+
-    '<button class="btn full" data-members-done>登録をおわる</button>';
+  return topNav()+playersApi.renderEditor({
+    min:2,
+    max:6,
+    count:state.playerCount,
+    players:state.players,
+    title:'参加メンバー',
+    subtitle:'名前とアイコンは放課後ゲーム部で共通です',
+    doneLabel:'登録をおわる'
+  });
 }
 const RULES=[
   {title:'手札を全部なくそう',text:'自分の番に教科書を1冊置きます。置ける教科書がなくなる前に、手札を全部出し切るのが目標です。',visual:'goal'},
