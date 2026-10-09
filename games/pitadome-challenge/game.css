@@ -197,3 +197,180 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
   .tier-perfect .hit-word,.tier-excellent .hit-word,.tier-great .hit-word,.tier-perfect::before,.tier-excellent::before,.hit-ring,.spark-burst i{animation:none!important}
   .quiet-track i,.meter-shell{transition:none!important}
 }
+
+
+/* Play screen: single viewport fit 2026-10-09 */
+.pitadome-app.screen-play{
+  height:100vh;
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+  padding:6px 8px max(6px,env(safe-area-inset-bottom));
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+}
+.screen-play .top-nav{
+  margin-bottom:5px;
+  gap:6px;
+}
+.screen-play .nav-pill{
+  min-height:34px;
+  padding:6px 10px;
+  font-size:11px;
+}
+.screen-play .play-wrap{
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+}
+.screen-play .play-panel{
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  padding:8px 10px 10px;
+  border-radius:22px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.screen-play .hud{
+  margin:0;
+  gap:6px;
+  flex:0 0 auto;
+}
+.screen-play .sub-hud{
+  margin:0;
+  gap:6px;
+  flex:0 0 auto;
+}
+.screen-play .hud-chip{
+  padding:5px 8px;
+  border-radius:11px;
+  font-size:11px;
+  line-height:1.15;
+}
+.screen-play .combo-chip b{font-size:16px}
+.screen-play .combo-chip small{font-size:9px}
+.screen-play .life-row{
+  font-size:10px;
+  letter-spacing:.03em;
+}
+.screen-play .player-mini{font-size:10px}
+.screen-play .quiet-row{
+  flex:0 0 auto;
+  padding:5px 7px;
+  gap:6px;
+  border-radius:11px;
+}
+.screen-play .quiet-copy span{font-size:9px}
+.screen-play .quiet-copy strong{font-size:11px}
+.screen-play .quiet-track{height:7px}
+.screen-play .mushin-badge{
+  padding:3px 6px;
+  font-size:9px;
+}
+.screen-play .stage-banner{
+  flex:0 0 auto;
+  padding:3px 8px;
+}
+.screen-play .stage-banner small{font-size:8px}
+.screen-play .stage-banner strong{
+  font-size:15px;
+  line-height:1.1;
+}
+.screen-play .target-wrap{
+  flex:0 0 auto;
+  margin-top:1px;
+}
+.screen-play .target-label{
+  font-size:10px;
+  line-height:1.1;
+}
+.screen-play .target-number{
+  font-size:clamp(48px,14vw,72px);
+  line-height:.88;
+}
+.screen-play .target-number small{
+  font-size:.21em;
+  margin-left:4px;
+}
+.screen-play .gimmick-row{
+  gap:3px;
+  margin-top:4px;
+  min-height:18px;
+}
+.screen-play .gimmick-row span{
+  padding:3px 6px;
+  font-size:8px;
+  line-height:1;
+}
+.screen-play .meter-zone{
+  flex:1 1 auto;
+  min-height:78px;
+  align-content:center;
+  gap:3px;
+}
+.screen-play .meter-shell{
+  min-width:52%;
+  max-width:100%;
+}
+.screen-play .meter-track{
+  height:46px;
+}
+.screen-play .meter-track .meter-line{
+  height:11px;
+}
+.screen-play .meter-track .meter-cursor{
+  top:5px;
+  height:36px;
+  width:5px;
+}
+.screen-play .blind-zone{
+  top:14px;
+  height:18px;
+}
+.screen-play .meter-labels{
+  height:18px;
+  margin-top:-2px;
+}
+.screen-play .meter-labels span{
+  font-size:10px;
+  line-height:1;
+}
+.screen-play .stop-btn{
+  flex:0 0 auto;
+  min-height:68px;
+  height:clamp(68px,10dvh,82px);
+  border-radius:19px;
+  font-size:clamp(29px,8vw,42px);
+  box-shadow:0 6px 0 #66451c,0 11px 24px rgba(0,0,0,.26);
+}
+.screen-play .countdown-overlay{
+  border-radius:22px;
+}
+
+@media(max-height:700px){
+  .pitadome-app.screen-play{padding-top:4px;padding-bottom:4px}
+  .screen-play .top-nav{margin-bottom:3px}
+  .screen-play .nav-pill{min-height:30px;padding:4px 8px;font-size:10px}
+  .screen-play .play-panel{padding:6px 8px 8px;gap:3px}
+  .screen-play .hud-chip{padding:4px 6px;font-size:10px}
+  .screen-play .quiet-row{padding:4px 6px}
+  .screen-play .stage-banner{padding:2px 6px}
+  .screen-play .stage-banner strong{font-size:13px}
+  .screen-play .target-label{font-size:9px}
+  .screen-play .target-number{font-size:clamp(42px,12vw,58px)}
+  .screen-play .gimmick-row{margin-top:2px;min-height:15px}
+  .screen-play .gimmick-row span{padding:2px 5px;font-size:7px}
+  .screen-play .meter-zone{min-height:66px}
+  .screen-play .meter-track{height:39px}
+  .screen-play .meter-track .meter-cursor{height:31px;top:4px}
+  .screen-play .blind-zone{top:12px;height:15px}
+  .screen-play .meter-labels{height:15px}
+  .screen-play .stop-btn{
+    min-height:58px;
+    height:58px;
+    font-size:29px;
+    border-radius:16px;
+  }
+}
