@@ -79,7 +79,7 @@ function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Mat
 function stopTimers(){if(state.timerId){clearInterval(state.timerId);state.timerId=null}if(state.countdownId){clearInterval(state.countdownId);state.countdownId=null}}
 function loadPlayers(){
   const d=playersApi?.load?.();
-  state.playerCount=Math.max(3,Math.min(10,Number(d?.activeCount)||4));
+  state.playerCount=Math.max(2,Math.min(10,Number(d?.activeCount)||4));
   state.players=(d?.players||[]).slice(0,state.playerCount).map(x=>({...x}));
   while(state.players.length<state.playerCount)state.players.push({name:'プレイヤー'+(state.players.length+1),icon:'🙂'});
 }
