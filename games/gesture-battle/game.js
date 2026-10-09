@@ -198,8 +198,8 @@ function topicScreen(){
   if(!state.currentPrompt)state.currentPrompt=drawPrompt();
   return topNav()+'<div class="turn-status"><strong>'+(state.turnIndex+1)+' / '+state.queue.length+'人目</strong><span>'+esc(p.name)+'さん</span></div>'+scoreStrip()+
     '<section class="ready-topic-card">'+(t?'<span class="team-label '+t+'">'+teamName(t)+'</span>':'')+
-    '<div class="topic-preview"><small>最初のお題</small><strong>'+esc(state.currentPrompt.word)+'</strong></div>'+
-    '<p class="ready-tip">お題を確認したらスマホを持ったままジェスチャー開始！<br>正解・パスを押すたび次のお題に変わります。</p>'+
+    '<div class="topic-preview topic-preview-hidden"><small>お題はまだヒミツ</small><strong>？？？</strong></div>'+
+    '<p class="ready-tip">「スタート！」を押すとカウントダウン開始。<br>カウントダウンが終わった瞬間に最初のお題が表示されます。</p>'+
     '<button class="btn yellow full" data-start-turn>スタート！</button></section>';
 }
 function playScreen(){
