@@ -91,7 +91,7 @@ function currentPlayerIndex(){return state.queue[state.turnIndex]?.player ?? 0}
 function currentTeam(){return state.queue[state.turnIndex]?.team || null}
 function currentPlayer(){return state.players[currentPlayerIndex()]||{name:'プレイヤー',icon:'🙂'}}
 function teamName(t){return t==='orange'?'オレンジチーム':'ライムチーム'}
-function minPlayers(){return state.mode==='team'?4:3}
+function minPlayers(){return state.mode==='team'?4:2}
 
 function titleScreen(){
   return topNav()+'<section class="title-card">'+logo()+'<p class="title-copy">声を使わず、動きだけで伝えよう！<br>正解したらすぐ次のお題へ！</p><div class="stack"><button class="btn yellow full" data-start-title>ゲームをはじめる</button><button class="btn secondary full" data-rules>あそびかた</button><button class="btn secondary full" data-members-direct>メンバーを選ぶ</button></div></section>';
@@ -107,7 +107,7 @@ function membersScreen(){
   loadPlayers();
   const nums=[];for(let n=minPlayers();n<=10;n++)nums.push(n);
   const used=state.players.map(p=>p.icon);
-  return topNav()+heading('メンバーを選ぶ',state.mode==='team'?'チームバトルは4〜10人':'3〜10人で遊べます')+
+  return topNav()+heading('メンバーを選ぶ',state.mode==='team'?'チームバトルは4〜10人':'みんなでジェスチャーは2〜10人')+
     '<section class="card"><h2>何人で遊ぶ？</h2><div class="count-grid">'+nums.map(n=>'<button class="choice-btn '+(state.playerCount===n?'selected':'')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
     '<div class="member-edit-list">'+state.players.map((p,i)=>'<section class="member-edit-card"><button class="member-avatar-btn" data-member-avatar="'+i+'" aria-label="'+esc(p.name)+'のアイコンを変更">'+esc(p.icon)+'</button><div class="member-edit-main"><label>プレイヤー'+(i+1)+'<input data-member-name="'+i+'" maxlength="12" value="'+esc(p.name)+'"></label><div class="member-icon-picker '+(state.memberIconTarget===i?'open':'')+'">'+(playersApi?.ICONS||[]).map(ic=>'<button class="member-icon-choice '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+ic+'" '+(p.icon!==ic&&used.includes(ic)?'disabled':'')+'>'+ic+'</button>').join('')+'</div></div></section>').join('')+'</div>'+
     '<button class="btn full" data-members-done>このメンバーで決定</button>';
