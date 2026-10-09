@@ -57,10 +57,22 @@
     return '<section class="shared-player-editor">'+
       '<header class="shared-player-heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></header>'+
       '<section class="shared-player-card shared-player-count"><h2>遊ぶ人数</h2><div class="shared-count-grid">'+nums.map(n=>'<button type="button" class="shared-count-btn '+(n===count?'selected':'')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
-      '<div class="shared-player-list">'+players.map((p,i)=>'<section class="shared-player-card shared-player-row"><div class="shared-player-main"><div class="shared-player-avatar">'+esc(p.icon)+'</div><label><span>'+(i+1)+'人目</span><input data-member-name="'+i+'" maxlength="12" value="'+esc(p.name)+'"></label></div><div class="shared-icon-grid">'+ICONS.map(ic=>'<button type="button" class="shared-icon-btn '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+esc(ic)+'" '+(p.icon!==ic&&used.has(ic)?'disabled aria-disabled="true"':'')+'>'+esc(ic)+'</button>').join('')+'</div></section>').join('')+'</div>'+
+      '<div class="shared-player-list">'+players.map((p,i)=>'<section class="shared-player-card shared-player-row"><div class="shared-player-main"><button type="button" class="shared-player-avatar" data-shared-icon-toggle="'+i+'" aria-label="'+(i+1)+'人目のアイコンを変更">'+esc(p.icon)+'</button><label><span>'+(i+1)+'人目</span><input data-member-name="'+i+'" maxlength="12" value="'+esc(p.name)+'"></label></div><div class="shared-icon-grid" data-shared-icon-grid="'+i+'">'+ICONS.map(ic=>'<button type="button" class="shared-icon-btn '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+esc(ic)+'" '+(p.icon!==ic&&used.has(ic)?'disabled aria-disabled="true"':'')+'>'+esc(ic)+'</button>').join('')+'</div></section>').join('')+'</div>'+
       '<p class="shared-player-note">同じアイコンは2人以上選べません。</p>'+
       '<button type="button" class="shared-player-done" data-members-done>'+esc(doneLabel)+'</button>'+
     '</section>';
+  }
+  if(!window.__houkagoPlayerEditorToggleBound){
+    window.__houkagoPlayerEditorToggleBound=true;
+    document.addEventListener('click',function(e){
+      const btn=e.target.closest&&e.target.closest('[data-shared-icon-toggle]');
+      if(!btn)return;
+      const root=btn.closest('.shared-player-editor');if(!root)return;
+      const id=btn.dataset.sharedIconToggle;
+      root.querySelectorAll('[data-shared-icon-grid]').forEach(grid=>{
+        grid.classList.toggle('open',grid.dataset.sharedIconGrid===id&&!grid.classList.contains('open'));
+      });
+    });
   }
   window.HoukagoPlayers={KEY,ICONS,MIN_COUNT,MAX_COUNT,load,save,setActiveCount,setPlayer,setPlayers,reset,renderEditor};
 })();
