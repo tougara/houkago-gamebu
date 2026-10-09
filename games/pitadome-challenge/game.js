@@ -161,11 +161,11 @@ function rulesScreen(){
   return topNav()+heading('あそびかた','止めるだけ。でもラウンドごとに条件が変わる！')+
     '<div class="rules-list">'+
       '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように目標が出ます。後半は上限150・200のラウンドもあります。</span></div></section>'+
-      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・超光速・上限150/200などが登場します。</span></div></section>'+
+      '<section class="rule-step"><b>2</b><div><strong>カーソルの動きを読む</strong><span>速度変化・短いバー・隠しゾーン・反転・上限150/200などが登場。超光速は後半だけの特別ギミックです。</span></div></section>'+
       '<section class="rule-step"><b>3</b><div><strong>ここだ！でSTOP</strong><span>最初だけ3・2・1で開始。指が触れた瞬間に停止し、次ラウンドからはカウントダウンなしで始まります。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>近さを連続させてCOMBO</strong><span>誤差3以内が続くほど得点倍率UP。PERFECTはコンボ+2。</span></div></section>'+
     '</div>'+
-    '<section class="card mode-help"><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>10種類の仕掛けを攻略するスコアアタック。FINALは複数ギミック。</p></div><div><strong>エンドレス</strong><p>進むほど合格範囲が狭くなり、複数ギミックが重なります。</p></div></section>'+
+    '<section class="card mode-help"><div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div><div><strong>エンドレスの護符</strong><p>10コンボ到達で護符を1個獲得。次のミスによるライフ減少を1回だけ防ぎます。</p></div><div><strong>10ラウンド</strong><p>前半は基本を覚え、後半ほど変化が増える全10ラウンド。FINALは上限200＋複合ギミック。</p></div><div><strong>エンドレス</strong><p>序盤は遊びやすく、10ラウンドごとに少しずつ難化。後半だけ複合ギミックと超光速が登場します。</p></div></section>'+
     '<button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
 function randomRef(maxValue=100){
@@ -182,7 +182,7 @@ function baseProfile(){
 }
 function applyGimmick(p,key){
   if(key==='fast'){p.speed+=14;p.gimmicks.push('高速')}
-  if(key==='hyper'){p.speed=Math.max(p.speed,150);p.movement='hyper';p.gimmicks.push('超光速')}
+  if(key==='hyper'){p.speed=Math.max(p.speed,118);p.movement='hyper';p.gimmicks.push('超光速')}
   if(key==='short'){p.barScale=.58;p.gimmicks.push('短尺')}
   if(key==='wide'){p.barScale=1;p.gimmicks.push('長尺')}
   if(key==='range150'){p.maxValue=150;p.gimmicks.push('上限150')}
@@ -195,41 +195,65 @@ function applyGimmick(p,key){
 }
 function tenProfile(round){
   const p=baseProfile();p.gimmicks=[];
-  if(round===1){p.gimmicks=['基本']}
-  if(round===2){p.speed=45;p.gimmicks=['速度UP']}
-  if(round===3){p.speed=42;applyGimmick(p,'short')}
-  if(round===4){p.speed=44;applyGimmick(p,'ref')}
-  if(round===5){p.speed=50;applyGimmick(p,'change')}
-  if(round===6){p.speed=50;applyGimmick(p,'blind')}
-  if(round===7){p.speed=58;applyGimmick(p,'wide');p.gimmicks.unshift('高速')}
-  if(round===8){p.speed=60;applyGimmick(p,'range150');applyGimmick(p,'ref')}
-  if(round===9){p.speed=150;applyGimmick(p,'hyper')}
+  if(round===1){p.speed=32;p.gimmicks=['基本']}
+  if(round===2){p.speed=40;p.gimmicks=['速度UP']}
+  if(round===3){p.speed=40;applyGimmick(p,'short')}
+  if(round===4){p.speed=42;applyGimmick(p,'ref')}
+  if(round===5){p.speed=46;applyGimmick(p,'change')}
+  if(round===6){p.speed=46;applyGimmick(p,'blind')}
+  if(round===7){p.speed=48;applyGimmick(p,'range150');p.refPoint=75}
+  if(round===8){p.speed=52;applyGimmick(p,'reverse');applyGimmick(p,'short')}
+  if(round===9){p.speed=118;applyGimmick(p,'hyper');applyGimmick(p,'wide')}
   if(round===10){
-    p.speed=72;p.gimmicks=['FINAL'];applyGimmick(p,'range200');
-    const picks=shuffle(['short','blind','ref','change','reverse']).slice(0,2);
+    p.speed=58;p.gimmicks=['FINAL'];applyGimmick(p,'range200');
+    const picks=shuffle(['ref','blind','change']).slice(0,2);
     picks.forEach(k=>applyGimmick(p,k));
   }
   return p;
 }
 function endlessStage(round){
-  if(round<=5)return{stage:'一ノ境',safe:10,count:0,speed:34+(round-1)*2,maxValue:100,hyper:0};
-  if(round<=10)return{stage:'二ノ境',safe:9,count:1,speed:45+(round-6)*2,maxValue:round>=8?150:100,hyper:0};
-  if(round<=15)return{stage:'三ノ境',safe:8,count:2,speed:56+(round-11)*2,maxValue:150,hyper:0};
-  if(round<=20)return{stage:'四ノ境',safe:7,count:2,speed:66+(round-16)*2,maxValue:round>=18?200:150,hyper:0};
-  if(round<=30)return{stage:'修羅ノ境',safe:6,count:3,speed:76+Math.min(14,(round-21)*1.5),maxValue:200,hyper:.28};
-  return{stage:'極ノ境',safe:5,count:3,speed:92+Math.min(24,(round-31)*1.15),maxValue:200,hyper:.48};
+  if(round<=5)return{stage:'一ノ境',safe:10,count:0,speed:31+(round-1)*2,maxValue:100,hyper:0};
+  if(round<=10)return{stage:'二ノ境',safe:10,count:1,speed:40+(round-6)*2,maxValue:100,hyper:0};
+  if(round<=15)return{stage:'三ノ境',safe:9,count:1,speed:48+(round-11)*2,maxValue:round>=13?150:100,hyper:0};
+  if(round<=20)return{stage:'四ノ境',safe:8,count:2,speed:56+(round-16)*2,maxValue:150,hyper:0};
+  if(round<=30)return{stage:'修羅ノ境',safe:7,count:2,speed:64+Math.min(12,(round-21)*1.3),maxValue:round>=25?200:150,hyper:.12};
+  if(round<=40)return{stage:'極ノ境',safe:6,count:3,speed:76+Math.min(12,(round-31)*1.2),maxValue:200,hyper:.24};
+  return{stage:'無ノ境',safe:5,count:3,speed:88+Math.min(14,(round-41)*.8),maxValue:200,hyper:.34};
 }
 function endlessProfile(round){
   const s=endlessStage(round),p=baseProfile();
   p.speed=s.speed;p.safeLimit=s.safe;p.maxValue=s.maxValue;p.gimmicks=[];p.stageName=s.stage;
+
   if(p.maxValue===150)p.gimmicks.push('上限150');
   if(p.maxValue===200)p.gimmicks.push('上限200');
-  if(round<=2){p.gimmicks.push('基本');return p}
-  const pool=round<=10?['short','wide','ref','fast']:round<=15?['short','ref','blind','accel','change']:['short','wide','ref','blind','accel','change','reverse','fast'];
+
+  if(round<=3){
+    p.gimmicks.push('基本');
+    return p;
+  }
+
+  const early=['short','wide','ref','fast'];
+  const middle=['short','wide','ref','blind','accel','change'];
+  const late=['short','wide','ref','blind','accel','change','reverse','fast'];
+  const pool=round<=10?early:round<=20?middle:late;
+
   const count=Math.max(1,s.count);
   shuffle(pool).slice(0,count).forEach(k=>applyGimmick(p,k));
-  if(round>=11&&p.movement==='normal')applyGimmick(p,round%2?'accel':'change');
+
+  // 中盤以降は毎回必ず動きが変わる、ではなく「時々」にして読めるラウンドも残す。
+  if(round>=16&&p.movement==='normal'&&Math.random()<.55){
+    applyGimmick(p,Math.random()<.5?'accel':'change');
+  }
+
+  // 超光速は後半のスパイス。連発しないよう確率を抑える。
   if(s.hyper&&Math.random()<s.hyper)applyGimmick(p,'hyper');
+
+  // 極端な複合を避ける：超光速時は短尺を解除し、見切れる余地を残す。
+  if(p.movement==='hyper'&&p.barScale<.8){
+    p.barScale=.9;
+    p.gimmicks=p.gimmicks.filter(g=>g!=='短尺');
+  }
+
   p.gimmicks=[...new Set(p.gimmicks)];
   return p;
 }
