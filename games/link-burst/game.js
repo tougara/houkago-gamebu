@@ -179,6 +179,7 @@
           '<div class="game-board" data-board></div>'+
         '</div>'+
         '<div class="chain-banner" data-chain-banner><small>CHAIN</small><strong>1 LINK</strong></div>'+
+        '<div class="combo-fx" data-combo-fx><strong>2 COMBO!</strong><span>SIMULTANEOUS CLEAR</span></div>'+
         '<div class="chain-flash" data-chain-flash></div>'+
         '<div class="particle-layer" data-particle-layer aria-hidden="true"></div>'+
         '<div class="split-fx" data-split-fx>SPLIT</div>'+
@@ -629,6 +630,7 @@
       const total=cells.length;
       const combo=groups.length;
       const gain=scoreGain(total,link,combo);
+      const power=Math.max(1,Math.min(8,link+Math.max(0,combo-1)*2));
       const keys=cells.map(function(c){return c.y+':'+c.x});
       const chargeWait=reducedMotion()?70:Math.min(270+link*55,520);
       const clearWait=reducedMotion()?90:Math.min(360+link*28,500);
@@ -636,10 +638,10 @@
 
       // 1) Anticipation: freeze the board for a beat and make the winning group glow.
       state.chargedKeys=new Set(keys);
-      setChainStage(link);
-      showChainBanner(link,combo);
+      setChainStage(link,combo,power);
+      showChainBanner(link,combo,power);
       drawBoard();
-      pulseChainFlash(link,'charge');
+      pulseChainFlash(link,combo,power,'charge');
       await delay(chargeWait);
       if(!state.gameStarted)break;
 
@@ -652,12 +654,15 @@
       state.clearingKeys=new Set(keys);
       drawBoard();
       updateHud();
-      spawnClearParticles(cells,link);
-      showLink(link,gain,combo);
-      pulseChainFlash(link,'burst');
-      if(link>=5)vibrate([30,24,48]);
-      else if(link>=3)vibrate([20,18,30]);
-      else if(link===2)vibrate([14,12,18]);
+      spawnClearParticles(cells,link,combo,power);
+      showLink(link,gain,combo,power);
+      showComboFx(combo,power);
+      pulseChainFlash(link,combo,power,'burst');
+      spawnBurstRings(link,combo,power);
+      if(power>=8)vibrate([34,22,56,24,72]);
+      else if(power>=6)vibrate([30,22,48]);
+      else if(power>=4)vibrate([20,16,30]);
+      else if(power>=2)vibrate([14,10,18]);
       else vibrate(12);
 
       await delay(clearWait);
@@ -765,7 +770,7 @@
     el.classList.add('show');
     setTimeout(function(){el&&el.classList.remove('show')},reducedMotion()?130:360);
   }
-  function showLink(link,gain,combo){
+  function showLink(link,gain,combo,power){
     const el=document.querySelector('[data-link-fx]');
     const pop=document.querySelector('[data-score-pop]');
     const frameEl=document.querySelector('[data-board-frame]');
@@ -778,7 +783,7 @@
       el.querySelector('strong').textContent=main;
       el.querySelector('span').textContent=(combo>1?combo+' COMBO  ':'')+'+'+gain;
       el.style.setProperty('--link-duration',hold+'ms');
-      el.className='link-fx '+(link>=5?'burst ':'')+(link>=3?'strong ':'')+'show';
+      el.className='link-fx fx-tier-'+Math.min(8,power)+' '+(link>=5?'burst ':'')+(link>=3?'strong ':'')+(combo>=2?' combo-heavy ':'')+'show';
       setTimeout(function(){if(el&&el.isConnected)el.classList.remove('show')},hold+30);
     }
     if(pop){
@@ -789,7 +794,7 @@
       pop.classList.add('show');
       setTimeout(function(){if(pop&&pop.isConnected)pop.classList.remove('show')},reducedMotion()?240:1000);
     }
-    if(frameEl&&link>=4){
+    if(frameEl&&(power>=5||combo>=3)){
       frameEl.classList.remove('burst-shake');
       void frameEl.offsetWidth;
       frameEl.classList.add('burst-shake');
@@ -797,14 +802,12 @@
     }
   }
 
-  function showChainBanner(link,combo){
+  function showChainBanner(link,combo,power){
     const el=document.querySelector('[data-chain-banner]');
     if(!el)return;
     el.querySelector('strong').textContent=link+' LINK';
     el.querySelector('small').textContent=combo>1?combo+' COMBO / CHAIN':'CHAIN';
-    el.classList.add('show');
-    el.classList.toggle('hot',link>=3);
-    el.classList.toggle('burst',link>=5);
+    el.className='chain-banner show fx-tier-'+Math.min(8,power)+(link>=3?' hot':'')+(link>=5?' burst':'')+(combo>=2?' combo-heavy':'');
   }
 
   function hideChainBanner(){
@@ -823,13 +826,18 @@
     setTimeout(function(){if(el&&el.isConnected)el.classList.remove('show')},hold+20);
   }
 
-  function setChainStage(link){
+  function setChainStage(link,combo,power){
     const frameEl=document.querySelector('[data-board-frame]');
+    const stage=document.querySelector('.board-stage');
     if(!frameEl)return;
     frameEl.classList.add('chain-active');
-    frameEl.classList.toggle('chain-strong',link>=3);
-    frameEl.classList.toggle('chain-burst',link>=5);
+    frameEl.classList.toggle('chain-strong',power>=4);
+    frameEl.classList.toggle('chain-burst',power>=6);
     frameEl.dataset.chain=String(link);
+    frameEl.dataset.combo=String(combo);
+    if(stage){
+      stage.className='board-stage chain-stage fx-tier-'+Math.min(8,power)+(combo>=2?' combo-heavy':'');
+    }
   }
 
   function clearChainStage(){
@@ -837,48 +845,83 @@
     if(!frameEl)return;
     frameEl.classList.remove('chain-active','chain-strong','chain-burst');
     delete frameEl.dataset.chain;
+    delete frameEl.dataset.combo;
+    const stage=document.querySelector('.board-stage');
+    if(stage)stage.className='board-stage';
   }
 
-  function pulseChainFlash(link,kind){
+  function pulseChainFlash(link,combo,power,kind){
     const el=document.querySelector('[data-chain-flash]');
     if(!el)return;
     el.className='chain-flash';
     void el.offsetWidth;
     el.classList.add(kind==='charge'?'charge':'burst');
-    if(link>=3)el.classList.add('strong');
-    if(link>=5)el.classList.add('max');
+    if(power>=4)el.classList.add('strong');
+    if(power>=6)el.classList.add('max');
+    if(combo>=2)el.classList.add('combo-heavy');
+    el.classList.add('fx-tier-'+Math.min(8,power));
     setTimeout(function(){if(el&&el.isConnected)el.className='chain-flash'},reducedMotion()?100:430);
   }
 
-  function spawnClearParticles(cells,link){
+  function spawnClearParticles(cells,link,combo,power){
     if(reducedMotion())return;
     const stage=document.querySelector('.board-stage');
     const layer=document.querySelector('[data-particle-layer]');
     if(!stage||!layer)return;
     const stageRect=stage.getBoundingClientRect();
     let count=0;
+    const cap=Math.min(88,34+power*7+Math.max(0,combo-1)*10);
     cells.forEach(function(cell,cellIndex){
-      if(cell.y<HIDDEN_ROWS||count>=42)return;
+      if(cell.y<HIDDEN_ROWS||count>=cap)return;
       const key=cell.y+':'+cell.x;
       const origin=document.querySelector('[data-key="'+key+'"]');
       if(!origin)return;
       const rect=origin.getBoundingClientRect();
       const color=state.board[cell.y][cell.x]||'blue';
-      const perCell=link>=4?4:3;
-      for(let i=0;i<perCell&&count<42;i++,count++){
+      const perCell=Math.min(7,3+Math.floor(power/3)+(combo>=2?1:0));
+      for(let i=0;i<perCell&&count<cap;i++,count++){
         const p=document.createElement('i');
         const angle=((cellIndex*53+i*97)%360)*Math.PI/180;
-        const dist=26+((cellIndex*17+i*13)%32)+(link>=4?12:0);
+        const dist=26+((cellIndex*17+i*13)%34)+power*5+(combo>=2?10:0);
         p.className='clear-particle c-'+color;
         p.style.left=(rect.left-stageRect.left+rect.width/2)+'px';
         p.style.top=(rect.top-stageRect.top+rect.height/2)+'px';
         p.style.setProperty('--dx',(Math.cos(angle)*dist).toFixed(1)+'px');
         p.style.setProperty('--dy',(Math.sin(angle)*dist-10).toFixed(1)+'px');
-        p.style.setProperty('--particle-life',(480+link*35)+'ms');
+        p.style.setProperty('--particle-life',(470+power*45)+'ms');
         layer.appendChild(p);
-        setTimeout(function(){p.remove()},650+link*45);
+        setTimeout(function(){p.remove()},700+power*55);
       }
     });
+  }
+
+  function showComboFx(combo,power){
+    const el=document.querySelector('[data-combo-fx]');
+    if(!el)return;
+    if(combo<2){
+      el.className='combo-fx';
+      return;
+    }
+    el.querySelector('strong').textContent=combo+' COMBO!';
+    el.querySelector('span').textContent=combo>=4?'MULTI BURST!':combo>=3?'TRIPLE CLEAR!':'DOUBLE CLEAR!';
+    el.className='combo-fx show fx-tier-'+Math.min(8,power)+(combo>=3?' heavy':'');
+    const hold=reducedMotion()?220:Math.min(720+combo*130,1250);
+    setTimeout(function(){if(el&&el.isConnected)el.className='combo-fx'},hold);
+  }
+
+  function spawnBurstRings(link,combo,power){
+    if(reducedMotion()||power<3)return;
+    const layer=document.querySelector('[data-particle-layer]');
+    if(!layer)return;
+    const rings=Math.min(4,1+Math.floor((power-3)/2)+(combo>=3?1:0));
+    for(let i=0;i<rings;i++){
+      const ring=document.createElement('b');
+      ring.className='burst-ring fx-tier-'+Math.min(8,power);
+      ring.style.setProperty('--ring-delay',(i*90)+'ms');
+      ring.style.setProperty('--ring-size',(70+i*24+power*6)+'%');
+      layer.appendChild(ring);
+      setTimeout(function(){ring.remove()},900+i*100);
+    }
   }
 
   function personalBestKey(){
