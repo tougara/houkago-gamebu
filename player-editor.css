@@ -53,3 +53,20 @@
 .player-registry-tab.selected{background:#eaf5ff;border-color:#2994ea;color:#0c62ae}
 .home-record-btn{width:100%;min-height:50px;padding:10px 18px;border-radius:999px;border:2px solid rgba(255,255,255,.92);background:rgba(255,255,255,.92);color:#21416b;font:inherit;font-size:clamp(14px,4vw,18px);font-weight:1000;box-shadow:0 5px 0 rgba(36,61,91,.25),0 10px 20px rgba(0,0,0,.12)}
 @media(max-width:380px){.shared-roster-grid{grid-template-columns:1fr}}
+
+
+/* Player record delete 2026-10-10 */
+.shared-record-delete{
+  width:100%;
+  min-height:40px;
+  margin-top:11px;
+  border:1px solid #edc6c6;
+  border-radius:12px;
+  background:#fff7f7;
+  color:#a33f3f;
+  font:inherit;
+  font-size:12px;
+  font-weight:1000;
+}
+.shared-record-delete:active:not(:disabled){transform:translateY(1px);background:#ffeded}
+.shared-record-delete:disabled{opacity:.38;cursor:not-allowed}
