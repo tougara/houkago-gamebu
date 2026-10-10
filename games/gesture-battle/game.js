@@ -355,7 +355,16 @@ function finishTurn(){
   go('turnResult',{push:false});
 }
 function advanceTurn(){
-  if(state.turnIndex+1>=state.queue.length){state.gameStarted=false;go('final',{push:false});return}
+  if(state.turnIndex+1>=state.queue.length){
+    let winners=[];
+    if(state.mode==='team'&&state.teamScores.orange!==state.teamScores.lime){
+      const winTeam=state.teamScores.orange>state.teamScores.lime?'orange':'lime';
+      const ids=new Set(state.teams[winTeam]);winners=state.players.filter((p,i)=>ids.has(i));
+    }
+    const scores={};state.players.forEach((p,i)=>{const id=window.HoukagoPlayers?.resolveId?.(p);if(id)scores[id]=state.scores[i]||0});
+    window.HoukagoPlayers?.recordGame?.({gameId:'gesture-battle',participants:state.players,winners,scores});
+    state.gameStarted=false;go('final',{push:false});return
+  }
   state.turnIndex++;state.currentPrompt=null;state.turnScore=0;state.passes=0;go('handoff',{push:false});
 }
 function replaySame(){
@@ -474,6 +483,7 @@ function bind(){
   document.querySelector('[data-title]')?.addEventListener('click',()=>{resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.history=[];go('title',{push:false})});
 }
 loadPlayers();render();
+window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayers();render();});
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
