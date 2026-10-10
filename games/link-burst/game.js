@@ -148,7 +148,7 @@
         '<section class="card rule-card"><h2>1. 2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
         '<section class="card rule-card"><h2>2. LOCKすると2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
         '<section class="card rule-card"><h2>3. 同じ色を4個以上つなげる</h2><p>上下左右につながった同色4個以上で消去。消したあとにまた4個つながると2 LINK、3 LINK…と続きます。</p></section>'+
-        '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span>←</span><span>→</span><span>↓</span><span class="demo-rotate">↻</span></div><p>上段の←→で移動、下段の↓で高速落下、↻で90°右回転。左右は長押しできます。</p></section>'+
+        '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span class="demo-left">←</span><span class="demo-right">→</span><span class="demo-rotate">↻</span><span class="demo-down">↓</span></div><p>上段は← → ↻、下段は←と→の中央に↓。←→は長押し移動、↓は高速落下、↻は90°右回転です。</p></section>'+
       '</div>'+
       '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-rules-back>← もどる</button></div>';
   }
@@ -184,8 +184,8 @@
       '<section class="controls" aria-label="操作">'+
         '<button class="control-btn" data-control="left" aria-label="左へ">←</button>'+
         '<button class="control-btn" data-control="right" aria-label="右へ">→</button>'+
-        '<button class="control-btn" data-control="down" aria-label="速く落とす">↓</button>'+
         '<button class="control-btn rotate" data-control="rotate" aria-label="右回転">↻</button>'+
+        '<button class="control-btn" data-control="down" aria-label="速く落とす">↓</button>'+
       '</section>';
   }
 
