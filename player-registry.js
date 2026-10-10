@@ -140,7 +140,7 @@
     return '<section class="shared-records"><header class="shared-player-heading"><h1>プレイヤー記録</h1><p>登録メンバーごとの放課後ゲーム部の記録です。</p></header>'+
       data.roster.map(p=>{const r=data.records[p.id]||emptyRecord();const games=Object.entries(r.games||{}).filter(([,g])=>g.plays>0).sort((a,b)=>b[1].plays-a[1].plays);
         return '<section class="shared-record-card"><div class="shared-record-head"><span class="shared-record-avatar">'+esc(p.icon)+'</span><div><strong>'+esc(p.name)+'</strong><small>プレイ '+r.plays+'回'+(r.wins?' ／ 勝利・1位 '+r.wins+'回':'')+'</small></div></div>'+
-        (games.length?'<div class="shared-record-games">'+games.map(([id,g])=>'<div><span>'+esc(gameLabel(id))+'</span><strong>'+g.plays+'回'+(g.wins?'・勝'+g.wins:'')+(Number.isFinite(g.bestScore)?'・BEST '+g.bestScore:'')+'</strong></div>').join('')+'</div>':'<p class="shared-record-empty">まだプレイ記録がありません。</p>')+
+        (games.length?'<div class="shared-record-games">'+games.map(([id,g])=>'<div><span>'+esc(gameLabel(id))+'</span><strong>'+g.plays+'回'+(g.wins?'・勝'+g.wins:'')+(Number.isFinite(g.bestScore)?'・BEST '+g.bestScore:'')+(id==='link-burst'&&Number(g.bestLink)>0?'・MAX LINK '+g.bestLink:'')+'</strong></div>').join('')+'</div>':'<p class="shared-record-empty">まだプレイ記録がありません。</p>')+
         '<button type="button" class="shared-record-delete" data-player-record-delete="'+esc(p.id)+'" data-player-record-name="'+esc(p.name)+'" '+(r.plays>0?'':'disabled')+'>この記録を削除</button></section>'
       }).join('')+'</section>';
   }
