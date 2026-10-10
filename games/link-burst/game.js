@@ -34,6 +34,7 @@
     mode:'endless',
     rankMode:'endless',
     gameStarted:false,
+    paused:false,
     resolving:false,
     board:makeBoard(),
     piece:null,
@@ -70,7 +71,16 @@
     return String(v==null?'':v).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]});
   }
   function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
-  function delay(ms){return new Promise(function(resolve){setTimeout(resolve,reducedMotion()?Math.min(18,ms):ms)})}
+  function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
+  async function delay(ms){
+    let remaining=reducedMotion()?Math.min(18,ms):ms;
+    while(remaining>0){
+      if(state.paused){await sleep(60);continue}
+      const step=Math.min(remaining,60);
+      await sleep(step);
+      remaining-=step;
+    }
+  }
   function reducedMotion(){return document.documentElement.dataset.hgMotion==='reduced'}
   function vibrate(pattern){settingsApi&&settingsApi.vibrate&&settingsApi.vibrate(pattern)}
 
@@ -171,6 +181,7 @@
         '<div class="next-panel">'+
           '<div class="next-box"><small>NEXT</small><div data-next-one>'+miniPieceHtml(state.queue[0])+'</div></div>'+
           '<div class="next-box"><small>NEXT 2</small><div data-next-two>'+miniPieceHtml(state.queue[1])+'</div></div>'+
+          '<button type="button" class="pause-btn" data-pause aria-label="一時停止"><strong>Ⅱ</strong><small>PAUSE</small></button>'+
         '</div>'+
       '</section>'+
       '<section class="board-stage">'+
@@ -182,7 +193,6 @@
         '<div class="combo-fx" data-combo-fx><strong>2 COMBO!</strong><span>SIMULTANEOUS CLEAR</span></div>'+
         '<div class="chain-flash" data-chain-flash></div>'+
         '<div class="particle-layer" data-particle-layer aria-hidden="true"></div>'+
-        '<div class="split-fx" data-split-fx>SPLIT</div>'+
         '<div class="link-fx" data-link-fx><strong></strong><span></span></div>'+
         '<div class="score-pop" data-score-pop></div>'+ 
         '<div class="play-tip" data-play-tip>← → 移動　↓ 高速落下　↻ 回転</div>'+
@@ -293,6 +303,49 @@
     location.href='../';
   }
 
+  function pauseGame(auto){
+    if(state.screen!=='play'||!state.gameStarted||state.paused)return;
+    state.paused=true;
+    releaseControls();
+    stopLoop();
+    persistResume();
+    document.querySelector('[data-pause-backdrop]')?.remove();
+
+    const w=document.createElement('div');
+    w.className='pause-backdrop';
+    w.setAttribute('data-pause-backdrop','');
+    w.innerHTML='<section class="card pause-card" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">'+
+      '<span class="pause-kicker">PAUSE</span>'+
+      '<h2 id="pauseTitle">一時停止</h2>'+
+      '<p>'+(auto?'画面を離れたため自動で停止しました。':'ゲームは止まっています。ゆっくり再開してね。')+'</p>'+
+      '<div class="pause-summary"><span>SCORE <strong>'+state.score+'</strong></span><span>MAX LINK <strong>'+state.maxLink+'</strong></span></div>'+
+      '<div class="stack"><button class="btn" type="button" data-pause-resume>ゲームに戻る</button><button class="btn secondary" type="button" data-pause-quit>やめる</button></div>'+
+    '</section>';
+    document.body.appendChild(w);
+
+    w.querySelector('[data-pause-resume]').addEventListener('click',resumePausedGame);
+    w.querySelector('[data-pause-quit]').addEventListener('click',function(){
+      w.remove();
+      state.paused=false;
+      state.gameStarted=false;
+      state.paused=false;
+      state.resolving=false;
+      state.chainActive=false;
+      resumeApi&&resumeApi.clear&&resumeApi.clear(RESUME_ID);
+      state.history=[];
+      state.screen='title';
+      render();
+    });
+  }
+
+  function resumePausedGame(){
+    document.querySelector('[data-pause-backdrop]')?.remove();
+    if(!state.gameStarted)return;
+    state.paused=false;
+    state.lastFrame=performance.now();
+    startLoop();
+  }
+
   function showQuitConfirm(type){
     document.querySelector('.quit-backdrop')&&document.querySelector('.quit-backdrop').remove();
     state.softDrop=false;
@@ -332,6 +385,7 @@
     document.querySelector('[data-ranking-back]')&&document.querySelector('[data-ranking-back]').addEventListener('click',doBack);
     document.querySelector('[data-retry]')&&document.querySelector('[data-retry]').addEventListener('click',function(){beginGame(state.mode)});
     document.querySelector('[data-mode-change]')&&document.querySelector('[data-mode-change]').addEventListener('click',function(){state.history=['title','playType'];state.screen='mode';render()});
+    document.querySelector('[data-pause]')&&document.querySelector('[data-pause]').addEventListener('click',function(){pauseGame(false)});
 
     document.querySelectorAll('[data-control]').forEach(function(btn){
       btn.addEventListener('pointerdown',function(e){
@@ -355,7 +409,7 @@
   window.addEventListener('pointercancel',releaseControls);
   window.addEventListener('blur',releaseControls);
 
-  function canInput(){return state.screen==='play'&&state.gameStarted&&!state.resolving&&!!state.piece}
+  function canInput(){return state.screen==='play'&&state.gameStarted&&!state.paused&&!state.resolving&&!!state.piece}
   function clearRepeat(){
     if(repeatDelayId){clearTimeout(repeatDelayId);repeatDelayId=null}
     if(repeatId){clearInterval(repeatId);repeatId=null}
@@ -454,6 +508,7 @@
     state.rankMode=state.mode;
     state.history=[];
     state.gameStarted=true;
+    state.paused=false;
     state.resolving=false;
     state.board=makeBoard();
     state.piece=null;
@@ -483,13 +538,13 @@
   function fallInterval(){
     if(state.mode==='timed'){
       const elapsed=120-state.timeLeft;
-      return Math.max(320,620-elapsed*1.5);
+      return Math.max(460,760-elapsed*2);
     }
-    return Math.max(220,720-Math.floor(state.pieces/8)*45);
+    return Math.max(300,820-Math.floor(state.pieces/10)*40);
   }
 
   function startLoop(){
-    if(state.rafId||state.screen!=='play'||!state.gameStarted)return;
+    if(state.rafId||state.screen!=='play'||!state.gameStarted||state.paused)return;
     state.lastFrame=performance.now();
     state.rafId=requestAnimationFrame(frame);
   }
@@ -499,7 +554,7 @@
   }
   function frame(ts){
     state.rafId=null;
-    if(state.screen!=='play'||!state.gameStarted)return;
+    if(state.screen!=='play'||!state.gameStarted||state.paused)return;
     const dt=Math.min(60,Math.max(0,ts-state.lastFrame));
     state.lastFrame=ts;
 
@@ -548,9 +603,7 @@
     drawBoard();
     flashLock();
     vibrate(9);
-    await delay(90);
-    showSplit();
-    await delay(110);
+    await delay(120);
     await applyGravityAnimated();
     await resolveClears();
 
@@ -761,14 +814,6 @@
     void frameEl.offsetWidth;
     frameEl.classList.add('lock-flash');
     setTimeout(function(){frameEl&&frameEl.classList.remove('lock-flash')},220);
-  }
-  function showSplit(){
-    const el=document.querySelector('[data-split-fx]');
-    if(!el)return;
-    el.classList.remove('show');
-    void el.offsetWidth;
-    el.classList.add('show');
-    setTimeout(function(){el&&el.classList.remove('show')},reducedMotion()?130:360);
   }
   function showLink(link,gain,combo,power){
     const el=document.querySelector('[data-link-fx]');
@@ -1019,6 +1064,7 @@
     stopLoop();
     releaseControls();
     state.gameStarted=false;
+    state.paused=false;
     state.resolving=false;
     state.softDrop=false;
     state.rankResult=addRanking(reason);
@@ -1084,6 +1130,7 @@
     if(saved.player)state.player=saved.player;
     state.soloIndex=Math.max(0,Number(saved.soloIndex)||0);
     state.gameStarted=true;
+    state.paused=false;
     state.resolving=!state.piece;
     state.chargedKeys=new Set();
     state.clearingKeys=new Set();
@@ -1106,7 +1153,12 @@
   }
 
   window.addEventListener('pagehide',persistResume);
-  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')persistResume()});
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='hidden'){
+      persistResume();
+      if(state.screen==='play'&&state.gameStarted&&!state.paused)pauseGame(true);
+    }
+  });
   window.addEventListener('keydown',function(e){
     if(!canInput())return;
     if(e.key==='ArrowLeft'){e.preventDefault();moveHorizontal(-1)}
