@@ -22,3 +22,34 @@
 .shared-player-done{width:100%;min-height:58px;border:0;border-radius:18px;padding:13px 16px;background:linear-gradient(180deg,#269aff,#0c60cc);color:#fff;font:inherit;font-size:18px;font-weight:1000;box-shadow:0 5px 0 #06438f}
 .shared-player-done:active{transform:translateY(3px);box-shadow:0 2px 0 #06438f}
 @media(max-width:380px){.shared-count-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.shared-icon-grid{gap:6px}.shared-icon-btn{font-size:20px;min-height:42px}.shared-player-main{grid-template-columns:58px minmax(0,1fr)}.shared-player-avatar{width:54px;height:54px}}
+
+
+/* Shared roster pool + player records 2026-10-10 */
+.shared-roster-card{display:grid;gap:10px}
+.shared-roster-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.shared-roster-head h2{margin:0 0 3px}
+.shared-roster-head p{margin:0;color:#667085;font-size:12px;font-weight:800;line-height:1.45}
+.shared-add-player{flex:0 0 auto;min-height:38px;padding:7px 11px;border:1px solid #cad6e4;border-radius:12px;background:#fff;color:#29628d;font:inherit;font-size:12px;font-weight:1000}
+.shared-roster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.shared-roster-chip{min-width:0;min-height:58px;padding:8px 9px;border:2px solid #dfe6ef;border-radius:15px;background:#f8fafc;color:#536178;display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;text-align:left;align-items:center;column-gap:7px;font:inherit}
+.shared-roster-chip>span{grid-row:1/3;font-size:24px}
+.shared-roster-chip>strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.shared-roster-chip>small{font-size:10px;font-weight:900;color:#8b97a7}
+.shared-roster-chip.selected{border-color:#2b96eb;background:#eaf5ff;color:#155c99}
+.shared-roster-chip.selected>small{color:#1674bd}
+.shared-records{display:grid;gap:11px}
+.shared-record-card{padding:14px;border:1px solid #dfe6ef;border-radius:20px;background:#fff;box-shadow:0 9px 24px rgba(25,40,70,.09)}
+.shared-record-head{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;align-items:center}
+.shared-record-avatar{width:54px;height:54px;display:grid;place-items:center;border-radius:16px;background:#f4f7fb;font-size:30px}
+.shared-record-head strong{display:block;font-size:18px}
+.shared-record-head small{display:block;margin-top:3px;color:#67758a;font-weight:850}
+.shared-record-games{display:grid;gap:6px;margin-top:11px}
+.shared-record-games>div{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:11px;background:#f7f9fc;font-size:11px;font-weight:850}
+.shared-record-games>div>span{color:#5f6d82}
+.shared-record-games>div>strong{text-align:right;color:#273750}
+.shared-record-empty{margin:10px 0 0;color:#8994a5;font-size:12px;font-weight:800}
+.player-registry-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0 2px}
+.player-registry-tab{min-height:44px;border:1px solid #d7e0ea;border-radius:13px;background:#f7f9fc;color:#5b687c;font:inherit;font-weight:1000}
+.player-registry-tab.selected{background:#eaf5ff;border-color:#2994ea;color:#0c62ae}
+.home-record-btn{width:100%;min-height:50px;padding:10px 18px;border-radius:999px;border:2px solid rgba(255,255,255,.92);background:rgba(255,255,255,.92);color:#21416b;font:inherit;font-size:clamp(14px,4vw,18px);font-weight:1000;box-shadow:0 5px 0 rgba(36,61,91,.25),0 10px 20px rgba(0,0,0,.12)}
+@media(max-width:380px){.shared-roster-grid{grid-template-columns:1fr}}
