@@ -1,0 +1,911 @@
+(function(){
+  'use strict';
+
+  const app=document.getElementById('app');
+  const playersApi=window.HoukagoPlayers;
+  const settingsApi=window.HoukagoSettings;
+  const resumeApi=window.HoukagoResume;
+
+  const COLS=7;
+  const VISIBLE_ROWS=13;
+  const HIDDEN_ROWS=2;
+  const ROWS=VISIBLE_ROWS+HIDDEN_ROWS;
+  const SPAWN_X=2;
+  const SPAWN_Y=1;
+  const LOCK_DELAY=300;
+  const RESUME_ID='link-burst';
+  const RANK_KEY='houkago_link_burst_ranking_v1';
+  const SOLO_KEY='houkago_link_burst_solo_index_v1';
+  const COLORS=['blue','red','yellow','green'];
+  const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇'};
+
+  const ROTATIONS=[
+    [[0,0,'a'],[1,0,'a'],[0,1,'b']],
+    [[0,0,'b'],[1,0,'a'],[1,1,'a']],
+    [[1,0,'b'],[0,1,'a'],[1,1,'a']],
+    [[0,0,'a'],[0,1,'a'],[1,1,'b']]
+  ];
+
+  const state={
+    screen:'title',
+    history:[],
+    mode:'endless',
+    rankMode:'endless',
+    gameStarted:false,
+    resolving:false,
+    board:makeBoard(),
+    piece:null,
+    queue:[],
+    score:0,
+    maxLink:0,
+    maxCombo:0,
+    clears:0,
+    pieces:0,
+    timeLeft:120,
+    timeExpired:false,
+    player:{id:'',name:'プレイヤー1',icon:'🐶'},
+    soloIndex:0,
+    fallAccum:0,
+    lockAccum:0,
+    softDrop:false,
+    lastFrame:0,
+    rafId:null,
+    resumeAccum:0,
+    clearingKeys:new Set(),
+    fallingKeys:new Set(),
+    rankResult:null
+  };
+
+  let repeatDelayId=null;
+  let repeatId=null;
+
+  function makeBoard(){
+    return Array.from({length:ROWS},()=>Array(COLS).fill(null));
+  }
+  function esc(v){
+    return String(v==null?'':v).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]});
+  }
+  function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+  function delay(ms){return new Promise(function(resolve){setTimeout(resolve,reducedMotion()?Math.min(18,ms):ms)})}
+  function reducedMotion(){return document.documentElement.dataset.hgMotion==='reduced'}
+  function vibrate(pattern){settingsApi&&settingsApi.vibrate&&settingsApi.vibrate(pattern)}
+
+  function loadPlayer(){
+    const data=playersApi&&playersApi.load?playersApi.load():null;
+    const active=data&&Array.isArray(data.players)?data.players.slice(0,Math.max(1,Number(data.activeCount)||1)):[];
+    let idx=Number(localStorage.getItem(SOLO_KEY)||0);
+    if(!Number.isInteger(idx)||idx<0||idx>=active.length)idx=0;
+    state.soloIndex=idx;
+    state.player=active[idx]||{id:'',name:'プレイヤー1',icon:'🐶'};
+    return active;
+  }
+  function saveSoloIndex(i){
+    const active=loadActivePlayers();
+    i=clamp(Number(i)||0,0,Math.max(0,active.length-1));
+    state.soloIndex=i;
+    try{localStorage.setItem(SOLO_KEY,String(i))}catch(e){}
+    state.player=active[i]||state.player;
+  }
+  function loadActivePlayers(){
+    const data=playersApi&&playersApi.load?playersApi.load():null;
+    return data&&Array.isArray(data.players)?data.players.slice(0,Math.max(1,Number(data.activeCount)||1)):[];
+  }
+
+  function topNav(){
+    return '<nav class="top-nav"><button type="button" class="nav-pill" data-back>← 1個前にもどる</button><button type="button" class="nav-pill" data-home>ゲームをえらぶ</button></nav>';
+  }
+  function heading(title,sub){
+    return '<header class="screen-heading"><h1>'+esc(title)+'</h1>'+(sub?'<p>'+esc(sub)+'</p>':'')+'</header>';
+  }
+
+  function titleScreen(){
+    loadPlayer();
+    return topNav()+
+      '<section class="title-card">'+
+        '<img class="title-logo" src="../../link_burst_logo.png" alt="リンクバースト！">'+
+        '<p class="title-copy">つないで、落として、バースト！<br>L字が分かれて落ちる、新感覚リンクパズル。</p>'+
+        '<div class="stack title-actions">'+
+          '<button class="btn" data-start>ゲームをはじめる</button>'+
+          '<button class="btn secondary" data-rules>あそびかた</button>'+
+          '<button class="btn secondary" data-ranking>ランキング</button>'+
+          '<button class="btn secondary" data-player-select>プレイヤーを選ぶ</button>'+
+        '</div>'+
+        '<div class="title-player">'+esc(state.player.icon)+' '+esc(state.player.name)+'でプレイ</div>'+
+      '</section>';
+  }
+
+  function playTypeScreen(){
+    return topNav()+heading('遊び方をえらぶ','まずは1人用を完成。2人対戦は次の段階で追加します。')+
+      '<div class="choice-grid">'+
+        '<button class="choice-card solo" data-play-type="solo"><span class="mode-badge">PLAYABLE</span><strong>1人であそぶ</strong><span>ENDLESSと2 MINUTES。連鎖とハイスコアに挑戦。</span></button>'+
+        '<button class="choice-card versus" disabled><span class="mode-badge">NEXT STEP</span><strong>2人で対戦</strong><span>横画面・JAM・COUNTER・攻撃演出は次の実装段階で追加。</span></button>'+
+      '</div>';
+  }
+
+  function modeScreen(){
+    return topNav()+heading('1人用モード','遊びたいルールをえらんでね。')+
+      '<div class="choice-grid">'+
+        '<button class="choice-card solo" data-mode="endless"><span class="mode-badge">ENDLESS</span><strong>エンドレス</strong><span>積み上がるまで挑戦。置くほど少しずつスピードアップ。</span></button>'+
+        '<button class="choice-card solo" data-mode="timed"><span class="mode-badge">2 MINUTES</span><strong>2分スコアアタック</strong><span>120秒でどこまで得点できるか勝負。</span></button>'+
+      '</div>';
+  }
+
+  function playerSelectScreen(){
+    const active=loadActivePlayers();
+    const buttons=(active.length?active:[state.player]).map(function(p,i){
+      return '<button class="solo-player-btn '+(i===state.soloIndex?'selected':'')+'" data-solo-player="'+i+'"><span>'+esc(p.icon)+'</span><small>'+esc(p.name)+'</small></button>';
+    }).join('');
+    return topNav()+heading('プレイヤーを選ぶ','このゲームの記録を残すメンバーを選びます。')+
+      '<section class="card player-card"><div class="solo-player-grid">'+buttons+'</div></section>'+
+      '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-player-done>決定</button></div>';
+  }
+
+  function rulesScreen(){
+    return topNav()+heading('あそびかた','基本は4つ。置いたあとの分離がポイント。')+
+      '<div class="rules-wrap">'+
+        '<section class="card rule-card"><h2>1. L字は「同じ色2個＋別色1個」</h2><div class="rule-visual"><div class="rule-piece"><i class="a1">○</i><i class="a2">○</i><i class="b">△</i></div></div><p>毎回この向きで出現。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
+        '<section class="card rule-card"><h2>2. LOCKすると3個に分かれる</h2><p>L字のまま着地したあと、支えのないブロックだけ真下へ落下。段差を利用して連鎖を作ろう。</p></section>'+
+        '<section class="card rule-card"><h2>3. 同じ色を4個以上つなげる</h2><p>上下左右につながった同色4個以上で消去。消したあとにまた4個つながると2 LINK、3 LINK…と続きます。</p></section>'+
+        '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span>←</span><span>↓</span><span>→</span><span>↻</span></div><p>←→は移動、↓は押している間だけ高速落下、↻は90°右回転。左右は長押しできます。</p></section>'+
+      '</div>'+
+      '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-rules-back>← もどる</button></div>';
+  }
+
+  function miniPieceHtml(t){
+    if(!t)return '';
+    return '<div class="mini-piece"><i class="mini-block p0 c-'+t.a+'"></i><i class="mini-block p1 c-'+t.a+'"></i><i class="mini-block p2 c-'+t.b+'"></i></div>';
+  }
+
+  function playScreen(){
+    return topNav()+
+      '<section class="play-hud">'+
+        '<div class="score-panel">'+
+          '<div class="hud-box"><small>SCORE</small><strong data-score>0</strong></div>'+
+          '<div class="hud-box link"><small>MAX LINK</small><strong data-max-link>0</strong></div>'+
+          '<div class="hud-box"><small data-third-label>'+(state.mode==='timed'?'TIME':'BLOCKS')+'</small><strong data-third-value>0</strong></div>'+
+        '</div>'+
+        '<div class="next-panel">'+
+          '<div class="next-box"><small>NEXT</small><div data-next-one>'+miniPieceHtml(state.queue[0])+'</div></div>'+
+          '<div class="next-box"><small>NEXT 2</small><div data-next-two>'+miniPieceHtml(state.queue[1])+'</div></div>'+
+        '</div>'+
+      '</section>'+
+      '<section class="board-stage">'+
+        '<div class="board-frame" data-board-frame>'+
+          '<span class="danger-label">DANGER</span>'+
+          '<div class="game-board" data-board></div>'+
+        '</div>'+
+        '<div class="split-fx" data-split-fx>SPLIT</div>'+
+        '<div class="link-fx" data-link-fx><strong></strong><span></span></div>'+
+        '<div class="score-pop" data-score-pop></div>'+
+      '</section>'+
+      '<section class="controls" aria-label="操作">'+
+        '<button class="control-btn" data-control="left" aria-label="左へ">←</button>'+
+        '<button class="control-btn" data-control="down" aria-label="速く落とす">↓</button>'+
+        '<button class="control-btn" data-control="right" aria-label="右へ">→</button>'+
+        '<span class="control-spacer"></span>'+
+        '<button class="control-btn rotate" data-control="rotate" aria-label="右回転">↻</button>'+
+      '</section>';
+  }
+
+  function resultScreen(){
+    const r=state.rankResult||{};
+    let banner='チャレンジ終了';
+    if(r.modeBest)banner='最高記録！';
+    else if(r.rank)banner='ランキング '+r.rank+'位！';
+    else if(r.personalBest)banner='自己ベスト更新！';
+    const reason=r.reason==='time'?'2分終了':(r.reason==='topout'?'GAME OVER':'RESULT');
+    return topNav()+heading(reason,state.mode==='timed'?'2 MINUTES':'ENDLESS')+
+      '<section class="card result-card">'+
+        '<div class="result-kicker">TOTAL SCORE</div>'+
+        '<div class="result-score">'+state.score+'</div>'+
+        '<div class="result-banner">'+esc(banner)+'</div>'+
+        '<div class="result-stats">'+
+          '<div class="result-stat"><small>MAX LINK</small><strong>'+state.maxLink+'</strong></div>'+
+          '<div class="result-stat"><small>MAX COMBO</small><strong>'+state.maxCombo+'</strong></div>'+
+          '<div class="result-stat"><small>CLEAR</small><strong>'+state.clears+'</strong></div>'+
+        '</div>'+
+      '</section>'+
+      '<div class="stack" style="margin-top:10px">'+
+        '<button class="btn" data-retry>もう一度！</button>'+
+        '<button class="btn secondary" data-ranking>ランキングを見る</button>'+
+        '<button class="btn secondary" data-mode-change>モードを変える</button>'+
+        '<button class="btn secondary" data-home>ゲームをえらぶ</button>'+
+      '</div>';
+  }
+
+  function rankingScreen(){
+    return topNav()+heading('ハイスコアランキング','この端末のTOP10')+
+      '<div class="ranking-tabs"><button class="'+(state.rankMode==='endless'?'selected':'')+'" data-rank-mode="endless">ENDLESS</button><button class="'+(state.rankMode==='timed'?'selected':'')+'" data-rank-mode="timed">2 MINUTES</button></div>'+
+      '<section class="card ranking-card">'+rankingRows(state.rankMode)+'</section>'+
+      '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-ranking-back>← もどる</button></div>';
+  }
+
+  function rankingRows(mode){
+    const rows=sortRanking(loadRankings()[mode]||[]);
+    if(!rows.length)return '<div class="ranking-empty">まだ記録がありません。<br>最初のハイスコアを作ろう！</div>';
+    return '<div class="ranking-list">'+rows.map(function(x,i){
+      return '<div class="ranking-row '+(state.rankResult&&state.rankResult.entryId===x.id?'current':'')+'">'+
+        '<div class="rank-no">'+(i+1)+'</div>'+
+        '<div class="rank-player"><span>'+esc(x.icon)+'</span><strong>'+esc(x.name)+'</strong></div>'+
+        '<div class="rank-score"><strong>'+x.score+'</strong><small>MAX LINK '+x.maxLink+'</small></div>'+
+      '</div>';
+    }).join('')+'</div>';
+  }
+
+  function screenHtml(){
+    const map={title:titleScreen,playType:playTypeScreen,mode:modeScreen,playerSelect:playerSelectScreen,rules:rulesScreen,play:playScreen,result:resultScreen,ranking:rankingScreen};
+    return (map[state.screen]||titleScreen)();
+  }
+
+  function render(){
+    stopLoop();
+    app.className='link-burst-app screen-'+state.screen;
+    app.innerHTML=screenHtml();
+    bind();
+    window.scrollTo({top:0,behavior:'auto'});
+    if(state.screen==='play'){
+      drawBoard();
+      updateHud();
+      startLoop();
+    }
+  }
+
+  function go(screen,push){
+    if(push!==false&&state.screen!==screen)state.history.push(state.screen);
+    state.screen=screen;
+    render();
+  }
+
+  function doBack(){
+    if(state.screen==='play'&&state.gameStarted){showQuitConfirm('back');return}
+    if(state.history.length){state.screen=state.history.pop();render();return}
+    location.href='../';
+  }
+
+  function goHome(){
+    if(state.screen==='play'&&state.gameStarted){showQuitConfirm('home');return}
+    location.href='../';
+  }
+
+  function showQuitConfirm(type){
+    document.querySelector('.quit-backdrop')&&document.querySelector('.quit-backdrop').remove();
+    state.softDrop=false;
+    clearRepeat();
+    const w=document.createElement('div');
+    w.className='quit-backdrop';
+    w.innerHTML='<section class="card quit-card"><h2>ゲームをやめますか？</h2><p>「やめる」を選ぶと、このプレイの途中データは消えます。</p><div class="stack"><button class="btn secondary" data-quit-cancel>続ける</button><button class="btn" data-quit-ok>やめる</button></div></section>';
+    document.body.appendChild(w);
+    w.querySelector('[data-quit-cancel]').addEventListener('click',function(){w.remove()});
+    w.querySelector('[data-quit-ok]').addEventListener('click',function(){
+      w.remove();
+      stopLoop();
+      state.gameStarted=false;
+      state.resolving=false;
+      resumeApi&&resumeApi.clear&&resumeApi.clear(RESUME_ID);
+      if(type==='home')location.href='../';
+      else{state.history=[];state.screen='title';render()}
+    });
+  }
+
+  function bind(){
+    document.querySelector('[data-back]')&&document.querySelector('[data-back]').addEventListener('click',doBack);
+    document.querySelectorAll('[data-home]').forEach(function(b){b.addEventListener('click',goHome)});
+    document.querySelector('[data-start]')&&document.querySelector('[data-start]').addEventListener('click',function(){go('playType')});
+    document.querySelector('[data-rules]')&&document.querySelector('[data-rules]').addEventListener('click',function(){go('rules')});
+    document.querySelector('[data-rules-back]')&&document.querySelector('[data-rules-back]').addEventListener('click',doBack);
+    document.querySelector('[data-player-select]')&&document.querySelector('[data-player-select]').addEventListener('click',function(){go('playerSelect')});
+    document.querySelector('[data-player-done]')&&document.querySelector('[data-player-done]').addEventListener('click',doBack);
+    document.querySelectorAll('[data-solo-player]').forEach(function(b){
+      b.addEventListener('click',function(){saveSoloIndex(Number(b.dataset.soloPlayer));render()});
+    });
+    document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('mode')});
+    document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){beginGame(b.dataset.mode)})});
+    document.querySelectorAll('[data-ranking]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=state.mode||'endless';go('ranking')})});
+    document.querySelectorAll('[data-rank-mode]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=b.dataset.rankMode;render()})});
+    document.querySelector('[data-ranking-back]')&&document.querySelector('[data-ranking-back]').addEventListener('click',doBack);
+    document.querySelector('[data-retry]')&&document.querySelector('[data-retry]').addEventListener('click',function(){beginGame(state.mode)});
+    document.querySelector('[data-mode-change]')&&document.querySelector('[data-mode-change]').addEventListener('click',function(){state.history=['title','playType'];state.screen='mode';render()});
+
+    document.querySelectorAll('[data-control]').forEach(function(btn){
+      btn.addEventListener('pointerdown',function(e){
+        e.preventDefault();
+        btn.classList.add('pressed');
+        const action=btn.dataset.control;
+        if(action==='left')startHorizontal(-1);
+        else if(action==='right')startHorizontal(1);
+        else if(action==='down'){state.softDrop=true;stepDownNow()}
+        else if(action==='rotate')rotatePiece();
+      },{passive:false});
+    });
+  }
+
+  function releaseControls(){
+    state.softDrop=false;
+    clearRepeat();
+    document.querySelectorAll('.control-btn.pressed').forEach(function(b){b.classList.remove('pressed')});
+  }
+  window.addEventListener('pointerup',releaseControls);
+  window.addEventListener('pointercancel',releaseControls);
+  window.addEventListener('blur',releaseControls);
+
+  function canInput(){return state.screen==='play'&&state.gameStarted&&!state.resolving&&!!state.piece}
+  function clearRepeat(){
+    if(repeatDelayId){clearTimeout(repeatDelayId);repeatDelayId=null}
+    if(repeatId){clearInterval(repeatId);repeatId=null}
+  }
+  function startHorizontal(dir){
+    if(!canInput())return;
+    moveHorizontal(dir);
+    clearRepeat();
+    repeatDelayId=setTimeout(function(){
+      repeatId=setInterval(function(){moveHorizontal(dir)},82);
+    },230);
+  }
+  function moveHorizontal(dir){
+    if(!canInput())return false;
+    if(canPlace(state.piece,state.piece.x+dir,state.piece.y,state.piece.rot)){
+      state.piece.x+=dir;
+      state.lockAccum=0;
+      drawBoard();
+      return true;
+    }
+    return false;
+  }
+  function stepDownNow(){
+    if(!canInput())return false;
+    if(canPlace(state.piece,state.piece.x,state.piece.y+1,state.piece.rot)){
+      state.piece.y++;
+      state.fallAccum=0;
+      state.lockAccum=0;
+      drawBoard();
+      return true;
+    }
+    return false;
+  }
+  function rotatePiece(){
+    if(!canInput())return false;
+    const next=(state.piece.rot+1)%4;
+    const kicks=[0,-1,1];
+    for(let i=0;i<kicks.length;i++){
+      const nx=state.piece.x+kicks[i];
+      if(canPlace(state.piece,nx,state.piece.y,next)){
+        state.piece.x=nx;
+        state.piece.rot=next;
+        state.lockAccum=0;
+        vibrate(7);
+        drawBoard();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function randomTemplate(){
+    const a=COLORS[Math.floor(Math.random()*COLORS.length)];
+    const rest=COLORS.filter(function(c){return c!==a});
+    const b=rest[Math.floor(Math.random()*rest.length)];
+    return {a:a,b:b};
+  }
+  function fillQueue(){
+    while(state.queue.length<3)state.queue.push(randomTemplate());
+  }
+  function spawnPiece(){
+    fillQueue();
+    const t=state.queue.shift();
+    state.queue.push(randomTemplate());
+    state.piece={x:SPAWN_X,y:SPAWN_Y,rot:0,a:t.a,b:t.b};
+    state.fallAccum=0;
+    state.lockAccum=0;
+    if(!canPlace(state.piece,state.piece.x,state.piece.y,state.piece.rot)){
+      state.piece=null;
+      finishGame('topout');
+      return false;
+    }
+    updateHud();
+    drawBoard();
+    persistResume();
+    return true;
+  }
+  function pieceCells(piece,x,y,rot){
+    if(!piece)return[];
+    return ROTATIONS[rot].map(function(o){
+      return {x:x+o[0],y:y+o[1],color:o[2]==='a'?piece.a:piece.b};
+    });
+  }
+  function canPlace(piece,x,y,rot){
+    const cells=pieceCells(piece,x,y,rot);
+    for(let i=0;i<cells.length;i++){
+      const c=cells[i];
+      if(c.x<0||c.x>=COLS||c.y<0||c.y>=ROWS)return false;
+      if(state.board[c.y][c.x])return false;
+    }
+    return true;
+  }
+
+  function beginGame(mode){
+    loadPlayer();
+    state.mode=mode||'endless';
+    state.rankMode=state.mode;
+    state.history=[];
+    state.gameStarted=true;
+    state.resolving=false;
+    state.board=makeBoard();
+    state.piece=null;
+    state.queue=[];
+    state.score=0;
+    state.maxLink=0;
+    state.maxCombo=0;
+    state.clears=0;
+    state.pieces=0;
+    state.timeLeft=120;
+    state.timeExpired=false;
+    state.fallAccum=0;
+    state.lockAccum=0;
+    state.softDrop=false;
+    state.resumeAccum=0;
+    state.clearingKeys=new Set();
+    state.fallingKeys=new Set();
+    state.rankResult=null;
+    fillQueue();
+    spawnPiece();
+    state.screen='play';
+    render();
+  }
+
+  function fallInterval(){
+    if(state.mode==='timed'){
+      const elapsed=120-state.timeLeft;
+      return Math.max(320,620-elapsed*1.5);
+    }
+    return Math.max(220,720-Math.floor(state.pieces/8)*45);
+  }
+
+  function startLoop(){
+    if(state.rafId||state.screen!=='play'||!state.gameStarted)return;
+    state.lastFrame=performance.now();
+    state.rafId=requestAnimationFrame(frame);
+  }
+  function stopLoop(){
+    if(state.rafId){cancelAnimationFrame(state.rafId);state.rafId=null}
+    state.lastFrame=0;
+  }
+  function frame(ts){
+    state.rafId=null;
+    if(state.screen!=='play'||!state.gameStarted)return;
+    const dt=Math.min(60,Math.max(0,ts-state.lastFrame));
+    state.lastFrame=ts;
+
+    if(state.mode==='timed'&&!state.timeExpired){
+      state.timeLeft=Math.max(0,state.timeLeft-dt/1000);
+      if(state.timeLeft<=0)state.timeExpired=true;
+    }
+
+    state.resumeAccum+=dt;
+    if(state.resumeAccum>=1200){state.resumeAccum=0;persistResume()}
+
+    if(!state.resolving&&state.piece){
+      const below=canPlace(state.piece,state.piece.x,state.piece.y+1,state.piece.rot);
+      if(below){
+        state.lockAccum=0;
+        state.fallAccum+=dt;
+        const interval=state.softDrop?65:fallInterval();
+        if(state.fallAccum>=interval){
+          state.piece.y++;
+          state.fallAccum=0;
+          drawBoard();
+        }
+      }else{
+        state.fallAccum=0;
+        state.lockAccum+=dt;
+        if(state.lockAccum>=LOCK_DELAY)lockPiece();
+      }
+    }
+
+    updateHud();
+    if(state.timeExpired&&!state.resolving){
+      finishGame('time');
+      return;
+    }
+    if(state.gameStarted&&state.screen==='play')state.rafId=requestAnimationFrame(frame);
+  }
+
+  async function lockPiece(){
+    if(state.resolving||!state.piece||!state.gameStarted)return;
+    state.resolving=true;
+    releaseControls();
+    const cells=pieceCells(state.piece,state.piece.x,state.piece.y,state.piece.rot);
+    cells.forEach(function(c){state.board[c.y][c.x]=c.color});
+    state.piece=null;
+    state.pieces++;
+    drawBoard();
+    flashLock();
+    vibrate(9);
+    await delay(90);
+    showSplit();
+    await delay(110);
+    await applyGravityAnimated();
+    await resolveClears();
+
+    if(!state.gameStarted)return;
+    if(state.timeExpired){finishGame('time');return}
+    if(hiddenOccupied()){finishGame('topout');return}
+
+    state.resolving=false;
+    spawnPiece();
+  }
+
+  async function applyGravityAnimated(){
+    let safety=0;
+    while(safety++<ROWS+2){
+      const moved=[];
+      for(let y=ROWS-2;y>=0;y--){
+        for(let x=0;x<COLS;x++){
+          if(state.board[y][x]&&!state.board[y+1][x]){
+            state.board[y+1][x]=state.board[y][x];
+            state.board[y][x]=null;
+            moved.push((y+1)+':'+x);
+          }
+        }
+      }
+      if(!moved.length)break;
+      state.fallingKeys=new Set(moved);
+      drawBoard();
+      await delay(58);
+      state.fallingKeys.clear();
+    }
+    drawBoard();
+  }
+
+  function findGroups(){
+    const seen=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+    const groups=[];
+    const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(let y=0;y<ROWS;y++){
+      for(let x=0;x<COLS;x++){
+        const color=state.board[y][x];
+        if(!color||seen[y][x])continue;
+        const group=[];
+        const q=[[x,y]];
+        seen[y][x]=true;
+        while(q.length){
+          const p=q.shift(),px=p[0],py=p[1];
+          group.push({x:px,y:py});
+          for(let d=0;d<dirs.length;d++){
+            const nx=px+dirs[d][0],ny=py+dirs[d][1];
+            if(nx<0||nx>=COLS||ny<0||ny>=ROWS||seen[ny][nx])continue;
+            if(state.board[ny][nx]===color){seen[ny][nx]=true;q.push([nx,ny])}
+          }
+        }
+        if(group.length>=4)groups.push(group);
+      }
+    }
+    return groups;
+  }
+
+  function scoreGain(cleared,link,combo){
+    const base=cleared*100*link;
+    const comboBonus=Math.max(0,combo-1)*400;
+    const bigBonus=Math.max(0,cleared-4)*50;
+    return base+comboBonus+bigBonus;
+  }
+
+  async function resolveClears(){
+    let link=0;
+    while(state.gameStarted){
+      const groups=findGroups();
+      if(!groups.length)break;
+      link++;
+      const cells=[].concat.apply([],groups);
+      const total=cells.length;
+      const combo=groups.length;
+      const gain=scoreGain(total,link,combo);
+
+      state.maxLink=Math.max(state.maxLink,link);
+      state.maxCombo=Math.max(state.maxCombo,combo);
+      state.clears+=total;
+      state.score+=gain;
+      state.clearingKeys=new Set(cells.map(function(c){return c.y+':'+c.x}));
+      drawBoard();
+      updateHud();
+      showLink(link,gain,combo);
+      if(link>=5)vibrate([28,25,42]);
+      else if(link>=3)vibrate([18,18,24]);
+      else vibrate(12);
+
+      await delay(link>=5?360:290);
+      cells.forEach(function(c){state.board[c.y][c.x]=null});
+      state.clearingKeys.clear();
+      drawBoard();
+      await delay(70);
+      await applyGravityAnimated();
+    }
+    return link;
+  }
+
+  function hiddenOccupied(){
+    for(let y=0;y<HIDDEN_ROWS;y++)for(let x=0;x<COLS;x++)if(state.board[y][x])return true;
+    return false;
+  }
+  function isDanger(){
+    for(let y=HIDDEN_ROWS;y<HIDDEN_ROWS+2;y++)for(let x=0;x<COLS;x++)if(state.board[y][x])return true;
+    return false;
+  }
+
+  function blockHtml(color,classes){
+    return '<div class="block c-'+color+(classes?' '+classes:'')+'"><span>'+SYMBOL[color]+'</span></div>';
+  }
+
+  function drawBoard(){
+    const host=document.querySelector('[data-board]');
+    if(!host)return;
+    const active=new Map();
+    if(state.piece){
+      pieceCells(state.piece,state.piece.x,state.piece.y,state.piece.rot).forEach(function(c){
+        if(c.y>=HIDDEN_ROWS)active.set(c.y+':'+c.x,c.color);
+      });
+    }
+    let html='';
+    for(let vy=0;vy<VISIBLE_ROWS;vy++){
+      const y=vy+HIDDEN_ROWS;
+      for(let x=0;x<COLS;x++){
+        const key=y+':'+x;
+        const activeColor=active.get(key);
+        const color=activeColor||state.board[y][x];
+        let classes='';
+        if(color){
+          if(activeColor)classes+=' active';
+          if(state.clearingKeys.has(key))classes+=' clearing';
+          if(state.fallingKeys.has(key))classes+=' falling';
+        }
+        html+='<div class="board-cell '+(vy<2?'danger-row':'')+'">'+(color?blockHtml(color,classes.trim()):'')+'</div>';
+      }
+    }
+    host.innerHTML=html;
+    const frameEl=document.querySelector('[data-board-frame]');
+    if(frameEl)frameEl.classList.toggle('danger',isDanger());
+  }
+
+  function formatTime(sec){
+    const s=Math.max(0,Math.ceil(sec));
+    return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  }
+  function updateHud(){
+    const score=document.querySelector('[data-score]');
+    const link=document.querySelector('[data-max-link]');
+    const third=document.querySelector('[data-third-value]');
+    if(score)score.textContent=String(state.score);
+    if(link)link.textContent=String(state.maxLink);
+    if(third)third.textContent=state.mode==='timed'?formatTime(state.timeLeft):String(state.pieces);
+    const one=document.querySelector('[data-next-one]');
+    const two=document.querySelector('[data-next-two]');
+    if(one)one.innerHTML=miniPieceHtml(state.queue[0]);
+    if(two)two.innerHTML=miniPieceHtml(state.queue[1]);
+  }
+
+  function flashLock(){
+    const frameEl=document.querySelector('[data-board-frame]');
+    if(!frameEl)return;
+    frameEl.classList.remove('lock-flash');
+    void frameEl.offsetWidth;
+    frameEl.classList.add('lock-flash');
+    setTimeout(function(){frameEl&&frameEl.classList.remove('lock-flash')},220);
+  }
+  function showSplit(){
+    const el=document.querySelector('[data-split-fx]');
+    if(!el)return;
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    setTimeout(function(){el&&el.classList.remove('show')},reducedMotion()?130:360);
+  }
+  function showLink(link,gain,combo){
+    const el=document.querySelector('[data-link-fx]');
+    const pop=document.querySelector('[data-score-pop]');
+    const frameEl=document.querySelector('[data-board-frame]');
+    if(el){
+      let main=link+' LINK!';
+      if(link>=8)main='MAXIMUM LINK!';
+      else if(link>=6)main='SUPER BURST!';
+      else if(link>=5)main='BURST!';
+      el.querySelector('strong').textContent=main;
+      el.querySelector('span').textContent=(combo>1?combo+' COMBO  ':'')+'+'+gain;
+      el.className='link-fx '+(link>=5?'burst ':'')+'show';
+      setTimeout(function(){el&&el.classList.remove('show')},reducedMotion()?160:580);
+    }
+    if(pop){
+      pop.textContent='+'+gain;
+      pop.classList.remove('show');
+      void pop.offsetWidth;
+      pop.classList.add('show');
+      setTimeout(function(){pop&&pop.classList.remove('show')},reducedMotion()?160:620);
+    }
+    if(frameEl&&link>=5){
+      frameEl.classList.remove('burst-shake');
+      void frameEl.offsetWidth;
+      frameEl.classList.add('burst-shake');
+      setTimeout(function(){frameEl&&frameEl.classList.remove('burst-shake')},390);
+    }
+  }
+
+  function cleanRankEntry(x,i){
+    return {
+      id:String(x&&x.id||('legacy_'+i)),
+      playerId:String(x&&x.playerId||''),
+      name:String(x&&x.name||'プレイヤー').slice(0,14),
+      icon:String(x&&x.icon||'🎮'),
+      score:Math.max(0,Number(x&&x.score)||0),
+      maxLink:Math.max(0,Number(x&&x.maxLink)||0),
+      clears:Math.max(0,Number(x&&x.clears)||0),
+      at:Number(x&&x.at)||0
+    };
+  }
+  function loadRankings(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(RANK_KEY)||'{}');
+      return {
+        endless:Array.isArray(raw.endless)?raw.endless.map(cleanRankEntry):[],
+        timed:Array.isArray(raw.timed)?raw.timed.map(cleanRankEntry):[]
+      };
+    }catch(e){return{endless:[],timed:[]}}
+  }
+  function sortRanking(arr){
+    return arr.slice().sort(function(a,b){return b.score-a.score||b.maxLink-a.maxLink||b.clears-a.clears||a.at-b.at}).slice(0,10);
+  }
+  function saveRankings(r){
+    const out={endless:sortRanking(r.endless||[]),timed:sortRanking(r.timed||[])};
+    try{localStorage.setItem(RANK_KEY,JSON.stringify(out))}catch(e){}
+    return out;
+  }
+  function addRanking(reason){
+    const r=loadRankings();
+    const before=sortRanking(r[state.mode]||[]);
+    const playerId=playersApi&&playersApi.resolveId?playersApi.resolveId(state.player):state.player.id||'';
+    const samePlayer=function(x){
+      if(playerId&&x.playerId)return x.playerId===playerId;
+      return x.name===state.player.name&&x.icon===state.player.icon;
+    };
+    const oldPersonal=before.filter(samePlayer)[0];
+    const oldModeBest=before[0]&&before[0].score||0;
+    const entry={
+      id:Date.now()+'_'+Math.random().toString(36).slice(2,7),
+      playerId:playerId||'',
+      name:state.player.name,
+      icon:state.player.icon,
+      score:state.score,
+      maxLink:state.maxLink,
+      clears:state.clears,
+      at:Date.now()
+    };
+    r[state.mode]=sortRanking(before.concat([entry]));
+    const saved=saveRankings(r);
+    const after=sortRanking(saved[state.mode]||[]);
+    const index=after.findIndex(function(x){return x.id===entry.id});
+    return {
+      entryId:entry.id,
+      rank:index>=0?index+1:null,
+      modeBest:state.score>oldModeBest,
+      personalBest:state.score>(oldPersonal?oldPersonal.score:0),
+      reason:reason
+    };
+  }
+
+  function recordShared(){
+    if(!playersApi||!playersApi.recordGame)return;
+    const id=playersApi.resolveId?playersApi.resolveId(state.player):state.player.id;
+    if(!id)return;
+    const scores={};scores[id]=state.score;
+    const metrics={};metrics[id]={bestLink:state.maxLink,bestCombo:state.maxCombo,totalClears:state.clears};
+    playersApi.recordGame({gameId:'link-burst',participants:[state.player],scores:scores,metrics:metrics});
+  }
+
+  function finishGame(reason){
+    if(!state.gameStarted)return;
+    stopLoop();
+    releaseControls();
+    state.gameStarted=false;
+    state.resolving=false;
+    state.softDrop=false;
+    state.rankResult=addRanking(reason);
+    recordShared();
+    resumeApi&&resumeApi.clear&&resumeApi.clear(RESUME_ID);
+    state.screen='result';
+    state.history=[];
+    render();
+  }
+
+  function resumeSnapshot(){
+    return {
+      version:1,
+      mode:state.mode,
+      board:state.board,
+      piece:state.piece,
+      queue:state.queue,
+      score:state.score,
+      maxLink:state.maxLink,
+      maxCombo:state.maxCombo,
+      clears:state.clears,
+      pieces:state.pieces,
+      timeLeft:state.timeLeft,
+      timeExpired:state.timeExpired,
+      player:state.player,
+      soloIndex:state.soloIndex
+    };
+  }
+  function persistResume(){
+    if(!state.gameStarted||!resumeApi||!resumeApi.save)return;
+    resumeApi.save(RESUME_ID,{
+      title:'リンクバースト！',
+      path:'/games/link-burst/',
+      summary:(state.mode==='timed'?'2 MINUTES':'ENDLESS')+' SCORE '+state.score+' / MAX LINK '+state.maxLink
+    },resumeSnapshot());
+  }
+  function normalizeBoard(raw){
+    const b=makeBoard();
+    if(Array.isArray(raw)){
+      for(let y=0;y<Math.min(ROWS,raw.length);y++){
+        if(!Array.isArray(raw[y]))continue;
+        for(let x=0;x<Math.min(COLS,raw[y].length);x++)if(COLORS.includes(raw[y][x]))b[y][x]=raw[y][x];
+      }
+    }
+    return b;
+  }
+  function restoreResume(saved){
+    if(!saved)return;
+    loadPlayer();
+    state.mode=saved.mode==='timed'?'timed':'endless';
+    state.rankMode=state.mode;
+    state.board=normalizeBoard(saved.board);
+    state.piece=saved.piece&&COLORS.includes(saved.piece.a)&&COLORS.includes(saved.piece.b)?saved.piece:null;
+    state.queue=Array.isArray(saved.queue)?saved.queue.filter(function(t){return t&&COLORS.includes(t.a)&&COLORS.includes(t.b)}).slice(0,3):[];
+    fillQueue();
+    state.score=Math.max(0,Number(saved.score)||0);
+    state.maxLink=Math.max(0,Number(saved.maxLink)||0);
+    state.maxCombo=Math.max(0,Number(saved.maxCombo)||0);
+    state.clears=Math.max(0,Number(saved.clears)||0);
+    state.pieces=Math.max(0,Number(saved.pieces)||0);
+    state.timeLeft=state.mode==='timed'?clamp(Number(saved.timeLeft)||120,0,120):120;
+    state.timeExpired=!!saved.timeExpired;
+    if(saved.player)state.player=saved.player;
+    state.soloIndex=Math.max(0,Number(saved.soloIndex)||0);
+    state.gameStarted=true;
+    state.resolving=!state.piece;
+    state.clearingKeys=new Set();
+    state.fallingKeys=new Set();
+    state.rankResult=null;
+    state.history=[];
+    state.screen='play';
+    render();
+    if(state.resolving)setTimeout(stabilizeAfterRestore,30);
+  }
+  async function stabilizeAfterRestore(){
+    if(!state.gameStarted)return;
+    await applyGravityAnimated();
+    await resolveClears();
+    if(state.timeExpired){finishGame('time');return}
+    if(hiddenOccupied()){finishGame('topout');return}
+    state.resolving=false;
+    spawnPiece();
+  }
+
+  window.addEventListener('pagehide',persistResume);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')persistResume()});
+  window.addEventListener('keydown',function(e){
+    if(!canInput())return;
+    if(e.key==='ArrowLeft'){e.preventDefault();moveHorizontal(-1)}
+    else if(e.key==='ArrowRight'){e.preventDefault();moveHorizontal(1)}
+    else if(e.key==='ArrowDown'){e.preventDefault();stepDownNow()}
+    else if(e.key==='ArrowUp'||e.key===' '){e.preventDefault();rotatePiece()}
+  });
+
+  loadPlayer();
+  render();
+  setTimeout(function(){
+    if(resumeApi&&resumeApi.offer){
+      resumeApi.offer({
+        gameId:RESUME_ID,
+        onResume:function(saved){restoreResume(saved)},
+        onNew:function(){state.history=[];state.screen='title';render()}
+      });
+    }
+  },80);
+})();
