@@ -910,8 +910,9 @@ body.registry-open{overflow:hidden}
 .link-burst-card-art img{
   position:relative;
   z-index:2;
-  width:min(94%,520px);
-  max-height:190px;
+  width:142%;
+  max-width:none;
+  max-height:145px;
   object-fit:contain;
   filter:drop-shadow(0 9px 16px rgba(0,0,0,.34));
 }
