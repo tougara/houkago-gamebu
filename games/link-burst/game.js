@@ -271,11 +271,12 @@
     document.querySelector('.quit-backdrop')&&document.querySelector('.quit-backdrop').remove();
     state.softDrop=false;
     clearRepeat();
+    stopLoop();
     const w=document.createElement('div');
     w.className='quit-backdrop';
     w.innerHTML='<section class="card quit-card"><h2>ゲームをやめますか？</h2><p>「やめる」を選ぶと、このプレイの途中データは消えます。</p><div class="stack"><button class="btn secondary" data-quit-cancel>続ける</button><button class="btn" data-quit-ok>やめる</button></div></section>';
     document.body.appendChild(w);
-    w.querySelector('[data-quit-cancel]').addEventListener('click',function(){w.remove()});
+    w.querySelector('[data-quit-cancel]').addEventListener('click',function(){w.remove();if(state.gameStarted&&state.screen==='play')startLoop()});
     w.querySelector('[data-quit-ok]').addEventListener('click',function(){
       w.remove();
       stopLoop();
@@ -832,7 +833,7 @@
     };
   }
   function persistResume(){
-    if(!state.gameStarted||!resumeApi||!resumeApi.save)return;
+    if(!state.gameStarted||state.resolving||!resumeApi||!resumeApi.save)return;
     resumeApi.save(RESUME_ID,{
       title:'リンクバースト！',
       path:'/games/link-burst/',
