@@ -180,7 +180,7 @@ function showLeaveConfirm(type){
   stopMotion();
   const w=document.createElement('div');
   w.className='countdown-overlay leave-confirm';
-  w.innerHTML='<div class="card" style="width:min(430px,90%);text-align:center"><h2>ゲームを中断しますか？</h2><p style="margin:8px 0 14px">現在のスコアはランキングに保存されません。</p><div class="stack"><button class="btn secondary full" data-leave-cancel>続ける</button><button class="btn full" data-leave-ok>中断する</button></div></div>';
+  w.innerHTML='<div class="card leave-confirm-card"><h2>ゲームをやめますか？</h2><p>現在のスコアはランキングに保存されません。</p><div class="stack"><button class="btn secondary full" data-leave-cancel>続ける</button><button class="btn full" data-leave-ok>やめる</button></div></div>';
   document.body.appendChild(w);
   w.querySelector('[data-leave-cancel]')?.addEventListener('click',()=>{
     w.remove();
