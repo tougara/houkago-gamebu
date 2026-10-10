@@ -17,6 +17,7 @@
   const RANK_KEY='houkago_link_burst_ranking_v1';
   const PB_KEY='houkago_link_burst_personal_best_v1';
   const SOLO_KEY='houkago_link_burst_solo_index_v1';
+  const TUTORIAL_KEY='houkago_link_burst_tutorial_seen_v1';
   const COLORS=['blue','red','yellow','green'];
   const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇'};
 
@@ -177,7 +178,8 @@
         '</div>'+
         '<div class="split-fx" data-split-fx>SPLIT</div>'+
         '<div class="link-fx" data-link-fx><strong></strong><span></span></div>'+
-        '<div class="score-pop" data-score-pop></div>'+
+        '<div class="score-pop" data-score-pop></div>'+ 
+        '<div class="play-tip" data-play-tip>← → 移動　↓ 高速落下　↻ 回転</div>'+
       '</section>'+
       '<section class="controls" aria-label="操作">'+
         '<button class="control-btn" data-control="left" aria-label="左へ">←</button>'+
@@ -248,7 +250,25 @@
       drawBoard();
       updateHud();
       startLoop();
+      maybeShowTutorial();
     }
+  }
+
+  function maybeShowTutorial(){
+    let seen=false;
+    try{seen=localStorage.getItem(TUTORIAL_KEY)==='1'}catch(e){}
+    if(seen)return;
+    const tip=document.querySelector('[data-play-tip]');
+    if(!tip)return;
+    tip.classList.add('show');
+    setTimeout(function(){
+      if(!tip.isConnected)return;
+      tip.textContent='同じ色を4つつなげよう！';
+    },2600);
+    setTimeout(function(){
+      if(tip.isConnected)tip.classList.remove('show');
+      try{localStorage.setItem(TUTORIAL_KEY,'1')}catch(e){}
+    },5600);
   }
 
   function go(screen,push){
