@@ -15,6 +15,7 @@
   const LOCK_DELAY=300;
   const RESUME_ID='link-burst';
   const RANK_KEY='houkago_link_burst_ranking_v1';
+  const PB_KEY='houkago_link_burst_personal_best_v1';
   const SOLO_KEY='houkago_link_burst_solo_index_v1';
   const COLORS=['blue','red','yellow','green'];
   const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇'};
@@ -728,6 +729,28 @@
     }
   }
 
+  function personalBestKey(){
+    const id=playersApi&&playersApi.resolveId?playersApi.resolveId(state.player):(state.player&&state.player.id);
+    return id?('id:'+id):('name:'+String(state.player&&state.player.name||'')+'|'+String(state.player&&state.player.icon||''));
+  }
+  function loadPersonalBests(){
+    try{const x=JSON.parse(localStorage.getItem(PB_KEY)||'{}');return x&&typeof x==='object'?x:{}}
+    catch(e){return{}}
+  }
+  function personalBestFor(mode){
+    const all=loadPersonalBests();
+    const p=all[personalBestKey()];
+    return p&&Number(p[mode])||0;
+  }
+  function savePersonalBest(mode,score){
+    const all=loadPersonalBests();
+    const key=personalBestKey();
+    const p=all[key]&&typeof all[key]==='object'?all[key]:{};
+    p[mode]=Math.max(Number(p[mode])||0,Number(score)||0);
+    all[key]=p;
+    try{localStorage.setItem(PB_KEY,JSON.stringify(all))}catch(e){}
+  }
+
   function cleanRankEntry(x,i){
     return {
       id:String(x&&x.id||('legacy_'+i)),
@@ -761,11 +784,7 @@
     const r=loadRankings();
     const before=sortRanking(r[state.mode]||[]);
     const playerId=playersApi&&playersApi.resolveId?playersApi.resolveId(state.player):state.player.id||'';
-    const samePlayer=function(x){
-      if(playerId&&x.playerId)return x.playerId===playerId;
-      return x.name===state.player.name&&x.icon===state.player.icon;
-    };
-    const oldPersonal=before.filter(samePlayer)[0];
+    const oldPersonalBest=personalBestFor(state.mode);
     const oldModeBest=before[0]&&before[0].score||0;
     const entry={
       id:Date.now()+'_'+Math.random().toString(36).slice(2,7),
@@ -778,6 +797,7 @@
       at:Date.now()
     };
     r[state.mode]=sortRanking(before.concat([entry]));
+    savePersonalBest(state.mode,state.score);
     const saved=saveRankings(r);
     const after=sortRanking(saved[state.mode]||[]);
     const index=after.findIndex(function(x){return x.id===entry.id});
@@ -785,7 +805,7 @@
       entryId:entry.id,
       rank:index>=0?index+1:null,
       modeBest:state.score>oldModeBest,
-      personalBest:state.score>(oldPersonal?oldPersonal.score:0),
+      personalBest:state.score>oldPersonalBest,
       reason:reason
     };
   }
