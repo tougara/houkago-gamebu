@@ -609,7 +609,7 @@ function rankingRows(mode,difficulty){
   const r=loadRankings(),key=rankKey(mode,difficulty);
   const rows=sortRanking(mode,r[key]||[]);
   if(!rows.length)return'<div class="ranking-empty">まだ記録がありません。<br>最初のハイスコアを作ろう！</div>';
-  return '<div class="ranking-list">'+rows.map((x,i)=>'<div class="ranking-row '+(i<3?'top top-'+(i+1):'')+(state.finalRank?.entryId===x.id?' current-run':'')+'"><div class="rank-no">'+(i+1)+'</div><div class="rank-player"><span>'+esc(x.icon)+'</span><strong>'+esc(x.name)+'</strong></div><div class="rank-score"><strong>'+x.score+'</strong><small>点'+(mode==='endless'?' / R'+x.round:'')+'</small></div>'+(state.rankEdit?'<button class="rank-delete" data-rank-delete="'+esc(x.id)+'">削除</button>':'')+'</div>').join('')+'</div>';
+  return '<div class="ranking-list">'+rows.map((x,i)=>'<div class="ranking-row '+(i<3?'top top-'+(i+1):'')+(state.finalRank?.entryId===x.id?' current-run':'')+'"><div class="rank-no">'+(i+1)+'</div><div class="rank-player"><span>'+esc(x.icon)+'</span><strong>'+esc(x.name)+'</strong>'+(state.finalRank?.entryId===x.id?'<em class="current-run-badge">今回</em>':'')+'</div><div class="rank-score"><strong>'+x.score+'</strong><small>点'+(mode==='endless'?' / R'+x.round:'')+'</small></div>'+(state.rankEdit?'<button class="rank-delete" data-rank-delete="'+esc(x.id)+'">削除</button>':'')+'</div>').join('')+'</div>';
 }
 function rankingScreen(){
   const mode=state.rankMode,difficulty=state.rankDifficulty;
