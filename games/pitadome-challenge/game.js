@@ -20,7 +20,8 @@ const state={
   combo:0,maxCombo:0,comboMultiplier:1,
   quietGauge:0,mushinReady:false,mushinActive:false,
   charm:0,charmEarnedThisRound:false,lifeProtected:false,
-  rankMode:'ten',rankDifficulty:'normal',rankEdit:false
+  rankMode:'ten',rankDifficulty:'normal',rankEdit:false,
+  finalRank:null
 };
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -43,6 +44,7 @@ function saveSoloIndex(i){
 function cleanRankEntry(x,i){
   return {
     id:String(x?.id||('legacy_'+i+'_'+(Number(x?.score)||0)+'_'+(Number(x?.round)||0)+'_'+(Number(x?.at)||0))),
+    playerId:x?.playerId?String(x.playerId):'',
     name:String(x?.name||'プレイヤー').slice(0,12),
     icon:String(x?.icon||'🏅'),
     score:Math.max(0,Number(x?.score)||0),
@@ -90,17 +92,50 @@ function addRankingEntry(){
   loadPlayer();
   const r=loadRankings();
   const avg=state.roundErrors.length?state.roundErrors.reduce((a,b)=>a+b,0)/state.roundErrors.length:0;
+  const key=rankKey(state.mode,state.difficulty);
+  const before=sortRanking(state.mode,r[key]||[]);
+  const playerId=playersApi?.resolveId?.(state.player)||'';
+  const samePlayer=x=>playerId?(x.playerId===playerId):(!x.playerId&&x.name===state.player.name&&x.icon===state.player.icon);
+  const personalBefore=before.filter(samePlayer);
+  const oldPersonalBest=personalBefore[0]?.score||0;
+  const oldModeBest=before[0]?.score||0;
+  const oldCutoff=before.length>=10?before[9].score:null;
+
   const entry={
     id:Date.now()+'_'+Math.random().toString(36).slice(2,7),
+    playerId,
     name:state.player.name,icon:state.player.icon,score:state.score,
     round:state.round,perfects:state.perfects,avgError:Number(avg.toFixed(2)),at:Date.now()
   };
-  const key=rankKey(state.mode,state.difficulty);
-  const before=sortRanking(state.mode,r[key]||[]);
-  const oldBest=before[0]?.score||0;
+
   r[key]=sortRanking(state.mode,[...before,entry]);
-  saveRankings(r);
-  state.newRecord=state.score>oldBest;
+  const saved=saveRankings(r);
+  const after=sortRanking(state.mode,saved[key]||[]);
+  const rankIndex=after.findIndex(x=>x.id===entry.id);
+  const rank=rankIndex>=0?rankIndex+1:null;
+  const personalBest=state.score>oldPersonalBest;
+  const modeBest=state.score>oldModeBest;
+  const tiedPersonalBest=oldPersonalBest>0&&state.score===oldPersonalBest;
+  const nextHigher=rank&&rank>1?after[rank-2]:null;
+  const pointsToNext=nextHigher?Math.max(0,nextHigher.score-state.score+1):0;
+  const pointsToRankIn=rank?0:(oldCutoff==null?0:Math.max(1,oldCutoff-state.score+1));
+
+  state.newRecord=modeBest;
+  state.finalRank={
+    entryId:entry.id,
+    rank,
+    ranked:!!rank,
+    personalBest,
+    tiedPersonalBest,
+    modeBest,
+    oldPersonalBest,
+    personalBestScore:Math.max(oldPersonalBest,state.score),
+    modeBestScore:after[0]?.score||state.score,
+    pointsToNext,
+    pointsToRankIn,
+    cutoffScore:after[9]?.score||0
+  };
+  return state.finalRank;
 }
 function deleteRankEntry(mode,difficulty,id){
   const r=loadRankings(),key=rankKey(mode,difficulty);
@@ -525,26 +560,56 @@ function finishGame(){
   window.HoukagoPlayers?.recordGame?.({gameId:'pitadome-challenge',participants:[state.player],scores,metrics});
   state.gameStarted=false;addRankingEntry();go('final',{push:false});
 }
+function finalRankBanner(){
+  const f=state.finalRank;
+  if(!f)return '';
+  let main='RESULT',sub='';
+  if(f.rank){
+    main=f.modeBest?'最高記録！':('ランキング '+f.rank+'位！');
+    sub=f.personalBest&&!f.modeBest?'自己ベスト更新！':(f.rank===1?'このモードの1位です！':'TOP10にランクイン！');
+  }else if(f.personalBest){
+    main='自己ベスト更新！';
+    sub=f.pointsToRankIn?'あと'+f.pointsToRankIn+'点でTOP10':'新しい自己ベストです';
+  }else if(f.tiedPersonalBest){
+    main='自己ベストタイ！';
+    sub=f.pointsToRankIn?'あと'+f.pointsToRankIn+'点でTOP10':'自己最高と同点！';
+  }else{
+    main='チャレンジ完了';
+    if(f.oldPersonalBest>state.score)sub='自己ベストまであと'+(f.oldPersonalBest-state.score)+'点';
+    else if(f.pointsToRankIn)sub='TOP10まであと'+f.pointsToRankIn+'点';
+  }
+  return '<section class="final-rank-banner '+(f.rank?'is-ranked':'')+' '+(f.modeBest?'is-mode-best':'')+'">'+
+    '<small>'+(f.rank?'RANK IN':'RECORD')+'</small><strong>'+esc(main)+'</strong><span>'+esc(sub)+'</span>'+
+  '</section>';
+}
 function finalScreen(){
   const diffLabel=state.difficulty==='easy'?'かんたん':'通常';
   const avg=state.roundErrors.length?(state.roundErrors.reduce((a,b)=>a+b,0)/state.roundErrors.length).toFixed(1):'0.0';
-  const best=bestScore(state.mode==='ten'?'ten':'endless',state.difficulty);
+  const f=state.finalRank;
+  const best=f?.personalBestScore||state.score;
+  const rankText=f?.rank?f.rank+'位':'圏外';
+  const goalText=f?.rank
+    ? (f.rank===1?'1位！':(f.pointsToNext?'次の順位まで '+f.pointsToNext+'点':'TOP10入り'))
+    : (f?.pointsToRankIn?'TOP10まで '+f.pointsToRankIn+'点':'TOP10圏外');
   return topNav()+heading('チャレンジ終了',(state.mode==='ten'?'10ラウンド完走！':'限界まで挑戦しました')+'・'+diffLabel)+
-    '<section class="card final-card">'+(state.newRecord?'<div class="new-record">NEW RECORD！</div>':'')+
+    finalRankBanner()+
+    '<section class="card final-card">'+
     '<div class="result-kicker">TOTAL SCORE</div><div class="final-score">'+state.score+'</div>'+
     '<div class="record-grid">'+
+      '<div class="record-box"><small>今回の順位</small><strong>'+rankText+'</strong></div>'+
+      '<div class="record-box"><small>自己ベスト</small><strong>'+best+'点</strong></div>'+
       '<div class="record-box"><small>PERFECT</small><strong>'+state.perfects+'回</strong></div>'+
       '<div class="record-box"><small>MAX COMBO</small><strong>'+state.maxCombo+'</strong></div>'+
-      '<div class="record-box"><small>平均誤差</small><strong>'+avg+'</strong></div>'+
-      (state.mode==='endless'?'<div class="record-box"><small>到達</small><strong>ROUND '+state.round+'</strong></div>':'<div class="record-box"><small>モードBEST</small><strong>'+best+'点</strong></div>')+
-    '</div></section>'+
+    '</div>'+
+    '<div class="final-next-goal">'+esc(goalText)+'</div>'+
+    '</section>'+
     '<div class="stack"><button class="btn full" data-replay>もう一度！</button><button class="btn secondary full" data-ranking>ランキングを見る</button><button class="btn secondary full" data-change-mode>モードを変える</button><button class="btn secondary full" data-home>ゲームをえらぶ</button></div>';
 }
 function rankingRows(mode,difficulty){
   const r=loadRankings(),key=rankKey(mode,difficulty);
   const rows=sortRanking(mode,r[key]||[]);
   if(!rows.length)return'<div class="ranking-empty">まだ記録がありません。<br>最初のハイスコアを作ろう！</div>';
-  return '<div class="ranking-list">'+rows.map((x,i)=>'<div class="ranking-row '+(i<3?'top top-'+(i+1):'')+'"><div class="rank-no">'+(i+1)+'</div><div class="rank-player"><span>'+esc(x.icon)+'</span><strong>'+esc(x.name)+'</strong></div><div class="rank-score"><strong>'+x.score+'</strong><small>点'+(mode==='endless'?' / R'+x.round:'')+'</small></div>'+(state.rankEdit?'<button class="rank-delete" data-rank-delete="'+esc(x.id)+'">削除</button>':'')+'</div>').join('')+'</div>';
+  return '<div class="ranking-list">'+rows.map((x,i)=>'<div class="ranking-row '+(i<3?'top top-'+(i+1):'')+(state.finalRank?.entryId===x.id?' current-run':'')+'"><div class="rank-no">'+(i+1)+'</div><div class="rank-player"><span>'+esc(x.icon)+'</span><strong>'+esc(x.name)+'</strong></div><div class="rank-score"><strong>'+x.score+'</strong><small>点'+(mode==='endless'?' / R'+x.round:'')+'</small></div>'+(state.rankEdit?'<button class="rank-delete" data-rank-delete="'+esc(x.id)+'">削除</button>':'')+'</div>').join('')+'</div>';
 }
 function rankingScreen(){
   const mode=state.rankMode,difficulty=state.rankDifficulty;
@@ -580,7 +645,7 @@ function render(){
 }
 function beginGame(mode=state.mode,difficulty=state.difficulty){
   loadPlayer();state.mode=mode;state.difficulty=difficulty;state.history=[];state.gameStarted=true;state.round=1;state.score=0;state.perfects=0;state.needsOpeningCountdown=true;
-  state.lives=3;state.roundErrors=[];state.newRecord=false;state.combo=0;state.maxCombo=0;state.quietGauge=0;state.mushinReady=false;state.mushinActive=false;state.charm=0;
+  state.lives=3;state.roundErrors=[];state.newRecord=false;state.finalRank=null;state.combo=0;state.maxCombo=0;state.quietGauge=0;state.mushinReady=false;state.mushinActive=false;state.charm=0;
   prepareRound();state.screen='play';render();
 }
 function startCountdown(){
