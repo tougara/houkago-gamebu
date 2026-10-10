@@ -891,3 +891,28 @@ body.registry-open{overflow:hidden}
   width:122%;max-width:none;max-height:112px;object-fit:contain;
   filter:drop-shadow(0 7px 12px rgba(0,0,0,.34));
 }
+
+
+/* Link Burst game card 2026-10-10 */
+.link-burst-card-art{
+  position:relative;
+  background:
+    linear-gradient(to bottom,rgba(10,14,36,.04),rgba(10,14,36,.24)),
+    url("../link_burst_background_vertical.png") center 46%/cover no-repeat;
+}
+.link-burst-card-art::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to bottom,rgba(255,255,255,.05),rgba(7,11,29,.18));
+  z-index:1;
+}
+.link-burst-card-art img{
+  position:relative;
+  z-index:2;
+  width:min(94%,520px);
+  max-height:190px;
+  object-fit:contain;
+  filter:drop-shadow(0 9px 16px rgba(0,0,0,.34));
+}
+.link-burst-card-art .game-feel{z-index:3}
