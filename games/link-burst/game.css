@@ -465,3 +465,16 @@ html[data-hg-motion="reduced"] .score-pop.show{opacity:1!important}
 }
 .play-tip.show{opacity:1;transform:translate(-50%,0)}
 html[data-hg-motion="reduced"] .play-tip{transition:none!important}
+
+
+/* HUD best score 2026-10-10 */
+.score-box em{
+  display:block;
+  margin-top:3px;
+  color:#8fa0bd;
+  font-style:normal;
+  font-size:7px;
+  font-weight:1000;
+  letter-spacing:.04em;
+  line-height:1;
+}
