@@ -356,6 +356,9 @@ function finalizeRound(){
 }
 function nextRound(){
   if(state.round+1>=state.roundCount){
+    const winners=state.mode==='battle'&&state.scores.length?state.players.filter((p,i)=>state.scores[i]===Math.max(...state.scores)):[];
+    const scores={};state.players.forEach((p,i)=>{const id=window.HoukagoPlayers?.resolveId?.(p);if(id&&state.mode==='battle')scores[id]=state.scores[i]||0});
+    window.HoukagoPlayers?.recordGame?.({gameId:'minna-wa-docchi',participants:state.players,winners,scores});
     state.gameStarted=false;
     state.history=['mode'];
     state.screen='final';
@@ -461,6 +464,7 @@ function bind(){
 }
 loadPlayers();
 render();
+window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayers();render();});
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
