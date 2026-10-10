@@ -1849,3 +1849,28 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
   .screen-final .final-rank-banner strong{font-size:21px}
   .screen-final .final-rank-banner span{font-size:9px}
 }
+
+
+/* Final result five-row layout fix 2026-10-10 */
+/* nav / heading / rank banner / result card / actions の5段構成 */
+.pitadome-app.screen-final{
+  grid-template-rows:auto auto auto minmax(0,1fr) auto;
+}
+.screen-final .final-rank-banner{
+  min-height:0;
+  margin:0;
+}
+@media(max-height:760px){
+  .screen-final .record-box{
+    min-height:58px;
+  }
+}
+@media(max-height:680px){
+  .screen-final .record-box{
+    min-height:48px;
+  }
+  .screen-final .final-score{
+    font-size:76px;
+    margin:3px 0 5px;
+  }
+}
