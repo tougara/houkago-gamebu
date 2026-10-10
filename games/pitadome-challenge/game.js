@@ -519,6 +519,10 @@ function roundResultScreen(){
 }
 function isGameOver(){return state.mode==='ten'?state.round>=10:state.lives<=0}
 function finishGame(){
+  const id=window.HoukagoPlayers?.resolveId?.(state.player);
+  const scores=id?{[id]:state.score}:{};
+  const metrics=id?{[id]:{bestRound:state.round,totalPerfects:state.perfects}}:{};
+  window.HoukagoPlayers?.recordGame?.({gameId:'pitadome-challenge',participants:[state.player],scores,metrics});
   state.gameStarted=false;addRankingEntry();go('final',{push:false});
 }
 function finalScreen(){
@@ -693,6 +697,7 @@ function bind(){
   document.querySelector('[data-rank-back]')?.addEventListener('click',doBackOne);
 }
 loadPlayer();render();
+window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayer();render();});
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
