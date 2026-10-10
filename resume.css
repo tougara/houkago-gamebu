@@ -33,3 +33,59 @@ body.hg-resume-open{overflow:hidden!important}
   .hg-resume-modal{padding:16px}
   .hg-resume-actions{grid-template-columns:1fr}
 }
+
+/* Home resume fit fix 2026-10-10 */
+/* 「つづきから」がある時だけホームの操作群を下端基準で収める */
+.home-page .hero-action-wrap.hg-has-resume{
+  top:auto!important;
+  bottom:max(12px,env(safe-area-inset-bottom))!important;
+  transform:translateX(-50%)!important;
+  gap:8px!important;
+}
+.home-page .hero-action-wrap.hg-has-resume .home-cta{
+  min-height:54px!important;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+.home-page .hero-action-wrap.hg-has-resume .home-member-btn,
+.home-page .hero-action-wrap.hg-has-resume .home-record-btn,
+.home-page .hero-action-wrap.hg-has-resume .home-settings-btn{
+  min-height:44px!important;
+  padding-top:8px!important;
+  padding-bottom:8px!important;
+}
+.home-page .hero-action-wrap.hg-has-resume .hg-resume-slot{
+  width:100%;
+  margin:0;
+}
+.home-page .hero-action-wrap.hg-has-resume .hg-resume-home-card{
+  min-height:54px;
+  padding:8px 13px;
+  border-radius:15px;
+  gap:1px;
+}
+.home-page .hero-action-wrap.hg-has-resume .hg-resume-home-card>span{
+  font-size:10px;
+}
+.home-page .hero-action-wrap.hg-has-resume .hg-resume-home-card>strong{
+  font-size:15px;
+  line-height:1.15;
+}
+.home-page .hero-action-wrap.hg-has-resume .hg-resume-home-card>small{
+  font-size:9px;
+  line-height:1.15;
+}
+@media(max-height:700px){
+  .home-page .hero-action-wrap.hg-has-resume{
+    bottom:max(7px,env(safe-area-inset-bottom))!important;
+    gap:6px!important;
+  }
+  .home-page .hero-action-wrap.hg-has-resume .home-cta{min-height:50px!important}
+  .home-page .hero-action-wrap.hg-has-resume .home-member-btn,
+  .home-page .hero-action-wrap.hg-has-resume .home-record-btn,
+  .home-page .hero-action-wrap.hg-has-resume .home-settings-btn{min-height:40px!important}
+  .home-page .hero-action-wrap.hg-has-resume .hg-resume-home-card{
+    min-height:48px;
+    padding:6px 11px;
+  }
+}
