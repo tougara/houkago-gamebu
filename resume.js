@@ -86,6 +86,7 @@
     const item=latest();
     host.innerHTML='';
     host.hidden=!item;
+    host.closest('.hero-action-wrap')?.classList.toggle('hg-has-resume',!!item);
     if(!item)return;
     const a=document.createElement('a');
     a.className='hg-resume-home-card';
