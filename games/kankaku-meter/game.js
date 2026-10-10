@@ -95,7 +95,7 @@ function remember(){state.revealIndex++;if(state.revealIndex>=state.playerCount)
 function swapOrder(a,b){const y=window.scrollY;[state.order[a],state.order[b]]=[state.order[b],state.order[a]];state.selectedOrder=null;render({preserveScroll:true,scrollY:y})}
 function confirmOrder(){go('orderConfirm')}
 function finalizeOrder(){calculateResult();state.resultRevealed=new Set();go('result',{push:false})}
-function nextRound(){if(state.round+1>=state.roundCount){state.gameStarted=false;go('final');return}state.round++;newRound()}
+function nextRound(){if(state.round+1>=state.roundCount){const scores={};state.players.forEach(p=>{const id=window.HoukagoPlayers?.resolveId?.(p);if(id)scores[id]=state.totalScore});window.HoukagoPlayers?.recordGame?.({gameId:'kankaku-meter',participants:state.players,scores});state.gameStarted=false;go('final');return}state.round++;newRound()}
 function changeTopic(){const q=drawTopic();if(!q)return;state.topic=q;render()}
 function useComposedTopic(){const q=document.getElementById('tq')?.value.trim(),low=document.getElementById('tl')?.value.trim(),high=document.getElementById('th')?.value.trim();if(!q||!low||!high){alert('お題・1・100のイメージを全部入力してください。');return}state.topic={category:'みんなのお題',q,low,high};if(state.history[state.history.length-1]==='topic')state.history.pop();go('topic',{push:false})}
 function addCustom(){const q=document.getElementById('cq')?.value.trim(),low=document.getElementById('cl')?.value.trim(),high=document.getElementById('ch')?.value.trim();if(!q||!low||!high){alert('お題・1・100のイメージを全部入力してください。');return}const a=customItems();a.push({q,low,high});saveCustom(a);render()}
@@ -173,6 +173,7 @@ document.querySelector('[data-add-custom]')?.addEventListener('click',addCustom)
 document.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{const a=customItems();a.splice(Number(b.dataset.delete),1);saveCustom(a);render()}));
 }
 loadPlayers();render();
+window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayers();render();});
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
