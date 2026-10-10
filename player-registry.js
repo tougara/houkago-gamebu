@@ -128,13 +128,20 @@
     }
     return save(data);
   }
+  function clearRecord(id){
+    const data=load();id=String(id||'');
+    if(!data.roster.some(p=>p.id===id))return data;
+    data.records[id]=emptyRecord();
+    return save(data);
+  }
   function gameLabel(id){return ({'nise-transfer-student':'ニセ転校生','minna-wa-docchi':'みんなはどっち？','kankaku-meter':'感覚メーター','kyokasho-tower':'教科書タワー','gesture-battle':'ジェスチャーバトル','pitadome-challenge':'ピタ止め'})[id]||id}
   function renderRecords(){
     const data=load();
     return '<section class="shared-records"><header class="shared-player-heading"><h1>プレイヤー記録</h1><p>登録メンバーごとの放課後ゲーム部の記録です。</p></header>'+
       data.roster.map(p=>{const r=data.records[p.id]||emptyRecord();const games=Object.entries(r.games||{}).filter(([,g])=>g.plays>0).sort((a,b)=>b[1].plays-a[1].plays);
         return '<section class="shared-record-card"><div class="shared-record-head"><span class="shared-record-avatar">'+esc(p.icon)+'</span><div><strong>'+esc(p.name)+'</strong><small>プレイ '+r.plays+'回'+(r.wins?' ／ 勝利・1位 '+r.wins+'回':'')+'</small></div></div>'+
-        (games.length?'<div class="shared-record-games">'+games.map(([id,g])=>'<div><span>'+esc(gameLabel(id))+'</span><strong>'+g.plays+'回'+(g.wins?'・勝'+g.wins:'')+(Number.isFinite(g.bestScore)?'・BEST '+g.bestScore:'')+'</strong></div>').join('')+'</div>':'<p class="shared-record-empty">まだプレイ記録がありません。</p>')+'</section>'
+        (games.length?'<div class="shared-record-games">'+games.map(([id,g])=>'<div><span>'+esc(gameLabel(id))+'</span><strong>'+g.plays+'回'+(g.wins?'・勝'+g.wins:'')+(Number.isFinite(g.bestScore)?'・BEST '+g.bestScore:'')+'</strong></div>').join('')+'</div>':'<p class="shared-record-empty">まだプレイ記録がありません。</p>')+
+        '<button type="button" class="shared-record-delete" data-player-record-delete="'+esc(p.id)+'" data-player-record-name="'+esc(p.name)+'" '+(r.plays>0?'':'disabled')+'>この記録を削除</button></section>'
       }).join('')+'</section>';
   }
   function renderEditor(opts){
@@ -162,5 +169,5 @@
       root.querySelectorAll('[data-shared-icon-grid]').forEach(grid=>grid.classList.toggle('open',grid.dataset.sharedIconGrid===id&&!grid.classList.contains('open')));
     });
   }
-  window.HoukagoPlayers={KEY,ICONS,MIN_COUNT,MAX_COUNT,ROSTER_MAX,load,save,setActiveCount,setActiveIds,toggleActive,setPlayer,setPlayers,addPlayer,reset,renderEditor,renderRecords,recordGame,resolveId};
+  window.HoukagoPlayers={KEY,ICONS,MIN_COUNT,MAX_COUNT,ROSTER_MAX,load,save,setActiveCount,setActiveIds,toggleActive,setPlayer,setPlayers,addPlayer,reset,renderEditor,renderRecords,recordGame,clearRecord,resolveId};
 })();
