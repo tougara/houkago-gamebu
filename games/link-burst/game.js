@@ -162,7 +162,7 @@
     return topNav()+
       '<section class="play-hud">'+
         '<div class="score-panel">'+
-          '<div class="hud-box"><small>SCORE</small><strong data-score>0</strong></div>'+
+          '<div class="hud-box score-box"><small>SCORE</small><strong data-score>0</strong><em data-best-score>BEST 0</em></div>'+
           '<div class="hud-box link"><small>MAX LINK</small><strong data-max-link>0</strong></div>'+
           '<div class="hud-box"><small data-third-label>'+(state.mode==='timed'?'TIME':'BLOCKS')+'</small><strong data-third-value>0</strong></div>'+
         '</div>'+
@@ -695,8 +695,10 @@
     const score=document.querySelector('[data-score]');
     const link=document.querySelector('[data-max-link]');
     const third=document.querySelector('[data-third-value]');
+    const best=document.querySelector('[data-best-score]');
     if(score)score.textContent=String(state.score);
     if(link)link.textContent=String(state.maxLink);
+    if(best){const rows=sortRanking(loadRankings()[state.mode]||[]);best.textContent='BEST '+(rows[0]?rows[0].score:0)}
     if(third)third.textContent=state.mode==='timed'?formatTime(state.timeLeft):String(state.pieces);
     const one=document.querySelector('[data-next-one]');
     const two=document.querySelector('[data-next-two]');
