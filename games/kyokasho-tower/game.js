@@ -453,7 +453,12 @@ function continueTurn(){
   go('pass',{push:false});
 }
 function nextRound(){
-  if(state.round+1>=state.totalRounds){state.gameStarted=false;state.screen='final';render();return}
+  if(state.round+1>=state.totalRounds){
+    const min=Math.min(...state.penalties);
+    const winners=state.players.filter((p,i)=>state.penalties[i]===min);
+    window.HoukagoPlayers?.recordGame?.({gameId:'kyokasho-tower',participants:state.players,winners});
+    state.gameStarted=false;state.screen='final';render();return
+  }
   state.round++;startRound();
 }
 function replay(){state.penalties=Array(state.playerCount).fill(0);state.round=0;state.totalRounds=state.playerCount;state.gameStarted=true;state.history=[];startRound()}
@@ -488,6 +493,7 @@ function bind(){
   document.querySelector('[data-to-title]')?.addEventListener('click',()=>{resumeApi?.clear?.(RESUME_ID);state.gameStarted=false;state.history=[];state.screen='title';render()});
 }
 loadPlayers();render();
+window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayers();render();});
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })()
