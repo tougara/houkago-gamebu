@@ -38,6 +38,15 @@
     if(count){api.setActiveCount(Number(count.dataset.memberCount));render();return}
     const icon=e.target.closest('[data-member-icon]');
     if(icon){api.setPlayer(Number(icon.dataset.memberIcon),{icon:icon.dataset.icon});render();return}
+    const del=e.target.closest('[data-player-record-delete]');
+    if(del){
+      const name=del.dataset.playerRecordName||'このメンバー';
+      if(confirm(name+'さんのプレイヤー記録を削除しますか？\n登録メンバー自体は削除されません。')){
+        api.clearRecord(del.dataset.playerRecordDelete);
+        render();
+      }
+      return;
+    }
     if(e.target.closest('[data-members-done]')){close()}
   });
   overlay?.addEventListener('change',e=>{
