@@ -585,3 +585,187 @@ html[data-hg-motion="reduced"] .play-tip{transition:none!important}
 
 /* Link Burst chain feedback 2026-10-11 */
 /* Chain timing is intentionally readable: glow → burst → fall → next-link beat. */
+
+
+/* Escalating LINK / COMBO spectacle 2026-10-11 */
+.board-stage{
+  isolation:isolate;
+}
+.board-stage::before,
+.board-stage::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  z-index:0;
+  pointer-events:none;
+  opacity:0;
+  border-radius:28px;
+}
+.board-stage::before{
+  background:radial-gradient(circle at center,rgba(94,225,255,.18),transparent 58%);
+  filter:blur(10px);
+}
+.board-stage::after{
+  border:2px solid rgba(255,255,255,.12);
+  box-shadow:inset 0 0 28px rgba(255,255,255,.06);
+}
+.board-stage.chain-stage::before,
+.board-stage.chain-stage::after{
+  opacity:1;
+}
+.board-stage.fx-tier-2::before{background:radial-gradient(circle at center,rgba(82,218,255,.24),transparent 62%)}
+.board-stage.fx-tier-3::before{background:radial-gradient(circle at center,rgba(126,126,255,.28),transparent 63%)}
+.board-stage.fx-tier-4::before{background:radial-gradient(circle at center,rgba(168,105,255,.34),transparent 64%)}
+.board-stage.fx-tier-5::before{background:radial-gradient(circle at center,rgba(255,102,201,.31),rgba(120,92,255,.18) 42%,transparent 68%)}
+.board-stage.fx-tier-6::before{background:radial-gradient(circle at center,rgba(255,215,92,.34),rgba(255,111,160,.18) 44%,transparent 70%)}
+.board-stage.fx-tier-7::before{background:radial-gradient(circle at center,rgba(255,236,130,.42),rgba(104,226,255,.22) 46%,rgba(255,98,206,.18) 65%,transparent 74%)}
+.board-stage.fx-tier-8::before{
+  background:
+    radial-gradient(circle at 50% 48%,rgba(255,255,255,.52),rgba(255,227,113,.28) 30%,rgba(96,229,255,.20) 50%,rgba(255,82,204,.16) 68%,transparent 78%);
+  animation:stageAuraMax .72s ease-in-out infinite alternate;
+}
+.board-stage.combo-heavy::after{
+  border-color:rgba(255,240,173,.46);
+  box-shadow:inset 0 0 34px rgba(255,236,159,.12),0 0 24px rgba(255,195,72,.10);
+}
+
+.chain-banner.fx-tier-4 strong{font-size:19px}
+.chain-banner.fx-tier-5 strong{font-size:20px;color:#ffd4ff}
+.chain-banner.fx-tier-6 strong{font-size:21px;color:#fff0a3}
+.chain-banner.fx-tier-7 strong{font-size:22px;color:#fff7c6;text-shadow:0 0 12px rgba(255,224,95,.58)}
+.chain-banner.fx-tier-8{
+  transform:translate(-50%,0) scale(1.08);
+  border-color:rgba(255,255,255,.88);
+  background:linear-gradient(135deg,rgba(68,39,132,.95),rgba(154,49,125,.95),rgba(174,116,34,.95));
+  box-shadow:0 8px 22px rgba(0,0,0,.34),0 0 34px rgba(255,213,89,.58);
+}
+.chain-banner.fx-tier-8 strong{font-size:23px;color:#fff}
+
+.link-fx.fx-tier-2 strong{font-size:clamp(36px,10.5vw,60px)}
+.link-fx.fx-tier-3 strong{font-size:clamp(39px,11vw,63px)}
+.link-fx.fx-tier-4 strong{font-size:clamp(42px,11.5vw,66px)}
+.link-fx.fx-tier-5 strong{font-size:clamp(45px,12vw,70px)}
+.link-fx.fx-tier-6 strong{font-size:clamp(48px,12.5vw,74px)}
+.link-fx.fx-tier-7 strong{font-size:clamp(51px,13vw,78px)}
+.link-fx.fx-tier-8 strong{
+  font-size:clamp(54px,14vw,84px);
+  color:#fff9d7;
+  text-shadow:
+    0 4px 0 #a34c11,
+    0 0 18px rgba(255,255,255,.92),
+    0 0 38px rgba(255,213,86,.96),
+    0 0 60px rgba(255,89,208,.52),
+    0 11px 26px rgba(0,0,0,.58);
+}
+.link-fx.combo-heavy span{
+  color:#fff;
+  font-size:18px;
+  text-shadow:0 0 10px rgba(255,225,102,.85),0 2px 9px #000;
+}
+
+.combo-fx{
+  position:absolute;
+  right:8px;
+  top:21%;
+  z-index:23;
+  min-width:120px;
+  padding:8px 11px;
+  border-radius:16px;
+  background:rgba(8,12,34,.88);
+  border:1px solid rgba(255,255,255,.22);
+  text-align:center;
+  pointer-events:none;
+  opacity:0;
+  transform:translateX(14px) scale(.9);
+}
+.combo-fx.show{
+  animation:comboPop .78s cubic-bezier(.18,.82,.22,1);
+}
+.combo-fx strong{
+  display:block;
+  color:#fff;
+  font-size:18px;
+  line-height:1;
+  text-shadow:0 0 14px rgba(117,226,255,.72);
+}
+.combo-fx span{
+  display:block;
+  margin-top:4px;
+  color:#bcd2eb;
+  font-size:7px;
+  font-weight:1000;
+  letter-spacing:.12em;
+}
+.combo-fx.fx-tier-5,
+.combo-fx.fx-tier-6{border-color:rgba(219,142,255,.66);box-shadow:0 0 24px rgba(163,97,255,.27)}
+.combo-fx.fx-tier-7,
+.combo-fx.fx-tier-8{
+  border-color:rgba(255,232,117,.82);
+  background:linear-gradient(135deg,rgba(77,39,130,.94),rgba(151,55,107,.94));
+  box-shadow:0 0 30px rgba(255,202,75,.38);
+}
+.combo-fx.heavy strong{font-size:20px;color:#fff0a4}
+
+.chain-flash.fx-tier-6.burst,
+.chain-flash.fx-tier-7.burst,
+.chain-flash.fx-tier-8.burst{
+  animation-duration:.52s;
+}
+.chain-flash.fx-tier-8.burst{
+  box-shadow:inset 0 0 80px rgba(255,255,255,.42);
+}
+
+.clear-particle.fx-tier-6,
+.clear-particle.fx-tier-7,
+.clear-particle.fx-tier-8{
+  box-shadow:0 0 12px rgba(255,255,255,.96),0 0 24px rgba(255,230,117,.55);
+}
+
+.burst-ring{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:var(--ring-size,90%);
+  aspect-ratio:1;
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(.12);
+  border:3px solid rgba(137,232,255,.58);
+  box-shadow:0 0 20px rgba(116,218,255,.36),inset 0 0 14px rgba(255,255,255,.16);
+  opacity:0;
+  animation:burstRing .72s var(--ring-delay,0ms) cubic-bezier(.16,.7,.18,1) forwards;
+}
+.burst-ring.fx-tier-5{border-color:rgba(214,135,255,.70);box-shadow:0 0 24px rgba(180,103,255,.42)}
+.burst-ring.fx-tier-6{border-color:rgba(255,198,101,.78);box-shadow:0 0 28px rgba(255,177,71,.48)}
+.burst-ring.fx-tier-7{border-color:rgba(255,239,150,.88);box-shadow:0 0 32px rgba(255,216,91,.58)}
+.burst-ring.fx-tier-8{
+  border-width:4px;
+  border-color:rgba(255,255,255,.94);
+  box-shadow:0 0 20px rgba(255,255,255,.82),0 0 38px rgba(255,221,92,.65),0 0 56px rgba(255,92,210,.36);
+}
+
+@keyframes comboPop{
+  0%{opacity:0;transform:translateX(18px) scale(.76)}
+  18%{opacity:1;transform:translateX(-4px) scale(1.08)}
+  30%{transform:translateX(0) scale(1)}
+  76%{opacity:1}
+  100%{opacity:0;transform:translateX(-8px) scale(1.02)}
+}
+@keyframes burstRing{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.12)}
+  18%{opacity:.9}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.06)}
+}
+@keyframes stageAuraMax{
+  from{opacity:.76;filter:brightness(.98) saturate(1.05)}
+  to{opacity:1;filter:brightness(1.18) saturate(1.28)}
+}
+
+html[data-hg-motion="reduced"] .board-stage::before,
+html[data-hg-motion="reduced"] .board-stage::after,
+html[data-hg-motion="reduced"] .combo-fx,
+html[data-hg-motion="reduced"] .burst-ring{
+  animation:none!important;
+  transition:none!important;
+}
+html[data-hg-motion="reduced"] .combo-fx.show{opacity:1!important;transform:none!important}
+html[data-hg-motion="reduced"] .burst-ring{display:none!important}
