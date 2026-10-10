@@ -95,7 +95,7 @@ function addRankingEntry(){
   const key=rankKey(state.mode,state.difficulty);
   const before=sortRanking(state.mode,r[key]||[]);
   const playerId=playersApi?.resolveId?.(state.player)||'';
-  const samePlayer=x=>playerId?(x.playerId===playerId):(!x.playerId&&x.name===state.player.name&&x.icon===state.player.icon);
+  const samePlayer=x=>playerId?(x.playerId===playerId||(!x.playerId&&x.name===state.player.name&&x.icon===state.player.icon)):(x.name===state.player.name&&x.icon===state.player.icon);
   const personalBefore=before.filter(samePlayer);
   const oldPersonalBest=personalBefore[0]?.score||0;
   const oldModeBest=before[0]?.score||0;
