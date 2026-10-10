@@ -883,7 +883,7 @@
         const p=document.createElement('i');
         const angle=((cellIndex*53+i*97)%360)*Math.PI/180;
         const dist=26+((cellIndex*17+i*13)%34)+power*5+(combo>=2?10:0);
-        p.className='clear-particle c-'+color;
+        p.className='clear-particle c-'+color+' fx-tier-'+Math.min(8,power);
         p.style.left=(rect.left-stageRect.left+rect.width/2)+'px';
         p.style.top=(rect.top-stageRect.top+rect.height/2)+'px';
         p.style.setProperty('--dx',(Math.cos(angle)*dist).toFixed(1)+'px');
