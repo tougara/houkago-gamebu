@@ -10,7 +10,7 @@
   const VISIBLE_ROWS=13;
   const HIDDEN_ROWS=2;
   const ROWS=VISIBLE_ROWS+HIDDEN_ROWS;
-  const SPAWN_X=2;
+  const SPAWN_X=3;
   const SPAWN_Y=1;
   const LOCK_DELAY=300;
   const RESUME_ID='link-burst';
@@ -22,10 +22,10 @@
   const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇'};
 
   const ROTATIONS=[
-    [[0,0,'a'],[1,0,'a'],[0,1,'b']],
-    [[0,0,'b'],[1,0,'a'],[1,1,'a']],
-    [[1,0,'b'],[0,1,'a'],[1,1,'a']],
-    [[0,0,'a'],[0,1,'a'],[1,1,'b']]
+    [[0,0,'a'],[1,0,'b']],
+    [[0,0,'a'],[0,1,'b']],
+    [[0,0,'a'],[-1,0,'b']],
+    [[0,0,'a'],[0,-1,'b']]
   ];
 
   const state={
@@ -105,7 +105,7 @@
     return topNav()+
       '<section class="title-card">'+
         '<img class="title-logo" src="../../link_burst_logo.png" alt="リンクバースト！">'+
-        '<p class="title-copy">つないで、落として、バースト！<br>L字が分かれて落ちる、新感覚リンクパズル。</p>'+
+        '<p class="title-copy">つないで、落として、バースト！<br>2個のブロックが分かれて落ちる、新感覚リンクパズル。</p>'+
         '<div class="stack title-actions">'+
           '<button class="btn" data-start>ゲームをはじめる</button>'+
           '<button class="btn secondary" data-rules>あそびかた</button>'+
@@ -145,17 +145,17 @@
   function rulesScreen(){
     return topNav()+heading('あそびかた','基本は4つ。置いたあとの分離がポイント。')+
       '<div class="rules-wrap">'+
-        '<section class="card rule-card"><h2>1. L字は「同じ色2個＋別色1個」</h2><div class="rule-visual"><div class="rule-piece"><i class="a1">○</i><i class="a2">○</i><i class="b">△</i></div></div><p>毎回この向きで出現。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
-        '<section class="card rule-card"><h2>2. LOCKすると3個に分かれる</h2><p>L字のまま着地したあと、支えのないブロックだけ真下へ落下。段差を利用して連鎖を作ろう。</p></section>'+
+        '<section class="card rule-card"><h2>1. 2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
+        '<section class="card rule-card"><h2>2. LOCKすると2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
         '<section class="card rule-card"><h2>3. 同じ色を4個以上つなげる</h2><p>上下左右につながった同色4個以上で消去。消したあとにまた4個つながると2 LINK、3 LINK…と続きます。</p></section>'+
-        '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span>←</span><span>↓</span><span>→</span><span>↻</span></div><p>←→は移動、↓は押している間だけ高速落下、↻は90°右回転。左右は長押しできます。</p></section>'+
+        '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span>←</span><span>→</span><span>↓</span><span class="demo-rotate">↻</span></div><p>上段の←→で移動、下段の↓で高速落下、↻で90°右回転。左右は長押しできます。</p></section>'+
       '</div>'+
       '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-rules-back>← もどる</button></div>';
   }
 
   function miniPieceHtml(t){
     if(!t)return '';
-    return '<div class="mini-piece"><i class="mini-block p0 c-'+t.a+'"></i><i class="mini-block p1 c-'+t.a+'"></i><i class="mini-block p2 c-'+t.b+'"></i></div>';
+    return '<div class="mini-piece"><i class="mini-block p0 c-'+t.a+'"></i><i class="mini-block p1 c-'+t.b+'"></i></div>';
   }
 
   function playScreen(){
@@ -183,9 +183,8 @@
       '</section>'+
       '<section class="controls" aria-label="操作">'+
         '<button class="control-btn" data-control="left" aria-label="左へ">←</button>'+
-        '<button class="control-btn" data-control="down" aria-label="速く落とす">↓</button>'+
         '<button class="control-btn" data-control="right" aria-label="右へ">→</button>'+
-        '<span class="control-spacer"></span>'+
+        '<button class="control-btn" data-control="down" aria-label="速く落とす">↓</button>'+
         '<button class="control-btn rotate" data-control="rotate" aria-label="右回転">↻</button>'+
       '</section>';
   }
@@ -404,8 +403,7 @@
 
   function randomTemplate(){
     const a=COLORS[Math.floor(Math.random()*COLORS.length)];
-    const rest=COLORS.filter(function(c){return c!==a});
-    const b=rest[Math.floor(Math.random()*rest.length)];
+    const b=COLORS[Math.floor(Math.random()*COLORS.length)];
     return {a:a,b:b};
   }
   function fillQueue(){
