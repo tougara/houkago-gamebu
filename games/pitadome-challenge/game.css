@@ -1758,3 +1758,94 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     --pita-main-action-top:67dvh;
   }
 }
+
+
+/* Final ranking feedback 2026-10-10 */
+.screen-final .final-rank-banner{
+  display:grid;
+  gap:2px;
+  place-items:center;
+  text-align:center;
+  padding:10px 14px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;
+  background:rgba(5,22,36,.82);
+  box-shadow:0 10px 24px rgba(0,0,0,.16);
+}
+.screen-final .final-rank-banner small{
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:.16em;
+  color:#a9bfd1;
+}
+.screen-final .final-rank-banner strong{
+  font-size:clamp(25px,7vw,38px);
+  line-height:1;
+  color:#fff;
+}
+.screen-final .final-rank-banner span{
+  font-size:12px;
+  font-weight:900;
+  color:#cfdeea;
+}
+.screen-final .final-rank-banner.is-ranked{
+  border-color:rgba(255,224,91,.6);
+  background:linear-gradient(180deg,rgba(89,67,13,.92),rgba(21,29,35,.93));
+  box-shadow:0 0 0 1px rgba(255,244,176,.2),0 12px 28px rgba(0,0,0,.22);
+}
+.screen-final .final-rank-banner.is-ranked small,
+.screen-final .final-rank-banner.is-ranked strong{
+  color:#fff19a;
+}
+.screen-final .final-rank-banner.is-mode-best{
+  animation:recordBannerPop .72s cubic-bezier(.2,.8,.2,1) both;
+}
+.screen-final .final-next-goal{
+  margin-top:8px;
+  padding:7px 10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.07);
+  text-align:center;
+  color:#dbe8f1;
+  font-size:11px;
+  font-weight:900;
+}
+.ranking-row.current-run{
+  position:relative;
+  outline:2px solid #ffe36a;
+  box-shadow:0 0 0 3px rgba(255,227,106,.15),0 8px 18px rgba(0,0,0,.12);
+  animation:currentRankPulse 1s ease-out 1;
+}
+.current-run-badge{
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 5px;
+  border-radius:999px;
+  background:#ffe36a;
+  color:#2b1d00;
+  font-style:normal;
+  font-size:8px;
+  font-weight:1000;
+  vertical-align:middle;
+}
+@keyframes recordBannerPop{
+  0%{opacity:0;transform:scale(.84)}
+  60%{opacity:1;transform:scale(1.05)}
+  100%{transform:scale(1)}
+}
+@keyframes currentRankPulse{
+  0%{transform:scale(.97);filter:brightness(1.4)}
+  60%{transform:scale(1.015)}
+  100%{transform:scale(1);filter:none}
+}
+@media(max-height:760px){
+  .screen-final .final-rank-banner{padding:7px 10px}
+  .screen-final .final-rank-banner strong{font-size:24px}
+  .screen-final .final-rank-banner span{font-size:10px}
+  .screen-final .final-next-goal{margin-top:5px;padding:5px 8px;font-size:9px}
+}
+@media(max-height:680px){
+  .screen-final .final-rank-banner{padding:5px 8px}
+  .screen-final .final-rank-banner strong{font-size:21px}
+  .screen-final .final-rank-banner span{font-size:9px}
+}
