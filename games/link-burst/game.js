@@ -53,8 +53,10 @@
     lastFrame:0,
     rafId:null,
     resumeAccum:0,
+    chargedKeys:new Set(),
     clearingKeys:new Set(),
     fallingKeys:new Set(),
+    chainActive:false,
     rankResult:null
   };
 
@@ -176,6 +178,9 @@
           '<span class="danger-label">DANGER</span>'+
           '<div class="game-board" data-board></div>'+
         '</div>'+
+        '<div class="chain-banner" data-chain-banner><small>CHAIN</small><strong>1 LINK</strong></div>'+
+        '<div class="chain-flash" data-chain-flash></div>'+
+        '<div class="particle-layer" data-particle-layer aria-hidden="true"></div>'+
         '<div class="split-fx" data-split-fx>SPLIT</div>'+
         '<div class="link-fx" data-link-fx><strong></strong><span></span></div>'+
         '<div class="score-pop" data-score-pop></div>'+ 
@@ -463,8 +468,10 @@
     state.lockAccum=0;
     state.softDrop=false;
     state.resumeAccum=0;
+    state.chargedKeys=new Set();
     state.clearingKeys=new Set();
     state.fallingKeys=new Set();
+    state.chainActive=false;
     state.rankResult=null;
     fillQueue();
     spawnPiece();
@@ -495,7 +502,7 @@
     const dt=Math.min(60,Math.max(0,ts-state.lastFrame));
     state.lastFrame=ts;
 
-    if(state.mode==='timed'&&!state.timeExpired){
+    if(state.mode==='timed'&&!state.timeExpired&&!state.chainActive){
       state.timeLeft=Math.max(0,state.timeLeft-dt/1000);
       if(state.timeLeft<=0)state.timeExpired=true;
     }
@@ -554,7 +561,8 @@
     spawnPiece();
   }
 
-  async function applyGravityAnimated(){
+  async function applyGravityAnimated(stepMs){
+    stepMs=Number(stepMs)||76;
     let safety=0;
     while(safety++<ROWS+2){
       const moved=[];
@@ -570,7 +578,7 @@
       if(!moved.length)break;
       state.fallingKeys=new Set(moved);
       drawBoard();
-      await delay(58);
+      await delay(stepMs);
       state.fallingKeys.clear();
     }
     drawBoard();
@@ -611,34 +619,70 @@
 
   async function resolveClears(){
     let link=0;
-    while(state.gameStarted){
-      const groups=findGroups();
-      if(!groups.length)break;
+    let groups=findGroups();
+    if(!groups.length)return 0;
+
+    state.chainActive=true;
+    while(state.gameStarted&&groups.length){
       link++;
       const cells=[].concat.apply([],groups);
       const total=cells.length;
       const combo=groups.length;
       const gain=scoreGain(total,link,combo);
+      const keys=cells.map(function(c){return c.y+':'+c.x});
+      const chargeWait=reducedMotion()?70:Math.min(270+link*55,520);
+      const clearWait=reducedMotion()?90:Math.min(360+link*28,500);
+      const betweenWait=reducedMotion()?70:Math.min(230+link*75,520);
 
+      // 1) Anticipation: freeze the board for a beat and make the winning group glow.
+      state.chargedKeys=new Set(keys);
+      setChainStage(link);
+      showChainBanner(link,combo);
+      drawBoard();
+      pulseChainFlash(link,'charge');
+      await delay(chargeWait);
+      if(!state.gameStarted)break;
+
+      // 2) Impact: score appears exactly when the blocks burst.
       state.maxLink=Math.max(state.maxLink,link);
       state.maxCombo=Math.max(state.maxCombo,combo);
       state.clears+=total;
       state.score+=gain;
-      state.clearingKeys=new Set(cells.map(function(c){return c.y+':'+c.x}));
+      state.chargedKeys.clear();
+      state.clearingKeys=new Set(keys);
       drawBoard();
       updateHud();
+      spawnClearParticles(cells,link);
       showLink(link,gain,combo);
-      if(link>=5)vibrate([28,25,42]);
-      else if(link>=3)vibrate([18,18,24]);
+      pulseChainFlash(link,'burst');
+      if(link>=5)vibrate([30,24,48]);
+      else if(link>=3)vibrate([20,18,30]);
+      else if(link===2)vibrate([14,12,18]);
       else vibrate(12);
 
-      await delay(link>=5?360:290);
-      cells.forEach(function(c){state.board[c.y][c.x]=null});
+      await delay(clearWait);
+      cells.forEach(function(cell){state.board[cell.y][cell.x]=null});
       state.clearingKeys.clear();
       drawBoard();
-      await delay(70);
-      await applyGravityAnimated();
+      await delay(reducedMotion()?25:110);
+
+      // 3) Fallout: let the player watch the board collapse before checking the next link.
+      await applyGravityAnimated(link>=2?94:84);
+      await delay(reducedMotion()?25:150);
+
+      groups=findGroups();
+      if(groups.length){
+        showContinueCue(link+1);
+        await delay(betweenWait);
+      }
     }
+
+    state.chargedKeys.clear();
+    state.clearingKeys.clear();
+    state.chainActive=false;
+    hideChainBanner();
+    clearChainStage();
+    drawBoard();
     return link;
   }
 
@@ -674,10 +718,11 @@
         let classes='';
         if(color){
           if(activeColor)classes+=' active';
+          if(state.chargedKeys.has(key))classes+=' charged';
           if(state.clearingKeys.has(key))classes+=' clearing';
           if(state.fallingKeys.has(key))classes+=' falling';
         }
-        html+='<div class="board-cell '+(vy<2?'danger-row':'')+'">'+(color?blockHtml(color,classes.trim()):'')+'</div>';
+        html+='<div class="board-cell '+(vy<2?'danger-row':'')+'" data-key="'+key+'">'+(color?blockHtml(color,classes.trim()):'')+'</div>';
       }
     }
     host.innerHTML=html;
@@ -724,6 +769,7 @@
     const el=document.querySelector('[data-link-fx]');
     const pop=document.querySelector('[data-score-pop]');
     const frameEl=document.querySelector('[data-board-frame]');
+    const hold=reducedMotion()?220:Math.min(820+link*95,1300);
     if(el){
       let main=link+' LINK!';
       if(link>=8)main='MAXIMUM LINK!';
@@ -731,22 +777,108 @@
       else if(link>=5)main='BURST!';
       el.querySelector('strong').textContent=main;
       el.querySelector('span').textContent=(combo>1?combo+' COMBO  ':'')+'+'+gain;
-      el.className='link-fx '+(link>=5?'burst ':'')+'show';
-      setTimeout(function(){el&&el.classList.remove('show')},reducedMotion()?160:580);
+      el.style.setProperty('--link-duration',hold+'ms');
+      el.className='link-fx '+(link>=5?'burst ':'')+(link>=3?'strong ':'')+'show';
+      setTimeout(function(){if(el&&el.isConnected)el.classList.remove('show')},hold+30);
     }
     if(pop){
       pop.textContent='+'+gain;
+      pop.style.setProperty('--score-duration',Math.min(700+link*55,980)+'ms');
       pop.classList.remove('show');
       void pop.offsetWidth;
       pop.classList.add('show');
-      setTimeout(function(){pop&&pop.classList.remove('show')},reducedMotion()?160:620);
+      setTimeout(function(){if(pop&&pop.isConnected)pop.classList.remove('show')},reducedMotion()?240:1000);
     }
-    if(frameEl&&link>=5){
+    if(frameEl&&link>=4){
       frameEl.classList.remove('burst-shake');
       void frameEl.offsetWidth;
       frameEl.classList.add('burst-shake');
-      setTimeout(function(){frameEl&&frameEl.classList.remove('burst-shake')},390);
+      setTimeout(function(){if(frameEl&&frameEl.isConnected)frameEl.classList.remove('burst-shake')},430);
     }
+  }
+
+  function showChainBanner(link,combo){
+    const el=document.querySelector('[data-chain-banner]');
+    if(!el)return;
+    el.querySelector('strong').textContent=link+' LINK';
+    el.querySelector('small').textContent=combo>1?combo+' COMBO / CHAIN':'CHAIN';
+    el.classList.add('show');
+    el.classList.toggle('hot',link>=3);
+    el.classList.toggle('burst',link>=5);
+  }
+
+  function hideChainBanner(){
+    const el=document.querySelector('[data-chain-banner]');
+    if(el)el.className='chain-banner';
+  }
+
+  function showContinueCue(nextLink){
+    const el=document.querySelector('[data-link-fx]');
+    if(!el)return;
+    const hold=reducedMotion()?170:460;
+    el.querySelector('strong').textContent=nextLink+' LINK...';
+    el.querySelector('span').textContent='CHAIN CONTINUES';
+    el.style.setProperty('--link-duration',hold+'ms');
+    el.className='link-fx continue show';
+    setTimeout(function(){if(el&&el.isConnected)el.classList.remove('show')},hold+20);
+  }
+
+  function setChainStage(link){
+    const frameEl=document.querySelector('[data-board-frame]');
+    if(!frameEl)return;
+    frameEl.classList.add('chain-active');
+    frameEl.classList.toggle('chain-strong',link>=3);
+    frameEl.classList.toggle('chain-burst',link>=5);
+    frameEl.dataset.chain=String(link);
+  }
+
+  function clearChainStage(){
+    const frameEl=document.querySelector('[data-board-frame]');
+    if(!frameEl)return;
+    frameEl.classList.remove('chain-active','chain-strong','chain-burst');
+    delete frameEl.dataset.chain;
+  }
+
+  function pulseChainFlash(link,kind){
+    const el=document.querySelector('[data-chain-flash]');
+    if(!el)return;
+    el.className='chain-flash';
+    void el.offsetWidth;
+    el.classList.add(kind==='charge'?'charge':'burst');
+    if(link>=3)el.classList.add('strong');
+    if(link>=5)el.classList.add('max');
+    setTimeout(function(){if(el&&el.isConnected)el.className='chain-flash'},reducedMotion()?100:430);
+  }
+
+  function spawnClearParticles(cells,link){
+    if(reducedMotion())return;
+    const stage=document.querySelector('.board-stage');
+    const layer=document.querySelector('[data-particle-layer]');
+    if(!stage||!layer)return;
+    const stageRect=stage.getBoundingClientRect();
+    let count=0;
+    cells.forEach(function(cell,cellIndex){
+      if(cell.y<HIDDEN_ROWS||count>=42)return;
+      const key=cell.y+':'+cell.x;
+      const origin=document.querySelector('[data-key="'+key+'"]');
+      if(!origin)return;
+      const rect=origin.getBoundingClientRect();
+      const color=state.board[cell.y][cell.x]||'blue';
+      const perCell=link>=4?4:3;
+      for(let i=0;i<perCell&&count<42;i++,count++){
+        const p=document.createElement('i');
+        const angle=((cellIndex*53+i*97)%360)*Math.PI/180;
+        const dist=26+((cellIndex*17+i*13)%32)+(link>=4?12:0);
+        p.className='clear-particle c-'+color;
+        p.style.left=(rect.left-stageRect.left+rect.width/2)+'px';
+        p.style.top=(rect.top-stageRect.top+rect.height/2)+'px';
+        p.style.setProperty('--dx',(Math.cos(angle)*dist).toFixed(1)+'px');
+        p.style.setProperty('--dy',(Math.sin(angle)*dist-10).toFixed(1)+'px');
+        p.style.setProperty('--particle-life',(480+link*35)+'ms');
+        layer.appendChild(p);
+        setTimeout(function(){p.remove()},650+link*45);
+      }
+    });
   }
 
   function personalBestKey(){
@@ -873,7 +1005,7 @@
     };
   }
   function persistResume(){
-    if(!state.gameStarted||state.resolving||!resumeApi||!resumeApi.save)return;
+    if(!state.gameStarted||state.resolving||state.chainActive||!resumeApi||!resumeApi.save)return;
     resumeApi.save(RESUME_ID,{
       title:'リンクバースト！',
       path:'/games/link-burst/',
@@ -910,8 +1042,10 @@
     state.soloIndex=Math.max(0,Number(saved.soloIndex)||0);
     state.gameStarted=true;
     state.resolving=!state.piece;
+    state.chargedKeys=new Set();
     state.clearingKeys=new Set();
     state.fallingKeys=new Set();
+    state.chainActive=false;
     state.rankResult=null;
     state.history=[];
     state.screen='play';
