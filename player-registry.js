@@ -134,7 +134,7 @@
     data.records[id]=emptyRecord();
     return save(data);
   }
-  function gameLabel(id){return ({'nise-transfer-student':'ニセ転校生','minna-wa-docchi':'みんなはどっち？','kankaku-meter':'感覚メーター','kyokasho-tower':'教科書タワー','gesture-battle':'ジェスチャーバトル','pitadome-challenge':'ピタ止め'})[id]||id}
+  function gameLabel(id){return ({'nise-transfer-student':'ニセ転校生','minna-wa-docchi':'みんなはどっち？','kankaku-meter':'感覚メーター','kyokasho-tower':'教科書タワー','gesture-battle':'ジェスチャーバトル','pitadome-challenge':'ピタ止め','link-burst':'リンクバースト！'})[id]||id}
   function renderRecords(){
     const data=load();
     return '<section class="shared-records"><header class="shared-player-heading"><h1>プレイヤー記録</h1><p>登録メンバーごとの放課後ゲーム部の記録です。</p></header>'+
