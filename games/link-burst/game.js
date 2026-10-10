@@ -328,7 +328,6 @@
       w.remove();
       state.paused=false;
       state.gameStarted=false;
-      state.paused=false;
       state.resolving=false;
       state.chainActive=false;
       resumeApi&&resumeApi.clear&&resumeApi.clear(RESUME_ID);
@@ -355,7 +354,7 @@
     w.className='quit-backdrop';
     w.innerHTML='<section class="card quit-card"><h2>ゲームをやめますか？</h2><p>「やめる」を選ぶと、このプレイの途中データは消えます。</p><div class="stack"><button class="btn secondary" data-quit-cancel>続ける</button><button class="btn" data-quit-ok>やめる</button></div></section>';
     document.body.appendChild(w);
-    w.querySelector('[data-quit-cancel]').addEventListener('click',function(){w.remove();if(state.gameStarted&&state.screen==='play')startLoop()});
+    w.querySelector('[data-quit-cancel]').addEventListener('click',function(){w.remove();if(state.gameStarted&&state.screen==='play'&&!state.paused)startLoop()});
     w.querySelector('[data-quit-ok]').addEventListener('click',function(){
       w.remove();
       stopLoop();
