@@ -241,6 +241,25 @@ button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transp
 .mini-piece{width:44px;height:21px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .mini-block{border-radius:5px;border:1px solid rgba(255,255,255,.32);box-shadow:inset 0 1px 4px rgba(255,255,255,.34)}
 .mini-block.p0{grid-column:1}.mini-block.p1{grid-column:2}
+.pause-btn{
+  width:44px;
+  min-width:44px;
+  min-height:100%;
+  padding:5px 4px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:2px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:13px;
+  background:rgba(7,14,33,.88);
+  color:#eef5ff;
+  box-shadow:none
+}
+.pause-btn strong{font-size:18px;line-height:1;letter-spacing:-.08em}
+.pause-btn small{font-size:6px;font-weight:1000;letter-spacing:.08em;color:#aebbd4}
+.pause-btn:active{transform:translateY(2px);background:rgba(21,33,67,.94)}
+
 
 .board-stage{
   min-height:0;
@@ -494,6 +513,25 @@ button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transp
 }
 .quit-card{width:min(360px,100%);padding:19px;text-align:center}
 .quit-card h2{margin:0 0 8px;font-size:25px}.quit-card p{margin:0 0 14px;color:#c1cde3;font-size:12px;font-weight:800;line-height:1.5}
+
+.pause-backdrop{
+  position:fixed;inset:0;z-index:9100;display:grid;place-items:center;padding:16px;
+  background:rgba(5,9,24,.84);backdrop-filter:blur(7px)
+}
+.pause-card{
+  width:min(360px,100%);padding:22px 19px 19px;text-align:center;
+  border-color:rgba(121,220,255,.30)
+}
+.pause-kicker{display:inline-block;margin-bottom:4px;color:#76e7ff;font-size:9px;font-weight:1000;letter-spacing:.18em}
+.pause-card h2{margin:0 0 7px;font-size:28px}
+.pause-card p{margin:0 0 14px;color:#c5d2e8;font-size:12px;font-weight:800;line-height:1.5}
+.pause-summary{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 14px}
+.pause-summary span{
+  padding:9px 6px;border-radius:13px;background:rgba(255,255,255,.07);
+  color:#9eacc6;font-size:8px;font-weight:1000;letter-spacing:.04em
+}
+.pause-summary strong{display:block;margin-top:2px;color:#fff;font-size:18px;line-height:1}
+
 
 /* animations */
 @keyframes blockDrop{0%{transform:translateY(-18%)}100%{transform:translateY(0)}}
@@ -769,3 +807,16 @@ html[data-hg-motion="reduced"] .burst-ring{
 }
 html[data-hg-motion="reduced"] .combo-fx.show{opacity:1!important;transform:none!important}
 html[data-hg-motion="reduced"] .burst-ring{display:none!important}
+
+
+/* Link Burst pacing + pause 2026-10-11 */
+@media(max-width:390px){
+  .next-panel{gap:6px!important;padding:0!important}
+  .next-box{min-width:48px;padding:5px 4px}
+  .pause-btn{width:38px;min-width:38px}
+}
+@media(max-height:700px){
+  .next-panel{gap:5px!important;padding:0!important}
+  .next-box{min-width:46px;padding:4px}
+  .pause-btn{width:36px;min-width:36px}
+}
