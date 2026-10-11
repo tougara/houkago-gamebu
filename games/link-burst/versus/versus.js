@@ -177,7 +177,7 @@
       '<section class="card versus-rules-card">'+
         '<strong>2人で対戦</strong>'+
         '<p>4色のブロックを4個以上つなげて消そう。先に積み上がった方が負けだよ。</p>'+
-        '<small>テスト版：JAM・COUNTER・対戦記録は未実装</small>'+
+        '<small>JAMで攻撃！ 連鎖でCOUNTERして打ち返そう（試作版・対戦記録は未実装）</small>'+
       '</section>'+
       '<div class="stack versus-actions">'+
         '<button type="button" class="btn" data-launch>2人で対戦をはじめる →</button>'+
