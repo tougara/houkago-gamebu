@@ -216,7 +216,7 @@
 
   function miniPieceHtml(t){
     if(!t)return '';
-    return '<div class="mini-piece"><i class="mini-block p0 c-'+t.a+'"></i><i class="mini-block p1 c-'+t.b+'"></i></div>';
+    return '<div class="mini-piece"><i class="mini-block p0 c-'+t.a+'"><span>'+SYMBOL[t.a]+'</span></i><i class="mini-block p1 c-'+t.b+'"><span>'+SYMBOL[t.b]+'</span></i></div>';
   }
 
   function playScreen(){
