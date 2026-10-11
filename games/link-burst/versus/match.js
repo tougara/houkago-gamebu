@@ -6,7 +6,7 @@
  const SELECT_KEY='houkago_link_burst_versus_players_v1';
  if(!root||!engine)return;
  const match={players:[],games:[],raf:0,last:0,paused:false,ended:false,
-   countdown:3500,held:new Map(),keys:new Set(),boardSignatures:['',''],result:'',confirmBack:false};
+   countdown:3500,held:new Map(),keys:new Set(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[]};
  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
  function landscape(){return window.matchMedia?window.matchMedia('(orientation: landscape)').matches:window.innerWidth>window.innerHeight}
  function selectPlayers(){
@@ -53,7 +53,7 @@
    root.innerHTML='<div class="match-arenas">'+
      arena(0)+
      '<aside class="match-center" aria-label="対戦情報と一時停止">'+
-       '<div class="center-mode"><strong>2人で対戦</strong><small>JAMなし</small></div>'+
+       '<div class="center-mode"><strong>2人で対戦</strong><small>JAM BATTLE</small></div>'+
        '<div class="center-score p1"><small>1P SCORE</small><strong data-score="0">0</strong></div>'+
        '<div class="center-score p2"><small>2P SCORE</small><strong data-score="1">0</strong></div>'+
        '<button class="match-pause" data-pause type="button" aria-label="2人の対戦を一時停止">Ⅱ<span>PAUSE</span></button>'+
@@ -61,7 +61,12 @@
          '<div class="center-link p1"><small>1P LINK</small><strong data-link="0">0</strong></div>'+
          '<div class="center-link p2"><small>2P LINK</small><strong data-link="1">0</strong></div>'+
        '</div>'+
-       '<div class="center-status">同時対戦<br>テスト</div>'+
+       '<div class="center-jam-stack" aria-label="おじゃまブロックの到着予告">'+
+         '<div class="center-jam p1" data-jam-box="0"><span>1P JAM</span><strong data-jam="0">0</strong></div>'+
+         '<div class="center-jam p2" data-jam-box="1"><span>2P JAM</span><strong data-jam="1">0</strong></div>'+
+         '<div class="center-jam-note" data-jam-note="0" aria-live="off"></div>'+
+         '<div class="center-jam-note" data-jam-note="1" aria-live="off"></div>'+
+       '</div>'+
      '</aside>'+
      arena(1)+'</div>'+
      '<div class="match-countdown" data-countdown role="status" aria-live="polite"><strong data-countdown-text>3</strong><p>READY?</p></div>'+
@@ -142,6 +147,12 @@
    }
    const score=root.querySelector('[data-score="'+i+'"]');if(score)score.textContent=st.score.toLocaleString('ja-JP');
    const link=root.querySelector('[data-link="'+i+'"]');if(link)link.textContent=String(st.maxLink);
+   const incoming=engine.incomingCount(st);
+   const jam=root.querySelector('[data-jam="'+i+'"]');if(jam)jam.textContent=String(incoming);
+   const jamBox=root.querySelector('[data-jam-box="'+i+'"]');
+   if(jamBox)jamBox.dataset.pending=incoming>0?'true':'false';
+   const jamNote=root.querySelector('[data-jam-note="'+i+'"]');
+   if(jamNote)jamNote.textContent=st.notice||'';
    const next=root.querySelector('[data-next="'+i+'"]');
    if(next){const future=st.queue[0],key=future?future.a+':'+future.b:'';
       if(next.dataset.pair!==key){next.dataset.pair=key;next.innerHTML=mini(future)}}
@@ -170,6 +181,43 @@
      }
    }
  }
+ // Resolve both players at the SAME boundary. Each player uses their attack
+ // to cancel existing incoming JAM first, then simultaneous new attacks
+ // neutralize one another, and only the leftover crosses the arena.
+ function resolveAttacks(){
+   const ready=match.games.map(function(st){return !st.over&&st.phase==='interturn'});
+   if(!ready[0]&&!ready[1])return;
+   const attacks=match.games.map(function(st,i){return ready[i]?st.readyAttack:0});
+   for(let i=0;i<2;i++)if(ready[i]){
+     const result=engine.counterJam(match.games[i],attacks[i]);
+     attacks[i]=result.remaining;
+   }
+   const mutual=Math.min(attacks[0],attacks[1]);
+   if(mutual){
+     attacks[0]-=mutual;attacks[1]-=mutual;
+     for(let i=0;i<2;i++)if(ready[i]){
+       match.games[i].counteredJam+=mutual;
+       engine.notice(match.games[i],'COUNTER −'+mutual);
+     }
+   }
+   for(let i=0;i<2;i++)if(attacks[i]>0){
+     const other=1-i;
+     engine.queueJam(match.games[other],attacks[i]);
+     match.games[i].sentJam+=attacks[i];
+     engine.notice(match.games[i],'SEND +'+attacks[i]);
+   }
+   for(let i=0;i<2;i++)if(ready[i])engine.finishTurn(match.games[i]);
+ }
+ function sharedPair(index){
+   while(match.pairSequence.length<=index){
+     const colors=engine.COLORS;
+     match.pairSequence.push({
+       a:colors[Math.floor(Math.random()*colors.length)],
+       b:colors[Math.floor(Math.random()*colors.length)]
+     });
+   }
+   return match.pairSequence[index];
+ }
  function frame(ts){
    match.raf=0;
    if(match.paused||match.ended||!landscape()||document.visibilityState==='hidden')return;
@@ -183,6 +231,7 @@
          (i===0?match.keys.has('s'):match.keys.has('arrowdown'));
        engine.tick(match.games[i],dt,soft);
      }
+     resolveAttacks();
      draw(false);finish();
    }
    updateOverlays();
@@ -203,7 +252,8 @@
  }
  function newRound(){
    stop();releaseAll();
-   match.games=match.players.map(function(p){return engine.make(p)});
+   match.pairSequence=[];
+   match.games=match.players.map(function(p){return engine.make(p,sharedPair)});
    match.boardSignatures=['',''];match.paused=false;match.ended=false;match.confirmBack=false;
    match.countdown=3500;match.last=0;
    shell();draw(true);updateOverlays();continueLoop();
