@@ -71,7 +71,7 @@
             '<button type="button" class="versus-edit-button" data-edit-member="'+esc(p.id)+'" aria-label="'+esc(p.name)+'を編集">編集</button></div>';
         }).join('')+'</div>'+
       '</section>'+
-      '<div class="versus-actions"><button class="versus-secondary" type="button" data-back-select>← メンバー選択へ戻る</button></div>';
+      '<div class="versus-actions"><button class="btn secondary" type="button" data-back-select>← メンバー選択へ戻る</button></div>';
   }
   function memberForm(members){
     const member=state.editingId?members.find(function(p){return p.id===state.editingId}):null;
@@ -95,9 +95,9 @@
         '</div>'+
         '<p class="versus-form-help">アイコンは1人1種類。薄く表示されたものは使用中だよ。</p>'+
         '<p class="versus-error" data-form-error role="alert">'+esc(state.notice)+'</p>'+
-        '<button type="submit" class="versus-primary">'+(editing?'変更を保存':'登録して'+(state.target+1)+'Pに設定')+'</button>'+
+        '<button type="submit" class="btn">'+(editing?'変更を保存':'登録して'+(state.target+1)+'Pに設定')+'</button>'+
       '</form>'+
-      '<div class="versus-actions"><button type="button" class="versus-secondary" data-cancel-form>← 保存せず戻る</button></div>'+
+      '<div class="versus-actions"><button type="button" class="btn secondary" data-cancel-form>← 保存せず戻る</button></div>'+
       '<p class="versus-footnote">'+(editing?'名前・アイコンの変更は放課後ゲーム部の共通メンバーに反映されるよ。':'新規登録したメンバーはほかのゲームでも使えるよ。')+'</p>';
   }
   function showSelect(){
