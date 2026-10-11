@@ -51,7 +51,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-11",
     "datetime": "2026-10-11T13:34:32.000+09:00",
     "category": "link",
-    "major": true,
+    "major": false,
     "title": "リンクバーストを縦ペア方式に統一",
     "changes": [
       "新しいペアとNEXTを縦2個表示にし盤面を拡大"
@@ -84,7 +84,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-10",
     "datetime": "2026-10-10T22:03:37.000+09:00",
     "category": "link",
-    "major": true,
+    "major": false,
     "title": "7作目「リンクバースト！」制作開始",
     "changes": [
       "落ちものパズル専用ページの土台を用意"
@@ -128,7 +128,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-10",
     "datetime": "2026-10-10T00:47:08.000+09:00",
     "category": "pita",
-    "major": true,
+    "major": false,
     "title": "ピタ止めに「かんたん」モード追加",
     "changes": [
       "遊びやすい難易度と別ランキングに対応"
@@ -206,7 +206,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-07",
     "datetime": "2026-10-07T09:50:38.000+09:00",
     "category": "tower",
-    "major": true,
+    "major": false,
     "title": "教科書を同じ画面で配置できるように",
     "changes": [
       "選択・配置決定を同じ画面で完結"
@@ -217,7 +217,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-06",
     "datetime": "2026-10-06T21:39:01.000+09:00",
     "category": "tower",
-    "major": true,
+    "major": false,
     "title": "教科書タワーのゲーム進行を実装",
     "changes": [
       "手番ごとに教科書を配置するルールを実装"
@@ -283,7 +283,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-05",
     "datetime": "2026-10-05T07:48:09.000+09:00",
     "category": "site",
-    "major": true,
+    "major": false,
     "title": "共通メンバー登録の原型を追加",
     "changes": [
       "複数ゲームで使うメンバー登録を導入"
@@ -305,7 +305,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-05",
     "datetime": "2026-10-05T00:46:03.000+09:00",
     "category": "docchi",
-    "major": true,
+    "major": false,
     "title": "「みんなはどっち？」を追加",
     "changes": [
       "ゲーム一覧に新作を追加",
