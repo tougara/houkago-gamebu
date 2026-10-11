@@ -75,7 +75,7 @@
   function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
   function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
   async function delay(ms){
-    let remaining=reducedMotion()?Math.min(18,ms):ms;
+    let remaining=ms;
     while(remaining>0){
       if(state.paused){await sleep(60);continue}
       const step=Math.min(remaining,60);
@@ -794,9 +794,9 @@
       const gain=scoreGain(total,link,combo);
       const power=Math.max(1,Math.min(8,link+Math.max(0,combo-1)*2));
       const keys=cells.map(function(c){return c.y+':'+c.x});
-      const chargeWait=reducedMotion()?70:Math.min(270+link*55,520);
-      const clearWait=reducedMotion()?90:Math.min(360+link*28,500);
-      const betweenWait=reducedMotion()?70:Math.min(230+link*75,520);
+      const chargeWait=Math.min(270+link*55,520);
+      const clearWait=Math.min(360+link*28,500);
+      const betweenWait=Math.min(230+link*75,520);
 
       // 1) Anticipation: freeze the board for a beat and make the winning group glow.
       state.chargedKeys=new Set(keys);
@@ -831,11 +831,11 @@
       cells.forEach(function(cell){state.board[cell.y][cell.x]=null});
       state.clearingKeys.clear();
       drawBoard();
-      await delay(reducedMotion()?25:110);
+      await delay(110);
 
       // 3) Fallout: let the player watch the board collapse before checking the next link.
       await applyGravityAnimated(link>=2?94:84);
-      await delay(reducedMotion()?25:150);
+      await delay(150);
 
       groups=findGroups();
       if(groups.length){
