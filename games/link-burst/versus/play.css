@@ -137,3 +137,198 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
   overscroll-behavior:contain;
 }
 .match-dialog-actions a,.match-dialog-actions button{flex-shrink:0}
+
+/* 2026-10-11: enlarge both versus fields; side-bottom console controls */
+/* Reserve a single compact row for players and SCORE. The game field gets
+   the entire remaining height; controls occupy the side gutters, never rows
+   below the playfield. The 7:13 board stays proportional. */
+.match-shell{
+  grid-template-rows:25px minmax(0,1fr);
+  gap:2px;
+  padding-top:max(2px,env(safe-area-inset-top));
+  padding-bottom:max(2px,env(safe-area-inset-bottom));
+}
+.match-top{gap:5px;padding-right:78px;justify-content:center}
+.match-mode{font-size:clamp(11px,1.8vw,15px)}
+.match-phase{font-size:clamp(9px,1.25vw,11px)}
+.match-pause{
+  min-height:25px;
+  min-width:68px;
+  top:max(2px,env(safe-area-inset-top));
+  padding:4px 7px;
+  font-size:11px;
+}
+.match-arenas{gap:4px;min-height:0}
+.arena{
+  grid-template-rows:31px minmax(0,1fr);
+  padding:3px;
+  gap:2px;
+  min-height:0;
+}
+.arena-header{
+  padding:0 4px;
+  min-height:0;
+  overflow:hidden;
+  align-items:center;
+  gap:6px;
+}
+.arena-person{gap:5px;min-width:0}
+.arena-person .avatar{font-size:18px;line-height:1}
+.arena-person .details{min-width:0;overflow:hidden}
+.arena-person small{font-size:9px;line-height:1}
+.arena-person strong{
+  font-size:clamp(11px,1.7vw,14px);
+  line-height:1.15;
+  display:block;
+}
+.arena-score small{font-size:8px;line-height:1}
+.arena-score strong{font-size:clamp(14px,2.2vw,20px);line-height:1.05}
+.arena-core{
+  --versus-field-width:calc((100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 7 / 13);
+  display:grid;
+  grid-template-columns:
+    minmax(0,1.07fr)
+    minmax(0,min(var(--versus-field-width),calc(100% - 136px)))
+    minmax(0,.93fr);
+  grid-template-rows:minmax(0,1fr);
+  column-gap:5px;
+  min-width:0;
+  min-height:0;
+  height:100%;
+  align-items:stretch;
+}
+.arena-field-wrap{
+  width:100%;
+  height:100%;
+  min-height:0;
+  min-width:0;
+  container-type:inline-size;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.arena-field{
+  width:auto;
+  height:100%;
+  height:min(100%,calc(100cqw * 13 / 7));
+  max-width:100%;
+  max-height:100%;
+  aspect-ratio:7 / 13;
+  flex:0 0 auto;
+  border-radius:9px;
+  padding:2px;
+  gap:1px;
+}
+.arena-side{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  align-items:stretch;
+  gap:6px;
+  min-height:0;
+  min-width:0;
+}
+.arena-next{
+  align-self:center;
+  width:min(100%,57px);
+  gap:4px;
+  padding:5px 2px;
+  border-radius:9px;
+}
+.arena-next small{font-size:clamp(8px,1vw,10px);line-height:1}
+.v-mini{
+  width:clamp(22px,3.4vw,31px);
+  height:clamp(46px,7vw,62px);
+  gap:2px;
+}
+.v-mini .v-block{font-size:clamp(10px,1.9vw,16px)}
+.arena-link{font-size:clamp(10px,1.7vw,13px);line-height:1}
+.v-pad-left{
+  align-self:stretch;
+  width:100%;
+  min-width:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,clamp(44px,10vh,60px));
+  gap:5px;
+  align-content:end;
+  padding:0 1px 4px;
+}
+.v-pad-right{
+  width:100%;
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:clamp(54px,12vh,76px);
+  align-content:end;
+  padding:0 1px 4px;
+  margin-top:auto;
+}
+.v-pad-left .v-control[data-action="left"]{grid-column:1;grid-row:1}
+.v-pad-left .v-control[data-action="right"]{grid-column:2;grid-row:1}
+.v-pad-left .v-control[data-action="down"]{grid-column:1 / -1;grid-row:2}
+.v-control{
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:44px;
+  padding:2px;
+  border-radius:11px;
+  font-size:clamp(20px,3.2vw,29px);
+}
+.v-pad-right .v-control[data-action="rotate"]{
+  grid-column:1;
+  grid-row:1;
+  min-height:54px;
+  font-size:clamp(23px,3.5vw,33px);
+  background:linear-gradient(145deg,#8067c2,#3d2f7e);
+}
+.v-control[data-action="down"]{
+  font-size:clamp(22px,3.6vw,32px);
+}
+/* On very narrow landscape screens the left gutter cannot fit two comfortable
+   side-by-side buttons: stack all three instead of reducing targets to ~30px. */
+@media(max-width:690px) and (orientation:landscape){
+  .match-shell{grid-template-rows:22px minmax(0,1fr);padding:2px}
+  .match-top{padding-right:66px}
+  .match-mode{font-size:10px}
+  .match-phase{font-size:9px}
+  .match-pause{min-width:60px;min-height:23px;font-size:10px}
+  .arena{grid-template-rows:25px minmax(0,1fr);padding:2px}
+  .arena-header{padding:0 2px;gap:3px}
+  .arena-person .avatar{font-size:15px}
+  .arena-person strong{font-size:10px}
+  .arena-score strong{font-size:13px}
+  .arena-core{
+    --versus-field-width:calc((100dvh - 61px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 7 / 13);
+    grid-template-columns:minmax(0,1fr) minmax(0,min(var(--versus-field-width),calc(100% - 118px))) minmax(0,.82fr);
+    column-gap:3px;
+  }
+  .arena-next{width:min(100%,45px);padding:3px 1px;gap:2px}
+  .v-mini{width:19px;height:39px}
+  .v-pad-left{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:repeat(3,44px);
+    gap:3px;
+    padding:0 0 3px;
+  }
+  .v-pad-left .v-control[data-action="left"]{grid-column:1;grid-row:1}
+  .v-pad-left .v-control[data-action="right"]{grid-column:1;grid-row:2}
+  .v-pad-left .v-control[data-action="down"]{grid-column:1;grid-row:3}
+  .v-pad-right{
+    grid-template-rows:54px;
+    padding:0 0 3px;
+  }
+  .v-control{font-size:21px;border-radius:8px}
+  .v-pad-right .v-control[data-action="rotate"]{font-size:25px}
+}
+@media(max-height:320px) and (orientation:landscape){
+  .match-shell{grid-template-rows:21px minmax(0,1fr)}
+  .arena{grid-template-rows:24px minmax(0,1fr)}
+  .arena-core{
+    --versus-field-width:calc((100dvh - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 7 / 13);
+  }
+  .v-pad-left{grid-template-rows:repeat(3,42px)}
+  .v-control{min-height:42px}
+  .v-pad-right,.v-pad-right .v-control[data-action="rotate"]{min-height:50px}
+}
