@@ -10,7 +10,7 @@
   "theme_color": "#ffb63e",
   "icons": [
     {
-      "src": "/houkago_gamebu_app_icon_logo_based.png",
+      "src": "/houkago_gamebu_browser_icon_transparent.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any"
