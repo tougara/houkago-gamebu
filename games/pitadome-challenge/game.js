@@ -5,11 +5,12 @@ const settingsApi=window.HoukagoSettings;
 const resumeApi=window.HoukagoResume;
 const RESUME_ID='pitadome-challenge';
 const SOLO_KEY='houkago_pitadome_solo_player_v1';
+const SOLO_PLAYER_ID_KEY='houkago_pitadome_solo_player_id_v1';
 const RANK_KEY='houkago_pitadome_rankings_v1';
 
 const state={
   screen:'title',history:[],gameStarted:false,mode:null,difficulty:'normal',needsOpeningCountdown:true,
-  soloIndex:0,player:null,memberReturn:'title',
+  soloIndex:0,player:null,memberReturn:'title',registerIcon:null,
   round:1,score:0,perfects:0,
   lives:3,target:50,value:0,error:0,resultValue:0,
   baseScore:0,roundScore:0,comment:'',tier:'normal',
@@ -30,16 +31,34 @@ function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Mat
 function topNav(){return '<nav class="top-nav"><button class="nav-pill" data-back>← 1個前にもどる</button><button class="nav-pill" data-home>ゲームをえらぶ</button></nav>'}
 function heading(t,p=''){return '<header class="screen-heading"><h1>'+esc(t)+'</h1>'+(p?'<p>'+esc(p)+'</p>':'')+'</header>'}
 function logo(){return '<img class="title-logo" src="../../pitadome_challenge_logo.png" alt="ピタ止めチャレンジ">'}
-function loadPlayer(){
+function rosterPlayers(){
   const d=playersApi?.load?.();
-  const active=Math.max(1,Number(d?.activeCount)||1);
-  try{state.soloIndex=Math.max(0,Math.min(active-1,Number(localStorage.getItem(SOLO_KEY))||0))}catch(e){state.soloIndex=0}
-  state.player=(d?.players?.[state.soloIndex]||{name:'プレイヤー1',icon:'🐶'});
+  return Array.isArray(d?.players)?d.players:[];
 }
-function saveSoloIndex(i){
-  state.soloIndex=Math.max(0,Number(i)||0);
-  try{localStorage.setItem(SOLO_KEY,String(state.soloIndex))}catch(e){}
-  loadPlayer();
+function loadPlayer(){
+  const players=rosterPlayers();
+  let id='',legacyIndex=0;
+  try{
+    id=localStorage.getItem(SOLO_PLAYER_ID_KEY)||'';
+    legacyIndex=Number(localStorage.getItem(SOLO_KEY)||0);
+  }catch(e){}
+  let idx=id?players.findIndex(p=>p.id===id):-1;
+  if(idx<0)idx=Number.isInteger(legacyIndex)&&legacyIndex>=0&&legacyIndex<players.length?legacyIndex:0;
+  state.soloIndex=idx;
+  state.player=players[idx]||{id:'',name:'プレイヤー1',icon:'🐶'};
+  return players;
+}
+function selectSoloPlayer(id){
+  const players=rosterPlayers();
+  const idx=players.findIndex(p=>p.id===id);
+  if(idx<0)return false;
+  state.soloIndex=idx;
+  state.player=players[idx];
+  try{
+    localStorage.setItem(SOLO_PLAYER_ID_KEY,id);
+    localStorage.setItem(SOLO_KEY,String(idx));
+  }catch(e){}
+  return true;
 }
 function cleanRankEntry(x,i){
   return {
@@ -220,19 +239,49 @@ function difficultyScreen(){
     '</div>';
 }
 function playerSelectScreen(){
-  const d=playersApi?.load?.();
-  const players=(d?.players||[]).slice(0,d?.activeCount||2);
-  return topNav()+heading('プレイヤーを選ぶ','登録済みメンバーから今回遊ぶ人を選べます')+
-    '<section class="card solo-list">'+players.map((p,i)=>'<button class="solo-choice '+(i===state.soloIndex?'selected':'')+'" data-solo-player="'+i+'"><span>'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong></button>').join('')+'</section>'+
-    '<div class="stack"><button class="btn secondary full" data-edit-members>メンバー登録を編集</button><button class="btn full" data-player-done>このプレイヤーで決定</button></div>';
+  loadPlayer();
+  return topNav()+heading('プレイヤーを選ぶ','今回遊ぶプレイヤーは1人です。')+
+    '<section class="card solo-current-card">'+
+      '<div class="solo-current-caption">今回のプレイヤー</div>'+
+      '<div class="solo-current-row"><div class="solo-current-person">'+
+        '<span class="solo-current-icon">'+esc(state.player.icon)+'</span>'+
+        '<strong>'+esc(state.player.name)+'</strong>'+
+      '</div><button class="solo-change-btn" type="button" data-open-player-list>変更</button></div>'+
+    '</section>'+
+    '<div class="stack solo-select-actions"><button class="btn full" type="button" data-player-done>このプレイヤーで決定</button></div>';
 }
-function membersScreen(){
-  const d=playersApi?.load?.();
-  return topNav()+playersApi.renderEditor({
-    min:2,max:10,count:d?.activeCount||2,players:d?.players||[],
-    title:'参加メンバー',subtitle:'名前とアイコンは放課後ゲーム部の全ゲームで共通です',
-    doneLabel:'登録をおわる'
-  });
+function playerListScreen(){
+  loadPlayer();
+  const players=rosterPlayers();
+  const limit=playersApi?.ROSTER_MAX||15;
+  return topNav()+heading('プレイヤーを変更','登録済みのメンバーから1人選んでね。')+
+    '<section class="card solo-list">'+players.map(p=>{
+      const selected=p.id===state.player.id;
+      return '<button type="button" class="solo-choice '+(selected?'selected':'')+'" data-solo-player-id="'+esc(p.id)+'" aria-pressed="'+selected+'">'+
+        '<span>'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong>'+(selected?'<small>選択中</small>':'')+'</button>';
+    }).join('')+'</section>'+
+    '<div class="stack solo-select-actions">'+
+      '<button class="btn secondary full" type="button" data-player-add '+(players.length>=limit?'disabled':'')+'>＋ 新しいプレイヤーを登録</button>'+
+      (players.length>=limit?'<p class="solo-hint">登録は最大'+limit+'人までです。</p>':'')+
+    '</div>';
+}
+function playerRegisterScreen(){
+  const data=playersApi?.load?.();
+  const used=new Set((data?.roster||[]).map(p=>p.icon));
+  const free=(playersApi?.ICONS||[]).filter(icon=>!used.has(icon));
+  const chosen=free.includes(state.registerIcon)?state.registerIcon:free[0];
+  return topNav()+heading('新しく登録','名前とアイコンを決めてね。')+
+    '<form class="card solo-register" data-player-register>'+
+      '<label class="solo-register-label" for="solo-register-name">プレイヤー名</label>'+
+      '<input id="solo-register-name" name="playerName" type="text" maxlength="12" autocomplete="off" placeholder="名前を入力" required>'+
+      '<div class="solo-register-label">アイコンを選ぶ</div>'+
+      '<div class="solo-register-icons">'+free.map(icon=>
+        '<button type="button" class="solo-icon-choice '+(icon===chosen?'selected':'')+'" data-register-icon="'+esc(icon)+'" aria-label="'+esc(icon)+'" aria-pressed="'+(icon===chosen)+'">'+esc(icon)+'</button>'
+      ).join('')+'</div>'+
+      '<p class="solo-register-error" data-register-error role="alert"></p>'+
+      '<button class="btn full" type="submit">このプレイヤーを登録する</button>'+
+      '<button class="btn secondary full" type="button" data-register-cancel>登録せずに戻る</button>'+
+    '</form>';
 }
 function rulesScreen(){
   return topNav()+heading('あそびかた','止めるだけ。でもラウンドごとに条件が変わる！')+
@@ -621,7 +670,7 @@ function rankingScreen(){
     '<button class="btn secondary full rules-bottom-back" data-rank-back>← もどる</button>';
 }
 function screenHtml(){
-  return({title:titleScreen,mode:modeScreen,difficulty:difficultyScreen,playerSelect:playerSelectScreen,members:membersScreen,rules:rulesScreen,play:playScreen,roundResult:roundResultScreen,final:finalScreen,ranking:rankingScreen}[state.screen]||titleScreen)();
+  return({title:titleScreen,mode:modeScreen,difficulty:difficultyScreen,playerSelect:playerSelectScreen,playerList:playerListScreen,playerRegister:playerRegisterScreen,rules:rulesScreen,play:playScreen,roundResult:roundResultScreen,final:finalScreen,ranking:rankingScreen}[state.screen]||titleScreen)();
 }
 function resumeSnapshot(){
   const s={...state,running:false,countdownId:null,rafId:null,lastTs:0};
@@ -738,13 +787,51 @@ function bind(){
   document.querySelector('[data-change-player]')?.addEventListener('click',()=>{state.memberReturn='mode';go('playerSelect')});
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;go('difficulty')}));
   document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>beginGame(state.mode,b.dataset.difficulty)));
-  document.querySelectorAll('[data-solo-player]').forEach(b=>b.addEventListener('click',()=>{saveSoloIndex(Number(b.dataset.soloPlayer));render()}));
-  document.querySelector('[data-edit-members]')?.addEventListener('click',()=>go('members'));
-  document.querySelector('[data-player-done]')?.addEventListener('click',()=>{loadPlayer();returnTo(state.memberReturn==='title'?'title':'mode')});
-  document.querySelectorAll('[data-member-count]').forEach(b=>b.addEventListener('click',()=>{playersApi?.setActiveCount?.(Number(b.dataset.memberCount));render()}));
-  document.querySelectorAll('[data-member-name]').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.memberName);playersApi?.setPlayer?.(i,{name:inp.value||('プレイヤー'+(i+1))});render()}));
-  document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{playersApi?.setPlayer?.(Number(b.dataset.memberIcon),{icon:b.dataset.icon});render()}));
-  document.querySelector('[data-members-done]')?.addEventListener('click',()=>returnTo('playerSelect'));
+  document.querySelector('[data-open-player-list]')?.addEventListener('click',()=>go('playerList'));
+  document.querySelectorAll('[data-solo-player-id]').forEach(b=>b.addEventListener('click',()=>{
+    if(selectSoloPlayer(b.dataset.soloPlayerId))doBackOne();
+  }));
+  document.querySelector('[data-player-add]')?.addEventListener('click',()=>{
+    state.registerIcon=null;
+    go('playerRegister');
+  });
+  document.querySelectorAll('[data-register-icon]').forEach(b=>b.addEventListener('click',()=>{
+    state.registerIcon=b.dataset.registerIcon;
+    document.querySelectorAll('[data-register-icon]').forEach(option=>{
+      const selected=option===b;
+      option.classList.toggle('selected',selected);
+      option.setAttribute('aria-pressed',String(selected));
+    });
+  }));
+  document.querySelector('[data-register-cancel]')?.addEventListener('click',doBackOne);
+  document.querySelector('[data-player-register]')?.addEventListener('submit',e=>{
+    e.preventDefault();
+    const form=e.currentTarget;
+    const error=form.querySelector('[data-register-error]');
+    const name=form.querySelector('[name="playerName"]').value.trim();
+    const before=playersApi?.load?.();
+    if(!before||!playersApi?.addPlayer||!playersApi?.setPlayer){error.textContent='登録機能を読み込めませんでした。';return}
+    if(!name){error.textContent='名前を入力してください。';return}
+    if(before.roster.length>=playersApi.ROSTER_MAX){error.textContent='登録できる人数の上限です。';return}
+    const used=new Set(before.roster.map(p=>p.icon));
+    const free=playersApi.ICONS.filter(icon=>!used.has(icon));
+    const icon=free.includes(state.registerIcon)?state.registerIcon:free[0];
+    if(!icon){error.textContent='使用できるアイコンがありません。';return}
+    const after=playersApi.addPlayer(name);
+    const oldIds=new Set(before.roster.map(p=>p.id));
+    const created=after.roster.find(p=>!oldIds.has(p.id));
+    if(!created){error.textContent='登録できませんでした。';return}
+    const idx=after.players.findIndex(p=>p.id===created.id);
+    if(idx>=0&&created.icon!==icon)playersApi.setPlayer(idx,{icon});
+    selectSoloPlayer(created.id);
+    state.registerIcon=null;
+    state.history.pop();
+    doBackOne();
+  });
+  document.querySelector('[data-player-done]')?.addEventListener('click',()=>{
+    loadPlayer();
+    returnTo(state.memberReturn==='title'?'title':'mode');
+  });
   const stopBtn=document.querySelector('[data-stop]');
   stopBtn?.addEventListener('pointerdown',e=>{e.preventDefault();stopRound()},{passive:false});
   const nextBtn=document.querySelector('[data-next-round]');
