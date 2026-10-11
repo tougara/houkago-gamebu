@@ -199,6 +199,7 @@
         }).join('')+'</div>'+
         '<p class="solo-register-error" data-register-error role="alert"></p>'+
         '<button class="btn" type="submit">このプレイヤーを登録する</button>'+
+        '<button class="btn secondary" type="button" data-register-cancel>登録せずに戻る</button>'+
       '</form>';
   }
 
@@ -462,6 +463,7 @@
         });
       });
     });
+    document.querySelector('[data-register-cancel]')&&document.querySelector('[data-register-cancel]').addEventListener('click',doBack);
     document.querySelector('[data-player-register]')&&document.querySelector('[data-player-register]').addEventListener('submit',function(e){
       e.preventDefault();
       const form=e.currentTarget;
