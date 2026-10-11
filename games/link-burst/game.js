@@ -415,7 +415,11 @@
       b.addEventListener('click',function(){saveSoloIndex(Number(b.dataset.soloPlayer));render()});
     });
     document.querySelector('[data-edit-members]')&&document.querySelector('[data-edit-members]').addEventListener('click',function(){go('members')});
-    document.querySelector('[data-player-done]')&&document.querySelector('[data-player-done]').addEventListener('click',function(){loadPlayer();doBack()});
+    document.querySelector('[data-player-done]')&&document.querySelector('[data-player-done]').addEventListener('click',function(){
+      loadPlayer();
+      if(state.history[state.history.length-1]==='playType')go('mode');
+      else doBack();
+    });
     document.querySelectorAll('[data-member-count]').forEach(function(b){
       b.addEventListener('click',function(){playersApi&&playersApi.setActiveCount&&playersApi.setActiveCount(Number(b.dataset.memberCount));loadPlayer();render()});
     });
@@ -435,7 +439,7 @@
       });
     });
     document.querySelector('[data-members-done]')&&document.querySelector('[data-members-done]').addEventListener('click',function(){loadPlayer();if(state.history[state.history.length-1]==='playerSelect')state.history.pop();state.screen='playerSelect';render()});
-    document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('mode')});
+    document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('playerSelect')});
     document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){beginGame(b.dataset.mode)})});
     document.querySelectorAll('[data-ranking]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=state.mode||'endless';go('ranking')})});
     document.querySelectorAll('[data-rank-mode]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=b.dataset.rankMode;render()})});
