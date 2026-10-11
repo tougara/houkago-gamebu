@@ -1470,3 +1470,88 @@ html[data-hg-motion="reduced"] .score-milestone.show{
   .score-milestone.show{animation:none!important}
   .score-milestone.show{opacity:1;transform:translate(-50%,-50%)}
 }
+
+/* Compact HUD / free vertical room for the playfield (2026-10-11) */
+/* The score itself remains centered. Put SCORE and BEST on one small header
+   line to avoid an oversized three-row HUD. No board cell size/rule changes. */
+.link-burst-app.screen-play{
+  gap:3px;
+}
+.screen-play{
+  --lb-rail-width:clamp(48px,14vw,60px);
+}
+.screen-play .play-hud{
+  margin:0;
+}
+.screen-play .score-panel{
+  align-items:stretch;
+}
+.screen-play .hud-box{
+  height:48px;
+  min-height:0;
+  padding:4px 5px;
+  align-content:center;
+  border-radius:12px;
+}
+.screen-play .hud-box small{
+  font-size:clamp(9px,2.45vw,10px);
+  line-height:1;
+}
+.screen-play .hud-box strong{
+  margin-top:2px;
+  font-size:clamp(18px,5vw,23px);
+  line-height:1;
+}
+.screen-play .score-box{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-rows:11px minmax(0,1fr);
+  align-content:center;
+  align-items:center;
+  justify-items:stretch;
+  padding:4px 7px;
+  text-align:center;
+}
+.screen-play .score-box small{
+  grid-column:1;
+  grid-row:1;
+  justify-self:start;
+}
+.screen-play .score-box em{
+  grid-column:2;
+  grid-row:1;
+  justify-self:end;
+  margin:0;
+  font-size:clamp(7px,1.9vw,9px);
+  line-height:1;
+  white-space:nowrap;
+}
+.screen-play .score-box strong{
+  grid-column:1 / -1;
+  grid-row:2;
+  justify-self:center;
+  margin:0;
+  max-width:100%;
+  font-size:clamp(22px,6vw,30px);
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+/* Let the existing 7:13 board fill the taller middle grid row naturally.
+   Do not stretch the 7x13 cells or overrule the height/width constraints. */
+@media(max-width:390px){
+  .screen-play .hud-box{
+    height:45px;
+    min-height:0;
+    padding:3px 4px;
+  }
+  .screen-play .score-box{padding:3px 6px}
+}
+@media(max-height:700px){
+  .screen-play .hud-box{
+    height:42px;
+    min-height:0;
+    padding:3px 4px;
+  }
+  .screen-play .score-box{padding:3px 6px}
+  .screen-play .score-box strong{font-size:clamp(20px,5.5vw,27px)}
+}
