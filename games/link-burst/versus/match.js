@@ -61,8 +61,10 @@
  function releasePointer(pointerId){
    const entry=match.held.get(pointerId);
    if(!entry)return;
-   entry.button.classList.remove('is-held');
    match.held.delete(pointerId);
+   if(!Array.from(match.held.values()).some(function(h){return h.button===entry.button})){
+     entry.button.classList.remove('is-held');
+   }
  }
  function releaseAll(){
    for(const id of Array.from(match.held.keys()))releasePointer(id);
@@ -135,12 +137,10 @@
    for(const held of match.held.values()){
      if(held.action!=='left'&&held.action!=='right')continue;
      held.elapsed+=dt;
-     if(held.elapsed>=230){
-       while(held.elapsed>=230+held.repeats*82){
-         engine.move(match.games[held.side],held.action==='left'?-1:1);
-         held.repeats++;
-         if(held.repeats>=10)break;
-       }
+     let repeatCount=0;
+     while(held.elapsed>=held.nextRepeat&&repeatCount++<3){
+       engine.move(match.games[held.side],held.action==='left'?-1:1);
+       held.nextRepeat+=82;
      }
    }
  }
@@ -199,7 +199,7 @@
    const side=Number(button.dataset.side),action=button.dataset.action;
    if(![0,1].includes(side)||!['left','right','down','rotate'].includes(action))return;
    // Each pointer captures only its own button. Releasing 1P cannot cancel 2P.
-   const entry={side:side,action:action,button:button,elapsed:0,repeats:1};
+   const entry={side:side,action:action,button:button,elapsed:0,nextRepeat:230};
    match.held.set(e.pointerId,entry);
    button.classList.add('is-held');
    try{button.setPointerCapture(e.pointerId)}catch(err){}
