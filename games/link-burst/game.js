@@ -69,6 +69,7 @@
   let repeatDelayId=null;
   let repeatId=null;
   let countdownTimer=null;
+  let soloFinishTimer=null;
 
   function makeBoard(){
     return Array.from({length:ROWS},()=>Array(COLS).fill(null));
@@ -699,6 +700,7 @@
   }
 
   function beginGame(mode){
+    clearSoloFinale();
     loadPlayer();
     state.mode=mode||'endless';
     state.rankMode=state.mode;
@@ -1304,9 +1306,78 @@
     state.rankResult=addRanking(reason);
     recordShared();
     resumeApi&&resumeApi.clear&&resumeApi.clear(RESUME_ID);
-    state.screen='result';
     state.history=[];
-    render();
+    // Keep the exact last board/HUD in the DOM. Only add the finish visuals.
+    updateHud();
+    showSoloFinale(reason);
+  }
+
+  function clearSoloFinale(){
+    if(soloFinishTimer!==null){clearTimeout(soloFinishTimer);soloFinishTimer=null}
+    document.querySelector('[data-solo-finale]')?.remove();
+    app.classList.remove('lb-game-finished');
+  }
+
+  function showSoloFinale(reason){
+    clearSoloFinale();
+    if(state.screen!=='play')return;
+    const rank=state.rankResult||{};
+    const headline=reason==='time'?'TIME UP!':'GAME OVER!';
+    const kicker=state.mode==='timed'?'2 MINUTES':'ENDLESS MODE';
+    const award=rank.modeBest?'NEW HIGH SCORE!':
+      rank.personalBest?'PERSONAL BEST!':
+      rank.rank?'RANK IN!  '+rank.rank+'位':'CHALLENGE COMPLETE';
+    const finale=document.createElement('div');
+    finale.className='lb-solo-finale';
+    finale.setAttribute('data-solo-finale','');
+    finale.setAttribute('role','region');
+    finale.setAttribute('aria-label','プレイ結果');
+    const sparks=Array.from({length:16},function(_,i){
+      const x=10+(i*43%81),y=12+(i*31%72);
+      return '<i style="--sx:'+x+'%;--sy:'+y+'%;--sd:'+(i%5*65)+'ms" aria-hidden="true"></i>';
+    }).join('');
+    finale.innerHTML=
+      '<div class="lb-finale-flash" aria-hidden="true"></div>'+
+      '<div class="lb-finale-ring" aria-hidden="true"></div>'+
+      '<div class="lb-finale-sparks" aria-hidden="true">'+sparks+'</div>'+
+      '<div class="lb-finale-head" aria-live="polite">'+
+        '<small>'+kicker+' / FINAL RESULT</small>'+
+        '<strong>'+headline+'</strong>'+
+        '<span>'+esc(award)+'</span>'+
+      '</div>'+
+      '<div class="lb-finale-actions" data-solo-finale-actions hidden>'+
+        '<div class="lb-finale-score"><small>FINAL SCORE</small><strong>'+state.score.toLocaleString('ja-JP')+'</strong>'+
+          '<span>MAX LINK '+state.maxLink+'　/　COMBO '+state.maxCombo+'　/　CLEAR '+state.clears+'</span></div>'+
+        '<div class="lb-finale-buttons">'+
+          '<button type="button" data-solo-final-retry>もう一回！</button>'+
+          '<button type="button" data-solo-final-mode>モードを変える</button>'+
+        '</div>'+
+        '<div class="lb-finale-links">'+
+          '<button type="button" data-solo-final-ranking>ランキングを見る</button>'+
+          '<button type="button" data-solo-final-home>ゲームをえらぶ</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(finale);
+    app.classList.add('lb-game-finished');
+    finale.querySelector('[data-solo-final-retry]').addEventListener('click',function(){
+      clearSoloFinale();beginGame(state.mode);
+    });
+    finale.querySelector('[data-solo-final-mode]').addEventListener('click',function(){
+      clearSoloFinale();state.history=['title','playType'];state.screen='mode';render();
+    });
+    finale.querySelector('[data-solo-final-ranking]').addEventListener('click',function(){
+      clearSoloFinale();state.rankMode=state.mode;state.history=['title'];state.screen='ranking';render();
+    });
+    finale.querySelector('[data-solo-final-home]').addEventListener('click',function(){
+      clearSoloFinale();location.href='../';
+    });
+    const motionReduced=reducedMotion()||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    soloFinishTimer=setTimeout(function(){
+      soloFinishTimer=null;
+      if(!finale.isConnected)return;
+      const actions=finale.querySelector('[data-solo-finale-actions]');
+      if(actions)actions.hidden=false;
+    },motionReduced?450:2150);
   }
 
   function resumeSnapshot(){
@@ -1353,6 +1424,7 @@
   }
   function restoreResume(saved){
     if(!saved)return;
+    clearSoloFinale();
     clearCountdownTimer();
     state.countdownActive=false;
     state.countdownStep=3;
