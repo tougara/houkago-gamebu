@@ -41,13 +41,13 @@
        '</div>'+
        '<div class="arena-board-stack">'+
          '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+
-         '<div class="v-pad-bottom" aria-label="'+side+'Pの回転操作">'+
-           '<button class="v-control" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
-         '</div>'+
        '</div>'+
        '<div class="arena-side">'+
          '<aside class="arena-next"><small>NEXT</small><div data-next="'+i+'"></div>'+
            '<small>LINK</small><div class="arena-link" data-link="'+i+'">0</div></aside>'+
+         '<div class="v-pad-right" aria-label="'+side+'Pの回転操作">'+
+           '<button class="v-control" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
+         '</div>'+
        '</div>'+
      '</div></section>';
  }
