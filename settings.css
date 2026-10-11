@@ -382,3 +382,17 @@ body.hg-settings-open{overflow:hidden!important}
     max-width:36px!important;
   }
 }
+
+/* Sticky game navigation / 2026-10-11
+   Header remains in normal layout flow. Do not change button sizes,
+   screen-play rows, game logic, or the behavior of back/home/settings. */
+.top-nav{
+  position:sticky!important;
+  top:0!important;
+  z-index:60!important;
+  isolation:isolate;
+  border-radius:16px;
+  background:rgba(225,231,244,.10);
+  -webkit-backdrop-filter:blur(9px);
+  backdrop-filter:blur(9px);
+}
