@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="update-history.css" />
   <link rel="stylesheet" href="settings.css" />
   <link rel="stylesheet" href="resume.css" />
-  <link rel="stylesheet" href="site-history.css" />
 </head>
 <body class="home-page">
   <main class="site-shell home-shell">
@@ -31,27 +30,13 @@
           <button class="home-record-btn" id="openPlayerRecords" type="button">プレイヤー記録</button>
           <div class="home-tools-row">
             <button class="home-settings-btn" type="button" data-hg-settings-open>⚙ 共通設定</button>
-            <button class="home-history-btn" type="button" id="openSiteHistory">▤ 更新履歴</button>
+            <button class="hg-history-home-btn" id="openUpdateHistory" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="homeUpdateHistoryOverlay">▤ 更新履歴</button>
           </div>
-          <button class="hg-history-home-btn" id="openUpdateHistory" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="homeUpdateHistoryOverlay">▤ 更新履歴</button>
           <div class="hg-resume-slot" id="homeResumeSlot" hidden></div>
         </div>
       </div>
     </section>
   </main>
-  <div class="site-history-overlay" id="siteHistoryOverlay" hidden>
-    <section class="site-history-dialog" role="dialog" aria-modal="true" aria-labelledby="siteHistoryTitle">
-      <header class="site-history-head">
-        <div class="site-history-head-text">
-          <span class="site-history-kicker">UPDATE HISTORY</span>
-          <h2 id="siteHistoryTitle">放課後ゲーム部 更新履歴</h2>
-          <p>全ゲームと共通機能のこれまでの記録</p>
-        </div>
-        <button class="site-history-close" type="button" id="closeSiteHistory" aria-label="更新履歴を閉じる">×</button>
-      </header>
-      <div class="site-history-content" id="siteHistoryContent" role="region" aria-label="更新の一覧"></div>
-    </section>
-  </div>
   <div class="player-registry-overlay" id="playerRegistryOverlay" hidden>
     <section class="player-registry-modal" role="dialog" aria-modal="true" aria-labelledby="registryTitle">
       <div class="player-registry-head">
@@ -84,8 +69,6 @@
   <script src="player-registry.js"></script>
   <script src="settings.js"></script>
   <script src="resume.js"></script>
-  <script src="site-changelog.js"></script>
-  <script src="site-history.js"></script>
   <script src="home.js"></script>
   <script src="changelog.js"></script>
   <script src="update-history.js"></script>
