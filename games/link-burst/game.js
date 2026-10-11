@@ -20,7 +20,7 @@
   const SOLO_PLAYER_ID_KEY='houkago_link_burst_solo_player_id_v1';
   const TUTORIAL_KEY='houkago_link_burst_tutorial_seen_v1';
   const COLORS=['blue','red','yellow','green'];
-  const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇',purple:'♠'};
+  const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇'};
 
   const ROTATIONS=[
     [[0,0,'a'],[1,0,'b']],
