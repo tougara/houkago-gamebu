@@ -965,3 +965,24 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
   .arena-core .v-pad-right .v-control[data-action="rotate"]{min-height:40px}
   .match-center .match-pause{min-height:45px}
 }
+
+/* Versus V6: move 1P outward left and 2P outward right */
+/* Use existing free space outside each player's complete control/field/NEXT
+   group instead of centering it. This separates two players' hands, keeps
+   block cells exactly the same size, and leaves the common center HUD fixed. */
+.arena[data-side="0"] .arena-core{
+  justify-content:start;
+}
+.arena[data-side="1"] .arena-core{
+  justify-content:end;
+}
+/* Match the player-name anchor to the shifted control group so names continue
+   to sit above its left gutter, not across the board. */
+.arena[data-side="0"] .arena-header{
+  left:4px;
+}
+.arena[data-side="1"] .arena-header{
+  left:max(4px,calc(100% - var(--v5-left) - var(--v5-board) - var(--v5-right) - 8px));
+}
+/* At very narrow widths these groups already fill the available panel.
+   Keep the same alignment; the existing width caps prevent horizontal spill. */
