@@ -139,12 +139,12 @@
     '</section>';
   }
   function selectScreen(members){
-    return heading('2人対戦モード','対戦する2人をえらんでね。')+
+    return heading('2人で対戦モード','対戦する2人をえらんでね。')+
       currentCard(members,true)+
       '<div class="choice-grid">'+
         '<button type="button" class="choice-card versus" data-ready '+(state.ids.length!==2?'disabled':'')+'>'+
           '<span class="mode-badge">VERSUS</span>'+
-          '<strong>2人KO対戦</strong>'+
+          '<strong>2人で対戦</strong>'+
           '<span>2人で同時に勝負。対戦準備へ進む →</span>'+
         '</button>'+
       '</div>'+
@@ -175,12 +175,12 @@
     return heading('対戦の準備','スマホを横向きにして、2人で同時にプレイしよう。')+
       currentCard(members,false)+
       '<section class="card versus-rules-card">'+
-        '<strong>2人KO対戦</strong>'+
+        '<strong>2人で対戦</strong>'+
         '<p>5色のブロックを4個以上つなげて消そう。先に積み上がった方が負けだよ。</p>'+
         '<small>テスト版：JAM・COUNTER・対戦記録は未実装</small>'+
       '</section>'+
       '<div class="stack versus-actions">'+
-        '<button type="button" class="btn" data-launch>2人KO対戦をはじめる →</button>'+
+        '<button type="button" class="btn" data-launch>2人で対戦をはじめる →</button>'+
         '<button type="button" class="btn secondary" data-change>← プレイヤーを変更</button>'+
       '</div>';
   }
