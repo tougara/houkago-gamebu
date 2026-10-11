@@ -107,7 +107,7 @@
   function scan(st){
     const groups=findGroups(st);
     if(groups.length){
-      st.groups=groups;st.phase='charge';st.phaseMs=260;return;
+      st.groups=groups;st.phase='charge';st.phaseMs=185;return;
     }
     st.groups=[];st.phaseMs=0;
     if(topOut(st)){st.over=true;st.phase='over';st.piece=null;return}
@@ -146,8 +146,8 @@
     st.groups=[];
     compress(st);
     st.phase='settle';
-    st.phaseMs=220;
-    st.flashMs=400;
+    st.phaseMs=135;
+    st.flashMs=360;
   }
   function speed(st){
     const steps=st.pieces<20?0:Math.floor((st.pieces-20)/8)+1;
@@ -179,9 +179,10 @@
   function queueJam(st,count){
     count=Math.max(0,Math.floor(Number(count)||0));
     if(!count||st.over)return;
-    // An already falling pair never counts as the mandatory new defensive pair.
-    const delay=st.phase==='falling'?2:1;
-    st.jamQueue.push({count,readyAfter:st.pieces+delay});
+    // JAM is signalled immediately. It lands at the next safe turn boundary:
+    // the pair already being controlled is the counter opportunity.
+    // This avoids waiting for two complete pairs after every attack.
+    st.jamQueue.push({count,readyAfter:st.pieces+1});
     st.receivedJam+=count;
   }
   function dropDueJam(st){
