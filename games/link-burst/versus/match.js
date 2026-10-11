@@ -6,7 +6,7 @@
  const SELECT_KEY='houkago_link_burst_versus_players_v1';
  if(!root||!engine)return;
  const match={players:[],games:[],raf:0,last:0,paused:false,ended:false,
-   countdown:3500,held:new Map(),keys:new Set(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[]};
+   countdown:3500,held:new Map(),keys:new Set(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[],finishTimer:0};
  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
  function landscape(){return window.matchMedia?window.matchMedia('(orientation: landscape)').matches:window.innerWidth>window.innerHeight}
  function selectPlayers(){
@@ -85,10 +85,19 @@
           '<button type="button" data-cancel-back>キャンセルして一時停止に戻る</button>'+
           '<button type="button" class="secondary" data-confirm-back>対戦準備に戻る</button>'+
         '</div></div></div>'+
-     '<div class="match-overlay" data-result hidden><div class="match-dialog" role="dialog" aria-label="対戦結果">'+
-        '<h2 data-winner>勝負あり！</h2><p data-outcome>KOで決着</p>'+
-        '<div class="match-dialog-actions"><button data-retry>同じ2人で再戦</button>'+
-        '<a class="secondary" href="./">2人を選び直す</a></div></div></div>'+
+     '<div class="vs-finale" data-result hidden aria-live="polite">'+
+        '<div class="vs-finale-flash" aria-hidden="true"></div>'+
+        '<div class="vs-finale-ring" aria-hidden="true"></div>'+
+        '<div class="vs-finale-impact" aria-hidden="true">K.O.!</div>'+
+        '<div class="vs-finale-actions" data-finale-actions hidden>'+
+          '<div class="vs-finale-summary" role="region" aria-label="対戦結果">'+
+            '<small>BATTLE RESULT</small><h2 data-winner>勝負あり！</h2><p data-outcome>KOで決着</p>'+
+          '</div>'+
+          '<div class="vs-finale-buttons">'+
+            '<button type="button" data-retry>もう一戦！</button>'+
+            '<a href="./">2人を選び直す</a>'+
+          '</div>'+
+        '</div></div>'+
      '<div class="match-rotate-overlay" data-rotate hidden><div><strong>スマホを横向きにしてね</strong><p>左右の盤面を並べて2人で操作するよ。<br>縦画面ではゲームを停止するよ。</p></div></div>';
  }
  function releasePointer(pointerId){
@@ -165,16 +174,32 @@
  }
  function draw(force){drawArena(0,force);drawArena(1,force)}
  function finish(){
+   if(match.ended)return;
    const p1=match.games[0].over,p2=match.games[1].over;
    if(!p1&&!p2)return;
+   // Preserve the simultaneous-KO draw rule and both final boards.
    match.ended=true;stop();releaseAll();
-   const message=p1&&p2?'引き分け！':p1?'2P WIN!':'1P WIN!';
-   const winner=p1&&!p2?match.players[1]:p2&&!p1?match.players[0]:null;
+   const winningSide=p1&&p2?-1:(p1?1:0);
+   const message=winningSide<0?'DRAW!':(winningSide+1)+'P WIN!';
+   const winner=winningSide<0?null:match.players[winningSide];
+   root.dataset.finished='true';
+   root.querySelectorAll('.arena').forEach(function(arena,i){
+     arena.dataset.finish=winningSide<0?'draw':(i===winningSide?'win':'lose');
+   });
    const header=root.querySelector('[data-winner]');
    if(header)header.textContent=message;
    const outcome=root.querySelector('[data-outcome]');
    if(outcome)outcome.textContent=winner?winner.icon+' '+winner.name+' の勝利！':'両者同時KO！';
    updateOverlays();
+   if(match.finishTimer)clearTimeout(match.finishTimer);
+   const reduced=document.documentElement.dataset.hgMotion==='reduced'||
+      (window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+   match.finishTimer=setTimeout(function(){
+     match.finishTimer=0;
+     if(!match.ended)return;
+     const actions=root.querySelector('[data-finale-actions]');
+     if(actions)actions.hidden=false;
+   },reduced?450:2250);
  }
  function repeatActions(dt){
    for(const held of match.held.values()){
@@ -264,6 +289,7 @@
    match.confirmBack=false;match.paused=false;updateOverlays();continueLoop();
  }
  function newRound(){
+   if(match.finishTimer){clearTimeout(match.finishTimer);match.finishTimer=0}
    stop();releaseAll();
    match.pairSequence=[];
    match.games=match.players.map(function(p){return engine.make(p,sharedPair)});
