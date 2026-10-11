@@ -19,8 +19,8 @@
   const SOLO_KEY='houkago_link_burst_solo_index_v1';
   const SOLO_PLAYER_ID_KEY='houkago_link_burst_solo_player_id_v1';
   const TUTORIAL_KEY='houkago_link_burst_tutorial_seen_v1';
-  const COLORS=['blue','red','yellow','green'];
-  const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇'};
+  const COLORS=['blue','red','yellow','green','purple'];
+  const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇',purple:'♠'};
 
   const ROTATIONS=[
     [[0,0,'a'],[1,0,'b']],
@@ -206,7 +206,7 @@
   function rulesScreen(){
     return topNav()+heading('あそびかた','基本は4つ。置いたあとの分離がポイント。')+
       '<div class="rules-wrap">'+
-        '<section class="card rule-card"><h2>1. 最初は縦2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
+        '<section class="card rule-card"><h2>1. 最初は縦2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は5色（青・赤・黄・緑・紫）から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
         '<section class="card rule-card"><h2>2. LOCKすると2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
         '<section class="card rule-card"><h2>3. 同じ色を4個以上つなげる</h2><p>上下左右につながった同色4個以上で消去。消したあとにまた4個つながると2 LINK、3 LINK…と続きます。</p></section>'+
         '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span class="demo-left">←</span><span class="demo-right">→</span><span class="demo-rotate">↻</span><span class="demo-down">↓</span></div><p>上段は← → ↻、下段は←と→の中央に↓。←→は長押し移動、↓は高速落下、↻は90°右回転です。<br>キーボードは A＝左、D＝右、S＝下、Enter＝回転。矢印キーでも操作できます。</p></section>'+
