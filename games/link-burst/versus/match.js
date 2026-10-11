@@ -41,7 +41,10 @@
          '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+
        '</div>'+
        '<div class="arena-side">'+
-         '<aside class="arena-next"><small>NEXT</small><div data-next="'+i+'"></div></aside>'+
+         '<aside class="arena-next">'+
+           '<div class="v-next-entry"><small>NEXT</small><div data-next="'+i+'"></div></div>'+
+           '<div class="v-next-entry v-next-second"><small>NEXT2</small><div data-next2="'+i+'"></div></div>'+
+         '</aside>'+
          '<div class="v-pad-right" aria-label="'+side+'Pの回転操作">'+
            '<button class="v-control" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
          '</div>'+
@@ -51,6 +54,7 @@
  function shell(){
    root.className='match-shell';
    root.innerHTML='<div class="match-arenas">'+
+     '<div class="jam-flight-layer" data-jam-flight aria-hidden="true"></div>'+
      arena(0)+
      '<aside class="match-center" aria-label="対戦情報と一時停止">'+
        '<div class="center-mode"><strong>2人で対戦</strong><small>JAM BATTLE</small></div>'+
@@ -156,6 +160,9 @@
    const next=root.querySelector('[data-next="'+i+'"]');
    if(next){const future=st.queue[0],key=future?future.a+':'+future.b:'';
       if(next.dataset.pair!==key){next.dataset.pair=key;next.innerHTML=mini(future)}}
+   const next2=root.querySelector('[data-next2="'+i+'"]');
+   if(next2){const future2=st.queue[1],key2=future2?future2.a+':'+future2.b:'';
+      if(next2.dataset.pair!==key2){next2.dataset.pair=key2;next2.innerHTML=mini(future2)}}
  }
  function draw(force){drawArena(0,force);drawArena(1,force)}
  function finish(){
@@ -181,6 +188,12 @@
      }
    }
  }
+ // A quick non-blocking visual makes the send readable right away.
+ function launchJamFlight(from,count){
+   const target=root.querySelector('[data-jam-flight]');
+   if(!target||count<=0)return;
+   target.innerHTML='<span class="jam-projectile" data-from="'+from+'">J <small>×'+count+'</small></span>';
+ }
  // Resolve both players at the SAME boundary. Each player uses their attack
  // to cancel existing incoming JAM first, then simultaneous new attacks
  // neutralize one another, and only the leftover crosses the arena.
@@ -203,6 +216,7 @@
    for(let i=0;i<2;i++)if(attacks[i]>0){
      const other=1-i;
      engine.queueJam(match.games[other],attacks[i]);
+     launchJamFlight(i,attacks[i]);
      match.games[i].sentJam+=attacks[i];
      engine.notice(match.games[i],'SEND +'+attacks[i]);
    }
