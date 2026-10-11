@@ -1318,3 +1318,27 @@ html[data-hg-motion="reduced"] .lb-countdown-number.pulse{
 @media(prefers-reduced-motion:reduce){
   .lb-countdown-number.pulse{animation:none}
 }
+
+/* NEXT uses the same marks as the falling blocks; PAUSE sits one button-space lower. */
+.screen-play .mini-block{
+  display:grid;
+  place-items:center;
+  font-style:normal;
+}
+.screen-play .mini-block span{
+  display:block;
+  font-size:clamp(12px,3.1vw,16px);
+  font-weight:1000;
+  line-height:1;
+  color:rgba(255,255,255,.9);
+  text-shadow:0 1px 3px rgba(0,0,0,.32);
+}
+.screen-play .pause-btn{
+  margin-top:44px;
+}
+@media(max-width:390px){
+  .screen-play .pause-btn{margin-top:46px}
+}
+@media(max-height:700px){
+  .screen-play .pause-btn{margin-top:40px}
+}
