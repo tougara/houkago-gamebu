@@ -19,7 +19,7 @@
   const SOLO_KEY='houkago_link_burst_solo_index_v1';
   const SOLO_PLAYER_ID_KEY='houkago_link_burst_solo_player_id_v1';
   const TUTORIAL_KEY='houkago_link_burst_tutorial_seen_v1';
-  const COLORS=['blue','red','yellow','green','purple'];
+  const COLORS=['blue','red','yellow','green'];
   const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇',purple:'♠'};
 
   const ROTATIONS=[
@@ -45,6 +45,7 @@
     maxCombo:0,
     clears:0,
     pieces:0,
+    elapsedMs:0,
     timeLeft:120,
     timeExpired:false,
     player:{id:'',name:'プレイヤー1',icon:'🐶'},
@@ -164,7 +165,7 @@
         '</div><button class="solo-change-btn" type="button" data-change-player>変更</button></div>'+
       '</section>'+
       '<div class="choice-grid">'+
-        '<button class="choice-card solo" data-mode="endless"><span class="mode-badge">ENDLESS</span><strong>エンドレス</strong><span>積み上がるまで挑戦。置くほど少しずつスピードアップ。</span></button>'+
+        '<button class="choice-card solo" data-mode="endless"><span class="mode-badge">ENDLESS</span><strong>エンドレス</strong><span>時間とともにどんどん加速。長く生き残るほど難しくなる！</span></button>'+
         '<button class="choice-card solo" data-mode="timed"><span class="mode-badge">2 MINUTES</span><strong>2分スコアアタック</strong><span>120秒でどこまで得点できるか勝負。</span></button>'+
       '</div>';
   }
@@ -206,7 +207,7 @@
   function rulesScreen(){
     return topNav()+heading('あそびかた','基本は4つ。置いたあとの分離がポイント。')+
       '<div class="rules-wrap">'+
-        '<section class="card rule-card"><h2>1. 最初は縦2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は5色（青・赤・黄・緑・紫）から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
+        '<section class="card rule-card"><h2>1. 最初は縦2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色（青・赤・黄・緑）から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
         '<section class="card rule-card"><h2>2. LOCKすると2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
         '<section class="card rule-card"><h2>3. 同じ色を4個以上つなげる</h2><p>上下左右につながった同色4個以上で消去。消したあとにまた4個つながると2 LINK、3 LINK…と続きます。</p></section>'+
         '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span class="demo-left">←</span><span class="demo-right">→</span><span class="demo-rotate">↻</span><span class="demo-down">↓</span></div><p>上段は← → ↻、下段は←と→の中央に↓。←→は長押し移動、↓は高速落下、↻は90°右回転です。<br>キーボードは A＝左、D＝右、S＝下、Enter＝回転。矢印キーでも操作できます。</p></section>'+
@@ -713,6 +714,7 @@
     state.maxCombo=0;
     state.clears=0;
     state.pieces=0;
+    state.elapsedMs=0;
     state.timeLeft=120;
     state.timeExpired=false;
     state.fallAccum=0;
@@ -738,9 +740,17 @@
       const elapsed=120-state.timeLeft;
       return Math.max(460,760-elapsed*2);
     }
-    // ENDLESS: 20個目から8個ごとに40ms加速。後半は120msまで速くなる。
-    const speedSteps=state.pieces<20?0:Math.floor((state.pieces-20)/8)+1;
-    return Math.max(120,820-speedSteps*40);
+    // ENDLESS: play time is the main acceleration axis. Stages interpolate
+    // smoothly between these fall intervals (milliseconds per cell).
+    // Placing many pairs gives a smaller extra boost, so skilled players
+    // cannot keep an easy pace simply by clearing blocks efficiently.
+    const stages=[760,630,490,350,240,160,105,85]; // minute 0..7+
+    const minutes=Math.max(0,state.elapsedMs)/60000;
+    const index=Math.min(stages.length-1,Math.floor(minutes));
+    const fraction=index===stages.length-1?0:minutes-index;
+    const timeInterval=stages[index]+(stages[Math.min(index+1,stages.length-1)]-stages[index])*fraction;
+    const placementsBonus=Math.min(90,Math.floor(state.pieces/12)*12);
+    return Math.max(85,Math.round(timeInterval-placementsBonus));
   }
 
   function startLoop(){
@@ -763,6 +773,7 @@
       if(state.timeLeft<=0)state.timeExpired=true;
     }
 
+    if(state.mode==='endless')state.elapsedMs+=dt;
     state.resumeAccum+=dt;
     if(state.resumeAccum>=1200){state.resumeAccum=0;persistResume()}
 
@@ -780,7 +791,8 @@
       }else{
         state.fallAccum=0;
         state.lockAccum+=dt;
-        if(state.lockAccum>=LOCK_DELAY)lockPiece();
+        const lockDelay=state.mode==='endless'?Math.max(145,LOCK_DELAY-Math.floor(state.elapsedMs/45000)*18):LOCK_DELAY;
+        if(state.lockAccum>=lockDelay)lockPiece();
       }
     }
 
@@ -1309,6 +1321,7 @@
       maxCombo:state.maxCombo,
       clears:state.clears,
       pieces:state.pieces,
+      elapsedMs:state.elapsedMs,
       timeLeft:state.timeLeft,
       timeExpired:state.timeExpired,
       player:state.player,
@@ -1323,12 +1336,17 @@
       summary:(state.mode==='timed'?'2 MINUTES':'ENDLESS')+' SCORE '+state.score+' / MAX LINK '+state.maxLink
     },resumeSnapshot());
   }
+  // Old 5-color resume snapshots are converted, not silently dropped.
+  // Purple maps consistently to blue across board, active pair and NEXT.
+  function normalizeColor(color){
+    return color==='purple'?'blue':COLORS.includes(color)?color:null;
+  }
   function normalizeBoard(raw){
     const b=makeBoard();
     if(Array.isArray(raw)){
       for(let y=0;y<Math.min(ROWS,raw.length);y++){
         if(!Array.isArray(raw[y]))continue;
-        for(let x=0;x<Math.min(COLS,raw[y].length);x++)if(COLORS.includes(raw[y][x]))b[y][x]=raw[y][x];
+        for(let x=0;x<Math.min(COLS,raw[y].length);x++)b[y][x]=normalizeColor(raw[y][x]);
       }
     }
     return b;
@@ -1342,14 +1360,18 @@
     state.mode=saved.mode==='timed'?'timed':'endless';
     state.rankMode=state.mode;
     state.board=normalizeBoard(saved.board);
-    state.piece=saved.piece&&COLORS.includes(saved.piece.a)&&COLORS.includes(saved.piece.b)?saved.piece:null;
-    state.queue=Array.isArray(saved.queue)?saved.queue.filter(function(t){return t&&COLORS.includes(t.a)&&COLORS.includes(t.b)}).slice(0,3):[];
+    state.piece=saved.piece&&normalizeColor(saved.piece.a)&&normalizeColor(saved.piece.b)?Object.assign({},saved.piece,{a:normalizeColor(saved.piece.a),b:normalizeColor(saved.piece.b)}):null;
+    state.queue=Array.isArray(saved.queue)?saved.queue.filter(function(t){return t&&normalizeColor(t.a)&&normalizeColor(t.b)}).slice(0,3).map(function(t){return{a:normalizeColor(t.a),b:normalizeColor(t.b)}}):[];
     fillQueue();
     state.score=Math.max(0,Number(saved.score)||0);
     state.maxLink=Math.max(0,Number(saved.maxLink)||0);
     state.maxCombo=Math.max(0,Number(saved.maxCombo)||0);
     state.clears=Math.max(0,Number(saved.clears)||0);
     state.pieces=Math.max(0,Number(saved.pieces)||0);
+    // Snapshots created before elapsedMs existed get a conservative
+    // estimate from placements rather than restarting at slowest speed.
+    state.elapsedMs=saved.elapsedMs!=null&&Number.isFinite(Number(saved.elapsedMs))?
+      Math.max(0,Number(saved.elapsedMs)):Math.max(0,state.pieces-20)*900;
     state.timeLeft=state.mode==='timed'?clamp(Number(saved.timeLeft)||120,0,120):120;
     state.timeExpired=!!saved.timeExpired;
     if(saved.player)state.player=saved.player;
