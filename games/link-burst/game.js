@@ -149,24 +149,21 @@
   }
 
   function modeScreen(){
+    loadPlayer();
     return topNav()+heading('1人用モード','遊びたいルールをえらんでね。')+
+      '<section class="card solo-current-card mode-player-card">'+
+        '<div class="solo-current-row"><div class="solo-current-person">'+
+          '<span class="solo-current-icon">'+esc(state.player.icon)+'</span>'+
+          '<div class="solo-current-details">'+
+            '<small class="solo-current-caption">今回のプレイヤー</small>'+
+            '<strong>'+esc(state.player.name)+'</strong>'+
+          '</div>'+
+        '</div><button class="solo-change-btn" type="button" data-change-player>変更</button></div>'+
+      '</section>'+
       '<div class="choice-grid">'+
         '<button class="choice-card solo" data-mode="endless"><span class="mode-badge">ENDLESS</span><strong>エンドレス</strong><span>積み上がるまで挑戦。置くほど少しずつスピードアップ。</span></button>'+
         '<button class="choice-card solo" data-mode="timed"><span class="mode-badge">2 MINUTES</span><strong>2分スコアアタック</strong><span>120秒でどこまで得点できるか勝負。</span></button>'+
       '</div>';
-  }
-
-  function playerSelectScreen(){
-    loadPlayer();
-    return topNav()+heading('プレイヤーを選ぶ','今回遊ぶプレイヤーは1人です。')+
-      '<section class="card solo-current-card">'+
-        '<div class="solo-current-caption">今回のプレイヤー</div>'+
-        '<div class="solo-current-row"><div class="solo-current-person">'+
-          '<span class="solo-current-icon">'+esc(state.player.icon)+'</span>'+
-          '<strong>'+esc(state.player.name)+'</strong>'+
-        '</div><button class="solo-change-btn" type="button" data-change-player>変更</button></div>'+
-      '</section>'+
-      '<div class="stack player-select-actions"><button class="btn" type="button" data-player-done>このプレイヤーで決定</button></div>';
   }
 
   function playerListScreen(){
@@ -300,7 +297,7 @@
   }
 
   function screenHtml(){
-    const map={title:titleScreen,playType:playTypeScreen,mode:modeScreen,playerSelect:playerSelectScreen,playerList:playerListScreen,playerRegister:playerRegisterScreen,rules:rulesScreen,play:playScreen,result:resultScreen,ranking:rankingScreen};
+    const map={title:titleScreen,playType:playTypeScreen,mode:modeScreen,playerList:playerListScreen,playerRegister:playerRegisterScreen,rules:rulesScreen,play:playScreen,result:resultScreen,ranking:rankingScreen};
     return (map[state.screen]||titleScreen)();
   }
 
@@ -488,12 +485,7 @@
       state.history.pop();
       doBack();
     });
-    document.querySelector('[data-player-done]')&&document.querySelector('[data-player-done]').addEventListener('click',function(){
-      loadPlayer();
-      if(state.history[state.history.length-1]==='playType')go('mode');
-      else doBack();
-    });
-    document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('playerSelect')});
+    document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('mode')});
     document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){beginGame(b.dataset.mode)})});
     document.querySelectorAll('[data-ranking]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=state.mode||'endless';go('ranking')})});
     document.querySelectorAll('[data-rank-mode]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=b.dataset.rankMode;render()})});
