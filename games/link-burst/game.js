@@ -463,6 +463,8 @@
     w.querySelector('[data-quit-ok]').addEventListener('click',function(){
       w.remove();
       stopLoop();
+      clearCountdownTimer();
+      state.countdownActive=false;
       state.gameStarted=false;
       state.paused=false;
       state.resolving=false;
