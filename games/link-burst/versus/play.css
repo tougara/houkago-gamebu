@@ -706,10 +706,12 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
   position:absolute;
   z-index:2;
   top:4px;
-  left:max(4px,calc((100% - var(--v5-left) - var(--v5-board) - var(--v5-right) - 6px) / 2 + 3px));
+  left:4px;
   display:block;
-  width:var(--v5-left);
-  max-width:var(--v5-left);
+  /* Name may extend across the vacant space BEFORE the controls; never onto
+     the field. A long name should not be needlessly clipped to 110px. */
+  width:calc((100% - var(--v5-left) - var(--v5-board) - var(--v5-right) - 6px) / 2 + var(--v5-left) - 7px);
+  max-width:calc(100% - var(--v5-board) - var(--v5-right) - 11px);
   height:auto;
   min-height:0;
   padding:0;
