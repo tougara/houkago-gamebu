@@ -2,6 +2,19 @@
 globalThis.HOUKAGO_CHANGELOG=[
   {
     "date": "2026-10-11",
+    "datetime": "2026-10-11T19:17:16.000+09:00",
+    "category": "site",
+    "major": true,
+    "title": "放課後ゲーム部全体の更新履歴を公開",
+    "changes": [
+      "トップから全7ゲームと共通機能の更新履歴を確認できるように",
+      "制作開始までさかのぼり、日付・作品別に絞り込める記録画面を追加",
+      "大型更新を専用デザインで分かりやすく表示"
+    ],
+    "commit": "4705c7b274ddeb317dbcb7a1fd1c604d07052b3e"
+  },
+  {
+    "date": "2026-10-11",
     "datetime": "2026-10-11T18:54:23.000+09:00",
     "category": "link",
     "major": true,
