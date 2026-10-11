@@ -60,11 +60,14 @@
     clearingKeys:new Set(),
     fallingKeys:new Set(),
     chainActive:false,
+    countdownActive:false,
+    countdownStep:3,
     rankResult:null
   };
 
   let repeatDelayId=null;
   let repeatId=null;
+  let countdownTimer=null;
 
   function makeBoard(){
     return Array.from({length:ROWS},()=>Array(COLS).fill(null));
@@ -242,6 +245,7 @@
         '<div class="score-pop" data-score-pop></div>'+ 
         '<div class="play-tip" data-play-tip>← → 移動　↓ 高速落下　↻ 回転</div>'+
       '</section>'+
+      (state.countdownActive?'<div class="lb-countdown-overlay" data-countdown role="status" aria-live="assertive" aria-label="ゲーム開始までのカウントダウン"><strong class="lb-countdown-number" data-countdown-value>'+state.countdownStep+'</strong><span>READY?</span></div>':'')+
       '<section class="controls" aria-label="操作">'+
         '<button class="control-btn" data-control="left" aria-label="左へ">←</button>'+
         '<button class="control-btn" data-control="right" aria-label="右へ">→</button>'+
@@ -302,6 +306,7 @@
 
   function render(){
     stopLoop();
+    clearCountdownTimer();
     app.className='link-burst-app screen-'+state.screen;
     app.innerHTML=screenHtml();
     bind();
@@ -309,9 +314,43 @@
     if(state.screen==='play'){
       drawBoard();
       updateHud();
-      startLoop();
-      maybeShowTutorial();
+      if(state.countdownActive)startCountdown();
+      else{
+        startLoop();
+        maybeShowTutorial();
+      }
     }
+  }
+
+  function clearCountdownTimer(){
+    if(countdownTimer!==null){
+      clearTimeout(countdownTimer);
+      countdownTimer=null;
+    }
+  }
+
+  function startCountdown(){
+    if(!state.countdownActive||state.paused||state.screen!=='play'||!state.gameStarted||countdownTimer!==null)return;
+    const label=document.querySelector('[data-countdown-value]');
+    if(!label)return;
+    label.textContent=state.countdownStep===0?'START!':String(state.countdownStep);
+    label.classList.toggle('go',state.countdownStep===0);
+    label.classList.remove('pulse');
+    void label.offsetWidth;
+    label.classList.add('pulse');
+    countdownTimer=setTimeout(function(){
+      countdownTimer=null;
+      if(!state.countdownActive||state.paused||state.screen!=='play'||!state.gameStarted)return;
+      if(state.countdownStep>0){
+        state.countdownStep--;
+        startCountdown();
+      }else{
+        state.countdownActive=false;
+        document.querySelector('[data-countdown]')?.remove();
+        startLoop();
+        maybeShowTutorial();
+      }
+    },state.countdownStep===0?500:1000);
   }
 
   function maybeShowTutorial(){
@@ -353,6 +392,7 @@
     state.paused=true;
     releaseControls();
     stopLoop();
+    clearCountdownTimer();
     persistResume();
     document.querySelector('[data-pause-backdrop]')?.remove();
 
@@ -389,7 +429,8 @@
     if(!state.gameStarted)return;
     state.paused=false;
     state.lastFrame=performance.now();
-    startLoop();
+    if(state.countdownActive)startCountdown();
+    else startLoop();
   }
 
   function showQuitConfirm(type){
@@ -524,7 +565,7 @@
   window.addEventListener('pointercancel',releaseControls);
   window.addEventListener('blur',releaseControls);
 
-  function canInput(){return state.screen==='play'&&state.gameStarted&&!state.paused&&!state.resolving&&!!state.piece}
+  function canInput(){return state.screen==='play'&&state.gameStarted&&!state.paused&&!state.resolving&&!state.countdownActive&&!!state.piece}
   function clearRepeat(){
     if(repeatDelayId){clearTimeout(repeatDelayId);repeatDelayId=null}
     if(repeatId){clearInterval(repeatId);repeatId=null}
@@ -679,6 +720,9 @@
     state.fallingKeys=new Set();
     state.chainActive=false;
     state.rankResult=null;
+    clearCountdownTimer();
+    state.countdownActive=true;
+    state.countdownStep=3;
     fillQueue();
     spawnPiece();
     state.screen='play';
@@ -696,7 +740,7 @@
   }
 
   function startLoop(){
-    if(state.rafId||state.screen!=='play'||!state.gameStarted||state.paused)return;
+    if(state.rafId||state.screen!=='play'||!state.gameStarted||state.paused||state.countdownActive)return;
     state.lastFrame=performance.now();
     state.rafId=requestAnimationFrame(frame);
   }
@@ -1210,6 +1254,8 @@
     releaseControls();
     state.gameStarted=false;
     state.paused=false;
+    clearCountdownTimer();
+    state.countdownActive=false;
     state.resolving=false;
     state.softDrop=false;
     state.rankResult=addRanking(reason);
@@ -1258,6 +1304,9 @@
   }
   function restoreResume(saved){
     if(!saved)return;
+    clearCountdownTimer();
+    state.countdownActive=false;
+    state.countdownStep=3;
     loadPlayer();
     state.mode=saved.mode==='timed'?'timed':'endless';
     state.rankMode=state.mode;
