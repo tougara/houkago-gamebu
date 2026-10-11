@@ -978,3 +978,27 @@ html[data-hg-motion="reduced"] .burst-ring{display:none!important}
   min-height:0;
 }
 .solo-register-error:empty{display:none}
+
+/* Soft landing + clearer color-matched burst pieces.
+   FX follows the existing site-wide motion setting. */
+.block.land-squash{
+  transform-origin:50% 90%;
+  animation:lbSoftLanding .22s cubic-bezier(.22,.8,.3,1) both;
+}
+@keyframes lbSoftLanding{
+  0%{transform:translateY(-2px) scale(.98,1.04)}
+  34%{transform:translateY(2px) scale(1.10,.84);border-radius:27%}
+  65%{transform:translateY(-1px) scale(.96,1.05)}
+  100%{transform:translateY(0) scale(1,1)}
+}
+.clear-particle{
+  width:10px;
+  height:10px;
+  margin:-5px 0 0 -5px;
+  border-radius:29%;
+  box-shadow:inset 0 1px 3px rgba(255,255,255,.6),0 0 7px rgba(255,255,255,.65);
+}
+html[data-hg-motion="reduced"] .block.land-squash{
+  animation:none!important;
+  transform:none!important;
+}
