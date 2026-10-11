@@ -242,7 +242,8 @@
         '<div class="chain-flash" data-chain-flash></div>'+
         '<div class="particle-layer" data-particle-layer aria-hidden="true"></div>'+
         '<div class="link-fx" data-link-fx><strong></strong><span></span></div>'+
-        '<div class="score-pop" data-score-pop></div>'+ 
+        '<div class="score-pop" data-score-pop></div>'+
+        '<div class="score-milestone" data-score-milestone role="status" aria-live="polite"><strong></strong><small>SCORE MILESTONE!</small></div>'+ 
         '<div class="play-tip" data-play-tip>← → 移動　↓ 高速落下　↻ 回転</div>'+
       '</section>'+
       (state.countdownActive?'<div class="lb-countdown-overlay" data-countdown role="status" aria-live="assertive" aria-label="ゲーム開始までのカウントダウン"><strong class="lb-countdown-number" data-countdown-value>'+state.countdownStep+'</strong><span>READY?</span></div>':'')+
@@ -899,6 +900,7 @@
       state.maxLink=Math.max(state.maxLink,link);
       state.maxCombo=Math.max(state.maxCombo,combo);
       state.clears+=total;
+      const scoreBefore=state.score;
       state.score+=gain;
       state.chargedKeys.clear();
       state.clearingKeys=new Set(keys);
@@ -906,6 +908,7 @@
       updateHud();
       spawnClearParticles(cells,link,combo,power);
       showLink(link,gain,combo,power);
+      showScoreMilestone(scoreBefore,state.score);
       showComboFx(combo,power);
       pulseChainFlash(link,combo,power,'burst');
       spawnBurstRings(link,combo,power);
@@ -1019,7 +1022,7 @@
       el.querySelector('strong').textContent=main;
       el.querySelector('span').textContent=(combo>1?combo+' COMBO  ':'')+'+'+gain;
       el.style.setProperty('--link-duration',hold+'ms');
-      el.className='link-fx fx-tier-'+Math.min(8,power)+' '+(link>=5?'burst ':'')+(link>=3?'strong ':'')+(combo>=2?' combo-heavy ':'')+'show';
+      el.className='link-fx fx-tier-'+Math.min(8,power)+' '+(link>=5?'burst fx-link-5 ':link>=3?'fx-link-3 ':'')+(link>=3?'strong ':'')+(combo>=2?' combo-heavy ':'')+'show';
       setTimeout(function(){if(el&&el.isConnected)el.classList.remove('show')},hold+30);
     }
     if(pop){
@@ -1036,6 +1039,31 @@
       frameEl.classList.add('burst-shake');
       setTimeout(function(){if(frameEl&&frameEl.isConnected)frameEl.classList.remove('burst-shake')},430);
     }
+  }
+
+
+  // Milestones are visual only. Announce the highest 10,000-point boundary
+  // crossed in one score gain; score calculations and timings are untouched.
+  function showScoreMilestone(before,after){
+    const step=10000;
+    if(Math.floor(after/step)<=Math.floor(before/step))return;
+    const badge=document.querySelector('[data-score-milestone]');
+    const scoreBox=document.querySelector('.screen-play .score-box');
+    if(!badge||!scoreBox)return;
+    const milestone=Math.floor(after/step)*step;
+    badge.querySelector('strong').textContent=milestone.toLocaleString('ja-JP')+'点突破!';
+    badge.classList.remove('show');
+    scoreBox.classList.remove('milestone-hit');
+    void badge.offsetWidth;
+    badge.classList.add('show');
+    if(!reducedMotion())scoreBox.classList.add('milestone-hit');
+    const hold=reducedMotion()?850:1450;
+    clearTimeout(showScoreMilestone.hideTimer);
+    showScoreMilestone.hideTimer=setTimeout(function(){
+      badge.classList.remove('show');
+      scoreBox.classList.remove('milestone-hit');
+      showScoreMilestone.hideTimer=null;
+    },hold);
   }
 
   function showChainBanner(link,combo,power){
@@ -1106,7 +1134,7 @@
     if(!stage||!layer)return;
     const stageRect=stage.getBoundingClientRect();
     let count=0;
-    const cap=Math.min(88,34+power*7+Math.max(0,combo-1)*10);
+    const cap=Math.min(link>=5?108:link>=3?92:88,34+power*7+(link>=3?20:0)+Math.max(0,combo-1)*10);
     cells.forEach(function(cell,cellIndex){
       if(cell.y<HIDDEN_ROWS||count>=cap)return;
       const key=cell.y+':'+cell.x;
@@ -1114,7 +1142,7 @@
       if(!origin)return;
       const rect=origin.getBoundingClientRect();
       const color=state.board[cell.y][cell.x]||'blue';
-      const perCell=Math.min(7,3+Math.floor(power/3)+(combo>=2?1:0));
+      const perCell=Math.min(7,3+Math.floor(power/3)+(link>=3?2:0)+(link>=5?1:0)+(combo>=2?1:0));
       for(let i=0;i<perCell&&count<cap;i++,count++){
         const p=document.createElement('i');
         const angle=((cellIndex*53+i*97)%360)*Math.PI/180;
@@ -1149,7 +1177,7 @@
     if(reducedMotion()||power<3)return;
     const layer=document.querySelector('[data-particle-layer]');
     if(!layer)return;
-    const rings=Math.min(4,1+Math.floor((power-3)/2)+(combo>=3?1:0));
+    const rings=Math.min(4,1+Math.floor((power-3)/2)+(link>=3?1:0)+(combo>=3?1:0));
     for(let i=0;i<rings;i++){
       const ring=document.createElement('b');
       ring.className='burst-ring fx-tier-'+Math.min(8,power);
