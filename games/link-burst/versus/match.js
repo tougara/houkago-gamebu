@@ -26,20 +26,30 @@
  }
  function arena(i){
    const p=match.players[i],side=i+1;
-   return '<section class="arena" data-side="'+i+'" aria-label="'+(side)+'P '+esc(p.name)+'の盤面">'+
-     '<header class="arena-header"><div class="arena-person"><span class="avatar">'+esc(p.icon)+'</span>'+
-       '<div class="details"><small>'+(side)+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
-       '<div class="arena-score"><small>SCORE</small><strong data-score="'+i+'">0</strong></div></header>'+
-     '<div class="arena-core"><div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+
-       '<aside class="arena-next"><small>NEXT</small><div data-next="'+i+'"></div><small>LINK</small><div class="arena-link" data-link="'+i+'">0</div></aside>'+
-       '<div class="v-pad" aria-label="'+side+'P操作">'+
+   return '<section class="arena" data-side="'+i+'" aria-label="'+side+'P '+esc(p.name)+'の盤面">'+
+     '<header class="arena-header">'+
+       '<div class="arena-person"><span class="avatar">'+esc(p.icon)+'</span>'+
+         '<div class="details"><small>'+side+'P</small><strong>'+esc(p.name)+'</strong></div>'+
+       '</div>'+
+       '<div class="arena-score"><small>SCORE</small><strong data-score="'+i+'">0</strong></div>'+
+     '</header>'+
+     '<div class="arena-core">'+
+       '<div class="v-pad-left" aria-label="'+side+'Pの左右移動・高速落下">'+
          '<button class="v-control" type="button" data-side="'+i+'" data-action="left" aria-label="'+side+'P 左へ">←</button>'+
          '<button class="v-control" type="button" data-side="'+i+'" data-action="right" aria-label="'+side+'P 右へ">→</button>'+
          '<button class="v-control" type="button" data-side="'+i+'" data-action="down" aria-label="'+side+'P 高速落下">↓</button>'+
-         '<button class="v-control" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
-       '</div></div></section>';
+       '</div>'+
+       '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+
+       '<div class="arena-side">'+
+         '<aside class="arena-next"><small>NEXT</small><div data-next="'+i+'"></div>'+
+           '<small>LINK</small><div class="arena-link" data-link="'+i+'">0</div></aside>'+
+         '<div class="v-pad-right" aria-label="'+side+'Pの回転操作">'+
+           '<button class="v-control" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
+         '</div>'+
+       '</div>'+
+     '</div></section>';
  }
- function shell(){
+  function shell(){
    root.className='match-shell';
    root.innerHTML='<header class="match-top"><span class="match-mode">LINK BURST / 2P KO</span>'+
      '<span class="match-phase">JAMなし・同時対戦テスト</span>'+
