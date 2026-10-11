@@ -874,11 +874,18 @@ html[data-hg-motion="reduced"] .burst-ring{display:none!important}
   border-color:rgba(98,231,255,.48);
 }
 .solo-current-caption{
-  margin:0 0 12px;
+  display:block;
+  margin:0 0 2px;
   color:#a9ddec;
   font-size:12px;
   font-weight:900;
 }
+.solo-current-details{
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+.mode-player-card{margin-bottom:12px}
 .solo-current-row{
   display:flex;
   align-items:center;
