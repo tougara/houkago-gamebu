@@ -203,7 +203,7 @@
   function rulesScreen(){
     return topNav()+heading('あそびかた','基本は4つ。置いたあとの分離がポイント。')+
       '<div class="rules-wrap">'+
-        '<section class="card rule-card"><h2>1. 2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
+        '<section class="card rule-card"><h2>1. 最初は縦2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
         '<section class="card rule-card"><h2>2. LOCKすると2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
         '<section class="card rule-card"><h2>3. 同じ色を4個以上つなげる</h2><p>上下左右につながった同色4個以上で消去。消したあとにまた4個つながると2 LINK、3 LINK…と続きます。</p></section>'+
         '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span class="demo-left">←</span><span class="demo-right">→</span><span class="demo-rotate">↻</span><span class="demo-down">↓</span></div><p>上段は← → ↻、下段は←と→の中央に↓。←→は長押し移動、↓は高速落下、↻は90°右回転です。<br>キーボードは A＝左、D＝右、S＝下、Enter＝回転。矢印キーでも操作できます。</p></section>'+
@@ -588,7 +588,7 @@
     fillQueue();
     const t=state.queue.shift();
     state.queue.push(randomTemplate());
-    state.piece={x:SPAWN_X,y:SPAWN_Y,rot:0,a:t.a,b:t.b};
+    state.piece={x:SPAWN_X,y:SPAWN_Y,rot:1,a:t.a,b:t.b};
     state.fallAccum=0;
     state.lockAccum=0;
     if(!canPlace(state.piece,state.piece.x,state.piece.y,state.piece.rot)){
