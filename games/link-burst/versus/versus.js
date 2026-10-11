@@ -63,8 +63,8 @@
     window.scrollTo(0,0);
   }
   function memberManagement(members){
-    return header('名前やアイコンを変更できるよ。変更内容はほかのゲームでも共通だよ。')+
-      '<section class="versus-card"><div class="versus-section-heading"><h2>登録メンバーを編集</h2><small>'+members.length+' / '+(registry&&registry.ROSTER_MAX||15)+'人</small></div>'+
+    return heading('メンバーを編集','変更した名前・アイコンはほかのゲームでも共通だよ。')+
+      '<section class="card versus-card"><div class="versus-section-heading"><h2>登録メンバーを編集</h2><small>'+members.length+' / '+(registry&&registry.ROSTER_MAX||15)+'人</small></div>'+
         '<p>変更したいメンバーの「編集」を押してね。プレイ記録はそのまま残るよ。</p>'+
         '<div class="versus-edit-list">'+members.map(function(p){
           return '<div class="versus-edit-item"><span class="avatar">'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong>'+
@@ -80,8 +80,8 @@
     const used=new Set(members.filter(function(p){return !member||p.id!==member.id}).map(function(p){return p.icon}));
     const editing=!!member;
     const title=editing?'メンバーを編集':'新しいメンバーを登録';
-    return header(editing?'名前とアイコンを編集しよう。':'新しいメンバーを登録して、対戦に参加させよう。')+
-      '<form class="versus-card versus-member-form" data-versus-member-form>'+
+    return heading(editing?'メンバーを編集':'新しく登録','名前とアイコンを決めてね。')+
+      '<form class="card versus-card versus-member-form" data-versus-member-form>'+
         '<h2>'+title+'</h2>'+
         '<label class="versus-form-label" for="versus-name">名前（12文字まで）</label>'+
         '<input id="versus-name" name="memberName" maxlength="12" autocomplete="off" required placeholder="名前を入力" value="'+esc(member?member.name:'')+'">'+
@@ -108,96 +108,117 @@
     window.scrollTo(0,0);
   }
 
+
   function controls(){
-    return '<nav class="versus-nav" aria-label="ページ移動">'+
-      '<a href="../">← リンクバーストへ</a>'+
-      '<a href="../../">ゲームをえらぶ</a>'+
-      '<button type="button" data-hg-settings-open aria-label="共通設定">⚙</button>'+
+    return '<nav class="top-nav" aria-label="ゲームナビゲーション">'+
+      '<button type="button" class="nav-pill" data-versus-back>← もどる</button>'+
+      '<button type="button" class="nav-pill" data-versus-home>ゲームをえらぶ</button>'+
     '</nav>';
   }
-  function header(message){
-    return '<header class="versus-top">'+
-      '<img src="../../../link_burst_logo.png" alt="リンクバースト！">'+
-      '<h1>2人対戦</h1>'+
-      '<p>'+esc(message)+'</p>'+
-      '<span class="versus-status">STEP 1 / 対戦準備</span>'+
-    '</header>';
+  function heading(title,message){
+    return '<header class="screen-heading"><h1>'+esc(title)+'</h1>'+
+      (message?'<p>'+esc(message)+'</p>':'')+'</header>';
+  }
+  function currentCard(members,editable){
+    const rows=[0,1].map(function(i){
+      const p=selectedMember(members,i);
+      return '<div class="versus-current-row">'+
+        '<div class="solo-current-person">'+
+          '<span class="solo-current-icon">'+(p?esc(p.icon):'？')+'</span>'+
+          '<div class="solo-current-details">'+
+            '<small class="versus-side-label">'+(i===0?'1P・左側':'2P・右側')+'</small>'+
+            '<strong>'+esc(p?p.name:'未選択')+'</strong>'+
+          '</div>'+
+        '</div>'+
+        (editable?'<button type="button" class="solo-change-btn" data-slot="'+i+'" aria-label="'+(i+1)+'Pのプレイヤーを変更">変更</button>':'')+
+      '</div>';
+    }).join('');
+    return '<section class="card solo-current-card mode-player-card versus-current-card">'+
+      '<div class="solo-current-caption versus-current-caption">今回のプレイヤー</div>'+
+      '<div class="versus-current-list">'+rows+'</div>'+
+    '</section>';
   }
   function selectScreen(members){
-    const slots=[0,1].map(function(i){
-      const p=selectedMember(members,i);
-      return '<button type="button" class="versus-slot '+(state.target===i?'is-active':'')+'" data-slot="'+i+'" data-side="'+(i+1)+'" aria-pressed="'+String(state.target===i)+'">'+
-        '<small>'+(i===0?'1P　左側':'2P　右側')+'</small>'+
-        '<span class="avatar">'+(p?esc(p.icon):'？')+'</span>'+
-        '<strong>'+(p?esc(p.name):'未選択')+'</strong>'+
+    return heading('2人対戦モード','対戦する2人をえらんでね。')+
+      currentCard(members,true)+
+      '<div class="choice-grid">'+
+        '<button type="button" class="choice-card versus" data-ready '+(state.ids.length!==2?'disabled':'')+'>'+
+          '<span class="mode-badge">VERSUS</span>'+
+          '<strong>2人KO対戦</strong>'+
+          '<span>2人で同時に勝負。対戦準備へ進む →</span>'+
+        '</button>'+
+      '</div>'+
+      (state.notice?'<p class="versus-error" role="status">'+esc(state.notice)+'</p>':'');
+  }
+  function pickScreen(members){
+    const otherId=state.ids[1-state.target];
+    const list=members.map(function(p){
+      const selected=p.id===state.ids[state.target];
+      const busy=p.id===otherId;
+      return '<button type="button" class="solo-choice '+(selected?'selected':'')+'" data-pick="'+esc(p.id)+'"'+
+        ' aria-pressed="'+String(selected)+'" '+(busy?'disabled aria-disabled="true"':'')+'>'+
+        '<span>'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong>'+
+        '<small>'+(selected?'選択中':busy?(state.target===0?'2Pが使用中':'1Pが使用中'):'選択する')+'</small>'+
       '</button>';
     }).join('');
-    const options=members.map(function(p){
-      const which=state.ids.indexOf(p.id);
-      return '<button type="button" class="versus-member '+(which===0?'is-one':which===1?'is-two':'')+'" data-pick="'+esc(p.id)+'" aria-label="'+esc(p.name)+'を選ぶ">'+
-        '<span class="avatar">'+esc(p.icon)+'</span>'+
-        '<strong>'+esc(p.name)+'</strong>'+
-        (which>=0?'<small>'+(which+1)+'P</small>':'<small>選択する</small>')+
-      '</button>';
-    }).join('');
-    return header('共有メンバーから2人を選ぼう。登録済みの全員から選べるよ。')+
-      '<div class="versus-players">'+slots+'</div>'+
-      '<section class="versus-card"><div class="versus-section-heading"><h2>メンバー選択</h2><small>登録 '+members.length+'人</small></div>'+
-        '<p>上で変更したい1P・2Pを選んで、下のメンバーをタップしてね。</p>'+
-        '<div class="versus-member-tools">'+
-          '<button type="button" class="versus-tool-btn" data-add-member '+(members.length>=(registry&&registry.ROSTER_MAX||15)?'disabled':'')+'>＋ 新規登録</button>'+
-          '<button type="button" class="versus-tool-btn" data-manage-members>✎ 名前・アイコン編集</button>'+
-        '</div>'+
-        '<div class="versus-roster">'+options+'</div>'+
-        '<p class="versus-error" role="status">'+esc(state.notice)+'</p>'+
-      '</section>'+
-      '<div class="versus-actions"><button class="versus-primary" type="button" data-ready '+(state.ids.length<2?'disabled':'')+'>この2人で対戦準備へ進む →</button></div>'+
-      '<p class="versus-footnote">選択した2人だけを対戦専用に保存。1人用プレイヤーや他ゲームの参加設定は変わらないよ。</p>';
+    const max=registry&&registry.ROSTER_MAX||15;
+    return heading((state.target+1)+'Pのプレイヤーを変更','登録済みのメンバーから1人選んでね。')+
+      '<section class="card solo-list versus-choose-list">'+list+'</section>'+
+      (state.notice?'<p class="versus-error" role="status">'+esc(state.notice)+'</p>':'')+
+      '<div class="stack player-select-actions">'+
+        '<button type="button" class="btn secondary" data-add-member '+(members.length>=max?'disabled':'')+'>＋ 新しいプレイヤーを登録</button>'+
+        '<button type="button" class="btn secondary" data-manage-members>名前・アイコンを編集</button>'+
+        (members.length>=max?'<p class="solo-hint">登録は最大'+max+'人までです。</p>':'')+
+      '</div>';
   }
   function readyScreen(members){
-    const sides=[0,1].map(function(i){
-      const p=selectedMember(members,i);
-      return '<section class="versus-ready-side">'+
-        '<small>'+(i===0?'1P / LEFT':'2P / RIGHT')+'</small>'+
-        '<div class="avatar">'+(p?esc(p.icon):'？')+'</div>'+
-        '<strong>'+(p?esc(p.name):'未選択')+'</strong>'+
-        '<small>左右の盤面で同時に操作するよ</small>'+
-      '</section>';
-    }).join('');
-    return header('2人の準備ができたよ。スマホを横にして、同時KO対戦を試そう。')+
-      '<div class="versus-ready-screen">'+
-      '<section class="versus-card"><h2>KO対戦の準備</h2>'+
-        '<div class="versus-ready-players">'+sides+'</div>'+
-        '<div class="versus-ready-rule"><span>5色・4個消し</span><span>先に積んだら負け</span><span>JAMは未実装</span></div>'+
-        '<div class="versus-landscape-note">スマホを横向きにしてね。横画面で左右の盤面を同時に操作できるよ。</div>'+
-        '<div class="versus-coming"><strong>2人KO対戦 テスト版</strong>左右2盤面・同時タッチ・5色4個消し・KO決着に対応。<br>JAM・COUNTER・対戦記録は次の段階で追加するよ。</div>'+
+    return heading('対戦の準備','スマホを横向きにして、2人で同時にプレイしよう。')+
+      currentCard(members,false)+
+      '<section class="card versus-rules-card">'+
+        '<strong>2人KO対戦</strong>'+
+        '<p>5色のブロックを4個以上つなげて消そう。先に積み上がった方が負けだよ。</p>'+
+        '<small>テスト版：JAM・COUNTER・対戦記録は未実装</small>'+
       '</section>'+
-      '<div class="versus-actions">'+
-        '<button type="button" class="versus-primary" data-launch>2人KO対戦をはじめる →</button>'+
-        '<button type="button" class="versus-secondary" data-change>← プレイヤーを選び直す</button>'+
-      '</div></div>';
+      '<div class="stack versus-actions">'+
+        '<button type="button" class="btn" data-launch>2人KO対戦をはじめる →</button>'+
+        '<button type="button" class="btn secondary" data-change>← プレイヤーを変更</button>'+
+      '</div>';
   }
+
   function render(){
     const members=roster();
     synchronizeSelection(members);
     if(state.screen==='ready'&&state.ids.length<2)state.screen='select';
-    root.className='versus-shell';
+    root.className='link-burst-app versus-shell';
     root.innerHTML='<div class="versus-wrap">'+controls()+
       (state.screen==='ready'?readyScreen(members):
        state.screen==='manage'?memberManagement(members):
-       state.screen==='form'?memberForm(members):selectScreen(members))+'</div>';
+       state.screen==='form'?memberForm(members):
+       state.screen==='pick'?pickScreen(members):selectScreen(members))+'</div>';
   }
   root.addEventListener('click',function(e){
+    if(e.target.closest('[data-versus-home]')){location.href='../../';return}
+    if(e.target.closest('[data-versus-back]')){
+      if(state.screen==='select'){location.href='../';return}
+      if(state.screen==='form'){
+        state.screen=state.editingId?'manage':'pick';
+      }else if(state.screen==='manage'){
+        state.screen='pick';
+      }else{
+        state.screen='select';
+      }
+      state.notice='';render();window.scrollTo(0,0);return;
+    }
     if(e.target.closest('[data-add-member]')){openMemberForm(null);return}
     if(e.target.closest('[data-manage-members]')){
       state.screen='manage';state.notice='';render();window.scrollTo(0,0);return;
     }
     const edit=e.target.closest('[data-edit-member]');
     if(edit){openMemberForm(edit.dataset.editMember);return}
-    if(e.target.closest('[data-back-select]')){showSelect();return}
+    if(e.target.closest('[data-back-select]')){state.screen='pick';state.notice='';render();window.scrollTo(0,0);return}
     if(e.target.closest('[data-cancel-form]')){
       if(state.editingId){state.screen='manage';state.notice='';render();window.scrollTo(0,0)}
-      else showSelect();
+      else {state.screen='pick';state.notice='';render();window.scrollTo(0,0)}
       return;
     }
     const iconChoice=e.target.closest('[data-icon-choice]');
@@ -213,8 +234,10 @@
     const slot=e.target.closest('[data-slot]');
     if(slot){
       state.target=Number(slot.dataset.slot)===1?1:0;
+      state.screen='pick';
       state.notice='';
       render();
+      window.scrollTo(0,0);
       return;
     }
     const pick=e.target.closest('[data-pick]');
@@ -230,7 +253,7 @@
       state.ids[state.target]=id;
       saveSelectedIds();
       state.notice='';
-      render();
+      showSelect();
       return;
     }
     if(e.target.closest('[data-ready]')){
@@ -281,7 +304,7 @@
       if(!saved||saved.name!==name||saved.icon!==state.formIcon){
         fail('変更を保存できませんでした。もう一度試してね。');return;
       }
-      state.screen='select';
+      state.screen='pick';
       state.notice='メンバー情報を更新したよ。';
     }else{
       if(members.length>=(registry.ROSTER_MAX||15)){fail('登録できる人数は最大15人だよ。');return}
