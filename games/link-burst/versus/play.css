@@ -124,3 +124,16 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff08b;outline-offset:2p
 }
 @media(prefers-reduced-motion:reduce){.v-block.charged{animation:none;filter:brightness(1.25)}}
 html[data-hg-motion="reduced"] .v-block.charged{animation:none}
+
+/* Keep pause/result controls reachable on low-height landscape phones. */
+.match-overlay{
+  overflow:auto;
+  align-content:safe center;
+  justify-items:center;
+}
+.match-dialog{
+  max-height:calc(100dvh - 22px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.match-dialog-actions a,.match-dialog-actions button{flex-shrink:0}
