@@ -1066,3 +1066,70 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
 html[data-hg-motion="reduced"] .center-jam[data-pending="true"]{
   animation:none;box-shadow:0 0 0 1px rgba(255,215,113,.35);
 }
+
+/* Versus responsiveness: NEXT and NEXT2 + immediate JAM flight */
+/* NEXT2 occupies vertical room inside the existing narrow NEXT column.
+   Never grow the column or reduce the 7x13 board to accommodate previews. */
+.arena-core .arena-next{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.arena-core .v-next-entry{
+  min-width:0;width:100%;
+  display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;
+  gap:3px;
+}
+.arena-core .v-next-entry small{
+  color:#c2d2f0;
+  font-size:clamp(7px,.76vw,10px);
+  font-weight:1000;line-height:1.05;letter-spacing:-.035em;
+  white-space:nowrap;
+}
+.arena-core .v-next-second{
+  border-top:1px solid rgba(163,196,244,.26);
+  padding-top:5px;
+}
+.arena-core .v-next-entry .v-mini{
+  width:min(100%,clamp(19px,2.7vw,30px));
+  height:clamp(38px,5.4vw,60px);
+  margin-inline:auto;gap:2px;
+}
+.match-arenas{position:relative}
+/* Pointer-events none: both players can keep holding their controls. */
+.jam-flight-layer{
+  position:absolute;z-index:12;inset:0;
+  pointer-events:none;overflow:hidden;
+}
+.jam-projectile{
+  --jam-start:23%;
+  --jam-end:80%;
+  position:absolute;left:var(--jam-start);top:36%;
+  display:flex;align-items:center;gap:3px;
+  padding:4px 8px;border-radius:999px;
+  background:linear-gradient(130deg,#ffe998,#e7a73d 60%,#9d722d);
+  color:#24364e;
+  border:1px solid #ffecb4;
+  box-shadow:0 0 17px rgba(255,214,101,.65),0 1px 5px rgba(0,0,0,.55);
+  font-size:clamp(13px,1.6vw,20px);font-weight:1000;
+  white-space:nowrap;
+  animation:jam-fast-flight 350ms cubic-bezier(.17,.68,.35,1) both;
+}
+.jam-projectile small{font-size:clamp(9px,.95vw,13px);font-weight:1000}
+.jam-projectile[data-from="1"]{--jam-start:80%;--jam-end:23%}
+@keyframes jam-fast-flight{
+  0%{left:var(--jam-start);opacity:0;transform:translate(-50%,-50%) scale(.75)}
+  13%{opacity:1}
+  75%{opacity:1}
+  100%{left:var(--jam-end);opacity:0;transform:translate(-50%,-50%) scale(1.07)}
+}
+@media(max-width:780px) and (orientation:landscape){
+  .arena-core .arena-next{gap:2px}
+  .arena-core .v-next-entry{gap:2px}
+  .arena-core .v-next-second{padding-top:3px}
+  .arena-core .v-next-entry small{font-size:7px}
+  .arena-core .v-next-entry .v-mini{width:19px;height:38px}
+  .jam-projectile{top:35%;padding:3px 5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .jam-projectile{display:none;animation:none}
+}
+html[data-hg-motion="reduced"] .jam-projectile{display:none;animation:none}
