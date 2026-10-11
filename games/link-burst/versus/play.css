@@ -664,3 +664,302 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
   .arena-core .v-pad-right{grid-template-rows:45px}
   .arena-core .v-pad-right .v-control[data-action="rotate"]{min-height:42px;font-size:20px}
 }
+
+/* Versus V5 - full-height board, center match console */
+/* The old title bar and separate name row no longer take height away from
+   the 7x13 boards. Keep the existing visual palette and dialog styles. */
+.match-shell{
+  display:block;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  padding:max(2px,env(safe-area-inset-top)) max(2px,env(safe-area-inset-right))
+          max(2px,env(safe-area-inset-bottom)) max(2px,env(safe-area-inset-left));
+  overflow:hidden;
+}
+.match-arenas{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(90px,8.5vw,114px) minmax(0,1fr);
+  gap:4px;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  align-items:stretch;
+}
+/* The player name floats over the otherwise unused upper part of the
+   left control gutter; it cannot steal a row or overlap the field. */
+.arena{
+  --v5-left:clamp(94px,8.3vw,116px);
+  --v5-right:clamp(42px,4vw,54px);
+  --v5-board:min(calc((100dvh - 12px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 7 / 13),
+      calc(100% - var(--v5-left) - var(--v5-right) - 6px));
+  position:relative;
+  display:block;
+  border-radius:11px;
+  padding:3px;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.arena-header{
+  position:absolute;
+  z-index:2;
+  top:4px;
+  left:max(4px,calc((100% - var(--v5-left) - var(--v5-board) - var(--v5-right) - 6px) / 2 + 3px));
+  display:block;
+  width:var(--v5-left);
+  max-width:var(--v5-left);
+  height:auto;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  pointer-events:none;
+}
+.arena-person{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+  width:100%;
+}
+.arena-person .avatar{font-size:clamp(15px,1.6vw,21px);line-height:1}
+.arena-person .details{min-width:0;overflow:hidden}
+.arena-person small{font-size:10px;line-height:1}
+.arena-person strong{
+  display:block;
+  width:100%;
+  max-width:100%;
+  font-size:clamp(10px,1.25vw,14px);
+  line-height:1.2;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.arena-core{
+  display:grid;
+  grid-template-columns:var(--v5-left) minmax(0,var(--v5-board)) var(--v5-right);
+  grid-template-rows:minmax(0,1fr);
+  column-gap:2px;
+  justify-content:center;
+  align-items:stretch;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+}
+.arena-board-stack{
+  display:block;
+  grid-column:2;
+  grid-row:1;
+  width:100%;
+  height:100%;
+  min-height:0;
+  min-width:0;
+  align-self:start;
+}
+.arena-board-stack .arena-field-wrap{
+  width:100%;
+  height:100%;
+  min-height:0;
+  min-width:0;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  container-type:inline-size;
+}
+.arena-board-stack .arena-field{
+  width:auto;
+  height:100%;
+  height:min(100%,calc(100cqw * 13 / 7));
+  max-width:100%;
+  max-height:100%;
+  aspect-ratio:7/13;
+  align-self:flex-start;
+  flex:0 0 auto;
+  padding:2px;
+  border-radius:8px;
+}
+.arena-core .v-pad-left{
+  grid-column:1;
+  grid-row:1;
+  align-self:end;
+  justify-self:stretch;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  min-width:0;
+  min-height:0;
+  margin:0;
+  padding:0 0 2px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,clamp(43px,8.5vh,55px));
+  gap:3px;
+}
+.arena-core .v-pad-left .v-control[data-action="left"]{grid-column:1;grid-row:1}
+.arena-core .v-pad-left .v-control[data-action="right"]{grid-column:2;grid-row:1}
+.arena-core .v-pad-left .v-control[data-action="down"]{grid-column:1/-1;grid-row:2}
+.arena-core .arena-side{
+  grid-column:3;
+  grid-row:1;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:space-between;
+  gap:4px;
+}
+.arena-core .arena-next{
+  width:100%;
+  max-width:none;
+  align-self:stretch;
+  padding:5px 1px;
+  margin:0;
+  gap:5px;
+  border-radius:9px;
+}
+.arena-next small{font-size:clamp(8px,.95vw,11px);line-height:1}
+.v-mini{width:clamp(19px,2.8vw,30px);height:clamp(40px,5.6vw,62px);gap:2px}
+.v-mini .v-block{font-size:clamp(10px,1.8vw,16px)}
+.arena-core .v-pad-right{
+  width:100%;
+  height:auto;
+  min-width:0;
+  min-height:0;
+  margin:0;
+  padding:0 0 2px;
+  align-self:stretch;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:clamp(48px,11vh,64px);
+}
+.arena-core .v-control{
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:43px;
+  padding:2px;
+  border-radius:10px;
+  font-size:clamp(20px,2.65vw,29px);
+  touch-action:none;
+}
+.arena-core .v-pad-right .v-control[data-action="rotate"]{
+  width:100%;
+  min-height:48px;
+  background:linear-gradient(145deg,#8067c2,#3d2f7e);
+  font-size:clamp(22px,2.8vw,31px);
+}
+/* Shared console is the *only* match-level information area.
+   Its pause button is centered between the two independent boards. */
+.match-center{
+  min-width:0;
+  min-height:0;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:space-between;
+  gap:6px;
+  padding:8px 5px;
+  border:1px solid rgba(187,206,255,.36);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(21,34,70,.94),rgba(7,16,39,.93));
+  box-shadow:inset 0 1px 0 rgba(238,247,255,.1),0 4px 18px rgba(0,0,0,.23);
+}
+.center-mode{display:grid;justify-items:center;gap:2px}
+.center-mode strong{font-size:clamp(13px,1.7vw,19px);font-weight:1000;white-space:nowrap}
+.center-mode small{font-size:10px;color:#b7c6e8;font-weight:850;white-space:nowrap}
+.center-score,.center-link{
+  min-width:0;
+  display:grid;
+  justify-items:center;
+  align-content:center;
+  padding:5px 2px;
+  border:1px solid rgba(174,198,255,.24);
+  background:rgba(16,32,69,.76);
+  border-radius:9px;
+}
+.center-score.p1,.center-link.p1{border-color:rgba(114,228,255,.52)}
+.center-score.p2,.center-link.p2{border-color:rgba(255,147,206,.52)}
+.center-score small,.center-link small{
+  color:#d0dcf3;
+  font-size:clamp(8px,.95vw,11px);
+  font-weight:900;
+  white-space:nowrap;
+}
+.center-score strong{
+  color:#fff;
+  font-size:clamp(18px,2.3vw,29px);
+  line-height:1.08;
+  font-variant-numeric:tabular-nums;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:clip;
+}
+.center-link-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+.center-link{padding:5px 1px;gap:3px}
+.center-link small{font-size:clamp(7px,.7vw,9px);white-space:normal;text-align:center;line-height:1.1}
+.center-link strong{font-size:clamp(15px,1.8vw,22px);color:#f6d67c}
+.match-center .match-pause{
+  position:static;
+  z-index:auto;
+  width:100%;
+  min-width:0;
+  min-height:62px;
+  display:grid;
+  align-content:center;
+  justify-items:center;
+  gap:3px;
+  padding:8px 1px;
+  font-size:clamp(24px,2.8vw,32px);
+  line-height:1;
+  border-radius:12px;
+  border-color:rgba(149,239,255,.72);
+  background:linear-gradient(160deg,#2e6582,#173a60 58%,#122441);
+  box-shadow:0 3px 0 #071227,inset 0 1px 0 rgba(255,255,255,.2);
+}
+.match-center .match-pause span{font-size:clamp(10px,1.15vw,13px);letter-spacing:.06em;font-weight:900}
+.match-center .match-pause:active{transform:translateY(2px);box-shadow:0 1px 0 #071227}
+.center-status{text-align:center;font-size:10px;font-weight:850;line-height:1.35;color:#a8b9d9}
+/* Smartphone landscape (narrow and short): retain 2 columns of control keys
+   and protect the board rather than allocating unused decorative padding. */
+@media(max-width:780px) and (orientation:landscape){
+  .match-arenas{grid-template-columns:minmax(0,1fr) clamp(64px,10vw,76px) minmax(0,1fr);gap:2px}
+  .arena{--v5-left:clamp(73px,10vw,88px);--v5-right:36px;--v5-board:min(calc((100dvh - 8px)*7/13),calc(100% - var(--v5-left) - var(--v5-right) - 4px));padding:1px}
+  .arena-core{column-gap:1px}
+  .arena-header{top:2px}
+  .arena-person{gap:2px}
+  .arena-person .avatar{font-size:15px}
+  .arena-person small{font-size:8px}
+  .arena-person strong{font-size:10px}
+  .arena-core .v-pad-left{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,42px);gap:2px}
+  .arena-core .v-pad-left .v-control[data-action="left"]{grid-column:1;grid-row:1}
+  .arena-core .v-pad-left .v-control[data-action="right"]{grid-column:2;grid-row:1}
+  .arena-core .v-pad-left .v-control[data-action="down"]{grid-column:1/-1;grid-row:2}
+  .arena-core .v-control{min-height:40px;font-size:19px;border-radius:7px}
+  .arena-core .v-pad-right{grid-template-rows:46px}
+  .arena-core .v-pad-right .v-control[data-action="rotate"]{min-height:43px;font-size:21px}
+  .arena-core .arena-next{padding:3px 1px;gap:2px}
+  .v-mini{width:19px;height:39px}
+  .match-center{padding:5px 3px;gap:3px;border-radius:9px}
+  .center-mode strong{font-size:12px}
+  .center-mode small{font-size:8px}
+  .center-score strong{font-size:18px}
+  .center-score small{font-size:8px}
+  .match-center .match-pause{min-height:53px;font-size:24px}
+  .match-center .match-pause span{font-size:9px}
+  .center-status{font-size:8px}
+}
+@media(max-height:300px) and (orientation:landscape){
+  .match-center{gap:2px;padding:2px}
+  .center-status{display:none}
+  .arena-core .v-pad-left{grid-template-rows:repeat(2,38px)}
+  .arena-core .v-control{min-height:38px}
+  .arena-core .v-pad-right{grid-template-rows:42px}
+  .arena-core .v-pad-right .v-control[data-action="rotate"]{min-height:40px}
+  .match-center .match-pause{min-height:45px}
+}
