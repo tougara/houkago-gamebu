@@ -126,3 +126,33 @@ button:focus-visible,a:focus-visible{outline:3px solid #f7dc6f;outline-offset:3p
   .versus-ready-screen .versus-actions{margin-top:8px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important}}
+
+
+/* Member registration and editing within the versus setup (solo mode untouched). */
+.versus-nav{position:relative;top:auto}
+.versus-top img{height:76px}
+.versus-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.versus-section-heading h2{margin:0}
+.versus-section-heading small{font-size:11px;color:#b7e9ff;font-weight:900;white-space:nowrap}
+.versus-member-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 14px}
+.versus-tool-btn{min-width:0;min-height:47px;padding:8px 5px;border-radius:12px;border:1px solid rgba(107,234,255,.52);background:rgba(36,88,131,.36);color:#e9f9ff;font-size:clamp(11px,2.8vw,14px);font-weight:900}
+.versus-tool-btn:active,.versus-edit-button:active{transform:translateY(1px)}
+.versus-edit-list{display:grid;gap:8px}
+.versus-edit-item{min-width:0;display:grid;grid-template-columns:36px minmax(0,1fr) 66px;gap:9px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:13px;background:rgba(50,74,124,.26)}
+.versus-edit-item .avatar{font-size:26px;text-align:center}
+.versus-edit-item strong{font-size:14px;overflow-wrap:anywhere}
+.versus-edit-button{min-height:39px;border:1px solid rgba(107,234,255,.5);border-radius:10px;background:rgba(107,234,255,.14);color:#e9faff;font-size:13px;font-weight:900}
+.versus-member-form{display:grid;gap:10px}
+.versus-member-form h2{margin-bottom:3px}
+.versus-form-label{font-size:14px;color:#e5eeff;font-weight:900}
+.versus-member-form input{width:100%;min-width:0;min-height:50px;padding:10px 13px;border-radius:12px;border:2px solid rgba(166,206,255,.55);background:#f8fbff;color:#152745;font:inherit;font-weight:850;font-size:18px}
+.versus-member-form input:focus{outline:3px solid rgba(107,234,255,.3);border-color:var(--cyan)}
+.versus-icon-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.versus-icon-choice{aspect-ratio:1;min-height:48px;padding:0;border-radius:12px;border:2px solid rgba(172,196,243,.32);background:rgba(57,77,123,.34);font-size:clamp(23px,6vw,31px);color:#fff}
+.versus-icon-choice.is-selected{border-color:var(--cyan);background:rgba(107,234,255,.22);box-shadow:inset 0 0 0 1px rgba(107,234,255,.55)}
+.versus-icon-choice:disabled{opacity:.25;filter:grayscale(.6)}
+.versus-member-form .versus-form-help{font-size:11px;margin:0;color:var(--muted)}
+.versus-member-form .versus-error{margin:0;min-height:16px}
+.versus-member-form .versus-primary{margin-top:2px}
+@media(min-width:620px){.versus-edit-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:360px){.versus-tool-btn{font-size:11px}.versus-icon-options{gap:5px}.versus-icon-choice{min-height:43px}.versus-edit-item{grid-template-columns:34px minmax(0,1fr) 57px;gap:6px}}
