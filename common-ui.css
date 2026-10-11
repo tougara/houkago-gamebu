@@ -1,0 +1,21 @@
+/* 放課後ゲーム部 / 共通UI補助
+   既存7ゲームの配色、サイズ、配置、ゲーム処理には介入しない。
+   キーボードフォーカス時のみ視認性を補助する。 */
+body.hg-common-ui #app :is(button, a[href], input, select, textarea):focus-visible,
+body.hg-common-ui :is(.modal-backdrop, .recheck-backdrop, .quit-backdrop, .pause-backdrop, .countdown-overlay) button:focus-visible {
+  outline: 3px solid #ffcf3c;
+  outline-offset: 3px;
+}
+body.hg-common-ui #app .top-nav > button:focus-visible {
+  outline: 3px solid #ffcf3c;
+  outline-offset: 2px;
+}
+/* 使用可能な画面でのみ使う共通補助クラス。既存UIには自動適用しない。 */
+.hg-ui-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
