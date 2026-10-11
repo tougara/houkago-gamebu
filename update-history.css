@@ -90,7 +90,6 @@
 .hg-history-changes{border-top:1px dashed #e6e9ee;margin:7px 0 0;padding:7px 0 0;display:grid;gap:3px;list-style:none;font-size:11px;line-height:1.55;font-weight:740;color:#455570}
 .hg-history-changes li{padding-left:11px;position:relative}
 .hg-history-changes li::before{content:"・";position:absolute;left:0}
-.hg-history-commit{display:inline-block;margin-top:8px;font-size:10px;font-weight:850;color:#1e70b7;text-decoration:underline;text-underline-offset:2px}
 .hg-history-empty{border:1px dashed #b6c6db;border-radius:14px;padding:26px 12px;text-align:center;color:#647489;font-weight:800}
 body.hg-history-open{overflow:hidden}
 @media(max-width:450px){
