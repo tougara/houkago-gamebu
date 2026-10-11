@@ -86,19 +86,19 @@
         '<small>'+(i===0?'1P / LEFT':'2P / RIGHT')+'</small>'+
         '<div class="avatar">'+(p?esc(p.icon):'？')+'</div>'+
         '<strong>'+(p?esc(p.name):'未選択')+'</strong>'+
-        '<small>盤面と操作エリアは次の段階で実装</small>'+
+        '<small>左右の盤面で同時に操作するよ</small>'+
       '</section>';
     }).join('');
-    return header('2人の準備ができたよ。対戦はスマホを横にして遊ぶ予定だよ。')+
+    return header('2人の準備ができたよ。スマホを横にして、同時KO対戦を試そう。')+
       '<div class="versus-ready-screen">'+
       '<section class="versus-card"><h2>KO対戦の準備</h2>'+
         '<div class="versus-ready-players">'+sides+'</div>'+
-        '<div class="versus-ready-rule"><span>5色・4個消し</span><span>先に積んだら負け</span><span>JAM / COUNTER</span></div>'+
-        '<div class="versus-landscape-note">スマホを横向きにしてね。横画面で2つの盤面が並ぶ予定だよ。</div>'+
-        '<div class="versus-coming"><strong>対戦プレイは次の開発段階</strong>左右の盤面・同時タッチ操作・攻撃処理はまだ未実装。<br>今回の画面では試合は開始しないよ。</div>'+
+        '<div class="versus-ready-rule"><span>5色・4個消し</span><span>先に積んだら負け</span><span>JAMは未実装</span></div>'+
+        '<div class="versus-landscape-note">スマホを横向きにしてね。横画面で左右の盤面を同時に操作できるよ。</div>'+
+        '<div class="versus-coming"><strong>2人KO対戦 テスト版</strong>左右2盤面・同時タッチ・5色4個消し・KO決着に対応。<br>JAM・COUNTER・対戦記録は次の段階で追加するよ。</div>'+
       '</section>'+
       '<div class="versus-actions">'+
-        '<button type="button" class="versus-primary" disabled aria-disabled="true">対戦開始（制作中）</button>'+
+        '<button type="button" class="versus-primary" data-launch>2人KO対戦をはじめる →</button>'+
         '<button type="button" class="versus-secondary" data-change>← プレイヤーを選び直す</button>'+
       '</div></div>';
   }
@@ -139,6 +139,12 @@
       saveSelectedIds();
       state.screen='ready';
       render();
+      return;
+    }
+    if(e.target.closest('[data-launch]')){
+      if(state.ids.length!==2||state.ids[0]===state.ids[1])return;
+      saveSelectedIds();
+      location.href='play.html';
       return;
     }
     if(e.target.closest('[data-change]')){
