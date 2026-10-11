@@ -1153,3 +1153,15 @@ html[data-hg-motion="reduced"] .burst-ring{display:none!important}
   .pause-card h2{font-size:24px}
   .pause-nav-actions .btn{min-height:44px}
 }
+
+/* Landing guide: a faint, static outline at the two eventual resting cells.
+   Ghosts never receive touches or alter piece physics. */
+.board-cell .block.ghost{
+  opacity:.28;
+  border:1px dashed rgba(255,255,255,.78);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+  filter:saturate(.72);
+  pointer-events:none;
+}
+.board-cell .block.ghost::before{opacity:.3}
+.board-cell .block.ghost span{opacity:.72}
