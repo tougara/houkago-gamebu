@@ -710,7 +710,6 @@
     state.piece=null;
     state.pieces++;
     drawBoard();
-    flashLock(cells);
     vibrate(9);
     await delay(120);
     await applyGravityAnimated();
@@ -916,26 +915,6 @@
     if(two)two.innerHTML=miniPieceHtml(state.queue[1]);
   }
 
-  function flashLock(cells){
-    // Squash the newly landed pair and the existing block directly below each one.
-    // Do not treat the other half of the new pair as an existing support.
-    if(reducedMotion()||!Array.isArray(cells))return;
-    const placedKeys=new Set(cells.map(function(cell){return cell.y+':'+cell.x}));
-    const squashKeys=new Set(placedKeys);
-    cells.forEach(function(cell){
-      const belowY=cell.y+1;
-      const belowKey=belowY+':'+cell.x;
-      if(belowY<ROWS && state.board[belowY][cell.x] && !placedKeys.has(belowKey)){
-        squashKeys.add(belowKey);
-      }
-    });
-    squashKeys.forEach(function(key){
-      const block=document.querySelector('[data-key="'+key+'"] .block');
-      if(!block)return;
-      block.classList.add('land-squash');
-      setTimeout(function(){if(block.isConnected)block.classList.remove('land-squash')},220);
-    });
-  }
   function showLink(link,gain,combo,power){
     const el=document.querySelector('[data-link-fx]');
     const pop=document.querySelector('[data-score-pop]');
