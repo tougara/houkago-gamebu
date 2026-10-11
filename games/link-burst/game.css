@@ -320,6 +320,7 @@ button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transp
 .c-red{background:linear-gradient(145deg,#ff7a9a,#e62f5d)}
 .c-yellow{background:linear-gradient(145deg,#fff07a,#f2ae1d)}
 .c-green{background:linear-gradient(145deg,#7bea9a,#21a65c)}
+.c-purple{background:linear-gradient(145deg,#c99bff,#7845d3)}
 .block.active{filter:saturate(1.16) brightness(1.09);box-shadow:inset 0 2px 7px rgba(255,255,255,.42),0 0 10px rgba(116,223,255,.35)}
 .block.charged{
   z-index:3;
