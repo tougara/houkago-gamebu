@@ -1006,7 +1006,7 @@ html[data-hg-motion="reduced"] .block.land-squash{
 /* 2026-10-11: clear top score row + NEXT/PAUSE in the unused right-side rail.
    Keep the board centered with the same 7:13 aspect and preserve touch controls. */
 .screen-play{
-  --lb-rail-width:clamp(48px,17vw,70px);
+  --lb-rail-width:clamp(48px,15vw,64px);
   --lb-side-gap:7px;
   --lb-app-padding:10px;
 }
