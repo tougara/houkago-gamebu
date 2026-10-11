@@ -938,6 +938,13 @@ body.registry-open{overflow:hidden}
   -webkit-tap-highlight-color:transparent;
   transition:transform .15s ease,background .15s ease
 }
+/* 小さい星の見た目は維持し、透明なタップ範囲だけ約44pxへ広げる。 */
+.favorite-toggle::before{
+  content:"";
+  position:absolute;
+  inset:-5px;
+  border-radius:50%;
+}
 .favorite-toggle svg{
   display:block;width:20px;height:20px;
   fill:transparent;stroke:currentColor;stroke-width:2;
