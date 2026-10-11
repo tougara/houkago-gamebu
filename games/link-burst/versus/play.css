@@ -1234,3 +1234,119 @@ html[data-hg-motion="reduced"] .jam-projectile{display:none;animation:none}
 @media(max-height:300px) and (orientation:landscape){
   .arena{--v7-btn:40px}
 }
+
+/* Versus V8: solo-style controller polish without layout changes */
+/* Console-like depth, control captions, feedback; all controls retain their
+   existing data-action attributes, outer placement and touch dimensions. */
+.arena-core .arena-controls .v-control{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  padding:2px 3px;
+  border:1px solid rgba(128,194,245,.54);
+  border-radius:clamp(9px,1.25vw,13px);
+  background:linear-gradient(158deg,#364b70 0%,#243653 38%,#121e36 100%);
+  color:#e6f7ff;
+  font-size:clamp(20px,2.65vw,29px);
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 0 11px rgba(96,206,255,.27);
+  box-shadow:
+    0 3px 0 #090f22,
+    0 5px 10px rgba(0,0,0,.28),
+    inset 0 2px 0 rgba(230,248,255,.18),
+    inset 0 -2px 6px rgba(3,11,28,.55);
+  transition:transform .08s ease,box-shadow .08s ease,border-color .08s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.arena-core .arena-controls .v-control::after{
+  display:block;
+  font-size:clamp(6px,.7vw,9px);
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.09em;
+  color:rgba(171,218,255,.86);
+  text-shadow:none;
+  white-space:nowrap;
+}
+.arena-core .arena-controls .v-control[data-action="left"]::after{content:"LEFT"}
+.arena-core .arena-controls .v-control[data-action="right"]::after{content:"RIGHT"}
+.arena-core .arena-controls .v-control[data-action="down"]{
+  background:linear-gradient(158deg,#254d68 0%,#183a56 44%,#10243d 100%);
+  border-color:rgba(90,220,243,.7);
+  color:#c2f5ff;
+}
+.arena-core .arena-controls .v-control[data-action="down"]::after{
+  content:"DROP";
+  color:rgba(148,235,249,.90);
+}
+.arena-core .arena-controls .v-control[data-action="rotate"]{
+  gap:1px;
+  border-color:rgba(192,168,255,.78);
+  background:linear-gradient(150deg,#6656ac 0%,#3b307d 50%,#211e50 100%);
+  color:#f4edff;
+  text-shadow:0 0 14px rgba(204,153,255,.49);
+  box-shadow:
+    0 3px 0 #171239,
+    0 5px 12px rgba(0,0,0,.32),
+    inset 0 2px 0 rgba(255,255,255,.23),
+    inset 0 -3px 7px rgba(13,10,43,.58);
+}
+.arena-core .arena-controls .v-control[data-action="rotate"]::after{
+  content:"ROTATE";
+  color:#e4d8ff;
+}
+.arena-core .arena-controls .v-control.is-held,
+.arena-core .arena-controls .v-control:active{
+  transform:translateY(2px);
+  border-color:rgba(184,242,255,.92);
+  box-shadow:0 1px 0 #070d1e,inset 0 2px 8px rgba(4,11,27,.42);
+}
+.arena-core .arena-controls .v-control[data-action="rotate"].is-held,
+.arena-core .arena-controls .v-control[data-action="rotate"]:active{
+  border-color:#eee0ff;
+  box-shadow:0 1px 0 #171239,inset 0 2px 8px rgba(24,16,63,.48);
+}
+.arena-core .arena-controls .v-control:focus-visible{
+  outline:2px solid #9ae8ff;
+  outline-offset:2px;
+}
+@media(hover:hover) and (pointer:fine){
+  .arena-core .arena-controls .v-control:hover{border-color:rgba(183,232,255,.88)}
+  .arena-core .arena-controls .v-control[data-action="rotate"]:hover{border-color:#d8c7ff}
+}
+/* Compact NEXT presentation, inspired by the solo NEXT cards. */
+.arena-core > .arena-next{
+  border:1px solid rgba(165,199,249,.35);
+  border-radius:10px;
+  background:linear-gradient(163deg,rgba(29,46,79,.92),rgba(9,19,43,.88) 64%,rgba(5,12,28,.88));
+  box-shadow:inset 0 1px 0 rgba(231,243,255,.13),0 3px 9px rgba(0,0,0,.19);
+}
+.arena-core .v-next-entry small{
+  color:#e0eaff;
+  font-weight:1000;
+  letter-spacing:.015em;
+}
+.arena-core .v-next-second{
+  border-top-color:rgba(169,205,247,.4);
+}
+@media(max-width:780px) and (orientation:landscape){
+  .arena-core .arena-controls .v-control{
+    font-size:clamp(19px,2.65vw,24px);
+    padding:2px 1px;
+    border-radius:9px;
+  }
+  .arena-core .arena-controls .v-control::after{
+    font-size:clamp(6px,.85vw,7px);
+    letter-spacing:.03em;
+  }
+}
+@media(max-height:300px) and (orientation:landscape){
+  .arena-core .arena-controls .v-control{gap:0;font-size:19px}
+  .arena-core .arena-controls .v-control::after{font-size:6px}
+}
+@media(prefers-reduced-motion:reduce){
+  .arena-core .arena-controls .v-control{transition:none}
+}
