@@ -617,6 +617,41 @@
     return true;
   }
 
+  // Preview the two blocks at their final resting positions, including split gravity.
+  // Simulation uses a copy: gameplay board, scoring, timing and falling piece are untouched.
+  function ghostLandingCells(){
+    const ghost=new Map();
+    if(!state.piece||state.screen!=='play'||state.resolving||state.chainActive)return ghost;
+    const piece=state.piece;
+    let landingY=piece.y;
+    while(canPlace(piece,piece.x,landingY+1,piece.rot))landingY++;
+    const landing=pieceCells(piece,piece.x,landingY,piece.rot);
+    const preview=state.board.map(function(row){return row.slice()});
+    const markers=landing.map(function(cell){return {color:cell.color}});
+    landing.forEach(function(cell,i){preview[cell.y][cell.x]=markers[i]});
+
+    let moved=true,safety=0;
+    while(moved&&safety++<ROWS+2){
+      moved=false;
+      for(let y=ROWS-2;y>=0;y--){
+        for(let x=0;x<COLS;x++){
+          if(preview[y][x]&&!preview[y+1][x]){
+            preview[y+1][x]=preview[y][x];
+            preview[y][x]=null;
+            moved=true;
+          }
+        }
+      }
+    }
+    for(let y=HIDDEN_ROWS;y<ROWS;y++){
+      for(let x=0;x<COLS;x++){
+        const value=preview[y][x];
+        if(markers.includes(value))ghost.set(y+':'+x,value.color);
+      }
+    }
+    return ghost;
+  }
+
   function beginGame(mode){
     loadPlayer();
     state.mode=mode||'endless';
@@ -882,6 +917,7 @@
         if(c.y>=HIDDEN_ROWS)active.set(c.y+':'+c.x,c.color);
       });
     }
+    const ghosts=ghostLandingCells();
     let html='';
     for(let vy=0;vy<VISIBLE_ROWS;vy++){
       const y=vy+HIDDEN_ROWS;
@@ -896,7 +932,8 @@
           if(state.clearingKeys.has(key))classes+=' clearing';
           if(state.fallingKeys.has(key))classes+=' falling';
         }
-        html+='<div class="board-cell '+(vy<2?'danger-row':'')+'" data-key="'+key+'">'+(color?blockHtml(color,classes.trim()):'')+'</div>';
+        const ghostColor=color?null:ghosts.get(key);
+        html+='<div class="board-cell '+(vy<2?'danger-row':'')+'" data-key="'+key+'">'+(color?blockHtml(color,classes.trim()):ghostColor?blockHtml(ghostColor,'ghost'):'')+'</div>';
       }
     }
     host.innerHTML=html;
