@@ -101,8 +101,9 @@
     return Math.min(ATTACK_MAX,base+Math.min(2,Math.max(0,maxCombo-1)));
   }
   function topOut(st){
-    for(let y=0;y<HIDDEN;y++)for(let x=0;x<COLS;x++)if(st.board[y][x])return true;
-    return false;
+    // Only KO when a new pair cannot spawn at the center (y=1,2).
+    // A stack in another column touching the hidden rows is not a KO.
+    return !!(st.board[1][3]||st.board[2][3]);
   }
   function scan(st){
     const groups=findGroups(st);
