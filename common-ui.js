@@ -20,6 +20,10 @@
     if (nav.tagName !== 'NAV' && !nav.hasAttribute('role')) nav.setAttribute('role', 'navigation');
     const buttons = Array.from(nav.children).filter(node =>
       node.tagName === 'BUTTON' && !node.hasAttribute('data-hg-settings-open'));
+    // 各ゲーム固有の戻る処理はそのまま。誤解を生む「1個前」だけ表示から外す。
+    if (buttons[0] && /^\\s*←\\s*1個前にもどる\\s*$/.test(buttons[0].textContent)) {
+      buttons[0].textContent = '← もどる';
+    }
     if (buttons[0] && !buttons[0].hasAttribute('aria-label')) {
       buttons[0].setAttribute('aria-label', 'もどる');
     }
