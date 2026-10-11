@@ -1350,3 +1350,160 @@ html[data-hg-motion="reduced"] .jam-projectile{display:none;animation:none}
 @media(prefers-reduced-motion:reduce){
   .arena-core .arena-controls .v-control{transition:none}
 }
+/* Link Burst versus V-final: arena-preserving KO spectacle */
+/* Never replace or reset either board when the match ends. The result overlays
+   are translucent and all controls below the result stay noninteractive. */
+.match-shell[data-finished="true"] .arena{
+  transition:filter .55s ease,border-color .55s ease,box-shadow .55s ease;
+}
+.match-shell[data-finished="true"] .arena[data-finish="win"]{
+  border-color:#ffe790;
+  box-shadow:0 0 0 2px rgba(255,229,109,.55),0 0 30px rgba(255,207,80,.5),
+    inset 0 0 20px rgba(255,236,123,.19);
+  animation:vs-victory-glow 1.9s ease-in-out infinite alternate;
+}
+.match-shell[data-finished="true"] .arena[data-finish="lose"]{
+  filter:saturate(.57) brightness(.7);
+  border-color:rgba(187,171,212,.45);
+}
+.match-shell[data-finished="true"] .arena[data-finish="draw"]{
+  border-color:#d2f0ff;
+  box-shadow:0 0 20px rgba(126,203,255,.35),inset 0 0 15px rgba(119,190,255,.2);
+}
+.match-shell[data-finished="true"] .arena::after{
+  position:absolute;inset:0;z-index:9;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;white-space:nowrap;
+  font-family:system-ui,"Arial Black",sans-serif;
+  font-weight:1000;font-style:italic;letter-spacing:-.055em;
+  font-size:clamp(33px,5vw,85px);
+  animation:vs-arena-stamp .72s cubic-bezier(.14,.8,.25,1.2) both;
+}
+.match-shell[data-finished="true"] .arena[data-finish="win"]::after{
+  content:"WIN!";
+  color:#fff8d5;
+  -webkit-text-stroke:1px rgba(101,62,27,.66);
+  text-shadow:3px 4px 0 #9d532a,0 0 15px #ffe981,0 0 34px rgba(255,204,84,.9);
+  background:radial-gradient(ellipse at center,rgba(249,214,96,.3),rgba(249,214,96,0) 65%);
+}
+.match-shell[data-finished="true"] .arena[data-finish="lose"]::after{
+  content:"LOSE...";
+  font-size:clamp(28px,4.2vw,68px);
+  color:#e2ebff;
+  text-shadow:3px 4px 0 #302a4e,0 0 16px rgba(135,152,215,.56);
+  background:linear-gradient(180deg,rgba(8,13,35,.27),rgba(8,13,35,.42));
+}
+.match-shell[data-finished="true"] .arena[data-finish="draw"]::after{
+  content:"DRAW";
+  color:#e7f7ff;text-shadow:3px 4px 0 #36507c,0 0 21px #93dbff;
+  background:radial-gradient(ellipse at center,rgba(122,194,255,.23),transparent 70%);
+}
+.vs-finale{position:fixed;inset:0;z-index:27;pointer-events:none;overflow:hidden;isolation:isolate}
+.vs-finale-flash{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,rgba(255,246,180,.68),rgba(249,196,86,.17) 36%,transparent 78%);
+  animation:vs-final-flash .85s ease-out both;
+}
+.vs-finale-ring{
+  position:absolute;left:50%;top:44%;width:min(74vw,590px);aspect-ratio:1;border-radius:50%;
+  border:8px solid rgba(255,229,131,.66);
+  box-shadow:0 0 21px #fff4bc,0 0 58px #ffa950,inset 0 0 40px rgba(255,231,126,.66);
+  animation:vs-final-ring 1.3s cubic-bezier(.12,.64,.25,1) both;
+}
+.vs-finale-impact{
+  position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);
+  font-family:system-ui,"Arial Black",sans-serif;font-weight:1000;font-style:italic;
+  font-size:clamp(64px,14vw,165px);line-height:1;letter-spacing:-.08em;white-space:nowrap;
+  color:#fff6c8;-webkit-text-stroke:2px #ba5a37;
+  text-shadow:5px 7px 0 #542555,0 0 21px #ffc553,0 0 55px rgba(255,180,49,.92);
+  animation:vs-ko-slam 1.55s cubic-bezier(.14,.75,.22,1) both;
+}
+.vs-finale-actions{
+  position:absolute;left:50%;bottom:max(7px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);width:min(66vw,420px);
+  padding:9px 11px;display:grid;gap:7px;
+  border:1px solid rgba(255,231,147,.75);
+  border-radius:17px;
+  background:linear-gradient(145deg,rgba(36,53,91,.97),rgba(7,16,38,.98));
+  box-shadow:0 0 26px rgba(255,206,104,.27),0 12px 36px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.18);
+  pointer-events:auto;max-height:min(55dvh,300px);overflow-y:auto;
+  animation:vs-actions-rise .44s cubic-bezier(.16,.83,.23,1) both;
+}
+.vs-finale-summary{text-align:center}
+.vs-finale-summary small{display:block;font-size:clamp(8px,.7vw,11px);font-weight:1000;letter-spacing:.15em;color:#a3e5ff}
+.vs-finale-summary h2{
+  margin:2px 0 0;line-height:1.05;font-size:clamp(20px,3vw,35px);
+  font-weight:1000;color:#ffedab;text-shadow:0 0 13px rgba(255,208,101,.4);
+}
+.vs-finale-summary p{
+  margin:3px 0 0;font-size:clamp(9px,.9vw,13px);
+  font-weight:900;color:#e2ecff;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.vs-finale-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.vs-finale-buttons button,.vs-finale-buttons a{
+  min-width:0;min-height:42px;display:grid;place-items:center;
+  padding:7px 5px;border-radius:10px;
+  border:1px solid rgba(187,226,255,.73);
+  color:#102340;background:linear-gradient(160deg,#a2efff,#50b5ea);
+  font-size:clamp(11px,1.35vw,14px);font-weight:1000;text-decoration:none;
+  box-shadow:0 3px 0 #145d87,inset 0 1px 0 rgba(255,255,255,.55);
+}
+.vs-finale-buttons button{
+  border-color:#ffedc0;background:linear-gradient(155deg,#fff4a5,#ffc76b 79%,#ed9840);
+  box-shadow:0 3px 0 #a6652c,inset 0 1px 0 #fff6d4;
+}
+.vs-finale-buttons button:active,.vs-finale-buttons a:active{transform:translateY(2px);box-shadow:inset 0 2px 4px rgba(0,0,0,.18)}
+.vs-finale-buttons :is(button,a):focus-visible{outline:3px solid #fff5c3;outline-offset:2px}
+@keyframes vs-victory-glow{
+  from{box-shadow:0 0 0 2px rgba(255,229,109,.45),0 0 18px rgba(255,205,71,.35)}
+  to{box-shadow:0 0 0 2px rgba(255,233,151,.72),0 0 39px rgba(255,214,95,.62)}
+}
+@keyframes vs-arena-stamp{
+  0%{opacity:0;transform:scale(1.65) rotate(-5deg);filter:brightness(2)}
+  65%{opacity:1;transform:scale(.94) rotate(1deg)}
+  100%{opacity:1;transform:scale(1) rotate(0)}
+}
+@keyframes vs-final-flash{0%{opacity:0}18%{opacity:.88}100%{opacity:0}}
+@keyframes vs-final-ring{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+  25%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.65)}
+}
+@keyframes vs-ko-slam{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(2.2) rotate(-7deg)}
+  23%{opacity:1;transform:translate(-50%,-50%) scale(.9) rotate(3deg)}
+  46%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}
+  80%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-55%) scale(1.15)}
+}
+@keyframes vs-actions-rise{
+  from{opacity:0;transform:translate(-50%,16px) scale(.93)}
+  to{opacity:1;transform:translate(-50%,0) scale(1)}
+}
+@media(max-width:780px) and (orientation:landscape){
+  .match-shell[data-finished="true"] .arena::after{font-size:clamp(27px,5.2vw,46px)}
+  .match-shell[data-finished="true"] .arena[data-finish="lose"]::after{font-size:clamp(24px,4.2vw,39px)}
+  .vs-finale-actions{width:min(60vw,335px);gap:5px;padding:6px 8px;border-radius:12px}
+  .vs-finale-summary h2{font-size:20px}
+  .vs-finale-summary p{font-size:9px}
+  .vs-finale-buttons button,.vs-finale-buttons a{min-height:38px;font-size:11px}
+}
+@media(max-height:320px) and (orientation:landscape){
+  .vs-finale-actions{padding:5px;gap:4px;max-height:48dvh}
+  .vs-finale-summary h2{font-size:17px}
+  .vs-finale-summary p{font-size:8px}
+  .vs-finale-buttons button,.vs-finale-buttons a{min-height:34px}
+}
+@media(prefers-reduced-motion:reduce){
+  .match-shell[data-finished="true"] .arena{animation:none;transition:none}
+  .match-shell[data-finished="true"] .arena::after,.vs-finale-actions{animation:none}
+  .vs-finale-flash,.vs-finale-ring,.vs-finale-impact{display:none}
+}
+html[data-hg-motion="reduced"] .match-shell[data-finished="true"] .arena,
+html[data-hg-motion="reduced"] .match-shell[data-finished="true"] .arena::after,
+html[data-hg-motion="reduced"] .vs-finale-actions{animation:none;transition:none}
+html[data-hg-motion="reduced"] .vs-finale-flash,
+html[data-hg-motion="reduced"] .vs-finale-ring,
+html[data-hg-motion="reduced"] .vs-finale-impact{display:none}
