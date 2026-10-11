@@ -866,3 +866,108 @@ html[data-hg-motion="reduced"] .burst-ring{display:none!important}
   box-shadow:0 2px 0 #9f2940,0 5px 12px rgba(0,0,0,.18);
 }
 .quit-card .stack{gap:9px}
+
+
+/* One-player roster workflow: compact selection without shared participant counts */
+.solo-current-card{
+  padding:18px 16px;
+  border-color:rgba(98,231,255,.48);
+}
+.solo-current-caption{
+  margin:0 0 12px;
+  color:#a9ddec;
+  font-size:12px;
+  font-weight:900;
+}
+.solo-current-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.solo-current-person{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.solo-current-icon{font-size:40px;line-height:1.15}
+.solo-current-person strong{
+  min-width:0;
+  overflow-wrap:anywhere;
+  color:#fff;
+  font-size:clamp(19px,5vw,25px);
+  line-height:1.3;
+}
+.solo-change-btn{
+  flex:0 0 auto;
+  min-width:76px;
+  min-height:44px;
+  border:1px solid rgba(118,224,255,.78);
+  border-radius:13px;
+  background:rgba(86,230,255,.16);
+  color:#c5f8ff;
+  font-weight:1000;
+}
+.solo-choice small{
+  margin-left:auto;
+  flex-shrink:0;
+  color:#85efff;
+  font-size:11px;
+}
+.solo-hint{
+  margin:0;
+  color:#d2dbea;
+  font-size:12px;
+  text-align:center;
+  font-weight:800;
+}
+.solo-register{
+  display:grid;
+  gap:12px;
+  padding:17px;
+}
+.solo-register-label{
+  color:#e6f5ff;
+  font-size:14px;
+  font-weight:1000;
+}
+.solo-register input{
+  width:100%;
+  min-height:50px;
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:13px;
+  background:#fff;
+  color:#1e2b43;
+  padding:10px 12px;
+  font:inherit;
+  font-size:17px;
+}
+.solo-register-icons{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+.solo-icon-choice{
+  display:grid;
+  place-items:center;
+  min-width:0;
+  min-height:50px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:25px;
+}
+.solo-icon-choice.selected{
+  border:2px solid #6feaff;
+  background:rgba(86,230,255,.22);
+}
+.solo-register-error{
+  margin:0;
+  color:#ffc1ca;
+  font-size:12px;
+  font-weight:800;
+  min-height:0;
+}
+.solo-register-error:empty{display:none}
