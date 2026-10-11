@@ -39,13 +39,13 @@
           <div class="featured-meta">
             <span>3〜10人</span><span>推理</span><span>正体隠匿</span>
           </div>
-          <span class="featured-open">くわしく見る</span>
         </div>
       </a>
     </section>
 
     <nav class="game-filters" aria-label="ゲームカテゴリー">
       <button class="game-filter selected" type="button" data-game-filter="all">すべて</button>
+      <button class="game-filter" type="button" data-game-filter="favorites">☆ お気に入り</button>
       <button class="game-filter" type="button" data-game-filter="推理">推理</button>
       <button class="game-filter" type="button" data-game-filter="会話">会話</button>
       <button class="game-filter" type="button" data-game-filter="協力">協力</button>
@@ -144,6 +144,7 @@
           <div class="compact-tags"><span>2人</span><span>2人対戦</span></div>
         </div>
       </div>
+      <p class="favorites-empty" id="favoritesEmpty" hidden>お気に入りはまだありません。<br>ゲーム画像の右上にある☆を押して登録しよう！</p>
     </section>
 
     <p class="game-count-note"><span id="gameCount">0</span>件を表示中</p>
@@ -151,24 +152,6 @@
 
   <script src="../settings.js"></script>
   <script src="../resume.js"></script>
-  <script>
-    (() => {
-      const filters=[...document.querySelectorAll('[data-game-filter]')];
-      const cards=[...document.querySelectorAll('[data-game-card]')];
-      const count=document.getElementById('gameCount');
-      count.textContent=cards.length;
-      filters.forEach(btn=>btn.addEventListener('click',()=>{
-        const value=btn.dataset.gameFilter;
-        filters.forEach(x=>x.classList.toggle('selected',x===btn));
-        let visible=0;
-        cards.forEach(card=>{
-          const show=value==='all'||(card.dataset.categories||'').split(' ').includes(value);
-          card.hidden=!show;
-          if(show)visible++;
-        });
-        count.textContent=visible;
-      }));
-    })();
-  </script>
+  <script src="favorites.js"></script>
 </body>
 </html>
