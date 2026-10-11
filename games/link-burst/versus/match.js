@@ -29,9 +29,7 @@
    return '<section class="arena" data-side="'+i+'" aria-label="'+side+'P '+esc(p.name)+'の盤面">'+
      '<header class="arena-header">'+
        '<div class="arena-person"><span class="avatar">'+esc(p.icon)+'</span>'+
-         '<div class="details"><small>'+side+'P</small><strong>'+esc(p.name)+'</strong></div>'+
-       '</div>'+
-       '<div class="arena-score"><small>SCORE</small><strong data-score="'+i+'">0</strong></div>'+
+         '<div class="details"><small>'+side+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
      '</header>'+
      '<div class="arena-core">'+
        '<div class="v-pad-left" aria-label="'+side+'Pの左右移動・高速落下">'+
@@ -43,20 +41,29 @@
          '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+
        '</div>'+
        '<div class="arena-side">'+
-         '<aside class="arena-next"><small>NEXT</small><div data-next="'+i+'"></div>'+
-           '<small>LINK</small><div class="arena-link" data-link="'+i+'">0</div></aside>'+
+         '<aside class="arena-next"><small>NEXT</small><div data-next="'+i+'"></div></aside>'+
          '<div class="v-pad-right" aria-label="'+side+'Pの回転操作">'+
            '<button class="v-control" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
          '</div>'+
        '</div>'+
      '</div></section>';
  }
-  function shell(){
+ function shell(){
    root.className='match-shell';
-   root.innerHTML='<header class="match-top"><span class="match-mode">LINK BURST / 2P KO</span>'+
-     '<span class="match-phase">JAMなし・同時対戦テスト</span>'+
-     '<button class="match-pause" data-pause type="button" aria-label="一時停止">Ⅱ PAUSE</button></header>'+
-     '<div class="match-arenas">'+arena(0)+arena(1)+'</div>'+
+   root.innerHTML='<div class="match-arenas">'+
+     arena(0)+
+     '<aside class="match-center" aria-label="対戦情報と一時停止">'+
+       '<div class="center-mode"><strong>2P KO</strong><small>JAMなし</small></div>'+
+       '<div class="center-score p1"><small>1P SCORE</small><strong data-score="0">0</strong></div>'+
+       '<div class="center-score p2"><small>2P SCORE</small><strong data-score="1">0</strong></div>'+
+       '<button class="match-pause" data-pause type="button" aria-label="2人の対戦を一時停止">Ⅱ<span>PAUSE</span></button>'+
+       '<div class="center-link-row">'+
+         '<div class="center-link p1"><small>1P LINK</small><strong data-link="0">0</strong></div>'+
+         '<div class="center-link p2"><small>2P LINK</small><strong data-link="1">0</strong></div>'+
+       '</div>'+
+       '<div class="center-status">同時対戦<br>テスト</div>'+
+     '</aside>'+
+     arena(1)+'</div>'+
      '<div class="match-countdown" data-countdown role="status" aria-live="polite"><strong data-countdown-text>3</strong><p>READY?</p></div>'+
      '<div class="match-overlay" data-pause-menu hidden><div class="match-dialog" role="dialog" aria-label="一時停止">'+
         '<h2>PAUSE</h2><p>2人のゲームは停止中</p>'+
