@@ -217,8 +217,7 @@
   }
 
   function playScreen(){
-    return topNav()+
-      '<section class="play-hud">'+
+    return '<section class="play-hud">'+
         '<div class="score-panel">'+
           '<div class="hud-box score-box"><small>SCORE</small><strong data-score>0</strong><em data-best-score>BEST 0</em></div>'+
           '<div class="hud-box link" aria-label="最大連鎖数"><small>LINK</small><strong data-max-link>0</strong></div>'+
@@ -365,14 +364,23 @@
       '<h2 id="pauseTitle">一時停止</h2>'+
       '<p>'+(auto?'画面を離れたため自動で停止しました。':'ゲームは止まっています。ゆっくり再開してね。')+'</p>'+
       '<div class="pause-summary"><span>SCORE <strong>'+state.score+'</strong></span><span>MAX LINK <strong>'+state.maxLink+'</strong></span></div>'+
-      '<div class="stack"><button class="btn" type="button" data-pause-resume>ゲームに戻る</button><button class="btn secondary" type="button" data-pause-quit>やめる</button></div>'+
+      '<div class="stack pause-main-actions"><button class="btn" type="button" data-pause-resume>ゲームに戻る</button></div>'+
+      '<nav class="pause-nav-actions" aria-label="一時停止中のメニュー">'+
+        '<button class="btn secondary" type="button" data-pause-back>← タイトルへもどる</button>'+
+        '<button class="btn secondary" type="button" data-pause-home>ゲームをえらぶ</button>'+
+        '<button class="btn secondary pause-settings-btn" type="button" data-hg-settings-open>⚙ 共通設定</button>'+
+      '</nav>'+
     '</section>';
     document.body.appendChild(w);
 
     w.querySelector('[data-pause-resume]').addEventListener('click',resumePausedGame);
-    w.querySelector('[data-pause-quit]').addEventListener('click',function(){
+    w.querySelector('[data-pause-back]').addEventListener('click',function(){
       w.remove();
-      showQuitConfirm('pause');
+      showQuitConfirm('back');
+    });
+    w.querySelector('[data-pause-home]').addEventListener('click',function(){
+      w.remove();
+      showQuitConfirm('home');
     });
   }
 
@@ -389,7 +397,7 @@
     state.softDrop=false;
     clearRepeat();
     stopLoop();
-    const fromPause=type==='pause';
+    const fromPause=state.paused||type==='pause';
     if(fromPause)state.paused=true;
 
     const w=document.createElement('div');
