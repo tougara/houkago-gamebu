@@ -3,8 +3,8 @@
 (function(global){
   'use strict';
   const COLS=7,ROWS=15,HIDDEN=2,LOCK_MS=300;
-  const COLORS=['blue','red','yellow','green','purple'];
-  const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇',purple:'♠'};
+  const COLORS=['blue','red','yellow','green'];
+  const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇'};
   const ROT=[[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[-1,0]],[[0,0],[0,-1]]];
   function board(){return Array.from({length:ROWS},()=>Array(COLS).fill(null))}
   function cells(piece,x,y,rot){
