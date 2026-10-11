@@ -518,3 +518,149 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
   .arena-board-stack{grid-template-rows:minmax(0,1fr) 44px;row-gap:3px}
   .arena-board-stack .v-pad-bottom .v-control[data-action="rotate"]{min-height:42px}
 }
+
+/* Versus V4 — board-first: maximum field, micro controls */
+/* Remove the 44–58px row underneath the board entirely.  Height, rather
+   than controls, determines board size. Keep headers in their own track. */
+.match-shell{
+  grid-template-rows:22px minmax(0,1fr);
+  gap:2px;
+  padding-top:max(1px,env(safe-area-inset-top));
+  padding-bottom:max(1px,env(safe-area-inset-bottom));
+}
+.match-top{padding-right:72px}
+.match-mode{font-size:clamp(10px,1.65vw,14px)}
+.match-phase{font-size:clamp(8px,1.2vw,10px)}
+.match-pause{min-height:22px;min-width:65px;padding:3px 6px}
+.match-arenas{gap:3px;min-height:0}
+.arena{
+  grid-template-rows:28px minmax(0,1fr);
+  gap:1px;
+  padding:2px;
+  min-width:0;min-height:0;
+}
+.arena-header{min-height:0;padding:0 3px}
+.arena-core{
+  /* Board width capped only by actual height and minimal side spaces. */
+  --v4-side:clamp(37px,3.6vw,51px);
+  --v4-board:calc((100dvh - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 7 / 13);
+  display:grid;
+  grid-template-columns:
+    minmax(0,1fr)
+    minmax(0,min(var(--v4-board),calc(100% - 107px)))
+    var(--v4-side);
+  grid-template-rows:minmax(0,1fr);
+  column-gap:3px;
+  align-items:start;
+  width:100%;
+  height:100%;
+  min-height:0;
+  min-width:0;
+}
+.arena-board-stack{
+  grid-column:2;grid-row:1;
+  display:block;
+  width:100%;height:100%;
+  min-height:0;min-width:0;
+  align-self:start;
+}
+.arena-board-stack .arena-field-wrap{
+  width:100%;height:100%;
+  display:flex;align-items:flex-start;justify-content:flex-end;
+  min-width:0;min-height:0;
+  container-type:inline-size;
+}
+.arena-board-stack .arena-field{
+  width:auto;
+  height:100%;
+  height:min(100%,calc(100cqw * 13 / 7));
+  max-width:100%;max-height:100%;
+  aspect-ratio:7 / 13;
+  flex:0 0 auto;
+  align-self:flex-start;
+  border-radius:8px;
+}
+/* Explicitly compact the solo-style three-key pad and keep it within
+   the left *spare* column rather than letting its dimensions size the board. */
+.arena-core .v-pad-left{
+  grid-column:1;grid-row:1;
+  align-self:end;
+  justify-self:start;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,43px);
+  gap:3px;
+  width:min(112px,100%);
+  height:auto;
+  min-width:0;min-height:0;
+  margin:0;
+  padding:0 0 2px;
+}
+.arena-core .v-pad-left .v-control[data-action="left"]{grid-column:1;grid-row:1}
+.arena-core .v-pad-left .v-control[data-action="right"]{grid-column:2;grid-row:1}
+.arena-core .v-pad-left .v-control[data-action="down"]{grid-column:1 / -1;grid-row:2}
+.arena-core .v-control{
+  width:100%;height:100%;
+  min-width:0;min-height:40px;
+  padding:1px;
+  border-radius:8px;
+  font-size:clamp(18px,2.3vw,23px);
+}
+.arena-core .arena-side{
+  grid-column:3;grid-row:1;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  align-items:stretch;
+  width:100%;height:100%;
+  min-width:0;min-height:0;
+  gap:4px;
+}
+.arena-core .arena-next{
+  align-self:stretch;
+  width:100%;max-width:unset;
+  margin:0;
+  padding:4px 1px;
+  gap:3px;
+}
+.arena-core .v-pad-right{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:clamp(45px,10vh,58px);
+  width:100%;height:auto;
+  min-width:0;min-height:0;
+  margin:0;padding:0 0 2px;
+  align-self:stretch;
+}
+.arena-core .v-pad-right .v-control[data-action="rotate"]{
+  min-height:44px;
+  font-size:clamp(20px,2.6vw,27px);
+  border-radius:8px;
+  background:linear-gradient(145deg,#8067c2,#3d2f7e);
+}
+/* Smaller displays retain ← → above ↓; the buttons shrink rather than
+   changing into the vertical arrangement or stealing board height. */
+@media(max-width:690px) and (orientation:landscape){
+  .match-shell{grid-template-rows:21px minmax(0,1fr);padding:1px}
+  .arena{grid-template-rows:25px minmax(0,1fr);padding:1px;gap:1px}
+  .arena-core{
+    --v4-board:calc((100dvh - 54px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 7 / 13);
+    --v4-side:35px;
+    grid-template-columns:minmax(0,1fr) minmax(0,min(var(--v4-board),calc(100% - 88px))) var(--v4-side);
+    column-gap:2px;
+  }
+  .arena-core .v-pad-left{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-rows:repeat(2,40px);
+    width:min(94px,100%);
+    gap:2px;
+  }
+  .arena-core .v-pad-left .v-control[data-action="left"]{grid-column:1;grid-row:1}
+  .arena-core .v-pad-left .v-control[data-action="right"]{grid-column:2;grid-row:1}
+  .arena-core .v-pad-left .v-control[data-action="down"]{grid-column:1 / -1;grid-row:2}
+  .arena-core .v-control{min-height:38px;font-size:18px;border-radius:7px}
+  .arena-core .arena-next{padding:3px 1px;gap:2px}
+  .v-mini{width:18px;height:37px}
+  .arena-core .v-pad-right{grid-template-rows:45px}
+  .arena-core .v-pad-right .v-control[data-action="rotate"]{min-height:42px;font-size:20px}
+}
