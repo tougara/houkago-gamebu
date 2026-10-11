@@ -917,3 +917,50 @@ body.registry-open{overflow:hidden}
   filter:drop-shadow(0 9px 16px rgba(0,0,0,.34));
 }
 .link-burst-card-art .game-feel{z-index:3}
+
+
+/* Game favorites 2026-10-11 */
+.favorite-card-wrap{position:relative;min-width:0}
+.compact-card-wrap > .compact-game-card{display:block;height:100%}
+.featured-card-wrap > .featured-card{height:100%}
+.favorite-card-wrap[hidden],.featured-game[hidden],.favorites-empty[hidden]{display:none!important}
+.favorite-toggle{
+  position:absolute;top:8px;right:8px;z-index:12;
+  display:grid;place-items:center;
+  width:44px;height:44px;padding:8px;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:50%;
+  background:rgba(11,20,41,.53);
+  color:#fff;
+  box-shadow:0 3px 12px rgba(0,0,0,.25);
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .15s ease,background .15s ease
+}
+.favorite-toggle svg{
+  display:block;width:27px;height:27px;
+  fill:transparent;stroke:currentColor;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.36))
+}
+.favorite-toggle.is-favorite{
+  color:#ffe27a;
+  background:rgba(25,30,49,.77);
+  border-color:rgba(255,225,116,.9)
+}
+.favorite-toggle.is-favorite svg{fill:#ffcf36;stroke:#ffe27a}
+.favorite-toggle:active{transform:scale(.92)}
+.favorite-toggle:focus-visible{outline:3px solid #238de9;outline-offset:2px}
+.featured-card-wrap > .favorite-toggle{top:12px;right:12px}
+.game-filter[data-game-filter="favorites"].selected{
+  background:linear-gradient(180deg,#ffe47b,#ffc83f);
+  border-color:#edbc36;color:#513c11;
+  box-shadow:0 5px 12px rgba(218,159,28,.24)
+}
+.favorites-empty{
+  grid-column:1/-1;margin:0;min-height:156px;
+  padding:28px 16px;border:1px dashed #d2d8e4;
+  border-radius:20px;background:#fff;color:#536178;
+  text-align:center;font-size:13px;font-weight:800;line-height:1.7
+}
