@@ -122,7 +122,6 @@
           '<button class="btn" data-start>ゲームをはじめる</button>'+
           '<button class="btn secondary" data-rules>あそびかた</button>'+
           '<button class="btn secondary" data-ranking>ランキング</button>'+
-          '<button class="btn secondary" data-player-select>プレイヤーを選ぶ</button>'+
         '</div>'+
         '<div class="title-player">'+esc(state.player.icon)+' '+esc(state.player.name)+'でプレイ</div>'+
       '</section>';
@@ -410,7 +409,6 @@
     document.querySelector('[data-start]')&&document.querySelector('[data-start]').addEventListener('click',function(){go('playType')});
     document.querySelector('[data-rules]')&&document.querySelector('[data-rules]').addEventListener('click',function(){go('rules')});
     document.querySelector('[data-rules-back]')&&document.querySelector('[data-rules-back]').addEventListener('click',doBack);
-    document.querySelector('[data-player-select]')&&document.querySelector('[data-player-select]').addEventListener('click',function(){go('playerSelect')});
     document.querySelectorAll('[data-solo-player]').forEach(function(b){
       b.addEventListener('click',function(){saveSoloIndex(Number(b.dataset.soloPlayer));render()});
     });
