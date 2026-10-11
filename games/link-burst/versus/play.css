@@ -993,3 +993,76 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
 }
 /* At very narrow widths these groups already fill the available panel.
    Keep the same alignment; the existing width caps prevent horizontal spill. */
+
+/* Versus JAM trial: 4-color obstruction + compact center notifications */
+.v-block.jam{
+  background:linear-gradient(150deg,#8d98a7 0%,#495467 48%,#293243 100%);
+  color:#f0f6ff;
+  text-shadow:0 1px 2px #121a2a;
+  border:1px solid rgba(231,241,255,.8);
+  border-radius:20%;
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.3),0 2px 5px rgba(0,0,0,.27);
+  font-size:clamp(9px,1.8vh,16px);
+  font-weight:1000;
+}
+.center-jam-stack{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:3px;
+  flex:0 0 auto;
+  min-width:0;
+}
+.center-jam{
+  min-width:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;
+  border-radius:9px;
+  padding:5px 1px;
+  border:1px solid rgba(189,204,231,.42);
+  background:rgba(11,25,54,.72);
+}
+.center-jam.p1{border-color:rgba(105,226,250,.42)}
+.center-jam.p2{border-color:rgba(255,154,200,.42)}
+.center-jam span{
+  font-size:clamp(7px,.73vw,9px);font-weight:1000;
+  color:#b4c2dc;white-space:nowrap;
+}
+.center-jam strong{
+  font-size:clamp(16px,1.9vw,24px);line-height:1.06;
+  color:#d5e6f8;font-variant-numeric:tabular-nums;
+}
+.center-jam[data-pending="true"]{
+  border-color:#ffd36a;
+  background:rgba(121,71,30,.48);
+  animation:jam-pending-pulse .85s ease-in-out infinite alternate;
+}
+.center-jam[data-pending="true"] strong{color:#ffe087}
+.center-jam-note{
+  min-width:0;text-align:center;
+  min-height:11px;line-height:1.1;
+  font-size:clamp(8px,.8vw,10px);
+  font-weight:1000;color:#f5d079;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@keyframes jam-pending-pulse{
+  from{box-shadow:0 0 0 rgba(255,215,113,0)}
+  to{box-shadow:0 0 9px rgba(255,215,113,.47)}
+}
+@media(max-width:780px) and (orientation:landscape){
+  .center-jam-stack{gap:2px}
+  .center-jam{padding:3px 0;border-radius:6px}
+  .center-jam span{font-size:7px}
+  .center-jam strong{font-size:16px}
+  .center-jam-note{font-size:8px;min-height:9px}
+}
+@media(max-height:320px) and (orientation:landscape){
+  .center-jam{padding:2px 0}
+  .center-jam strong{font-size:14px}
+  .center-jam-note{font-size:7px;min-height:8px}
+}
+@media(prefers-reduced-motion:reduce){
+  .center-jam[data-pending="true"]{animation:none;box-shadow:0 0 0 1px rgba(255,215,113,.35)}
+}
+html[data-hg-motion="reduced"] .center-jam[data-pending="true"]{
+  animation:none;box-shadow:0 0 0 1px rgba(255,215,113,.35);
+}
