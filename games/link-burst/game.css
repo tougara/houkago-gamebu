@@ -1165,3 +1165,104 @@ html[data-hg-motion="reduced"] .burst-ring{display:none!important}
 }
 .board-cell .block.ghost::before{opacity:.3}
 .board-cell .block.ghost span{opacity:.72}
+
+/* 2026-10-11: expand the puzzle board and show NEXT as a vertical falling pair.
+   Keep the 7x13 playfield and existing touch/action bindings unchanged. */
+.link-burst-app.screen-play{
+  gap:4px;
+  padding-top:max(6px,env(safe-area-inset-top));
+  padding-bottom:max(5px,env(safe-area-inset-bottom));
+}
+.screen-play .board-stage{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) var(--lb-rail-width);
+  grid-template-rows:minmax(0,1fr);
+  column-gap:var(--lb-side-gap);
+  align-items:start;
+  justify-items:center;
+  min-height:0;
+}
+.screen-play .board-frame{
+  grid-column:1;
+  grid-row:1;
+  align-self:start;
+  justify-self:center;
+  /* Fill the stage vertically, limited only by the full left-hand column width. */
+  height:min(100%,calc((100vw - 2 * var(--lb-app-padding) - var(--lb-rail-width) - var(--lb-side-gap)) * 1.857142857));
+  max-width:100%;
+  aspect-ratio:7/13;
+}
+.screen-play .next-panel{
+  position:relative;
+  grid-column:2;
+  grid-row:1;
+  top:auto;
+  right:auto;
+  left:auto;
+  align-self:start;
+  justify-self:stretch;
+  z-index:35;
+  width:100%;
+  min-width:0;
+  gap:8px!important;
+}
+.screen-play .next-box{
+  min-height:0;
+  padding:7px 4px 8px;
+  gap:5px;
+}
+.screen-play .mini-piece{
+  width:30px;
+  max-width:100%;
+  height:63px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:3px;
+}
+.screen-play .mini-block.p0{grid-column:1;grid-row:1}
+.screen-play .mini-block.p1{grid-column:1;grid-row:2}
+.screen-play .pause-btn{
+  min-height:52px;
+  margin-top:2px;
+}
+.screen-play .hud-box{min-height:57px;padding:5px 6px}
+.screen-play .score-box{padding:5px 9px}
+.screen-play .controls{
+  grid-template-rows:repeat(2,46px);
+  row-gap:5px;
+}
+.screen-play .control-btn{height:46px;min-height:46px}
+/* The center of combo text follows the board rather than the sidebar. */
+.screen-play .chain-banner,
+.screen-play .combo-fx,
+.screen-play .link-fx,
+.screen-play .score-pop,
+.screen-play .play-tip{
+  left:calc(50% - (var(--lb-rail-width) + var(--lb-side-gap)) / 2);
+}
+@media(max-width:390px){
+  .screen-play .mini-piece{width:28px;height:59px}
+  .screen-play .next-box{padding:6px 3px 7px}
+  .screen-play .controls{grid-template-rows:repeat(2,45px);row-gap:4px}
+  .screen-play .control-btn{height:45px;min-height:45px}
+}
+@media(max-height:700px){
+  .screen-play .board-frame{
+    height:min(100%,calc((100vw - 2 * var(--lb-app-padding) - var(--lb-rail-width) - var(--lb-side-gap)) * 1.857142857));
+  }
+  .screen-play .mini-piece{width:25px;height:53px}
+  .screen-play .next-box{padding:5px 3px 6px}
+  .screen-play .next-panel{gap:5px!important}
+  .screen-play .pause-btn{min-height:45px}
+  .screen-play .hud-box{min-height:48px}
+  .screen-play .controls{grid-template-rows:repeat(2,44px);row-gap:4px}
+  .screen-play .control-btn{height:44px;min-height:44px}
+}
+@media(min-width:720px){
+  .screen-play .board-stage{width:min(100%,640px);margin-inline:auto}
+  .screen-play .board-frame{
+    height:min(100%,calc((640px - var(--lb-rail-width) - var(--lb-side-gap)) * 1.857142857));
+  }
+}
