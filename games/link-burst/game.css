@@ -1095,6 +1095,11 @@ html[data-hg-motion="reduced"] .burst-ring{display:none!important}
 }
 
 /* NEXT: explicitly size the inner wrapper and each block so grid sizing cannot collapse. */
+.screen-play .next-box{
+  grid-template-columns:minmax(0,1fr);
+  justify-items:stretch;
+}
+.screen-play .next-box small{justify-self:center}
 .screen-play .next-box > [data-next-one],
 .screen-play .next-box > [data-next-two]{
   display:block;
