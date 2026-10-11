@@ -2,6 +2,20 @@
 globalThis.HOUKAGO_CHANGELOG=[
   {
     "date": "2026-10-11",
+    "datetime": "2026-10-11T19:47:11.000+09:00",
+    "category": "link",
+    "major": true,
+    "title": "リンクバーストの2人対戦にJAM・COUNTERを追加",
+    "changes": [
+      "連鎖で相手に灰色のJAMブロックを送り合えるように",
+      "JAMの到着予告・連鎖による相殺・7個ずつの段階的な着弾に対応",
+      "同時攻撃と逆転の読み合いを楽しめる試作対戦を追加",
+      "1人用のゲームと保存データは変更なし"
+    ],
+    "commit": "69a72b7751bc23b475b176284fbeb8b4340c549d"
+  },
+  {
+    "date": "2026-10-11",
     "datetime": "2026-10-11T19:17:16.000+09:00",
     "category": "site",
     "major": true,
