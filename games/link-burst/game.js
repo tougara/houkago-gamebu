@@ -710,7 +710,7 @@
     state.piece=null;
     state.pieces++;
     drawBoard();
-    flashLock();
+    flashLock(cells);
     vibrate(9);
     await delay(120);
     await applyGravityAnimated();
@@ -916,13 +916,22 @@
     if(two)two.innerHTML=miniPieceHtml(state.queue[1]);
   }
 
-  function flashLock(){
+  function flashLock(cells){
     const frameEl=document.querySelector('[data-board-frame]');
     if(!frameEl)return;
     frameEl.classList.remove('lock-flash');
     void frameEl.offsetWidth;
     frameEl.classList.add('lock-flash');
     setTimeout(function(){frameEl&&frameEl.classList.remove('lock-flash')},220);
+
+    // Only animate the two newly landed blocks; never alter board coordinates or timing.
+    if(reducedMotion()||!Array.isArray(cells))return;
+    cells.forEach(function(cell){
+      const block=document.querySelector('[data-key="'+cell.y+':'+cell.x+'"] .block');
+      if(!block)return;
+      block.classList.add('land-squash');
+      setTimeout(function(){if(block.isConnected)block.classList.remove('land-squash')},220);
+    });
   }
   function showLink(link,gain,combo,power){
     const el=document.querySelector('[data-link-fx]');
