@@ -144,10 +144,10 @@
   }
 
   function playTypeScreen(){
-    return topNav()+heading('遊び方をえらぶ','まずは1人用を完成。2人対戦は次の段階で追加します。')+
+    return topNav()+heading('遊び方をえらぶ','1人用か2人対戦を選んでね。対戦は準備画面から順番に開発中。')+
       '<div class="choice-grid">'+
         '<button class="choice-card solo" data-play-type="solo"><span class="mode-badge">PLAYABLE</span><strong>1人であそぶ</strong><span>ENDLESSと2 MINUTES。連鎖とハイスコアに挑戦。</span></button>'+
-        '<button class="choice-card versus" disabled><span class="mode-badge">NEXT STEP</span><strong>2人で対戦</strong><span>横画面・JAM・COUNTER・攻撃演出は次の実装段階で追加。</span></button>'+
+        '<button class="choice-card versus" data-play-type="versus"><span class="mode-badge">SETUP PREVIEW</span><strong>2人で対戦</strong><span>2人を選んで横画面の準備へ。試合はまだ制作中。</span></button>'+
       '</div>';
   }
 
@@ -538,6 +538,7 @@
       doBack();
     });
     document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('mode')});
+    document.querySelector('[data-play-type="versus"]')&&document.querySelector('[data-play-type="versus"]').addEventListener('click',function(){location.href='versus/'});
     document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){beginGame(b.dataset.mode)})});
     document.querySelectorAll('[data-ranking]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=state.mode||'endless';go('ranking')})});
     document.querySelectorAll('[data-rank-mode]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=b.dataset.rankMode;render()})});
