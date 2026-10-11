@@ -6,7 +6,7 @@
  const SELECT_KEY='houkago_link_burst_versus_players_v1';
  if(!root||!engine)return;
  const match={players:[],games:[],raf:0,last:0,paused:false,ended:false,
-   countdown:3500,held:new Map(),keys:new Set(),boardSignatures:['',''],result:''};
+   countdown:3500,held:new Map(),keys:new Set(),boardSignatures:['',''],result:'',confirmBack:false};
  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
  function landscape(){return window.matchMedia?window.matchMedia('(orientation: landscape)').matches:window.innerWidth>window.innerHeight}
  function selectPlayers(){
@@ -53,7 +53,7 @@
    root.innerHTML='<div class="match-arenas">'+
      arena(0)+
      '<aside class="match-center" aria-label="対戦情報と一時停止">'+
-       '<div class="center-mode"><strong>2P KO</strong><small>JAMなし</small></div>'+
+       '<div class="center-mode"><strong>2人で対戦</strong><small>JAMなし</small></div>'+
        '<div class="center-score p1"><small>1P SCORE</small><strong data-score="0">0</strong></div>'+
        '<div class="center-score p2"><small>2P SCORE</small><strong data-score="1">0</strong></div>'+
        '<button class="match-pause" data-pause type="button" aria-label="2人の対戦を一時停止">Ⅱ<span>PAUSE</span></button>'+
@@ -65,12 +65,18 @@
      '</aside>'+
      arena(1)+'</div>'+
      '<div class="match-countdown" data-countdown role="status" aria-live="polite"><strong data-countdown-text>3</strong><p>READY?</p></div>'+
-     '<div class="match-overlay" data-pause-menu hidden><div class="match-dialog" role="dialog" aria-label="一時停止">'+
+     '<div class="match-overlay" data-pause-menu hidden><div class="match-dialog" role="dialog" aria-modal="true" aria-label="一時停止">'+
         '<h2>PAUSE</h2><p>2人のゲームは停止中</p>'+
-        '<div class="match-dialog-actions"><button data-resume>対戦に戻る</button>'+
-        '<button class="secondary" data-retry>同じ2人で最初から</button>'+
-        '<button data-hg-settings-open type="button">⚙ 共通設定</button>'+
-        '<a class="secondary" href="./">対戦準備に戻る</a></div></div></div>'+
+        '<div class="match-dialog-actions"><button type="button" data-resume>対戦に戻る</button>'+
+        '<button type="button" class="secondary" data-back-setup>対戦準備に戻る</button>'+
+        '<button type="button" data-hg-settings-open>⚙ 共通設定</button></div></div></div>'+
+     '<div class="match-overlay" data-back-confirm hidden><div class="match-dialog" role="alertdialog" aria-modal="true" aria-label="対戦準備に戻る確認">'+
+        '<h2>対戦を終了しますか？</h2>'+
+        '<p>現在の対戦を終了して、対戦準備に戻ります。途中の状態は保存されません。</p>'+
+        '<div class="match-dialog-actions">'+
+          '<button type="button" data-cancel-back>キャンセルして一時停止に戻る</button>'+
+          '<button type="button" class="secondary" data-confirm-back>対戦準備に戻る</button>'+
+        '</div></div></div>'+
      '<div class="match-overlay" data-result hidden><div class="match-dialog" role="dialog" aria-label="対戦結果">'+
         '<h2 data-winner>勝負あり！</h2><p data-outcome>KOで決着</p>'+
         '<div class="match-dialog-actions"><button data-retry>同じ2人で再戦</button>'+
@@ -96,7 +102,8 @@
  function updateOverlays(){
    const portrait=root.querySelector('[data-rotate]');
    if(portrait)portrait.hidden=landscape();
-   const pause=root.querySelector('[data-pause-menu]');if(pause)pause.hidden=!match.paused;
+   const pause=root.querySelector('[data-pause-menu]');if(pause)pause.hidden=!match.paused||match.confirmBack;
+   const confirm=root.querySelector('[data-back-confirm]');if(confirm)confirm.hidden=!match.confirmBack;
    const end=root.querySelector('[data-result]');if(end)end.hidden=!match.ended;
    const count=root.querySelector('[data-countdown]');
    if(count)count.hidden=match.paused||match.ended||match.countdown<=0;
@@ -188,16 +195,16 @@
  }
  function pause(auto){
    if(match.paused||match.ended)return;
-   match.paused=true;stop();releaseAll();updateOverlays();
+   match.confirmBack=false;match.paused=true;stop();releaseAll();updateOverlays();
  }
  function resume(){
    if(match.ended)return;
-   match.paused=false;updateOverlays();continueLoop();
+   match.confirmBack=false;match.paused=false;updateOverlays();continueLoop();
  }
  function newRound(){
    stop();releaseAll();
    match.games=match.players.map(function(p){return engine.make(p)});
-   match.boardSignatures=['',''];match.paused=false;match.ended=false;
+   match.boardSignatures=['',''];match.paused=false;match.ended=false;match.confirmBack=false;
    match.countdown=3500;match.last=0;
    shell();draw(true);updateOverlays();continueLoop();
  }
@@ -231,11 +238,34 @@
  root.addEventListener('click',function(e){
    if(e.target.closest('[data-pause]')){pause(false);return}
    if(e.target.closest('[data-resume]')){resume();return}
+   if(e.target.closest('[data-back-setup]')){
+     if(!match.paused||match.ended)return;
+     match.confirmBack=true;
+     updateOverlays();
+     return;
+   }
+   if(e.target.closest('[data-cancel-back]')){
+     if(!match.confirmBack)return;
+     match.confirmBack=false;
+     updateOverlays();
+     return;
+   }
+   if(e.target.closest('[data-confirm-back]')){
+     if(!match.paused||!match.confirmBack||match.ended)return;
+     location.href='./';
+     return;
+   }
    if(e.target.closest('[data-retry]')){newRound();return}
  });
  window.addEventListener('keydown',function(e){
    const lower=e.key.toLowerCase();
-   if(lower==='escape'){e.preventDefault();if(match.paused)resume();else pause(false);return}
+   if(lower==='escape'){
+     e.preventDefault();
+     if(match.confirmBack){match.confirmBack=false;updateOverlays()}
+     else if(match.paused)resume();
+     else pause(false);
+     return;
+   }
    const mapping={a:[0,'left'],d:[0,'right'],s:[0,'down'],w:[0,'rotate'],
      arrowleft:[1,'left'],arrowright:[1,'right'],arrowdown:[1,'down'],arrowup:[1,'rotate']};
    const mapped=mapping[lower];
