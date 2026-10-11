@@ -145,13 +145,29 @@
   }
 
   function playerSelectScreen(){
-    const active=loadActivePlayers();
-    const buttons=(active.length?active:[state.player]).map(function(p,i){
-      return '<button class="solo-player-btn '+(i===state.soloIndex?'selected':'')+'" data-solo-player="'+i+'"><span>'+esc(p.icon)+'</span><small>'+esc(p.name)+'</small></button>';
-    }).join('');
-    return topNav()+heading('プレイヤーを選ぶ','このゲームの記録を残すメンバーを選びます。')+
-      '<section class="card player-card"><div class="solo-player-grid">'+buttons+'</div></section>'+
-      '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-player-done>決定</button></div>';
+    const d=playersApi&&playersApi.load?playersApi.load():null;
+    const players=(d&&d.players||[]).slice(0,d&&d.activeCount||2);
+    return topNav()+heading('プレイヤーを選ぶ','登録済みメンバーから今回遊ぶ人を選べます')+
+      '<section class="card solo-list">'+players.map(function(p,i){
+        return '<button class="solo-choice '+(i===state.soloIndex?'selected':'')+'" data-solo-player="'+i+'"><span>'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong></button>';
+      }).join('')+'</section>'+
+      '<div class="stack player-select-actions"><button class="btn secondary" data-edit-members>メンバー登録を編集</button><button class="btn" data-player-done>このプレイヤーで決定</button></div>';
+  }
+
+  function membersScreen(){
+    const d=playersApi&&playersApi.load?playersApi.load():null;
+    if(!playersApi||!playersApi.renderEditor){
+      return topNav()+heading('参加メンバー','共通プレイヤー機能を読み込めませんでした。');
+    }
+    return topNav()+playersApi.renderEditor({
+      min:2,
+      max:10,
+      count:d&&d.activeCount||2,
+      players:d&&d.players||[],
+      title:'参加メンバー',
+      subtitle:'名前とアイコンは放課後ゲーム部の全ゲームで共通です',
+      doneLabel:'登録をおわる'
+    });
   }
 
   function rulesScreen(){
@@ -251,7 +267,7 @@
   }
 
   function screenHtml(){
-    const map={title:titleScreen,playType:playTypeScreen,mode:modeScreen,playerSelect:playerSelectScreen,rules:rulesScreen,play:playScreen,result:resultScreen,ranking:rankingScreen};
+    const map={title:titleScreen,playType:playTypeScreen,mode:modeScreen,playerSelect:playerSelectScreen,members:membersScreen,rules:rulesScreen,play:playScreen,result:resultScreen,ranking:rankingScreen};
     return (map[state.screen]||titleScreen)();
   }
 
@@ -326,14 +342,7 @@
     w.querySelector('[data-pause-resume]').addEventListener('click',resumePausedGame);
     w.querySelector('[data-pause-quit]').addEventListener('click',function(){
       w.remove();
-      state.paused=false;
-      state.gameStarted=false;
-      state.resolving=false;
-      state.chainActive=false;
-      resumeApi&&resumeApi.clear&&resumeApi.clear(RESUME_ID);
-      state.history=[];
-      state.screen='title';
-      render();
+      showQuitConfirm('pause');
     });
   }
 
@@ -350,19 +359,48 @@
     state.softDrop=false;
     clearRepeat();
     stopLoop();
+    const fromPause=type==='pause';
+    if(fromPause)state.paused=true;
+
     const w=document.createElement('div');
     w.className='quit-backdrop';
-    w.innerHTML='<section class="card quit-card"><h2>ゲームをやめますか？</h2><p>「やめる」を選ぶと、このプレイの途中データは消えます。</p><div class="stack"><button class="btn secondary" data-quit-cancel>続ける</button><button class="btn" data-quit-ok>やめる</button></div></section>';
+    w.innerHTML='<section class="card quit-card" role="dialog" aria-modal="true" aria-labelledby="quitTitle">'+
+      '<h2 id="quitTitle">ゲームをやめますか？</h2>'+
+      '<p>現在のスコアはランキングに保存されません。</p>'+
+      '<div class="stack"><button class="btn secondary" data-quit-cancel>続ける</button><button class="btn danger" data-quit-ok>やめる</button></div>'+
+    '</section>';
     document.body.appendChild(w);
-    w.querySelector('[data-quit-cancel]').addEventListener('click',function(){w.remove();if(state.gameStarted&&state.screen==='play'&&!state.paused)startLoop()});
+
+    w.querySelector('[data-quit-cancel]').addEventListener('click',function(){
+      w.remove();
+      if(fromPause){
+        state.paused=false;
+        pauseGame(false);
+      }else if(state.gameStarted&&state.screen==='play'&&!state.paused){
+        startLoop();
+      }
+    });
+
     w.querySelector('[data-quit-ok]').addEventListener('click',function(){
       w.remove();
       stopLoop();
       state.gameStarted=false;
+      state.paused=false;
       state.resolving=false;
+      state.chainActive=false;
       resumeApi&&resumeApi.clear&&resumeApi.clear(RESUME_ID);
       if(type==='home')location.href='../';
-      else{state.history=[];state.screen='title';render()}
+      else{
+        state.history=[];
+        state.screen='title';
+        render();
+      }
+    });
+
+    w.addEventListener('click',function(e){
+      if(e.target===w){
+        w.querySelector('[data-quit-cancel]').click();
+      }
     });
   }
 
@@ -373,10 +411,30 @@
     document.querySelector('[data-rules]')&&document.querySelector('[data-rules]').addEventListener('click',function(){go('rules')});
     document.querySelector('[data-rules-back]')&&document.querySelector('[data-rules-back]').addEventListener('click',doBack);
     document.querySelector('[data-player-select]')&&document.querySelector('[data-player-select]').addEventListener('click',function(){go('playerSelect')});
-    document.querySelector('[data-player-done]')&&document.querySelector('[data-player-done]').addEventListener('click',doBack);
     document.querySelectorAll('[data-solo-player]').forEach(function(b){
       b.addEventListener('click',function(){saveSoloIndex(Number(b.dataset.soloPlayer));render()});
     });
+    document.querySelector('[data-edit-members]')&&document.querySelector('[data-edit-members]').addEventListener('click',function(){go('members')});
+    document.querySelector('[data-player-done]')&&document.querySelector('[data-player-done]').addEventListener('click',function(){loadPlayer();doBack()});
+    document.querySelectorAll('[data-member-count]').forEach(function(b){
+      b.addEventListener('click',function(){playersApi&&playersApi.setActiveCount&&playersApi.setActiveCount(Number(b.dataset.memberCount));loadPlayer();render()});
+    });
+    document.querySelectorAll('[data-member-name]').forEach(function(inp){
+      inp.addEventListener('change',function(){
+        const i=Number(inp.dataset.memberName);
+        playersApi&&playersApi.setPlayer&&playersApi.setPlayer(i,{name:inp.value||('プレイヤー'+(i+1))});
+        loadPlayer();
+        render();
+      });
+    });
+    document.querySelectorAll('[data-member-icon]').forEach(function(b){
+      b.addEventListener('click',function(){
+        playersApi&&playersApi.setPlayer&&playersApi.setPlayer(Number(b.dataset.memberIcon),{icon:b.dataset.icon});
+        loadPlayer();
+        render();
+      });
+    });
+    document.querySelector('[data-members-done]')&&document.querySelector('[data-members-done]').addEventListener('click',function(){loadPlayer();if(state.history[state.history.length-1]==='playerSelect')state.history.pop();state.screen='playerSelect';render()});
     document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('mode')});
     document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){beginGame(b.dataset.mode)})});
     document.querySelectorAll('[data-ranking]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=state.mode||'endless';go('ranking')})});
@@ -1151,6 +1209,11 @@
     spawnPiece();
   }
 
+  window.addEventListener('houkago-player-selection-changed',function(){
+    if(state.gameStarted)return;
+    loadPlayer();
+    render();
+  });
   window.addEventListener('pagehide',persistResume);
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden'){
