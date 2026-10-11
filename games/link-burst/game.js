@@ -917,12 +917,20 @@
   }
 
   function flashLock(cells){
-    // Normal placement should stay quiet: the outer frame no longer pulses.
-    // Only the newly landed blocks squash; chain/burst feedback remains unchanged.
-    // Only animate the two newly landed blocks; never alter board coordinates or timing.
+    // Squash the newly landed pair and the existing block directly below each one.
+    // Do not treat the other half of the new pair as an existing support.
     if(reducedMotion()||!Array.isArray(cells))return;
+    const placedKeys=new Set(cells.map(function(cell){return cell.y+':'+cell.x}));
+    const squashKeys=new Set(placedKeys);
     cells.forEach(function(cell){
-      const block=document.querySelector('[data-key="'+cell.y+':'+cell.x+'"] .block');
+      const belowY=cell.y+1;
+      const belowKey=belowY+':'+cell.x;
+      if(belowY<ROWS && state.board[belowY][cell.x] && !placedKeys.has(belowKey)){
+        squashKeys.add(belowKey);
+      }
+    });
+    squashKeys.forEach(function(key){
+      const block=document.querySelector('[data-key="'+key+'"] .block');
       if(!block)return;
       block.classList.add('land-squash');
       setTimeout(function(){if(block.isConnected)block.classList.remove('land-squash')},220);
