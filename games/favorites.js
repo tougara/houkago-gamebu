@@ -15,6 +15,7 @@
   const cardById = new Map();
   const favoriteButtons = [];
   const featuredSection = document.querySelector('.featured-game');
+  const featuredLabel = featuredSection.querySelector('.featured-label');
   const featuredLink = featuredSection.querySelector('.featured-card');
   const featuredArt = featuredLink.querySelector('.featured-art');
   const featuredImage = featuredArt.querySelector('img');
@@ -110,6 +111,8 @@
 
   function refresh() {
     const recommendedId = favorites.length ? favorites[favorites.length - 1] : 'nise-transfer-student';
+    featuredLabel.textContent = favorites.length ? 'お気に入りのゲーム' : 'おすすめゲーム';
+    featuredSection.setAttribute('aria-label', featuredLabel.textContent);
     showFeaturedGame(recommendedId);
 
     favoriteButtons.forEach((button) => {
