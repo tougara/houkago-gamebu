@@ -971,3 +971,42 @@ body.registry-open{overflow:hidden}
   border-radius:20px;background:#fff;color:#536178;
   text-align:center;font-size:13px;font-weight:800;line-height:1.7
 }
+
+/* Sticky game browser navigation / 2026-10-11
+   Separate only the Top/Settings controls from the scrolling heading.
+   The category filter remains sticky immediately beneath the controls. */
+.games-page{
+  --games-sticky-height:66px;
+}
+.games-sticky-nav{
+  position:sticky;
+  top:0;
+  z-index:60;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding:18px 18px 6px;
+  background:rgba(255,251,244,.92);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+}
+.games-sticky-nav .games-settings-btn{
+  float:none;
+  flex-shrink:0;
+}
+.games-page .games-header{
+  padding-top:0;
+}
+.games-page .game-filters{
+  top:var(--games-sticky-height);
+  z-index:50;
+}
+@media(max-width:520px){
+  .games-page{
+    --games-sticky-height:60px;
+  }
+  .games-sticky-nav{
+    padding:12px 14px 6px;
+  }
+}
