@@ -54,13 +54,12 @@
      const major=x.major?'<span class="hg-history-badge major">大型更新</span>':'';
      const latest=x===data[0]?'<span class="hg-history-badge latest">最新</span>':'';
      const changes=(Array.isArray(x.changes)?x.changes:[]).map(s=>'<li>'+esc(s)+'</li>').join('');
-     const sha=/^[a-f0-9]{40}$/.test(x.commit||'')?x.commit:null;
-     const link=sha?'<a class="hg-history-commit" href="https://github.com/tougara/houkago-gamebu/commit/'+sha+'" target="_blank" rel="noopener noreferrer">GitHubの変更を見る ↗</a>':'';
+
      return header+'<article class="hg-history-card'+(x.major?' major':'')+'">'+
        '<div class="hg-history-meta"><time class="hg-history-time" datetime="'+esc(x.datetime)+'">'+esc(timeLabel(x))+'</time>'+
          '<div class="hg-history-badges">'+latest+major+badge+'</div></div>'+
        '<h3>'+esc(x.title)+'</h3>'+
-       (changes?'<ul class="hg-history-changes">'+changes+'</ul>':'')+link+
+       (changes?'<ul class="hg-history-changes">'+changes+'</ul>':'')+
      '</article>';
    }).join(''):'<div class="hg-history-empty">この条件の更新履歴はありません。</div>';
  }
