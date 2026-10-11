@@ -224,17 +224,17 @@
           '<div class="hud-box link"><small>MAX LINK</small><strong data-max-link>0</strong></div>'+
           '<div class="hud-box"><small data-third-label>'+(state.mode==='timed'?'TIME':'BLOCKS')+'</small><strong data-third-value>0</strong></div>'+
         '</div>'+
-        '<div class="next-panel">'+
-          '<div class="next-box"><small>NEXT</small><div data-next-one>'+miniPieceHtml(state.queue[0])+'</div></div>'+
-          '<div class="next-box"><small>NEXT 2</small><div data-next-two>'+miniPieceHtml(state.queue[1])+'</div></div>'+
-          '<button type="button" class="pause-btn" data-pause aria-label="一時停止"><strong>Ⅱ</strong><small>PAUSE</small></button>'+
-        '</div>'+
       '</section>'+
       '<section class="board-stage">'+
         '<div class="board-frame" data-board-frame>'+
           '<span class="danger-label">DANGER</span>'+
           '<div class="game-board" data-board></div>'+
         '</div>'+
+        '<aside class="next-panel" aria-label="次のブロックと一時停止">'+
+          '<div class="next-box"><small>NEXT</small><div data-next-one>'+miniPieceHtml(state.queue[0])+'</div></div>'+
+          '<div class="next-box"><small>NEXT 2</small><div data-next-two>'+miniPieceHtml(state.queue[1])+'</div></div>'+
+          '<button type="button" class="pause-btn" data-pause aria-label="一時停止"><strong>Ⅱ</strong><small>PAUSE</small></button>'+
+        '</aside>'+
         '<div class="chain-banner" data-chain-banner><small>CHAIN</small><strong>1 LINK</strong></div>'+
         '<div class="combo-fx" data-combo-fx><strong>2 COMBO!</strong><span>SIMULTANEOUS CLEAR</span></div>'+
         '<div class="chain-flash" data-chain-flash></div>'+
@@ -917,13 +917,8 @@
   }
 
   function flashLock(cells){
-    const frameEl=document.querySelector('[data-board-frame]');
-    if(!frameEl)return;
-    frameEl.classList.remove('lock-flash');
-    void frameEl.offsetWidth;
-    frameEl.classList.add('lock-flash');
-    setTimeout(function(){frameEl&&frameEl.classList.remove('lock-flash')},220);
-
+    // Normal placement should stay quiet: the outer frame no longer pulses.
+    // Only the newly landed blocks squash; chain/burst feedback remains unchanged.
     // Only animate the two newly landed blocks; never alter board coordinates or timing.
     if(reducedMotion()||!Array.isArray(cells))return;
     cells.forEach(function(cell){
