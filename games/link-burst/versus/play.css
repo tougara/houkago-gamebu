@@ -984,5 +984,12 @@ html[data-hg-motion="reduced"] .v-block.charged{animation:none}
 .arena[data-side="1"] .arena-header{
   left:max(4px,calc(100% - var(--v5-left) - var(--v5-board) - var(--v5-right) - 8px));
 }
+/* Limit labels to the left thumb column: shifting them must never cover
+   any puzzle cells even when names are longer than expected. */
+.arena[data-side="0"] .arena-header,
+.arena[data-side="1"] .arena-header{
+  width:var(--v5-left);
+  max-width:var(--v5-left);
+}
 /* At very narrow widths these groups already fill the available panel.
    Keep the same alignment; the existing width caps prevent horizontal spill. */
