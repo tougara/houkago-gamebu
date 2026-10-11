@@ -2,6 +2,19 @@
 globalThis.HOUKAGO_CHANGELOG=[
   {
     "date": "2026-10-11",
+    "datetime": "2026-10-11T20:56:58.000+09:00",
+    "category": "link",
+    "major": false,
+    "title": "2人対戦のNEXT2とJAM送信を改善",
+    "changes": [
+      "NEXTとNEXT2の2組を両プレイヤーの盤面に表示",
+      "JAMを送った瞬間に飛ぶ演出と予告を表示",
+      "JAMの着弾を現在のペア終了後へ早め、連鎖中の待ち時間も短縮"
+    ],
+    "commit": "be9705418bcc184281cdb2aa05ce601a97e12973"
+  },
+  {
+    "date": "2026-10-11",
     "datetime": "2026-10-11T19:47:11.000+09:00",
     "category": "link",
     "major": true,
