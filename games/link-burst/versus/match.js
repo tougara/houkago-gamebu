@@ -32,23 +32,22 @@
          '<div class="details"><small>'+side+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
      '</header>'+
      '<div class="arena-core">'+
-       '<div class="v-pad-left" aria-label="'+side+'Pの左右移動・高速落下">'+
-         '<button class="v-control" type="button" data-side="'+i+'" data-action="left" aria-label="'+side+'P 左へ">←</button>'+
-         '<button class="v-control" type="button" data-side="'+i+'" data-action="right" aria-label="'+side+'P 右へ">→</button>'+
-         '<button class="v-control" type="button" data-side="'+i+'" data-action="down" aria-label="'+side+'P 高速落下">↓</button>'+
+       '<div class="arena-controls" aria-label="'+side+'Pの操作ボタン">'+
+         '<button class="v-control v-control-rotate" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
+         '<div class="v-control-spacer" aria-hidden="true"></div>'+
+         '<div class="v-control-arrows" aria-label="'+side+'Pの左右移動">'+
+           '<button class="v-control" type="button" data-side="'+i+'" data-action="left" aria-label="'+side+'P 左へ">←</button>'+
+           '<button class="v-control" type="button" data-side="'+i+'" data-action="right" aria-label="'+side+'P 右へ">→</button>'+
+         '</div>'+
+         '<button class="v-control v-control-down" type="button" data-side="'+i+'" data-action="down" aria-label="'+side+'P 高速落下">↓</button>'+
        '</div>'+
        '<div class="arena-board-stack">'+
          '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+
        '</div>'+
-       '<div class="arena-side">'+
-         '<aside class="arena-next">'+
-           '<div class="v-next-entry"><small>NEXT</small><div data-next="'+i+'"></div></div>'+
-           '<div class="v-next-entry v-next-second"><small>NEXT2</small><div data-next2="'+i+'"></div></div>'+
-         '</aside>'+
-         '<div class="v-pad-right" aria-label="'+side+'Pの回転操作">'+
-           '<button class="v-control" type="button" data-side="'+i+'" data-action="rotate" aria-label="'+side+'P 回転">↻</button>'+
-         '</div>'+
-       '</div>'+
+       '<aside class="arena-next">'+
+         '<div class="v-next-entry"><small>NEXT</small><div data-next="'+i+'"></div></div>'+
+         '<div class="v-next-entry v-next-second"><small>NEXT2</small><div data-next2="'+i+'"></div></div>'+
+       '</aside>'+
      '</div></section>';
  }
  function shell(){
