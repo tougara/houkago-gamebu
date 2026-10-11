@@ -101,3 +101,29 @@ body.hg-history-open{overflow:hidden}
   .hg-history-card{padding:10px}
 }
 @media(prefers-reduced-motion:reduce){.hg-history-overlay{backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+/* Home tools row: settings and history side by side */
+.home-page .home-tools-row{
+  width:100%;min-width:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.home-page .home-tools-row .home-settings-btn,
+.home-page .home-tools-row .hg-history-home-btn{
+  width:100%;min-width:0;min-height:49px;
+  padding:9px 5px;border:2px solid rgba(255,255,255,.94);
+  border-radius:999px;
+  font:900 clamp(12px,3.4vw,16px)/1.25 system-ui,-apple-system,sans-serif;
+  cursor:pointer;white-space:nowrap;
+}
+.home-page .home-tools-row .hg-history-home-btn{
+  background:rgba(15,40,73,.93);
+  color:#fff6d8;text-shadow:0 1px 2px #173149;
+  box-shadow:0 5px 0 rgba(2,23,50,.58),0 10px 20px rgba(0,0,0,.15);
+}
+@media(max-height:700px){
+ .home-page .home-tools-row .home-settings-btn,
+ .home-page .home-tools-row .hg-history-home-btn{min-height:42px;padding:7px 4px;font-size:12px}
+}
+@media(max-width:360px){.home-page .home-tools-row{gap:5px}}
