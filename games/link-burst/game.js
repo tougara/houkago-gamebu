@@ -647,7 +647,9 @@
       const elapsed=120-state.timeLeft;
       return Math.max(460,760-elapsed*2);
     }
-    return Math.max(300,820-Math.floor(state.pieces/10)*40);
+    // ENDLESS: 20個目から8個ごとに40ms加速。後半は120msまで速くなる。
+    const speedSteps=state.pieces<20?0:Math.floor((state.pieces-20)/8)+1;
+    return Math.max(120,820-speedSteps*40);
   }
 
   function startLoop(){
