@@ -2036,3 +2036,15 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
   font-weight:850;
 }
 .solo-register-error:empty{display:none}
+
+
+/* Desktop action width containment 2026-10-11 */
+@media (min-width: 768px) {
+  /* These controls are position:fixed; center them inside the game area,
+     instead of stretching across the entire browser viewport. */
+  .screen-play [data-stop],
+  .screen-roundResult > [data-next-round] {
+    left: max(18px, calc((100vw - 600px) / 2)) !important;
+    right: max(18px, calc((100vw - 600px) / 2)) !important;
+  }
+}
