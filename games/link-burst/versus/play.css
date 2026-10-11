@@ -1133,3 +1133,104 @@ html[data-hg-motion="reduced"] .center-jam[data-pending="true"]{
   .jam-projectile{display:none;animation:none}
 }
 html[data-hg-motion="reduced"] .jam-projectile{display:none;animation:none}
+
+ 
+/* Versus V7: symmetrical control groups (1P left / 2P right) */
+/* Keep the original 7x13 board and input IDs; only the arena layout changes.
+   1P: controls | board | NEXT. 2P: NEXT | board | controls.
+   A full blank control row separates rotation from horizontal movement. */
+.arena{
+  --v7-controls:clamp(90px,10vw,142px);
+  --v7-next:clamp(38px,4vw,58px);
+  --v7-btn:clamp(43px,8.5dvh,57px);
+  --v7-board:min(
+    calc((100dvh - 12px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*7/13),
+    max(0px,calc(100% - var(--v7-controls) - var(--v7-next) - 6px))
+  );
+}
+.arena-core{
+  display:grid;
+  grid-template-columns:var(--v7-controls) minmax(0,var(--v7-board)) var(--v7-next);
+  grid-template-rows:minmax(0,1fr);
+  gap:0 2px;
+  justify-content:start;
+  align-items:stretch;
+}
+.arena[data-side="1"] .arena-core{
+  grid-template-columns:var(--v7-next) minmax(0,var(--v7-board)) var(--v7-controls);
+  justify-content:end;
+}
+.arena-core .arena-controls{
+  grid-column:1;
+  grid-row:1;
+  align-self:end;
+  min-width:0;
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:repeat(4,var(--v7-btn));
+  gap:3px;
+  padding:0 0 2px;
+}
+.arena[data-side="1"] .arena-controls{grid-column:3}
+.arena-core .arena-controls .v-control{
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  padding:2px;
+  border-radius:10px;
+  font-size:clamp(20px,2.65vw,29px);
+  touch-action:none;
+}
+.arena-core .arena-controls .v-control-rotate{
+  grid-row:1;
+  border-color:rgba(196,171,255,.8);
+  background:linear-gradient(145deg,#8067c2,#3d2f7e);
+  font-size:clamp(22px,2.8vw,31px);
+}
+.arena-core .v-control-spacer{grid-row:2;pointer-events:none}
+.arena-core .v-control-arrows{
+  grid-row:3;
+  min-width:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:3px;
+}
+.arena-core .arena-controls .v-control-down{grid-row:4}
+.arena[data-side="0"] .arena-board-stack,
+.arena[data-side="1"] .arena-board-stack{
+  grid-column:2;
+  grid-row:1;
+  min-width:0;
+}
+.arena-core > .arena-next{
+  grid-column:3;
+  grid-row:1;
+  align-self:start;
+  width:100%;
+  max-width:100%;
+  margin:0;
+}
+.arena[data-side="1"] .arena-core > .arena-next{grid-column:1}
+/* Names belong to the outer control gutter rather than covering cells. */
+.arena[data-side="0"] .arena-header,
+.arena[data-side="1"] .arena-header{
+  width:var(--v7-controls);
+  max-width:var(--v7-controls);
+  top:4px;
+}
+.arena[data-side="0"] .arena-header{left:4px;right:auto}
+.arena[data-side="1"] .arena-header{left:auto;right:4px}
+.arena[data-side="1"] .arena-person{justify-content:flex-end}
+@media(max-width:780px) and (orientation:landscape){
+  .arena{--v7-controls:clamp(90px,11.4vw,98px);--v7-next:38px;--v7-btn:clamp(42px,11dvh,46px)}
+  .arena-core{column-gap:1px}
+  .arena[data-side="0"] .arena-header,
+  .arena[data-side="1"] .arena-header{top:2px}
+  .arena-core .arena-controls .v-control{font-size:19px;border-radius:7px}
+  .arena-core .arena-controls .v-control-rotate{font-size:21px}
+}
+@media(max-height:300px) and (orientation:landscape){
+  .arena{--v7-btn:40px}
+}
