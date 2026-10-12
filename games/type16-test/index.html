@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111629">
+  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
+  <title>放課後タイプ診断16｜試験版</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="site-nav">
+      <a href="../" class="return-link" aria-label="ゲーム一覧に戻る">← ゲーム一覧</a>
+      <span class="test-label">試験版 β</span>
+    </header>
+    <main id="app" aria-live="polite">
+      <section id="intro" class="view intro-view">
+        <div class="eyebrow">THE TRUE NATURE OF YOU</div>
+        <div class="symbol" aria-hidden="true">十六</div>
+        <h1>放課後<br><span>タイプ診断16</span></h1>
+        <p class="intro-lead">その本性、隠したつもりか。</p>
+        <p class="intro-copy">40の選択で、16の異名からお前のタイプを導き出す。<br>異名は壮大。分析は、ちょっと失礼。</p>
+        <div class="intro-stats">
+          <span>全40問</span><span>4つの性格軸</span><span>約7〜10分</span>
+        </div>
+        <button id="start" type="button" class="action-primary">診断をはじめる <span aria-hidden="true">→</span></button>
+        <p id="resume-note" class="resume-note" hidden>前回の途中回答を再開できます。</p>
+        <button id="reset-intro" type="button" class="text-button" hidden>最初からやり直す</button>
+        <p class="disclaimer">これは性格を断定するものではない、放課後ゲーム部のエンタメ診断です。<br>回答はこの端末内だけに保存され、送信されません。</p>
+      </section>
+
+      <section id="quiz" class="view" hidden>
+        <div class="progress-head">
+          <span class="eyebrow">PERSONALITY ANALYSIS</span>
+          <span id="progress-number" class="progress-number">01 / 40</span>
+        </div>
+        <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+        <div class="question-panel">
+          <p id="question-kicker" class="question-kicker">SCENE</p>
+          <h2 id="question-prompt"></h2>
+          <div class="choice-grid">
+            <div class="choice-card a"><span class="choice-letter">A</span><p id="choice-a"></p></div>
+            <div class="choice-card b"><span class="choice-letter">B</span><p id="choice-b"></p></div>
+          </div>
+          <p class="answer-guide">自分に近いほうを選んでください</p>
+          <div id="answer-options" class="answer-options" role="group" aria-label="回答の強さ"></div>
+        </div>
+        <div class="page-actions">
+          <button id="quiz-back" type="button" class="action-subtle">← 戻る</button>
+          <button id="quiz-next" type="button" class="action-primary" disabled>次へ →</button>
+        </div>
+        <div class="footnote">正解・不正解はありません。迷ったら普段の自分に近いほうで。</div>
+      </section>
+
+      <section id="bonus" class="view" hidden>
+        <div class="eyebrow">FINAL CHECK</div>
+        <div class="section-heading">
+          <h2>最後の確認</h2>
+          <p>得点が完全に並んだ性格軸があります。もう少しだけ教えてください。</p>
+        </div>
+        <p id="bonus-progress" class="bonus-count"></p>
+        <div class="question-panel">
+          <h2 id="bonus-prompt"></h2>
+          <div class="choice-grid">
+            <div class="choice-card a"><span class="choice-letter">A</span><p id="bonus-a"></p></div>
+            <div class="choice-card b"><span class="choice-letter">B</span><p id="bonus-b"></p></div>
+          </div>
+          <div id="bonus-options" class="answer-options" role="group" aria-label="同点時の確認回答"></div>
+        </div>
+        <div class="page-actions">
+          <button id="bonus-back" class="action-subtle" type="button">← 戻る</button>
+          <button id="bonus-next" class="action-primary" type="button" disabled>判定へ →</button>
+        </div>
+        <p class="footnote">ここでは「どちらも同じ」は選べません。近いほうを選んでください。</p>
+      </section>
+
+      <section id="result" class="view" hidden>
+        <div class="result-hero">
+          <div class="eyebrow">ANALYSIS COMPLETE</div>
+          <div id="result-id" class="result-id">TYPE 01</div>
+          <div class="result-crest" aria-hidden="true">✧</div>
+          <div id="result-reading" class="result-reading"></div>
+          <h2 id="result-title"></h2>
+          <p id="result-label" class="result-label">その本性、解析完了。</p>
+        </div>
+        <article class="result-section">
+          <h3>本性解析</h3>
+          <p id="result-nature"></p>
+        </article>
+        <article class="result-section">
+          <h3>4つの性格軸</h3>
+          <div id="result-axes" class="result-axes"></div>
+          <p id="result-borderline" class="result-note"></p>
+        </article>
+        <article class="result-section verdict-section">
+          <h3>最終宣告</h3>
+          <p id="result-verdict"></p>
+        </article>
+        <article class="result-section">
+          <h3>お前に与えられし運命のボドゲ</h3>
+          <div id="result-game" class="game-name"></div>
+          <p id="result-game-comment"></p>
+        </article>
+        <p class="disclaimer">この16分類とコメントは娯楽目的のもので、心理学的に確定した性格診断ではありません。得点が近い軸は境界上として解釈してください。</p>
+        <div class="page-actions result-actions">
+          <button id="retry" type="button" class="action-primary">もう一度診断する</button>
+          <a class="action-subtle" href="../">ゲーム一覧へ</a>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="diagnosis-data.js"></script>
+  <script src="engine.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
