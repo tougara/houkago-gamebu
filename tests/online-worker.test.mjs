@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import service,{OnlineRoom} from '../worker/src/index.js';
 
 class MemoryStorage{
@@ -175,4 +176,80 @@ test('leaving mid-vote resolves to all-answered, never auto-reveals',async()=>{
  assert.equal(st.obj.snapshot().secret.counts.b,1);
  await st.obj.removeMember(b.id);
  assert.equal(st.obj.snapshot().phase,'lobby');
+});
+
+
+test('online phases render question and answers with offline layout and no blank voting view',()=>{
+ const html=readFileSync(new URL('../online/minna-wa-docchi/index.html',import.meta.url),'utf8');
+ const js=readFileSync(new URL('../online/minna-wa-docchi/game.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/minna-wa-docchi/game.css',import.meta.url),'utf8');
+ const offline=readFileSync(new URL('../games/minna-wa-docchi/game.css',import.meta.url),'utf8');
+ assert.ok(html.includes('../../games/minna-wa-docchi/game.css'));
+ assert.ok(html.includes('class="docchi-app online-docchi screen-options"'));
+ assert.ok(html.includes('id="vote-stage"'));
+ assert.ok(css.includes('minna_wa_docchi_background.png'));
+ assert.ok(offline.includes('minna_wa_docchi_background.png'));
+ assert.ok(css.includes('[hidden]{display:none!important}'));
+ assert.ok(js.includes("voting:'vote-stage'"));
+ assert.doesNotThrow(()=>new Function(js));
+ const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+ assert.equal(new Set(ids).size,ids.length,'no duplicate HTML IDs');
+ for(const id of [...js.matchAll(/\$\('([^']+)'\)/g)].map(m=>m[1]))
+   assert.ok(ids.includes(id),'JS refers to missing HTML element: '+id);
+ const make=()=>({
+   hidden:false,disabled:false,value:'',textContent:'',className:'',style:{},children:[],
+   classList:{toggle(){},add(){},remove(){}},
+   append(...nodes){this.children.push(...nodes)},
+   replaceChildren(...nodes){this.children=[...nodes]},
+   addEventListener(){},
+   querySelector(){return make()}
+ });
+ const els=Object.fromEntries(ids.map(id=>[id,make()]));
+ const doc={
+   getElementById:id=>els[id],
+   querySelector:selector=>selector==='.online-docchi'?els.app:null,
+   createElement:()=>make(),createTextNode:text=>({textContent:text})
+ };
+ class MockQuery{get(){return 'ABCD2345'}}
+ const navigation=[];
+ const location={search:'?room=ABCD2345',replace:url=>navigation.push(url),assign:url=>navigation.push(url)};
+ const storage={
+   getItem:key=>key==='houkago-online-session-v1'?
+     JSON.stringify({code:'ABCD2345',token:'a'.repeat(64),id:'p1'}):'[]',
+   setItem(){},removeItem(){}
+ };
+ const sockets=[];
+ class MockSocket{
+   static OPEN=1;
+   constructor(){this.readyState=1;sockets.push(this)}
+   send(){}close(){}
+ }
+ const win={HOUKAGO_ONLINE_API_URL:'https://houkago-online-api.example.workers.dev',
+   addEventListener(){}};
+ new Function('window','document','location','sessionStorage','localStorage','WebSocket',
+   'URLSearchParams','setTimeout','clearTimeout','confirm',js)(
+     win,doc,location,storage,storage,MockSocket,MockQuery,()=>{},()=>{},()=>true);
+ const sock=sockets[0];sock.onopen();
+ const question={q:'放課後に遊ぶなら？',a:'公園',b:'ゲーム',category:'友だち'};
+ const screens={setup:'setup-stage',voting:'vote-stage',allAnswered:'all-answered-stage',
+   result:'result-stage',finished:'finished-stage'};
+ for(const [stage,visible] of Object.entries(screens)){
+  const room={code:'ABCD2345',phase:'secret',hostId:'p1',
+    members:[{id:'p1',icon:'🐯',name:'ホスト'},{id:'p2',icon:'🐼',name:'ゲスト'}],
+    secret:{stage,question,round:1,roundCount:5,categories:['友だち'],
+      selectedCategories:['友だち'],customQuestions:[],includeCustom:true,
+      poolCount:20,answered:1,total:2,counts:stage==='result'?{a:1,b:1}:null}};
+  assert.doesNotThrow(()=>sock.onmessage({data:JSON.stringify({type:'room',room,voted:false})}),stage);
+  assert.equal(els[visible].hidden,false,'expected visible stage '+stage);
+  if(stage==='voting'){
+    assert.equal(els['question-text'].textContent,question.q);
+    assert.equal(els['vote-a-label'].textContent,question.a);
+    assert.equal(els['vote-b-label'].textContent,question.b);
+  }
+  if(stage==='result'){
+    assert.equal(els['result-a-count'].textContent,'1人');
+    assert.equal(els['result-b-count'].textContent,'1人');
+  }
+ }
+ assert.deepEqual(navigation,[],'game stage updates should not leave game URL');
 });
