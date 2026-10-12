@@ -254,10 +254,10 @@ test('online phases render question and answers with offline layout and no blank
    assert.ok(ids.includes(id),'JS refers to missing HTML element: '+id);
  const make=()=>({
    hidden:false,disabled:false,value:'',textContent:'',className:'',style:{},children:[],
-   classList:{toggle(){},add(){},remove(){}},
+   classList:{toggle(){},add(){},remove(){}},handlers:{},
    append(...nodes){this.children.push(...nodes)},
    replaceChildren(...nodes){this.children=[...nodes]},
-   addEventListener(){},
+   addEventListener(type,fn){this.handlers[type]=fn},
    querySelector(){return make()}
  });
  const els=Object.fromEntries(ids.map(id=>[id,make()]));
@@ -277,8 +277,8 @@ test('online phases render question and answers with offline layout and no blank
  const sockets=[];
  class MockSocket{
    static OPEN=1;
-   constructor(){this.readyState=1;sockets.push(this)}
-   send(){}close(){}
+   constructor(){this.readyState=1;this.sent=[];sockets.push(this)}
+   send(text){this.sent.push(JSON.parse(text))}close(){}
  }
  const win={HOUKAGO_ONLINE_API_URL:'https://houkago-online-api.example.workers.dev',
    addEventListener(){}};
@@ -294,7 +294,7 @@ test('online phases render question and answers with offline layout and no blank
     members:[{id:'p1',icon:'🐯',name:'ホスト'},{id:'p2',icon:'🐼',name:'ゲスト'}],
     secret:{stage,question,round:1,roundCount:5,categories:['友だち'],
       selectedCategories:['友だち'],customQuestions:[],includeCustom:true,
-      poolCount:20,answered:1,total:2,counts:stage==='result'?{a:1,b:1}:null}};
+      poolCount:20,alternatives:5,answered:1,total:2,counts:stage==='result'?{a:1,b:1}:null}};
   assert.doesNotThrow(()=>sock.onmessage({data:JSON.stringify({type:'room',room,voted:false})}),stage);
   assert.equal(els[visible].hidden,false,'expected visible stage '+stage);
   if(stage==='preview'){
@@ -303,6 +303,20 @@ test('online phases render question and answers with offline layout and no blank
     assert.equal(els['preview-b'].textContent,question.b);
     assert.equal(els['preview-host-controls'].hidden,false);
     assert.equal(els['preview-guest-wait'].hidden,true);
+    assert.equal(els['change-question'].disabled,false);
+    els['change-question'].handlers.click();
+    assert.equal(sock.sent.at(-1).type,'secret-change-question');
+    els['compose-question'].handlers.click();
+    assert.equal(els['compose-stage'].hidden,false);
+    els['round-q'].value='お昼に行くなら？';
+    els['round-a'].value='教室';
+    els['round-b'].value='校庭';
+    els['round-question-form'].handlers.submit({preventDefault(){}});
+    assert.equal(sock.sent.at(-1).type,'secret-use-question');
+    assert.equal(sock.sent.at(-1).question.q,'お昼に行くなら？');
+    assert.equal(els['question-stage'].hidden,false);
+    els['accept-question'].handlers.click();
+    assert.equal(sock.sent.at(-1).type,'secret-accept-question');
   }
   if(stage==='voting'){
     assert.equal(els['question-text'].textContent,question.q);
