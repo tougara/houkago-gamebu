@@ -1798,3 +1798,115 @@ html[data-hg-motion="reduced"] .arena-core .v-block.bursting{opacity:.6}
   .arena-board-stack .v-battle-cue.show{animation:none}
 }
 html[data-hg-motion="reduced"] .arena-board-stack .v-battle-cue.show{animation:none}
+
+/* Versus V11: wider central scoreboard and board-centered victory stamps */
+/* Use otherwise-unused clearance beside both NEXT rails for a wider HUD,
+   without changing the arena control sizes, NEXT previews or 7x13 boards. */
+.match-arenas{
+  grid-template-columns:minmax(0,1fr) clamp(116px,11.5vw,154px) minmax(0,1fr);
+  gap:2px;
+}
+.match-center{
+  min-width:0;
+  max-width:100%;
+  padding-inline:5px;
+  overflow:hidden;
+}
+.center-score{
+  min-width:0;
+  width:100%;
+}
+.center-score strong{
+  display:block;
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  text-align:center;
+  white-space:nowrap;
+  letter-spacing:-.035em;
+  overflow:hidden;
+  font-variant-numeric:tabular-nums;
+}
+.center-score small{
+  font-size:clamp(8px,.9vw,11px);
+  letter-spacing:-.025em;
+}
+.center-mode [data-pressure]{
+  white-space:nowrap;
+  font-size:clamp(8px,.85vw,11px);
+  letter-spacing:-.04em;
+  max-width:100%;
+}
+/* Previously the stamp was centered on the whole arena, which includes
+   the thumb-control column and the NEXT rail. Anchor it to the actual
+   field-sized board stack instead. No board or game logic changes needed. */
+.match-shell[data-finished="true"] .arena[data-finish]::after{
+  content:none;
+  display:none;
+}
+.match-shell[data-finished="true"] .arena[data-finish] .arena-board-stack::after{
+  position:absolute;
+  inset:0;
+  z-index:15;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  white-space:nowrap;
+  font-family:system-ui,"Arial Black",sans-serif;
+  font-weight:1000;
+  font-style:italic;
+  letter-spacing:-.055em;
+  text-align:center;
+  font-size:clamp(30px,4.8vw,76px);
+  animation:vs-arena-stamp .72s cubic-bezier(.14,.8,.25,1.2) both;
+}
+.match-shell[data-finished="true"] .arena[data-finish="win"] .arena-board-stack::after{
+  content:"WIN!";
+  color:#fff8d5;
+  -webkit-text-stroke:1px rgba(101,62,27,.66);
+  text-shadow:3px 4px 0 #9d532a,0 0 15px #ffe981,0 0 34px rgba(255,204,84,.9);
+  background:radial-gradient(ellipse at center,rgba(249,214,96,.3),rgba(249,214,96,0) 65%);
+}
+.match-shell[data-finished="true"] .arena[data-finish="lose"] .arena-board-stack::after{
+  content:"LOSE...";
+  font-size:clamp(25px,3.7vw,59px);
+  color:#e2ebff;
+  text-shadow:3px 4px 0 #302a4e,0 0 16px rgba(135,152,215,.56);
+  background:linear-gradient(180deg,rgba(8,13,35,.27),rgba(8,13,35,.42));
+}
+.match-shell[data-finished="true"] .arena[data-finish="draw"] .arena-board-stack::after{
+  content:"DRAW";
+  color:#e7f7ff;
+  text-shadow:3px 4px 0 #36507c,0 0 21px #93dbff;
+  background:radial-gradient(ellipse at center,rgba(122,194,255,.23),transparent 70%);
+}
+@media(max-width:780px) and (orientation:landscape){
+  /* Short phones have less spare horizontal room than desktop. */
+  .match-arenas{
+    grid-template-columns:minmax(0,1fr) clamp(90px,11.5vw,110px) minmax(0,1fr);
+    gap:2px;
+  }
+  .match-center{padding-inline:3px}
+  .center-score strong{font-size:clamp(17px,2.8vw,24px)}
+  .center-mode [data-pressure]{font-size:8px}
+  .match-shell[data-finished="true"] .arena[data-finish] .arena-board-stack::after{
+    font-size:clamp(24px,4.7vw,41px);
+  }
+  .match-shell[data-finished="true"] .arena[data-finish="lose"] .arena-board-stack::after{
+    font-size:clamp(21px,3.6vw,35px);
+  }
+}
+@media(max-width:690px) and (orientation:landscape){
+  /* Protect minimum button and NEXT widths on narrow handsets. */
+  .match-arenas{
+    grid-template-columns:minmax(0,1fr) clamp(76px,11vw,92px) minmax(0,1fr);
+  }
+  .center-mode [data-pressure]{font-size:7px}
+}
+@media(prefers-reduced-motion:reduce){
+  .match-shell[data-finished="true"] .arena[data-finish] .arena-board-stack::after{animation:none}
+}
+html[data-hg-motion="reduced"] .match-shell[data-finished="true"] .arena[data-finish] .arena-board-stack::after{
+  animation:none;
+}
