@@ -4,6 +4,7 @@
  const engine=window.LinkBurstVersusEngine;
  const playersApi=window.HoukagoPlayers;
  const SELECT_KEY='houkago_link_burst_versus_players_v1';
+ const MATCHUP_KEY='houkago_link_burst_versus_matchups_v1';
  if(!root||!engine)return;
  const match={players:[],games:[],raf:0,last:0,paused:false,ended:false,
    countdown:3500,held:new Map(),keys:new Set(),keyHeld:new Map(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[],finishTimer:0};
@@ -62,12 +63,12 @@
        '<div class="center-score p2"><small>2P SCORE</small><strong data-score="1">0</strong></div>'+
        '<button class="match-pause" data-pause type="button" aria-label="2人の対戦を一時停止">Ⅱ<span>PAUSE</span></button>'+
        '<div class="center-link-row">'+
-         '<div class="center-link p1"><small>1P LINK</small><strong data-link="0">0</strong></div>'+
-         '<div class="center-link p2"><small>2P LINK</small><strong data-link="1">0</strong></div>'+
+         '<div class="center-link p1"><small>1P MAX LINK</small><strong data-link="0">0</strong></div>'+
+         '<div class="center-link p2"><small>2P MAX LINK</small><strong data-link="1">0</strong></div>'+
        '</div>'+
        '<div class="center-jam-stack" aria-label="おじゃまブロックの到着予告">'+
-         '<div class="center-jam p1" data-jam-box="0"><span>1P JAM</span><strong data-jam="0">0</strong></div>'+
-         '<div class="center-jam p2" data-jam-box="1"><span>2P JAM</span><strong data-jam="1">0</strong></div>'+
+         '<div class="center-jam p1" data-jam-box="0"><span>1P 受信JAM</span><strong data-jam="0">0</strong></div>'+
+         '<div class="center-jam p2" data-jam-box="1"><span>2P 受信JAM</span><strong data-jam="1">0</strong></div>'+
          '<div class="center-jam-note" data-jam-note="0" aria-live="off"></div>'+
          '<div class="center-jam-note" data-jam-note="1" aria-live="off"></div>'+
        '</div>'+
@@ -92,7 +93,8 @@
         '<div class="vs-finale-impact" aria-hidden="true">K.O.!</div>'+
         '<div class="vs-finale-actions" data-finale-actions hidden>'+
           '<div class="vs-finale-summary" role="region" aria-label="対戦結果">'+
-            '<small>BATTLE RESULT</small><h2 data-winner>勝負あり！</h2><p data-outcome>KOで決着</p>'+
+            '<small>BATTLE RESULT</small><h2 data-winner>勝負あり！</h2><p data-outcome>KOで決着</p>'+ 
+            '<p class="matchup-record" data-matchup-record aria-live="polite"></p>'+
           '</div>'+
           '<div class="vs-finale-buttons">'+
             '<button type="button" data-retry>もう一戦！</button>'+
@@ -187,7 +189,7 @@
    const jamBox=root.querySelector('[data-jam-box="'+i+'"]');
    if(jamBox)jamBox.dataset.pending=incoming>0?'true':'false';
    const jamNote=root.querySelector('[data-jam-note="'+i+'"]');
-   if(jamNote)jamNote.textContent=st.notice||'';
+   if(jamNote)jamNote.textContent=st.notice||(incoming>0?'次の着弾 最大'+Math.min(7,incoming)+'個':'');
    const next=root.querySelector('[data-next="'+i+'"]');
    if(next){const future=st.queue[0],key=future?future.a+':'+future.b:'';
       if(next.dataset.pair!==key){next.dataset.pair=key;next.innerHTML=mini(future)}}
@@ -196,6 +198,37 @@
       if(next2.dataset.pair!==key2){next2.dataset.pair=key2;next2.innerHTML=mini(future2)}}
  }
  function draw(force){drawArena(0,force);drawArena(1,force)}
+ function recordMatch(winningSide){
+   const playerIds=match.players.map(p=>p.id);
+   if(playerIds.length!==2||playerIds[0]===playerIds[1])return null;
+   const pairKey=playerIds.slice().sort().join('|');
+   let history={};
+   try{history=JSON.parse(localStorage.getItem(MATCHUP_KEY)||'{}')||{}}catch(e){}
+   if(!history||typeof history!=='object'||Array.isArray(history))history={};
+   const prev=history[pairKey]&&typeof history[pairKey]==='object'?history[pairKey]:{};
+   const record={
+     wins:{},draws:Math.max(0,Number(prev.draws)||0),
+     played:Math.max(0,Number(prev.played)||0)+1
+   };
+   for(const id of playerIds)record.wins[id]=Math.max(0,Number(prev.wins?.[id])||0);
+   if(winningSide<0)record.draws++;
+   else record.wins[playerIds[winningSide]]++;
+   history[pairKey]=record;
+   try{localStorage.setItem(MATCHUP_KEY,JSON.stringify(history))}catch(e){}
+   if(playersApi?.recordGame){
+     const scores={},metrics={};
+     match.players.forEach((p,i)=>{
+       scores[p.id]=match.games[i].score;
+       const st=match.games[i];
+       metrics[p.id]={bestLink:st.maxLink,bestCombo:st.maxCombo,
+         totalClears:st.clears,totalJamSent:st.sentJam,totalJamCountered:st.counteredJam,
+         totalDraws:winningSide<0?1:0};
+     });
+     playersApi.recordGame({gameId:'link-burst-versus',participants:match.players,
+       winners:winningSide<0?[]:[playerIds[winningSide]],scores,metrics});
+   }
+   return record;
+ }
  function finish(){
    if(match.ended)return;
    const p1=match.games[0].over,p2=match.games[1].over;
@@ -205,6 +238,7 @@
    const winningSide=p1&&p2?-1:(p1?1:0);
    const message=winningSide<0?'DRAW!':(winningSide+1)+'P WIN!';
    const winner=winningSide<0?null:match.players[winningSide];
+   const record=recordMatch(winningSide);
    root.dataset.finished='true';
    root.querySelectorAll('.arena').forEach(function(arena,i){
      arena.dataset.finish=winningSide<0?'draw':(i===winningSide?'win':'lose');
@@ -213,6 +247,11 @@
    if(header)header.textContent=message;
    const outcome=root.querySelector('[data-outcome]');
    if(outcome)outcome.textContent=winner?winner.icon+' '+winner.name+' の勝利！':'両者同時KO！';
+   const matchup=root.querySelector('[data-matchup-record]');
+   if(matchup&&record){
+     const p1=match.players[0],p2=match.players[1];
+     matchup.textContent='通算 '+p1.name+' '+record.wins[p1.id]+'勝 ／ '+p2.name+' '+record.wins[p2.id]+'勝 ／ 引分 '+record.draws+'回';
+   }
    updateOverlays();
    if(match.finishTimer)clearTimeout(match.finishTimer);
    const reduced=document.documentElement.dataset.hgMotion==='reduced'||
