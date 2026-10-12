@@ -66,6 +66,39 @@
    </div>
    <p id="guest-setup" class="card online-wait" hidden>ホストがジャンルとお題を準備中。<br>ゲーム開始まで待ってね。</p>
   </section>
+  <section id="question-stage" hidden>
+    <section class="question-card">
+      <span id="preview-category" class="question-category">お題</span>
+      <h2 id="preview-question">お題を準備しています…</h2>
+      <div class="answer-preview">
+        <div><small>A</small><strong id="preview-a"></strong></div>
+        <b>VS</b>
+        <div><small>B</small><strong id="preview-b"></strong></div>
+      </div>
+    </section>
+    <p id="preview-sensitive" class="sensitive-note" hidden>少し踏み込んだお題です。答えにくければ別のお題に変えてOK。</p>
+    <div id="preview-host-controls" class="stack" hidden>
+      <button type="button" id="accept-question" class="btn full">このお題でいく</button>
+      <button type="button" id="change-question" class="btn secondary full">別のお題にする</button>
+      <button type="button" id="compose-question" class="btn secondary full">お題を考える</button>
+    </div>
+    <p id="preview-guest-wait" class="card online-wait" hidden>ホストがお題を確認中。<br>決まったら全員同時に回答を始めるよ。</p>
+  </section>
+  <section id="compose-stage" hidden>
+    <section class="card custom-form online-round-compose">
+      <h2>お題を考える</h2>
+      <p>今回の問題に使う2択を作ろう</p>
+      <form id="round-question-form">
+        <label>質問<input id="round-q" type="text" maxlength="70" placeholder="例：放課後に行くなら？" required></label>
+        <div class="custom-two">
+          <label>A<input id="round-a" type="text" maxlength="30" placeholder="公園" required></label>
+          <label>B<input id="round-b" type="text" maxlength="30" placeholder="友達の家" required></label>
+        </div>
+        <button type="submit" id="use-round-question" class="btn full">このお題で遊ぶ</button>
+      </form>
+    </section>
+    <button type="button" id="back-to-preview" class="btn secondary full">← お題の確認に戻る</button>
+  </section>
   <section id="vote-stage" hidden>
     <div class="answer-card">
       <span id="question-category" class="question-category">お題</span>
