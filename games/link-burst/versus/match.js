@@ -44,7 +44,8 @@
        '</div>'+
        '<div class="arena-board-stack">'+
          '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+ 
-         '<div class="v-chain-fx" data-chain-fx="'+i+'" hidden aria-live="off"><strong></strong><span></span></div>'+
+         '<div class="v-chain-fx" data-chain-fx="'+i+'" hidden aria-live="off"><strong></strong><span></span><em></em></div>'+ 
+         '<div class="v-battle-cue" data-battle-cue="'+i+'" hidden aria-live="off"></div>'+
        '</div>'+
        '<aside class="arena-next">'+
          '<div class="v-next-entry"><small>NEXT</small><div data-next="'+i+'"></div></div>'+
@@ -58,7 +59,7 @@
      '<div class="jam-flight-layer" data-jam-flight aria-hidden="true"></div>'+
      arena(0)+
      '<aside class="match-center" aria-label="対戦情報と一時停止">'+
-       '<div class="center-mode"><strong>2人で対戦</strong><small>JAM BATTLE</small></div>'+
+       '<div class="center-mode"><strong>2人で対戦</strong><small data-pressure>JAM着弾 最大14</small></div>'+
        '<div class="center-score p1"><small>1P SCORE</small><strong data-score="0">0</strong></div>'+
        '<div class="center-score p2"><small>2P SCORE</small><strong data-score="1">0</strong></div>'+
        '<button class="match-pause" data-pause type="button" aria-label="2人の対戦を一時停止">Ⅱ<span>PAUSE</span></button>'+
@@ -67,8 +68,8 @@
          '<div class="center-link p2"><small>2P MAX LINK</small><strong data-link="1">0</strong></div>'+
        '</div>'+
        '<div class="center-jam-stack" aria-label="おじゃまブロックの到着予告">'+
-         '<div class="center-jam p1" data-jam-box="0"><span>1P 受信JAM</span><strong data-jam="0">0</strong></div>'+
-         '<div class="center-jam p2" data-jam-box="1"><span>2P 受信JAM</span><strong data-jam="1">0</strong></div>'+
+         '<div class="center-jam p1" data-jam-box="0"><span>1P 受信JAM</span><strong data-jam="0">0</strong><small data-jam-forecast="0">次 0</small></div>'+
+         '<div class="center-jam p2" data-jam-box="1"><span>2P 受信JAM</span><strong data-jam="1">0</strong><small data-jam-forecast="1">次 0</small></div>'+
          '<div class="center-jam-note" data-jam-note="0" aria-live="off"></div>'+
          '<div class="center-jam-note" data-jam-note="1" aria-live="off"></div>'+
        '</div>'+
@@ -178,8 +179,12 @@
          void fx.offsetWidth;
          fx.classList.add('pop');
        }
+       const predicted=st.phase==='charge'
+         ?engine.scoreGain(st.groups.reduce(function(n,g){return n+g.length},0),link,combo)
+         :st.lastGain;
+       fx.querySelector('em').textContent=st.phase==='charge'?'READY':('+'+predicted.toLocaleString('ja-JP')+' SCORE');
        fx.dataset.phase=st.phase;
-       fx.dataset.power=String(Math.min(5,link));
+       fx.dataset.power=String(Math.min(8,link+Math.max(0,combo-1)));
      }else{delete fx.dataset.step;delete fx.dataset.phase}
    }
    const score=root.querySelector('[data-score="'+i+'"]');if(score)score.textContent=st.score.toLocaleString('ja-JP');
@@ -187,9 +192,21 @@
    const incoming=engine.incomingCount(st);
    const jam=root.querySelector('[data-jam="'+i+'"]');if(jam)jam.textContent=String(incoming);
    const jamBox=root.querySelector('[data-jam-box="'+i+'"]');
-   if(jamBox)jamBox.dataset.pending=incoming>0?'true':'false';
+   if(jamBox){
+     jamBox.dataset.pending=incoming>0?'true':'false';
+     jamBox.dataset.heavy=incoming>=14?'true':'false';
+   }
+   const forecast=root.querySelector('[data-jam-forecast="'+i+'"]');
+   if(forecast)forecast.textContent=incoming>0
+      ?'次 '+Math.min(engine.jamWaveSize(st),incoming)+' ／ 残 '+Math.max(0,incoming-engine.jamWaveSize(st))
+      :'次 0';
    const jamNote=root.querySelector('[data-jam-note="'+i+'"]');
-   if(jamNote)jamNote.textContent=st.notice||(incoming>0?'次の着弾 最大'+Math.min(7,incoming)+'個':'');
+   if(jamNote)jamNote.textContent=st.notice||(incoming>0?'相殺チャンス！':'');
+   // The landing cue plays only once per new notice, not each animation frame.
+   if(st.notice&&st.notice.startsWith('JAM ×')&&st.lastCueNotice!==st.notice){
+     st.lastCueNotice=st.notice;
+     showBattleCue(i,'着弾 '+st.notice.slice(4)+'個','landing');
+   }else if(!st.notice){st.lastCueNotice='';}
    const next=root.querySelector('[data-next="'+i+'"]');
    if(next){const future=st.queue[0],key=future?future.a+':'+future.b:'';
       if(next.dataset.pair!==key){next.dataset.pair=key;next.innerHTML=mini(future)}}
@@ -197,7 +214,17 @@
    if(next2){const future2=st.queue[1],key2=future2?future2.a+':'+future2.b:'';
       if(next2.dataset.pair!==key2){next2.dataset.pair=key2;next2.innerHTML=mini(future2)}}
  }
- function draw(force){drawArena(0,force);drawArena(1,force)}
+ function draw(force){
+   drawArena(0,force);drawArena(1,force);
+   const pressure=root.querySelector('[data-pressure]');
+   if(pressure&&match.games.length===2){
+     const wave=engine.jamWaveSize(match.games[0]);
+     const boost=engine.jamPressure(match.games[0]);
+     pressure.textContent='JAM '+wave+'個/回'+(boost>1?' · 攻撃×'+boost:'');
+     const center=pressure.closest('.center-mode');
+     if(center)center.dataset.pressure=boost>1?'overtime':wave>14?'rising':'normal';
+   }
+ }
  function recordMatch(winningSide){
    const playerIds=match.players.map(p=>p.id);
    if(playerIds.length!==2||playerIds[0]===playerIds[1])return null;
@@ -277,6 +304,21 @@
    for(const held of match.held.values())repeatHeld(held);
    for(const held of match.keyHeld.values())repeatHeld(held);
  }
+ function showBattleCue(side,message,kind){
+   const el=root.querySelector('[data-battle-cue="'+side+'"]');
+   if(!el||!message)return;
+   if(el.hideTimer)clearTimeout(el.hideTimer);
+   el.textContent=message;
+   el.dataset.kind=kind||'attack';
+   el.hidden=false;
+   el.classList.remove('show');
+   void el.offsetWidth;
+   el.classList.add('show');
+   const hiddenAfter=document.documentElement.dataset.hgMotion==='reduced'?700:1100;
+   el.hideTimer=setTimeout(function(){
+     el.hidden=true;el.classList.remove('show');el.hideTimer=0;
+   },hiddenAfter);
+ }
  // A quick non-blocking visual makes the send readable right away.
  function launchJamFlight(from,count){
    const target=root.querySelector('[data-jam-flight]');
@@ -297,9 +339,11 @@
    const ready=match.games.map(function(st){return !st.over&&st.phase==='interturn'});
    if(!ready[0]&&!ready[1])return;
    const attacks=match.games.map(function(st,i){return ready[i]?st.readyAttack:0});
+   const cues=[[],[]];
    for(let i=0;i<2;i++)if(ready[i]){
      const result=engine.counterJam(match.games[i],attacks[i]);
      attacks[i]=result.remaining;
+     if(result.countered>0)cues[i].push('COUNTER −'+result.countered);
    }
    const mutual=Math.min(attacks[0],attacks[1]);
    if(mutual){
@@ -307,6 +351,7 @@
      for(let i=0;i<2;i++)if(ready[i]){
        match.games[i].counteredJam+=mutual;
        engine.notice(match.games[i],'COUNTER −'+mutual);
+       cues[i].push('相殺 −'+mutual);
      }
    }
    for(let i=0;i<2;i++)if(attacks[i]>0){
@@ -315,6 +360,11 @@
      launchJamFlight(i,attacks[i]);
      match.games[i].sentJam+=attacks[i];
      engine.notice(match.games[i],'SEND +'+attacks[i]);
+     cues[i].push('SEND +'+attacks[i]);
+     cues[other].push('受信 +'+attacks[i]);
+   }
+   for(let i=0;i<2;i++)if(cues[i].length){
+     showBattleCue(i,cues[i].join(' / '),cues[i].some(function(x){return x.includes('COUNTER')||x.includes('相殺')})?'counter':'attack');
    }
    for(let i=0;i<2;i++)if(ready[i])engine.finishTurn(match.games[i]);
  }
