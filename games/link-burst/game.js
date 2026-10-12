@@ -34,6 +34,7 @@
     history:[],
     mode:'endless',
     rankMode:'endless',
+    rankEdit:false,
     gameStarted:false,
     paused:false,
     resolving:false,
@@ -284,9 +285,15 @@
   }
 
   function rankingScreen(){
+    const mode=state.rankMode;
     return topNav()+heading('ハイスコアランキング','この端末のTOP10')+
-      '<div class="ranking-tabs"><button class="'+(state.rankMode==='endless'?'selected':'')+'" data-rank-mode="endless">ENDLESS</button><button class="'+(state.rankMode==='timed'?'selected':'')+'" data-rank-mode="timed">2 MINUTES</button></div>'+
-      '<section class="card ranking-card">'+rankingRows(state.rankMode)+'</section>'+
+      '<div class="ranking-tabs"><button class="'+(mode==='endless'?'selected':'')+'" data-rank-mode="endless">ENDLESS</button><button class="'+(mode==='timed'?'selected':'')+'" data-rank-mode="timed">2 MINUTES</button></div>'+
+      '<section class="card ranking-card">'+
+        '<div class="ranking-head"><strong>'+(mode==='endless'?'ENDLESS':'2 MINUTES')+' TOP10</strong>'+
+          '<button type="button" class="rank-edit-toggle" data-rank-edit aria-label="'+(state.rankEdit?'編集をおわる':'記録を編集')+'">'+
+            (state.rankEdit?'<span>編集を</span><span>おわる</span>':'<span>記録を</span><span>編集</span>')+'</button>'+
+        '</div>'+rankingRows(mode)+'</section>'+
+      (state.rankEdit?'<button type="button" class="btn secondary rank-clear" data-rank-clear>このランキングをすべて削除</button>':'')+
       '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-ranking-back>← もどる</button></div>';
   }
 
@@ -294,10 +301,11 @@
     const rows=sortRanking(loadRankings()[mode]||[]);
     if(!rows.length)return '<div class="ranking-empty">まだ記録がありません。<br>最初のハイスコアを作ろう！</div>';
     return '<div class="ranking-list">'+rows.map(function(x,i){
-      return '<div class="ranking-row '+(state.rankResult&&state.rankResult.entryId===x.id?'current':'')+'">'+
+      return '<div class="ranking-row '+(state.rankResult&&state.rankResult.entryId===x.id?'current':'')+(state.rankEdit?' is-editing':'')+'">'+
         '<div class="rank-no">'+(i+1)+'</div>'+
         '<div class="rank-player"><span>'+esc(x.icon)+'</span><strong>'+esc(x.name)+'</strong></div>'+
         '<div class="rank-score"><strong>'+x.score+'</strong><small>MAX LINK '+x.maxLink+'</small></div>'+
+        (state.rankEdit?'<button type="button" class="rank-delete" data-rank-delete="'+esc(x.id)+'" aria-label="'+esc(x.name)+'の'+x.score+'点の記録を削除">削除</button>':'')+
       '</div>';
     }).join('')+'</div>';
   }
@@ -542,8 +550,15 @@
     document.querySelector('[data-play-type="solo"]')&&document.querySelector('[data-play-type="solo"]').addEventListener('click',function(){go('mode')});
     document.querySelector('[data-play-type="versus"]')&&document.querySelector('[data-play-type="versus"]').addEventListener('click',function(){location.href='versus/'});
     document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){beginGame(b.dataset.mode)})});
-    document.querySelectorAll('[data-ranking]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=state.mode||'endless';go('ranking')})});
-    document.querySelectorAll('[data-rank-mode]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=b.dataset.rankMode;render()})});
+    document.querySelectorAll('[data-ranking]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=state.mode||'endless';state.rankEdit=false;go('ranking')})});
+    document.querySelectorAll('[data-rank-mode]').forEach(function(b){b.addEventListener('click',function(){state.rankMode=b.dataset.rankMode;state.rankEdit=false;render()})});
+    document.querySelector('[data-rank-edit]')?.addEventListener('click',function(){state.rankEdit=!state.rankEdit;render()});
+    document.querySelectorAll('[data-rank-delete]').forEach(function(b){b.addEventListener('click',function(){
+      if(confirm('この記録を削除しますか？')){deleteRankEntry(state.rankMode,b.dataset.rankDelete);render()}
+    })});
+    document.querySelector('[data-rank-clear]')?.addEventListener('click',function(){
+      if(confirm('このランキングをすべて削除しますか？')){clearRankings(state.rankMode);state.rankEdit=false;render()}
+    });
     document.querySelector('[data-ranking-back]')&&document.querySelector('[data-ranking-back]').addEventListener('click',doBack);
     document.querySelector('[data-retry]')&&document.querySelector('[data-retry]').addEventListener('click',function(){beginGame(state.mode)});
     document.querySelector('[data-mode-change]')&&document.querySelector('[data-mode-change]').addEventListener('click',function(){state.history=['title','playType'];state.screen='mode';render()});
@@ -1254,6 +1269,18 @@
     try{localStorage.setItem(RANK_KEY,JSON.stringify(out))}catch(e){}
     return out;
   }
+  function deleteRankEntry(mode,id){
+    if(mode!=='endless'&&mode!=='timed')return;
+    const data=loadRankings();
+    data[mode]=data[mode].filter(function(row){return row.id!==id});
+    saveRankings(data);
+  }
+  function clearRankings(mode){
+    if(mode!=='endless'&&mode!=='timed')return;
+    const data=loadRankings();
+    data[mode]=[];
+    saveRankings(data);
+  }
   function addRanking(reason){
     const r=loadRankings();
     const before=sortRanking(r[state.mode]||[]);
@@ -1366,7 +1393,7 @@
       clearSoloFinale();state.history=['title','playType'];state.screen='mode';render();
     });
     finale.querySelector('[data-solo-final-ranking]').addEventListener('click',function(){
-      clearSoloFinale();state.rankMode=state.mode;state.history=['title'];state.screen='ranking';render();
+      clearSoloFinale();state.rankMode=state.mode;state.rankEdit=false;state.history=['title'];state.screen='ranking';render();
     });
     finale.querySelector('[data-solo-final-home]').addEventListener('click',function(){
       clearSoloFinale();location.href='../';
