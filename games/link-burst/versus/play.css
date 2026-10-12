@@ -1646,3 +1646,20 @@ html[data-hg-motion="reduced"] .vs-finale-impact{display:none}
 html[data-hg-motion="reduced"] .arena-board-stack .v-chain-fx.pop,
 html[data-hg-motion="reduced"] .arena-core .v-block.bursting{animation:none}
 html[data-hg-motion="reduced"] .arena-core .v-block.bursting{opacity:.6}
+
+/* Link Burst 2026-10-12 audit: matchup & incoming-jam clarity */
+.center-jam span{white-space:normal;word-break:keep-all;line-height:1.05;text-align:center;display:block}
+.center-link small{white-space:normal;word-break:keep-all}
+.vs-finale-summary .matchup-record{
+  margin:6px 0 0;
+  font-size:clamp(10px,.95vw,13px);
+  font-weight:900;
+  color:#c6e9ff;
+  white-space:normal;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+  text-overflow:clip;
+}
+@media(max-width:780px) and (orientation:landscape){
+  .vs-finale-summary .matchup-record{font-size:9px;line-height:1.2}
+}
