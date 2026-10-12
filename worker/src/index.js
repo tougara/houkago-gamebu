@@ -1,0 +1,184 @@
+/* 放課後ゲーム部 共通オンラインルーム Worker (ゲーム開始機能は別工程) */
+const TTL=2*60*60*1000, MAX=10;
+const ALPHABET='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const CODE=/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
+const TOKEN=/^[a-f0-9]{64}$/;
+const GAMES=new Set(['minna-wa-docchi','kyokasho-tower','kankaku-meter','pitadome-challenge','link-burst','nise-transfer-student','gesture-battle']);
+const ICONS=new Set(['🐯','🐼','🦊','🐧','🐶','🐱','🐰','🐸','🦄','🎮']);
+const response=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store',...headers}});
+const err=(text,status=400)=>response({ok:false,error:text},status);
+const safeName=x=>typeof x==='string'?x.trim().replace(/[\u0000-\u001f\u007f<>]/g,'').slice(0,16):'';
+const randomCode=()=>{let a=new Uint8Array(8);crypto.getRandomValues(a);return [...a].map(b=>ALPHABET[b%ALPHABET.length]).join('')};
+const randomToken=()=>{let a=new Uint8Array(32);crypto.getRandomValues(a);return [...a].map(b=>b.toString(16).padStart(2,'0')).join('')};
+async function digest(s){const v=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(v)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,expiresAt:room.expiresAt,phase:'lobby',maxPlayers:MAX,members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
+const cors=origin=>({'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'Content-Type'});
+async function readBody(request){
+  if(Number(request.headers.get('content-length'))>1024)return null;
+  const text=await request.text();if(text.length>1024)return null;
+  try{return text?JSON.parse(text):{}}catch{return null}
+}
+async function admit(env,request,kind){
+  const hash=await digest('online-rate-v1:'+(request.headers.get('CF-Connecting-IP')||'local'));
+  const obj=env.ROOMS.get(env.ROOMS.idFromName('gate:'+hash));
+  const r=await obj.fetch(new Request('https://internal/limit',{method:'POST',body:JSON.stringify({kind})}));
+  return r.ok;
+}
+export default {
+  async fetch(request,env){
+    const url=new URL(request.url),origin=request.headers.get('Origin');
+    const allowed=[env.ALLOWED_ORIGIN,'http://localhost:8788','http://127.0.0.1:8788'].filter(Boolean);
+    if(request.method==='GET'&&url.pathname==='/api/health')
+      return response({ok:true,mode:'lobby-only',version:1},200,allowed.includes(origin)?cors(origin):{});
+    if(!allowed.includes(origin))return err('許可されていないアクセスです',403);
+    const headers=cors(origin),reply=(data,status=200)=>response(data,status,headers);
+    if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
+    if(request.method==='POST'&&url.pathname==='/api/rooms'){
+      const body=await readBody(request),name=safeName(body?.name),gameId=body?.gameId||'minna-wa-docchi';
+      if(!name||!GAMES.has(gameId))return reply({ok:false,error:'名前かゲームを確認してね'},400);
+      if(!await admit(env,request,'create'))return reply({ok:false,error:'作成回数が多すぎます。時間をおいてね'},429);
+      for(let i=0;i<4;i++){
+        const code=randomCode(),obj=env.ROOMS.get(env.ROOMS.idFromName('room:'+code));
+        const r=await obj.fetch(new Request('https://internal/create',{method:'POST',
+          body:JSON.stringify({code,name,gameId,icon:ICONS.has(body.icon)?body.icon:'🎮'})}));
+        if(r.status===409)continue;
+        return reply(await r.json(),r.status);
+      }
+      return reply({ok:false,error:'部屋を作成できませんでした'},503);
+    }
+    const path=url.pathname.match(/^\/api\/rooms\/([A-Z2-9]{8})\/(join|ws)$/);
+    if(!path||!CODE.test(path[1]))return reply({ok:false,error:'部屋が見つかりません'},404);
+    const [,code,action]=path,obj=env.ROOMS.get(env.ROOMS.idFromName('room:'+code));
+    if(action==='join'&&request.method==='POST'){
+      const body=await readBody(request),name=safeName(body?.name);
+      if(!name)return reply({ok:false,error:'名前を入力してね'},400);
+      if(!await admit(env,request,'join'))return reply({ok:false,error:'参加操作が多すぎます'},429);
+      const r=await obj.fetch(new Request('https://internal/join',{method:'POST',
+        body:JSON.stringify({name,icon:ICONS.has(body.icon)?body.icon:'🎮'})}));
+      return reply(await r.json(),r.status);
+    }
+    if(action==='ws'&&request.method==='GET'){
+      if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return reply({ok:false,error:'WebSocketが必要です'},426);
+      const token=url.searchParams.get('token')||'';
+      if(!TOKEN.test(token))return reply({ok:false,error:'接続情報が無効です'},401);
+      return obj.fetch(new Request('https://internal/ws',{headers:{Upgrade:'websocket','X-Room-Token':token}}));
+    }
+    return reply({ok:false,error:'対応していない操作です'},404);
+  }
+};
+export class OnlineRoom{
+  constructor(ctx,env){
+    this.ctx=ctx;this.env=env;this.room=null;
+    ctx.blockConcurrencyWhile(async()=>{this.room=await ctx.storage.get('room')||null});
+  }
+  async fetch(request){
+    const path=new URL(request.url).pathname;
+    if(path==='/limit')return this.limit(request);
+    if(path==='/create')return this.create(request);
+    if(path==='/join')return this.join(request);
+    if(path==='/ws')return this.connect(request);
+    return err('not found',404);
+  }
+  async limit(request){
+    const {kind}=await request.json();
+    if(!['create','join'].includes(kind))return err('bad input');
+    const now=Date.now(),period=kind==='create'?3600000:600000,max=kind==='create'?4:40;
+    const items=(await this.ctx.storage.get(kind)||[]).filter(t=>t>now-period);
+    if(items.length>=max)return err('rate limited',429);
+    items.push(now);await this.ctx.storage.put(kind,items);
+    await this.ctx.storage.setAlarm(now+3600000);
+    return response({ok:true});
+  }
+  active(){return this.room&&this.room.expiresAt>Date.now()}
+  async create(request){
+    if(this.active())return err('room exists',409);
+    const {code,name,gameId,icon}=await request.json();
+    if(!CODE.test(code)||!safeName(name)||!GAMES.has(gameId))return err('bad input');
+    const token=randomToken(),id=crypto.randomUUID(),now=Date.now();
+    this.room={code,gameId,hostId:id,createdAt:now,expiresAt:now+TTL,
+      members:[{id,name:safeName(name),icon:ICONS.has(icon)?icon:'🎮',ready:false,tokenHash:await digest(token)}]};
+    await this.ctx.storage.put('room',this.room);
+    await this.ctx.storage.setAlarm(this.room.expiresAt);
+    return response({ok:true,code,id,token,room:view(this.room)},201);
+  }
+  async join(request){
+    if(!this.active())return err('部屋が見つからないか期限切れです',404);
+    if(this.room.members.length>=MAX)return err('満員です',409);
+    const {name,icon}=await request.json();
+    if(!safeName(name))return err('名前が必要です',400);
+    const token=randomToken(),id=crypto.randomUUID();
+    this.room.members.push({id,name:safeName(name),icon:ICONS.has(icon)?icon:'🎮',ready:false,tokenHash:await digest(token)});
+    await this.ctx.storage.put('room',this.room);this.broadcast();
+    return response({ok:true,code:this.room.code,id,token,room:view(this.room)},201);
+  }
+  sockets(){return this.ctx.getWebSockets()}
+  snapshot(){
+    const connected=new Set(this.sockets().map(s=>s.deserializeAttachment()?.id).filter(Boolean));
+    const room=view(this.room);
+    room.members=room.members.map(m=>({...m,connected:connected.has(m.id)}));
+    room.allReady=room.members.length>=2&&room.members.every(m=>m.ready&&m.connected);
+    return room;
+  }
+  send(ws,data){try{ws.send(JSON.stringify(data))}catch{}}
+  broadcast(){
+    if(!this.room)return;
+    const data={type:'room',room:this.snapshot()};
+    for(const ws of this.sockets())this.send(ws,data);
+  }
+  async connect(request){
+    if(!this.active())return err('部屋が見つからないか期限切れです',404);
+    const token=request.headers.get('X-Room-Token')||'';
+    const hash=TOKEN.test(token)?await digest(token):'';
+    const player=this.room.members.find(m=>m.tokenHash===hash);
+    if(!player)return err('接続情報が無効です',401);
+    for(const old of this.sockets())if(old.deserializeAttachment()?.id===player.id)try{old.close(4001,'reconnected')}catch{}
+    const [client,server]=Object.values(new WebSocketPair());
+    this.ctx.acceptWebSocket(server);
+    server.serializeAttachment({id:player.id});
+    this.send(server,{type:'welcome',selfId:player.id,room:this.snapshot()});
+    this.broadcast();
+    return new Response(null,{status:101,webSocket:client});
+  }
+  async webSocketMessage(ws,message){
+    if(!this.active())return void ws.close(4000,'expired');
+    if(typeof message!=='string'||message.length>512)return;
+    let data;try{data=JSON.parse(message)}catch{return}
+    const id=ws.deserializeAttachment()?.id,player=this.room.members.find(m=>m.id===id);
+    if(!player)return void ws.close(4003,'unauthorized');
+    if(data.type==='ready'){
+      if(typeof data.ready!=='boolean')return;
+      player.ready=data.ready;await this.ctx.storage.put('room',this.room);this.broadcast();return;
+    }
+    if(data.type==='game'){
+      if(this.room.hostId!==id||!GAMES.has(data.gameId))return;
+      this.room.gameId=data.gameId;
+      for(const m of this.room.members)m.ready=false;
+      await this.ctx.storage.put('room',this.room);this.broadcast();return;
+    }
+    if(data.type==='remove'){
+      if(id!==this.room.hostId||data.memberId===id||typeof data.memberId!=='string')return;
+      return this.removeMember(data.memberId);
+    }
+    if(data.type==='leave')return this.removeMember(id);
+  }
+  async removeMember(id){
+    if(!this.room||!this.room.members.some(m=>m.id===id))return;
+    this.room.members=this.room.members.filter(m=>m.id!==id);
+    if(this.room.hostId===id)this.room.hostId=this.room.members[0]?.id||null;
+    for(const ws of this.sockets())if(ws.deserializeAttachment()?.id===id){
+      this.send(ws,{type:'left'});try{ws.close(4002,'left')}catch{}
+    }
+    if(!this.room.members.length){
+      for(const ws of this.sockets())try{ws.close(4000,'empty')}catch{}
+      this.room=null;await this.ctx.storage.deleteAll();await this.ctx.storage.deleteAlarm();
+    }else{
+      await this.ctx.storage.put('room',this.room);this.broadcast();
+    }
+  }
+  webSocketClose(){this.broadcast()}
+  webSocketError(){this.broadcast()}
+  async alarm(){
+    for(const ws of this.sockets())try{ws.close(4000,'expired')}catch{}
+    this.room=null;await this.ctx.storage.deleteAll();
+  }
+}
