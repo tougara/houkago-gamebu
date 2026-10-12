@@ -25,8 +25,27 @@
   <div id="progress-header" class="online-progress" hidden>
     <span id="stage-label">準備中</span><strong id="round-info"></strong>
   </div>
+  <section id="mode-stage" hidden>
+    <img class="game-logo" src="../../minna_wa_docchi_logo.png" alt="みんなはどっち？">
+    <div id="mode-host" class="mode-grid" hidden>
+      <section class="mode-card battle"><span class="mode-kicker">MODE 1</span>
+        <h2>よみあいバトル</h2>
+        <p>自分の答えが「多数派」か「少数派」か予想してポイント勝負！</p>
+        <div class="mini-flow"><span>A/Bに回答</span><b>→</b><span>多数派？少数派？</span><b>→</b><span>当たれば1点</span></div>
+        <button id="choose-battle" type="button" class="mode-start-btn battle">よみあいバトルで遊ぶ</button>
+      </section>
+      <section class="mode-card secret"><span class="mode-kicker">MODE 2</span>
+        <h2>ひみつ投票</h2>
+        <p>誰がどっちを選んだかは最後まで秘密。人数だけ見て盛り上がろう！</p>
+        <div class="mini-flow"><span>匿名で回答</span><b>→</b><span>A○人 / B○人</span><b>→</b><span>正体は秘密</span></div>
+        <button id="choose-secret" type="button" class="mode-start-btn secret">ひみつ投票で遊ぶ</button>
+      </section>
+    </div>
+    <p id="mode-guest" class="card online-wait" hidden>ホストがモードを選んでいるよ。選び終わるまで待ってね。</p>
+  </section>
   <section id="setup-stage" hidden>
    <div id="host-setup" hidden>
+    <button id="back-to-mode" type="button" class="small-btn online-back-mode">← モードを選び直す</button>
     <section class="card setup-section setup-rounds online-rounds">
      <h2>何問遊ぶ？</h2>
      <div id="round-options" class="choice-row"></div>
@@ -37,7 +56,7 @@
       <button type="button" class="small-btn compact" id="select-all">全部</button>
      </div>
      <div id="category-options" class="category-grid compact"></div>
-     <p class="deep-note compact">「恋バナ」「ちょっとディープ」は初期状態ではOFF</p>
+     <p id="secret-genre-note" class="deep-note compact">「恋バナ」「ちょっとディープ」は初期状態ではOFF</p>
     </section>
     <section class="card options-card custom-quick">
      <div class="section-row compact">
@@ -111,6 +130,22 @@
     </div>
     <p class="online-privacy-hint">誰がどちらを選んだかは最後まで秘密だよ。</p>
   </section>
+  <section id="predict-stage" hidden>
+    <section class="predict-card">
+      <h2>この答えはみんなの中で……</h2>
+      <p id="predict-selected" class="online-prediction-selected"></p>
+      <div class="predict-grid">
+        <button type="button" id="predict-majority"><strong>多数派</strong><span>多い方だと思う</span></button>
+        <button type="button" id="predict-minority"><strong>少数派</strong><span>少ない方だと思う</span></button>
+      </div>
+    </section>
+  </section>
+  <section id="prediction-wait-stage" hidden>
+    <section class="card online-wait">
+      <h2>回答と予想が完了！</h2><p id="prediction-wait-status">ほかの人の回答を待ってね。</p>
+      <p>全員そろったら、ホストが結果を発表するよ。</p>
+    </section>
+  </section>
   <section id="all-answered-stage" class="all-answered-screen online-all-answered" hidden>
     <div class="all-done-icon">✓</div>
     <span class="all-done-kicker">ALL ANSWERED</span>
@@ -120,12 +155,15 @@
     <p id="reveal-wait" class="online-wait-message">ホストの結果発表を待ってね。</p>
   </section>
   <section id="result-stage" hidden>
-    <div class="anonymous-banner">誰がどっちを選んだかは秘密</div>
+    <div id="anonymous-banner" class="anonymous-banner">誰がどっちを選んだかは秘密</div>
     <div class="tally-grid">
       <div class="a"><small>A</small><span id="result-a-text"></span><strong id="result-a-count"></strong></div>
       <div class="b"><small>B</small><span id="result-b-text"></span><strong id="result-b-count"></strong></div>
     </div>
-    <section class="talk-card">
+    <div id="battle-result-details" class="card online-battle-results" hidden>
+      <h2>みんなの回答</h2><div id="battle-result-list" class="battle-result-list"></div>
+    </div>
+    <section id="secret-talk" class="talk-card">
      <h2>誰だろう？</h2><p>答えを明かさず、みんなで話してみよう。</p><small>言いたくない人は最後まで秘密でOK。</small>
     </section>
     <p class="online-result-question" id="result-question"></p>
@@ -134,9 +172,10 @@
   </section>
   <section id="finished-stage" hidden>
     <section class="final-card">
-      <div class="checkmark">✓</div><h2>ひみつ投票 おわり！</h2>
-      <p>誰がどっちを選んだかは、最後まで秘密のまま。</p>
+      <div class="checkmark">✓</div><h2 id="final-heading">ひみつ投票 おわり！</h2>
+      <p id="final-description">誰がどっちを選んだかは、最後まで秘密のまま。</p>
     </section>
+    <section id="battle-ranking" class="ranking-card" hidden></section>
     <button id="finish-return" type="button" class="btn full" hidden>オンラインルームに戻る</button>
     <p id="finish-wait" class="online-wait-message">ホストが部屋に戻すまで待ってね。</p>
   </section>
