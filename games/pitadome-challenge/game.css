@@ -2048,3 +2048,30 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
     right: max(18px, calc((100vw - 600px) / 2)) !important;
   }
 }
+
+
+/* Ranking record edit: fixed two-line labels in every mode */
+.screen-ranking .rank-edit-toggle{
+  flex:0 0 92px;
+  width:92px;
+  min-width:92px;
+  min-height:61px;
+  padding:6px 7px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  font-size:14px;
+  line-height:1.2;
+  text-align:center;
+}
+.screen-ranking .rank-edit-toggle span{
+  display:block;
+  white-space:nowrap;
+  overflow-wrap:normal;
+  word-break:keep-all;
+}
+@media(max-width:390px){
+  .screen-ranking .ranking-head>strong{min-width:0;font-size:clamp(15px,4vw,18px)}
+}
