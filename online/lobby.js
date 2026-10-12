@@ -12,7 +12,7 @@ const names={
 const STORE='houkago-online-session-v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const configured=/^https:\/\/[A-Za-z0-9.-]+$/.test(base)||/^http:\/\/localhost:\d+$/.test(base);
-let icon=icons[0],session=null,room=null,ws=null,retry=0,timer=null,leaving=false;
+let icon=icons[0],session=null,room=null,ws=null,retry=0,timer=null,leaving=false,voted=false;
 const supplied=(new URLSearchParams(location.search).get('room')||'').toUpperCase();
 if(/^[A-Z2-9]{8}$/.test(supplied))$('code').value=supplied;
 function notice(text,good=false){
@@ -40,7 +40,7 @@ function stopSocket(){
  if(ws){const old=ws;ws=null;old.onclose=null;old.onerror=null;try{old.close()}catch{}}
 }
 function backToEntry(message){
- stopSocket();session=null;room=null;sessionStorage.removeItem(STORE);
+ stopSocket();session=null;room=null;voted=false;sessionStorage.removeItem(STORE);
  $('entry').hidden=false;$('room-panel').hidden=true;history.replaceState(null,'',location.pathname);
  busy(false);if(message)notice(message);
 }
@@ -61,7 +61,7 @@ function enter(answer){
  session={code:answer.code,id:answer.id,token:answer.token,name:$('nickname').value.trim().slice(0,16)};
  persist();room=answer.room;$('entry').hidden=true;$('room-panel').hidden=false;
  history.replaceState(null,'','?room='+encodeURIComponent(session.code));
- notice('部屋に入れたよ！',true);connected(false);draw();connect();
+ voted=false;notice('部屋に入れたよ！',true);connected(false);draw();connect();
 }
 $('create').addEventListener('click',async()=>{
  const name=nameInput();if(!name||!configured)return;
@@ -78,6 +78,38 @@ $('join').addEventListener('click',async()=>{
  catch(error){notice(error.message);busy(false)}
 });
 const send=command=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(command))};
+function drawSecret(){
+ const g=room?.secret,active=room?.phase==='secret'&&g;
+ $('secret-game').hidden=!active;
+ $('ready').hidden=!!active;
+ $('start-secret').hidden=!!active||room.hostId!==session?.id||room.gameId!=='minna-wa-docchi';
+ $('start-secret').disabled=!room?.allReady||ws?.readyState!==WebSocket.OPEN;
+ $('waiting').hidden=!!active;
+ if(!active)return;
+ const host=room.hostId===session?.id,question=g.question||{};
+ $('secret-progress').textContent='ひみつ投票 · '+g.round+' / '+g.roundCount+'問'+(question.category?' · '+question.category:'');
+ $('secret-question').textContent=g.stage==='finished'?'全5問終了！':question.q||'お題を準備中';
+ $('secret-a-label').textContent=question.a||'A';
+ $('secret-b-label').textContent=question.b||'B';
+ const answering=g.stage==='voting'&&!voted;
+ $('secret-choices').hidden=g.stage!=='voting';
+ $('secret-a').disabled=!answering||ws?.readyState!==WebSocket.OPEN;
+ $('secret-b').disabled=!answering||ws?.readyState!==WebSocket.OPEN;
+ $('secret-result').hidden=g.stage==='voting';
+ $('secret-a-result-label').textContent='A · '+(question.a||'');
+ $('secret-b-result-label').textContent='B · '+(question.b||'');
+ $('secret-a-count').textContent=(g.counts?.a??0)+'人';
+ $('secret-b-count').textContent=(g.counts?.b??0)+'人';
+ $('secret-next').hidden=!host||g.stage!=='result';
+ $('secret-next').disabled=ws?.readyState!==WebSocket.OPEN;
+ $('secret-next').textContent=g.round>=g.roundCount?'5問の結果を確定':'次のお題へ';
+ $('secret-end').hidden=!host||g.stage!=='finished';
+ $('secret-end').disabled=ws?.readyState!==WebSocket.OPEN;
+ if(g.stage==='finished')$('secret-status').textContent=host?'みんなで遊んだね！ 部屋に戻ってまた遊ぼう。':'おしまい！ ホストが部屋に戻すまで待ってね。';
+ else if(g.stage==='result')$('secret-status').textContent='集計結果！ 誰がどちらを選んだかは秘密だよ。';
+ else if(voted)$('secret-status').textContent='回答を受け付けたよ · '+g.answered+' / '+g.total+'人が回答済み';
+ else $('secret-status').textContent='自分の答えを選んでね · '+g.answered+' / '+g.total+'人が回答済み';
+}
 function draw(){
  if(!room)return;
  $('room-code').textContent=room.code;
@@ -85,12 +117,14 @@ function draw(){
  $('game-in-room').value=room.gameId;
  $('member-count').textContent=room.members.length+' / '+(room.maxPlayers||10)+'人';
  const host=room.hostId===session?.id;
- $('change-game').hidden=!host;if(!host)$('game-change').hidden=true;
+ $('change-game').hidden=!host||room.phase!=='lobby';if(!host||room.phase!=='lobby')$('game-change').hidden=true;
  const self=room.members.find(m=>m.id===session?.id);
  $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
  $('ready').disabled=ws?.readyState!==WebSocket.OPEN;
- $('waiting').textContent=room.allReady?'全員準備OK！ ゲーム本体のオンライン接続は次の工程で追加するよ。':
-   'ゲームのオンライン接続はまだ準備中。ここでは部屋の動作を確認できるよ。';
+ $('waiting').textContent=room.allReady?(room.gameId==='minna-wa-docchi'?
+  '全員準備OK！ ホストが「ひみつ投票を始める」を押すと開始するよ。':
+  '全員準備OK！ この作品のオンライン対応はまだ準備中だよ。'):
+   'みんなが準備OKになったらゲームを始めよう。';
  $('members').replaceChildren();
  room.members.forEach(m=>{
   const row=document.createElement('div');row.className='member';
@@ -108,17 +142,18 @@ function draw(){
   }
   $('members').append(row);
  });
+ drawSecret();
 }
 function connect(){
  if(!session||!configured)return;
  stopSocket();connected(false);
  const endpoint=base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+encodeURIComponent(session.token);
  const current=new WebSocket(endpoint);ws=current;
- current.onopen=()=>{if(ws!==current)return;retry=0;connected(true);notice('オンライン接続できたよ',true)};
+ current.onopen=()=>{if(ws!==current)return;retry=0;connected(true);notice('オンライン接続できたよ',true);draw()};
  current.onmessage=event=>{
   if(ws!==current)return;
   let msg;try{msg=JSON.parse(event.data)}catch{return}
-  if(msg.type==='welcome'||msg.type==='room'){room=msg.room;draw()}
+  if(msg.type==='welcome'||msg.type==='room'){room=msg.room;voted=!!msg.voted;draw()}
   else if(msg.type==='left'){backToEntry('部屋から退出したよ');leaving=false}
   else if(msg.type==='error')notice(msg.error||'通信エラー');
  };
@@ -131,6 +166,16 @@ function connect(){
  };
  current.onerror=()=>{};
 }
+$('start-secret').addEventListener('click',()=>{
+ if(room?.gameId!=='minna-wa-docchi'||room?.phase!=='lobby'||!room.allReady)return;
+ send({type:'secret-start'});
+});
+for(const choice of ['a','b'])$('secret-'+choice).addEventListener('click',()=>{
+ if(room?.secret?.stage!=='voting'||voted||ws?.readyState!==WebSocket.OPEN)return;
+ voted=true;drawSecret();send({type:'secret-vote',choice});
+});
+$('secret-next').addEventListener('click',()=>send({type:'secret-next'}));
+$('secret-end').addEventListener('click',()=>send({type:'secret-stop'}));
 $('ready').addEventListener('click',()=>{
  const me=room?.members.find(m=>m.id===session?.id);
  if(me)send({type:'ready',ready:!me.ready});
