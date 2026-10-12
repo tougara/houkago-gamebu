@@ -1,9 +1,14 @@
 /* 放課後ゲーム部 共通オンラインルーム Worker (ひみつ投票を先行対応) */
 import {SECRET_QUESTIONS} from './secret-questions.js';
+import {BATTLE_QUESTIONS} from './battle-questions.js';
 const TTL=2*60*60*1000, MAX=10;
 const ROUND_OPTIONS=[3,5,7,10], DEFAULT_ROUNDS=5;
 const CATEGORIES=[...new Set(SECRET_QUESTIONS.map(q=>q.category))];
+const BATTLE_CATEGORIES=[...new Set(BATTLE_QUESTIONS.map(q=>q.category))];
 const DEFAULT_CATEGORIES=CATEGORIES.filter(c=>!['恋バナ','ちょっとディープ'].includes(c));
+const questionsFor=g=>g.mode==='battle'?BATTLE_QUESTIONS:SECRET_QUESTIONS;
+const categoriesFor=g=>g.mode==='battle'?BATTLE_CATEGORIES:CATEGORIES;
+const defaultCategoriesFor=mode=>mode==='battle'?[...BATTLE_CATEGORIES]:[...DEFAULT_CATEGORIES];
 const ALPHABET='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE=/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 const TOKEN=/^[a-f0-9]{64}$/;
@@ -23,7 +28,7 @@ const cleanQuestion=x=>{
 };
 const questionKey=q=>JSON.stringify([q.category,q.q,q.a,q.b]);
 const availablePreviewQuestions=g=>{
- const pool=SECRET_QUESTIONS.filter(q=>g.settings.categories.includes(q.category))
+ const pool=questionsFor(g).filter(q=>g.settings.categories.includes(q.category))
   .concat(g.settings.includeCustom?g.customQuestions:[]);
  const reserved=new Set((g.roundQuestions||[]).map(questionKey));
  for(const key of g.skippedKeys||[])reserved.add(key);
@@ -34,14 +39,17 @@ const secretView=room=>{
  const g=room.secret,questions=g.roundQuestions||g.indices?.map(i=>SECRET_QUESTIONS[i])||[];
  const question=g.stage==='setup'?null:questions[g.round]||null;
  return {
-   stage:g.stage,round:g.stage==='setup'?0:g.round+1,roundCount:g.settings?.roundCount||DEFAULT_ROUNDS,
-   categories:CATEGORIES,selectedCategories:g.settings?.categories||DEFAULT_CATEGORIES,
+   stage:g.stage,mode:g.mode||'secret',modeSelected:g.mode!==null,
+   round:g.stage==='setup'?0:g.round+1,roundCount:g.settings?.roundCount||DEFAULT_ROUNDS,
+   categories:categoriesFor(g),selectedCategories:g.settings?.categories||defaultCategoriesFor(g.mode),
    includeCustom:g.settings?.includeCustom??true,customQuestions:g.customQuestions||[],
-   poolCount:SECRET_QUESTIONS.filter(q=>(g.settings?.categories||DEFAULT_CATEGORIES).includes(q.category)).length+
+   poolCount:questionsFor(g).filter(q=>(g.settings?.categories||defaultCategoriesFor(g.mode)).includes(q.category)).length+
     ((g.settings?.includeCustom??true)?(g.customQuestions?.length||0):0),
    question,alternatives:g.stage==='preview'?availablePreviewQuestions(g).length:0,
-   answered:g.stage==='voting'?Object.keys(g.votes||{}).length:g.answeredCount||room.members.length,
-   total:room.members.length,counts:g.stage==='result'?g.counts:null
+   answered:g.stage==='voting'?(g.mode==='battle'?Object.keys(g.predictions||{}).length:Object.keys(g.votes||{}).length):g.answeredCount||room.members.length,
+   total:room.members.length,counts:g.stage==='result'?g.counts:null,
+   battleResult:g.mode==='battle'&&g.stage==='result'?g.battleResult:null,
+   scores:g.mode==='battle'&&['result','finished'].includes(g.stage)?g.scores:null
  };
 };
 const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,
@@ -161,7 +169,10 @@ export class OnlineRoom{
     const room=this.snapshot();
     for(const ws of this.sockets()){
       const id=ws.deserializeAttachment()?.id;
-      this.send(ws,{type:'room',room,voted:!!this.room.secret?.votes?.[id]});
+      this.send(ws,{type:'room',room,voted:!!this.room.secret?.votes?.[id],
+        myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
+          (this.room.secret.votes?.[id]||null):null,
+        predicted:!!this.room.secret?.predictions?.[id]});
     }
   }
   async saveAndBroadcast(){
@@ -171,23 +182,38 @@ export class OnlineRoom{
   finishVotingIfReady(){
     const g=this.room?.secret;
     if(!g||g.stage!=='voting'||Object.keys(g.votes).length!==this.room.members.length)return;
+    if(g.mode==='battle'&&Object.keys(g.predictions||{}).length!==this.room.members.length)return;
     g.counts={a:Object.values(g.votes).filter(v=>v==='a').length,
       b:Object.values(g.votes).filter(v=>v==='b').length};
+    if(g.mode==='battle'){
+      const tie=g.counts.a===g.counts.b,majority=tie?null:(g.counts.a>g.counts.b?'a':'b');
+      const players=this.room.members.map(m=>{
+        const answer=g.votes[m.id],prediction=g.predictions[m.id];
+        const actual=answer===majority?'majority':'minority';
+        const gain=!tie&&prediction===actual?1:0;
+        g.scores[m.id]=(g.scores[m.id]||0)+gain;
+        return {id:m.id,name:m.name,icon:m.icon,answer,prediction,gain,score:g.scores[m.id]};
+      });
+      g.battleResult={tie,majority,players};
+      g.predictions={};
+    }
     g.answeredCount=this.room.members.length;
     g.votes={};
-    // Hold at the "all answered" screen. Host reveals results explicitly.
+    // Do not expose the count, predictions, answer identities or scores until host reveal.
     g.stage='allAnswered';
   }
   startSecret(){
     this.room.secret={
-      stage:'setup',round:0,settings:{roundCount:DEFAULT_ROUNDS,
+      stage:'setup',mode:null,round:0,settings:{roundCount:DEFAULT_ROUNDS,
         categories:[...DEFAULT_CATEGORIES],includeCustom:true},
-      customQuestions:[],roundQuestions:[],votes:{},counts:null,answeredCount:0
+      customQuestions:[],roundQuestions:[],votes:{},predictions:{},counts:null,answeredCount:0,
+      scores:{},battleResult:null
     };
   }
   beginSecret(){
     const g=this.room.secret;
-    const pool=SECRET_QUESTIONS.filter(q=>g.settings.categories.includes(q.category))
+    if(!['secret','battle'].includes(g.mode))return false;
+    const pool=questionsFor(g).filter(q=>g.settings.categories.includes(q.category))
       .concat(g.settings.includeCustom?g.customQuestions:[]);
     if(pool.length<g.settings.roundCount)return false;
     const random=new Uint32Array(pool.length);
@@ -195,7 +221,9 @@ export class OnlineRoom{
     const shuffled=pool.map((_,i)=>i);
     shuffled.sort((a,b)=>random[a]-random[b]);
     g.roundQuestions=shuffled.slice(0,g.settings.roundCount).map(i=>pool[i]);
-    g.stage='preview';g.round=0;g.skippedKeys=[];g.votes={};g.counts=null;g.answeredCount=0;
+    g.stage='preview';g.round=0;g.skippedKeys=[];g.votes={};g.predictions={};
+    g.scores=Object.fromEntries(this.room.members.map(m=>[m.id,0]));
+    g.battleResult=null;g.counts=null;g.answeredCount=0;
     return true;
   }
   async connect(request){
@@ -209,7 +237,10 @@ export class OnlineRoom{
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({id:player.id});
     this.send(server,{type:'welcome',selfId:player.id,room:this.snapshot(),
-      voted:!!this.room.secret?.votes?.[player.id]});
+      voted:!!this.room.secret?.votes?.[player.id],
+      myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
+        (this.room.secret.votes?.[player.id]||null):null,
+      predicted:!!this.room.secret?.predictions?.[player.id]});
     this.broadcast();
     return new Response(null,{status:101,webSocket:client});
   }
@@ -234,12 +265,20 @@ export class OnlineRoom{
       this.startSecret();
       await this.saveAndBroadcast();return;
     }
+    if(data.type==='secret-mode'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='setup'||id!==this.room.hostId||
+         !['secret','battle'].includes(data.mode))return;
+      g.mode=data.mode;
+      g.settings.categories=defaultCategoriesFor(g.mode);
+      await this.saveAndBroadcast();return;
+    }
     if(data.type==='secret-config'){
       const g=this.room.secret;
-      if(!g||g.stage!=='setup'||id!==this.room.hostId)return;
-      const categories=data.categories;
-      if(!Array.isArray(categories)||categories.length>CATEGORIES.length||
-         categories.some(c=>typeof c!=='string'||!CATEGORIES.includes(c))||
+      if(!g||g.stage!=='setup'||id!==this.room.hostId||!g.mode)return;
+      const categories=data.categories,valid=categoriesFor(g);
+      if(!Array.isArray(categories)||categories.length>valid.length||
+         categories.some(c=>typeof c!=='string'||!valid.includes(c))||
          !ROUND_OPTIONS.includes(data.roundCount)||typeof data.includeCustom!=='boolean')return;
       g.settings={roundCount:data.roundCount,categories:[...new Set(categories)],includeCustom:data.includeCustom};
       await this.saveAndBroadcast();return;
@@ -265,7 +304,7 @@ export class OnlineRoom{
     if(data.type==='secret-accept-question'){
       const g=this.room.secret;
       if(!g||g.stage!=='preview'||id!==this.room.hostId)return;
-      g.stage='voting';g.votes={};g.counts=null;g.answeredCount=0;
+      g.stage='voting';g.votes={};g.predictions={};g.counts=null;g.answeredCount=0;
       await this.saveAndBroadcast();return;
     }
     if(data.type==='secret-change-question'){
@@ -296,6 +335,14 @@ export class OnlineRoom{
       this.finishVotingIfReady();
       await this.saveAndBroadcast();return;
     }
+    if(data.type==='battle-predict'){
+      const g=this.room.secret;
+      if(!g||g.mode!=='battle'||g.stage!=='voting'||
+        !g.votes[id]||g.predictions[id]||!['majority','minority'].includes(data.prediction))return;
+      g.predictions[id]=data.prediction;
+      this.finishVotingIfReady();
+      await this.saveAndBroadcast();return;
+    }
     if(data.type==='secret-reveal'){
       const g=this.room.secret;
       if(!g||id!==this.room.hostId||g.stage!=='allAnswered')return;
@@ -305,7 +352,7 @@ export class OnlineRoom{
       const g=this.room.secret;
       if(!g||this.room.hostId!==id||g.stage!=='result')return;
       if(g.round+1>=(g.settings?.roundCount||DEFAULT_ROUNDS))g.stage='finished';
-      else{g.round++;g.stage='preview';g.votes={};g.counts=null;g.answeredCount=0}
+      else{g.round++;g.stage='preview';g.votes={};g.predictions={};g.battleResult=null;g.counts=null;g.answeredCount=0}
       await this.saveAndBroadcast();return;
     }
     if(data.type==='secret-stop'){
@@ -326,6 +373,8 @@ export class OnlineRoom{
     if(this.room.hostId===id)this.room.hostId=this.room.members[0]?.id||null;
     if(this.room.secret){
       delete this.room.secret.votes[id];
+      if(this.room.secret.predictions)delete this.room.secret.predictions[id];
+      if(this.room.secret.scores)delete this.room.secret.scores[id];
       if(this.room.members.length<2){
         this.room.secret=null;
         for(const member of this.room.members)member.ready=false;
