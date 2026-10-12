@@ -95,6 +95,8 @@ test('host-only setup offers 10 genres, custom questions and 3/5/7/10 round choi
  assert.equal(st.obj.snapshot().secret.stage,'setup');
  assert.equal(st.obj.snapshot().secret.categories.length,10);
  assert.equal(st.obj.snapshot().secret.selectedCategories.length,8);
+ assert.equal(st.obj.snapshot().secret.modeSelected,false);
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-mode',mode:'secret'}));
  await st.obj.webSocketMessage(guest,JSON.stringify({type:'secret-config',roundCount:10,categories:['学校のホンネ'],includeCustom:true}));
  assert.equal(st.obj.snapshot().secret.roundCount,5);
  await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-config',roundCount:3,categories:[],includeCustom:true}));
@@ -122,6 +124,7 @@ test('all answered screen hides results until host reveals; full 5 rounds stay a
  const users=[sock(h.id),sock(b.id),sock(c.id)];st.sockets.push(...users);
  for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-mode',mode:'secret'}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-begin'}));
  assert.equal(st.obj.snapshot().secret.stage,'preview');
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-accept-question'}));
@@ -171,6 +174,7 @@ test('leaving mid-vote resolves to all-answered, never auto-reveals',async()=>{
  const users=[sock(h.id),sock(b.id),sock(c.id)];st.sockets.push(...users);
  for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-mode',mode:'secret'}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-begin'}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-accept-question'}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
@@ -193,6 +197,7 @@ test('host preview accepts, skips and composes a shared question without guest c
  const host=sock(h.id),guest=sock(b.id);st.sockets.push(host,guest);
  for(const w of [host,guest])await st.obj.webSocketMessage(w,JSON.stringify({type:'ready',ready:true}));
  await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-start'}));
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-mode',mode:'secret'}));
  await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-begin'}));
  const first=st.obj.snapshot().secret;
  assert.equal(first.stage,'preview');
@@ -233,6 +238,95 @@ test('host preview accepts, skips and composes a shared question without guest c
  assert.equal(st.obj.snapshot().secret.stage,'preview','next round must preview a new question');
  assert.equal(st.obj.snapshot().secret.round,2);
  assert.ok(st.obj.snapshot().secret.question?.q);
+});
+
+test('battle uses offline 10 genres; private predictions and 1 point scoring for majorities and minorities',async()=>{
+ const st=new Stub();
+ const h=await (await st.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'minna-wa-docchi'}))).json();
+ const b=await (await st.fetch(req('/join',{name:'B'}))).json();
+ const c=await (await st.fetch(req('/join',{name:'C'}))).json();
+ const us=[sock(h.id),sock(b.id),sock(c.id)];st.sockets.push(...us);
+ for(const u of us)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-start'}));
+ assert.equal(st.obj.snapshot().secret.modeSelected,false);
+ await st.obj.webSocketMessage(us[1],JSON.stringify({type:'secret-mode',mode:'battle'}));
+ assert.equal(st.obj.snapshot().secret.modeSelected,false,'guest cannot pick mode');
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-mode',mode:'battle'}));
+ assert.equal(st.obj.snapshot().secret.mode,'battle');
+ assert.equal(st.obj.snapshot().secret.categories.length,10);
+ assert.equal(st.obj.snapshot().secret.poolCount,200);
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-begin'}));
+ assert.equal(st.obj.snapshot().secret.stage,'preview');
+ assert.equal(st.obj.snapshot().secret.question.category.length>0,true);
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-accept-question'}));
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-vote',choice:'a'}));
+ await st.obj.webSocketMessage(us[1],JSON.stringify({type:'secret-vote',choice:'a'}));
+ await st.obj.webSocketMessage(us[2],JSON.stringify({type:'secret-vote',choice:'b'}));
+ assert.equal(st.obj.snapshot().secret.stage,'voting','battle waits for predictions');
+ assert.equal(st.obj.snapshot().secret.answered,0,'answer progress counts completed predictions');
+ const lastHost=us[0].events.at(-1),lastGuest=us[1].events.at(-1);
+ assert.equal(lastHost.myChoice,'a');
+ assert.equal(lastGuest.myChoice,'a');
+ assert.equal(lastGuest.room.secret.counts,null,'majority not disclosed');
+ assert.equal(JSON.stringify(lastGuest).includes('predictions'),false,'other predictions not broadcast');
+ await st.obj.webSocketMessage(us[1],JSON.stringify({type:'battle-predict',prediction:'minority'}));
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'battle-predict',prediction:'majority'}));
+ await st.obj.webSocketMessage(us[2],JSON.stringify({type:'battle-predict',prediction:'minority'}));
+ const waiting=st.obj.snapshot();
+ assert.equal(waiting.secret.stage,'allAnswered');
+ assert.equal(waiting.secret.counts,null);
+ assert.equal(waiting.secret.battleResult,null);
+ assert.equal(waiting.secret.scores,null);
+ assert.deepEqual(st.obj.room.secret.votes,{});
+ assert.deepEqual(st.obj.room.secret.predictions,{});
+ const leaked=JSON.stringify(us.flatMap(u=>u.events));
+ assert.equal(leaked.includes('"battleResult":{"tie"'),false,'battle result stays secret until reveal');
+ await st.obj.webSocketMessage(us[1],JSON.stringify({type:'secret-reveal'}));
+ assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-reveal'}));
+ const result=st.obj.snapshot().secret;
+ assert.equal(result.stage,'result');
+ assert.deepEqual(result.counts,{a:2,b:1});
+ const rows=result.battleResult.players;
+ assert.equal(rows[0].gain,1,'A majority correctly predicts majority');
+ assert.equal(rows[1].gain,0,'A majority incorrectly predicts minority');
+ assert.equal(rows[2].gain,1,'B minority correctly predicts minority');
+ assert.equal(result.scores[h.id],1);
+ assert.equal(result.scores[b.id],0);
+ assert.equal(result.scores[c.id],1);
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-next'}));
+ assert.equal(st.obj.snapshot().secret.stage,'preview');
+ assert.equal(st.obj.snapshot().secret.scores,null,'next round hides previous totals while answering');
+});
+
+test('battle A/B tie is zero points for everyone; full game produces final score totals',async()=>{
+ const st=new Stub(),h=await (await st.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'minna-wa-docchi'}))).json();
+ const b=await (await st.fetch(req('/join',{name:'B'}))).json();
+ const c=await (await st.fetch(req('/join',{name:'C'}))).json();
+ const d=await (await st.fetch(req('/join',{name:'D'}))).json();
+ const us=[sock(h.id),sock(b.id),sock(c.id),sock(d.id)];st.sockets.push(...us);
+ for(const u of us)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-start'}));
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-mode',mode:'battle'}));
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-config',roundCount:3,categories:['学校'],includeCustom:false}));
+ await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-begin'}));
+ for(let round=1;round<=3;round++){
+   assert.equal(st.obj.snapshot().secret.stage,'preview');
+   await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-accept-question'}));
+   for(let i=0;i<4;i++){
+     await st.obj.webSocketMessage(us[i],JSON.stringify({type:'secret-vote',choice:i<2?'a':'b'}));
+     await st.obj.webSocketMessage(us[i],JSON.stringify({type:'battle-predict',prediction:i%2?'minority':'majority'}));
+   }
+   assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
+   await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-reveal'}));
+   const r=st.obj.snapshot().secret;
+   assert.equal(r.battleResult.tie,true);
+   assert.ok(r.battleResult.players.every(p=>p.gain===0));
+   assert.ok(Object.values(r.scores).every(score=>score===0));
+   await st.obj.webSocketMessage(us[0],JSON.stringify({type:'secret-next'}));
+ }
+ assert.equal(st.obj.snapshot().secret.stage,'finished');
+ assert.ok(Object.values(st.obj.snapshot().secret.scores).every(x=>x===0));
 });
 
 test('online phases render question and answers with offline layout and no blank voting view',()=>{
