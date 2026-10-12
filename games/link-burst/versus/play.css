@@ -1557,3 +1557,92 @@ html[data-hg-motion="reduced"] .vs-finale-impact{display:none}
     place-items:center;
   }
 }
+/* Versus V9: readable LINK/COMBO chain spectacle and faster JAM flight */
+.arena-board-stack{position:relative}
+.arena-board-stack .v-chain-fx{
+  position:absolute;
+  z-index:10;
+  top:27%;left:50%;
+  width:max-content;
+  max-width:98%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding:7px clamp(8px,1.1vw,18px);
+  border:1px solid rgba(255,240,166,.88);
+  border-radius:13px;
+  background:linear-gradient(110deg,rgba(25,33,68,.78),rgba(67,35,93,.84),rgba(15,29,63,.78));
+  pointer-events:none;
+  text-align:center;
+  box-shadow:0 2px 18px rgba(255,200,96,.42),inset 0 1px 0 rgba(255,255,255,.25);
+  transform:translateX(-50%);
+}
+.arena-board-stack .v-chain-fx.pop{
+  animation:vs-link-pop .53s cubic-bezier(.15,.86,.25,1) both;
+}
+.arena-board-stack .v-chain-fx strong{
+  display:block;
+  color:#fff1aa;
+  line-height:1.04;
+  white-space:nowrap;
+  font-size:clamp(17px,2.9vw,37px);
+  font-weight:1000;
+  font-style:italic;
+  text-shadow:0 2px 0 #925823,0 0 16px rgba(255,212,93,.87),0 4px 12px #080f29;
+}
+.arena-board-stack .v-chain-fx span{
+  display:block;
+  line-height:1;
+  color:#c4ecff;
+  font-size:clamp(9px,1.2vw,16px);
+  font-weight:1000;
+  letter-spacing:.07em;
+  text-shadow:0 2px 7px #0d1532;
+}
+.arena-board-stack .v-chain-fx[data-power="3"],
+.arena-board-stack .v-chain-fx[data-power="4"],
+.arena-board-stack .v-chain-fx[data-power="5"]{
+  border-color:rgba(255,218,100,.95);
+  background:linear-gradient(110deg,rgba(85,41,109,.87),rgba(118,52,94,.9),rgba(81,39,100,.87));
+  box-shadow:0 0 24px rgba(255,210,104,.65),inset 0 1px 0 rgba(255,255,255,.3);
+}
+.arena-core .v-block.bursting{
+  animation:vs-block-burst .24s ease-out both;
+  box-shadow:0 0 13px 3px rgba(255,244,177,.85),inset 0 1px 5px rgba(255,255,255,.74);
+}
+.arena-core .v-block.charged{
+  animation:v-charge .34s ease-in-out infinite alternate;
+  box-shadow:0 0 11px rgba(255,236,166,.72),inset 0 2px 4px rgba(255,255,255,.53);
+}
+@keyframes vs-link-pop{
+  0%{opacity:0;transform:translate(-50%,20px) scale(.65)}
+  48%{opacity:1;transform:translate(-50%,-3px) scale(1.09)}
+  100%{opacity:1;transform:translate(-50%,0) scale(1)}
+}
+@keyframes vs-block-burst{
+  0%{opacity:1;transform:scale(1);filter:brightness(1.1)}
+  40%{opacity:1;transform:scale(1.2);filter:brightness(1.8)}
+  100%{opacity:.08;transform:scale(.2) rotate(14deg);filter:brightness(2)}
+}
+/* Draw each outgoing JAM in 220ms instead of 350ms. The gameplay's
+   one-safe-boundary counter opportunity remains unchanged. */
+.jam-projectile{
+  animation-duration:220ms;
+  animation-timing-function:cubic-bezier(.1,.72,.3,1);
+}
+@media(max-width:780px) and (orientation:landscape){
+  .arena-board-stack .v-chain-fx{
+    top:27%;border-radius:7px;padding:4px 6px;gap:2px;
+  }
+  .arena-board-stack .v-chain-fx strong{font-size:clamp(15px,3.2vw,23px)}
+  .arena-board-stack .v-chain-fx span{font-size:clamp(8px,1vw,12px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .arena-board-stack .v-chain-fx.pop,.arena-core .v-block.bursting{animation:none}
+  .arena-core .v-block.bursting{opacity:.6}
+}
+html[data-hg-motion="reduced"] .arena-board-stack .v-chain-fx.pop,
+html[data-hg-motion="reduced"] .arena-core .v-block.bursting{animation:none}
+html[data-hg-motion="reduced"] .arena-core .v-block.bursting{opacity:.6}
