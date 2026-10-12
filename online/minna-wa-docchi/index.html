@@ -1,79 +1,118 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#162d55"><title>みんなはどっち？ オンライン｜放課後ゲーム部</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e9eef4">
+<title>みんなはどっち？ オンライン｜放課後ゲーム部</title>
 <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
-<link rel="stylesheet" href="../lobby.css"><link rel="stylesheet" href="./game.css">
+<link rel="stylesheet" href="../../games/minna-wa-docchi/game.css">
+<link rel="stylesheet" href="./game.css">
 </head>
 <body>
-<main class="online-docchi">
-<header class="docchi-head">
-  <div class="docchi-topline"><a href="../" id="lobby-link">← オンラインルーム</a><span id="connection" class="online-status">接続待ち</span></div>
-  <img src="../../minna_wa_docchi_logo.png" class="docchi-logo" alt="みんなはどっち？">
-  <div class="docchi-mode">ONLINE · ひみつ投票</div>
-  <p id="room-brief">部屋につないでいるよ…</p>
-</header>
-<div id="notice" class="notice" role="status" hidden></div>
-<section id="game-shell" class="docchi-board" hidden>
- <div class="round-bar"><span id="stage-label">準備中</span><span id="round-info"></span></div>
- <section id="setup-stage" hidden>
-  <h1>ひみつ投票の設定</h1>
-  <p class="section-note">ジャンル・問題数を選んで、全員で同じお題に答えよう！</p>
-  <div id="host-setup" hidden>
-   <h2>何問遊ぶ？</h2><div id="round-options" class="option-pills"></div>
-   <h2>出題ジャンル（複数選択）</h2><div id="category-options" class="option-pills category-options"></div>
-   <p class="section-note">「恋バナ」「ちょっとディープ」は初期状態ではOFF。必要な場合だけ選べるよ。</p>
-   <h2>マイお題</h2>
-   <p class="section-note">作ったお題はこの端末に保存されるよ。以前作ったお題も必要なものを部屋に読み込める。</p>
-   <button type="button" id="import-saved" class="soft-btn">保存済みのお題をこの部屋に読み込む</button>
-   <label class="check-setting"><input id="include-custom" type="checkbox" checked>作ったお題も出題する</label>
-   <form id="custom-form" class="custom-form">
-     <label for="custom-q">質問（70文字まで）</label><input id="custom-q" maxlength="70" placeholder="例：放課後に遊ぶなら？" required>
-     <div class="custom-two"><label>A<input id="custom-a" maxlength="30" required placeholder="公園"></label><label>B<input id="custom-b" maxlength="30" required placeholder="ゲーム"></label></div>
-     <button type="submit" class="soft-btn">＋ このお題を追加</button>
-   </form>
-   <div id="custom-list" class="custom-list"></div>
-   <p id="question-total" class="section-note"></p>
-   <button type="button" id="begin" class="primary main-action">この設定でゲーム開始</button>
+<main class="docchi-app online-docchi screen-options" id="app">
+ <nav class="top-nav online-nav">
+  <a href="../" id="lobby-link" class="nav-pill">← もどる</a>
+  <a href="../../games/" id="game-list-link" class="nav-pill">ゲームをえらぶ</a>
+  <span class="nav-pill online-status" id="connection">接続待ち</span>
+ </nav>
+ <header class="screen-heading online-heading">
+  <h1 id="page-heading">ジャンル・お題</h1>
+  <p id="room-brief">部屋に接続中…</p>
+ </header>
+ <div id="notice" class="online-notice" role="status" aria-live="polite" hidden></div>
+ <div id="game-shell" hidden>
+  <div id="progress-header" class="online-progress" hidden>
+    <span id="stage-label">準備中</span><strong id="round-info"></strong>
   </div>
-  <p id="guest-setup" class="wait-card" hidden>ホストがお題を準備中。しばらく待ってね！</p>
+  <section id="setup-stage" hidden>
+   <div id="host-setup" hidden>
+    <section class="card setup-section setup-rounds online-rounds">
+     <h2>何問遊ぶ？</h2>
+     <div id="round-options" class="choice-row"></div>
+    </section>
+    <section class="card options-card">
+     <div class="section-row compact">
+      <div><h2>ジャンル</h2><p>複数選べます</p></div>
+      <button type="button" class="small-btn compact" id="select-all">全部</button>
+     </div>
+     <div id="category-options" class="category-grid compact"></div>
+     <p class="deep-note compact">「恋バナ」「ちょっとディープ」は初期状態ではOFF</p>
+    </section>
+    <section class="card options-card custom-quick">
+     <div class="section-row compact">
+      <div><h2>問題を考える</h2><p id="custom-count">保存中 0問</p></div>
+      <button type="button" id="toggle-custom-list" class="small-btn compact">一覧</button>
+     </div>
+     <form id="custom-form" class="quick-question-form">
+       <input id="custom-q" aria-label="質問" maxlength="70" placeholder="質問を書く" required>
+       <div>
+         <input id="custom-a" aria-label="Aの選択肢" maxlength="30" placeholder="A" required>
+         <input id="custom-b" aria-label="Bの選択肢" maxlength="30" placeholder="B" required>
+         <button type="submit" class="quick-add-btn">追加</button>
+       </div>
+     </form>
+     <label class="switch-row compact"><input id="include-custom" type="checkbox" checked>マイお題も混ぜる</label>
+     <div id="custom-details" class="online-custom-details" hidden>
+      <p class="online-detail-hint">端末に保存したお題は、読み込みを押したときだけこの部屋で共有されるよ。</p>
+      <button type="button" id="import-saved" class="small-btn compact">保存済みのお題を読み込む</button>
+      <div id="custom-list" class="custom-list"></div>
+     </div>
+    </section>
+    <div class="options-footer">
+     <p id="question-total" class="pool-count">この設定で出るお題：<strong>160問</strong></p>
+     <button type="button" id="begin" class="btn full">この設定でスタート</button>
+    </div>
+   </div>
+   <p id="guest-setup" class="card online-wait" hidden>ホストがジャンルとお題を準備中。<br>ゲーム開始まで待ってね。</p>
+  </section>
+  <section id="vote-stage" hidden>
+    <div class="answer-card">
+      <span id="question-category" class="question-category">お題</span>
+      <h2 id="question-text">読み込み中…</h2>
+      <div class="big-answers online-answers">
+        <button type="button" id="vote-a"><small>A</small><strong id="vote-a-label">A</strong></button>
+        <button type="button" id="vote-b"><small>B</small><strong id="vote-b-label">B</strong></button>
+      </div>
+      <p id="vote-status" class="online-answer-status" aria-live="polite"></p>
+    </div>
+    <p class="online-privacy-hint">誰がどちらを選んだかは最後まで秘密だよ。</p>
+  </section>
+  <section id="all-answered-stage" class="all-answered-screen online-all-answered" hidden>
+    <div class="all-done-icon">✓</div>
+    <span class="all-done-kicker">ALL ANSWERED</span>
+    <h1>全員の回答が<br>終わりました！</h1>
+    <p>結果発表まで、まだ内緒！</p>
+    <button id="reveal" type="button" class="btn yellow full" hidden>結果を発表する！</button>
+    <p id="reveal-wait" class="online-wait-message">ホストの結果発表を待ってね。</p>
+  </section>
+  <section id="result-stage" hidden>
+    <div class="anonymous-banner">誰がどっちを選んだかは秘密</div>
+    <div class="tally-grid">
+      <div class="a"><small>A</small><span id="result-a-text"></span><strong id="result-a-count"></strong></div>
+      <div class="b"><small>B</small><span id="result-b-text"></span><strong id="result-b-count"></strong></div>
+    </div>
+    <section class="talk-card">
+     <h2>誰だろう？</h2><p>答えを明かさず、みんなで話してみよう。</p><small>言いたくない人は最後まで秘密でOK。</small>
+    </section>
+    <p class="online-result-question" id="result-question"></p>
+    <button id="next-round" type="button" class="btn full" hidden>次のお題へ</button>
+    <p id="next-wait" class="online-wait-message">ホストが次のお題に進めるよ。</p>
+  </section>
+  <section id="finished-stage" hidden>
+    <section class="final-card">
+      <div class="checkmark">✓</div><h2>ひみつ投票 おわり！</h2>
+      <p>誰がどっちを選んだかは、最後まで秘密のまま。</p>
+    </section>
+    <button id="finish-return" type="button" class="btn full" hidden>オンラインルームに戻る</button>
+    <p id="finish-wait" class="online-wait-message">ホストが部屋に戻すまで待ってね。</p>
+  </section>
+ </div>
+ <section id="member-panel" class="card setup-section online-members" hidden>
+  <div class="section-row compact"><div><h2>参加メンバー</h2><p id="member-count"></p></div></div>
+  <div id="member-list" class="member-chips"></div>
  </section>
- <section id="vote-stage" hidden>
-  <div class="category-tag" id="question-category"></div>
-  <h1 id="question-text"></h1>
-  <p id="vote-status" class="section-note"></p>
-  <div class="answer-grid">
-   <button type="button" id="vote-a"><small>A</small><strong id="vote-a-label"></strong></button>
-   <button type="button" id="vote-b"><small>B</small><strong id="vote-b-label"></strong></button>
-  </div>
-  <p class="section-note vote-help">自分の答えを選んでね。誰がどちらを選んだかは公開されないよ。</p>
- </section>
- <section id="all-answered-stage" class="big-moment" hidden>
-  <div class="moment-icon">✓</div><h1>全員の投票が<br>終わりました！</h1>
-  <p>回答が出そろったよ。結果発表まで、まだ内緒！</p>
-  <button id="reveal" class="primary main-action" type="button" hidden>結果を発表する！</button>
-  <p id="reveal-wait" class="section-note">ホストの結果発表を待ってね。</p>
- </section>
- <section id="result-stage" hidden>
-  <h1>みんなの投票結果！</h1>
-  <p id="result-question" class="section-note"></p>
-  <div class="result-choice"><div class="result-top"><span id="result-a-text"></span><strong id="result-a-count"></strong></div><div class="result-track"><div id="result-a-bar"></div></div></div>
-  <div class="result-choice b"><div class="result-top"><span id="result-b-text"></span><strong id="result-b-count"></strong></div><div class="result-track"><div id="result-b-bar"></div></div></div>
-  <p class="section-note">集計だけを公開。誰が選んだかは最後まで秘密！</p>
-  <button id="next-round" class="primary main-action" type="button" hidden>次のお題へ</button>
-  <p id="next-wait" class="section-note">ホストが次のお題に進めるよ。</p>
- </section>
- <section id="finished-stage" class="big-moment" hidden>
-  <div class="moment-icon">★</div><h1>全問終了！</h1><p>みんなの答えはどうだった？ また遊ぼう！</p>
-  <button id="finish-return" class="primary main-action" type="button" hidden>オンラインルームに戻る</button>
-  <p id="finish-wait" class="section-note">ホストが部屋に戻すまで待ってね。</p>
- </section>
-</section>
-<section id="member-panel" class="member-panel" hidden>
-<h2>参加メンバー <span id="member-count"></span></h2><div id="member-list" class="member-chips"></div>
-</section>
-<button id="leave-room" class="exit-game" type="button">ゲームを中断・部屋から退出</button>
+ <button id="leave-room" type="button" class="btn secondary full online-leave">部屋から退出</button>
 </main>
 <script src="../config.js"></script><script src="./game.js"></script>
 </body>
