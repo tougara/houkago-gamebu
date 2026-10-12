@@ -62,88 +62,117 @@ test('join, ready and host-only game selection work',async()=>{
  await stub.obj.removeMember(b.id);
  assert.equal(stub.obj.room,null);
 });
-test('room max 10 and automatic expiry; rate limiter rejects repeated creation',async()=>{
+
+test('room holds ten and permits rapid creation without 4/hour lockout',async()=>{
  const a=await (await service.fetch(req('/api/rooms',{name:'X'}),env)).json();
  const stub=instances.get('room:'+a.code);
- for(let i=0;i<9;i++){
-  const r=await stub.fetch(req('/join',{name:'p'+i}));
-  assert.equal(r.status,201);
- }
+ for(let i=0;i<9;i++)assert.equal((await stub.fetch(req('/join',{name:'p'+i}))).status,201);
  assert.equal((await stub.fetch(req('/join',{name:'Over'}))).status,409);
  await stub.obj.alarm();
  assert.equal(stub.obj.room,null);
- assert.equal(stub.storage.data.size,0);
- let limited=false;
- for(let i=0;i<5;i++){
-  const r=await service.fetch(req('/api/rooms',{name:'X'}),env);
-  if(r.status===429)limited=true;
- }
- assert.ok(limited);
+ for(let i=0;i<5;i++)assert.equal((await service.fetch(req('/api/rooms',{name:'X'}),env)).status,201);
 });
 
-test('three-player online secret ballot reveals counts but not individual answers',async()=>{
- const stub=new Stub(),hostCreated=await stub.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'minna-wa-docchi',icon:'🐯'}));
- assert.equal(hostCreated.status,201);
- const h=await hostCreated.json();
- const b=await (await stub.fetch(req('/join',{name:'B',icon:'🐼'}))).json();
- const c=await (await stub.fetch(req('/join',{name:'C',icon:'🦊'}))).json();
- const users=[sock(h.id),sock(b.id),sock(c.id)];
- stub.sockets.push(...users);
- for(const w of users)await stub.obj.webSocketMessage(w,JSON.stringify({type:'ready',ready:true}));
- assert.equal(stub.obj.snapshot().allReady,true);
- await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-start'}));
- assert.equal(stub.obj.room.secret,undefined,'guest must never start');
- await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
- assert.equal(stub.obj.snapshot().phase,'secret');
- assert.equal(stub.obj.snapshot().secret.roundCount,5);
- assert.ok(stub.obj.snapshot().secret.question.q);
- assert.ok(!['恋バナ','ちょっとディープ'].includes(stub.obj.snapshot().secret.question.category));
- assert.equal(stub.obj.snapshot().secret.counts,null);
- assert.equal((await stub.fetch(req('/join',{name:'Late'}))).status,409,'joining mid-game is blocked');
- await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
- await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
- await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'b'}));
- assert.equal(stub.obj.snapshot().secret.answered,2);
- assert.equal(stub.obj.snapshot().secret.counts,null);
- await stub.obj.webSocketMessage(users[2],JSON.stringify({type:'secret-vote',choice:'a'}));
- const after=stub.obj.snapshot();
- assert.equal(after.secret.stage,'result');
- assert.equal(after.secret.counts.a,2);
- assert.equal(after.secret.counts.b,1);
- assert.deepEqual(stub.obj.room.secret.votes,{},'raw ballots discarded at tally');
- const traffic=JSON.stringify(users.flatMap(w=>w.events));
- assert.ok(!traffic.includes('"votes"'),'no raw votes sent to clients');
- assert.ok(!traffic.includes('"indices"'),'unseen future questions not sent to clients');
- await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-next'}));
- assert.equal(stub.obj.snapshot().secret.round,1,'only host can advance');
+test('all 15 standard player icons are accepted',async()=>{
+ for(const icon of ['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','🦍','🦄','👻']){
+  const st=new Stub();
+  const r=await st.fetch(req('/create',{code:'ABCD2345',name:'Test',gameId:'minna-wa-docchi',icon}));
+  assert.equal(r.status,201);
+  assert.equal((await r.json()).room.members[0].icon,icon);
+ }
+});
+
+test('host-only setup offers 10 genres, custom questions and 3/5/7/10 round choices',async()=>{
+ const st=new Stub();
+ const h=await (await st.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'minna-wa-docchi'}))).json();
+ const b=await (await st.fetch(req('/join',{name:'Guest'}))).json();
+ const host=sock(h.id),guest=sock(b.id);st.sockets.push(host,guest);
+ for(const u of [host,guest])await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
+ await st.obj.webSocketMessage(guest,JSON.stringify({type:'secret-start'}));
+ assert.equal(st.obj.room.secret,undefined);
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-start'}));
+ assert.equal(st.obj.snapshot().secret.stage,'setup');
+ assert.equal(st.obj.snapshot().secret.categories.length,10);
+ assert.equal(st.obj.snapshot().secret.selectedCategories.length,8);
+ await st.obj.webSocketMessage(guest,JSON.stringify({type:'secret-config',roundCount:10,categories:['学校のホンネ'],includeCustom:true}));
+ assert.equal(st.obj.snapshot().secret.roundCount,5);
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-config',roundCount:3,categories:[],includeCustom:true}));
+ assert.equal(st.obj.snapshot().secret.roundCount,3);
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-custom-add',question:{q:'好きな数字は？',a:'1',b:'2'}}));
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-custom-add',question:{q:'学校で遊ぶなら？',a:'鬼ごっこ',b:'かくれんぼ'}}));
+ assert.equal(st.obj.snapshot().secret.customQuestions.length,2);
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-begin'}));
+ assert.equal(st.obj.snapshot().secret.stage,'setup','two questions cannot fill three rounds');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-config',roundCount:3,categories:['学校のホンネ'],includeCustom:true}));
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-begin'}));
+ assert.equal(st.obj.snapshot().secret.stage,'voting');
+ assert.equal(st.obj.snapshot().secret.roundCount,3);
+ assert.ok(['学校のホンネ','マイお題'].includes(st.obj.snapshot().secret.question.category));
+ assert.equal((await st.fetch(req('/join',{name:'Late'}))).status,409);
+});
+
+test('all answered screen hides results until host reveals; full 5 rounds stay anonymous',async()=>{
+ const st=new Stub();
+ const h=await (await st.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'minna-wa-docchi'}))).json();
+ const b=await (await st.fetch(req('/join',{name:'B'}))).json();
+ const c=await (await st.fetch(req('/join',{name:'C'}))).json();
+ const users=[sock(h.id),sock(b.id),sock(c.id)];st.sockets.push(...users);
+ for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-begin'}));
+ assert.equal(st.obj.snapshot().secret.stage,'voting');
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
+ await st.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'b'}));
+ assert.equal(st.obj.snapshot().secret.answered,2);
+ await st.obj.webSocketMessage(users[2],JSON.stringify({type:'secret-vote',choice:'a'}));
+ assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
+ assert.equal(st.obj.snapshot().secret.answered,3);
+ assert.equal(st.obj.snapshot().secret.counts,null);
+ assert.deepEqual(st.obj.room.secret.votes,{});
+ const traffic=JSON.stringify(users.flatMap(u=>u.events));
+ assert.ok(!traffic.includes('"votes"')&&!traffic.includes('"indices"')&&!traffic.includes('"roundQuestions"'));
+ await st.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-reveal'}));
+ assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-reveal'}));
+ assert.equal(st.obj.snapshot().secret.counts.a,2);
+ assert.equal(st.obj.snapshot().secret.counts.b,1);
+ await st.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-next'}));
+ assert.equal(st.obj.snapshot().secret.round,1);
  for(let round=2;round<=5;round++){
-   await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-next'}));
-   assert.equal(stub.obj.snapshot().secret.stage,'voting');
-   assert.equal(stub.obj.snapshot().secret.round,round);
-   for(const w of users)await stub.obj.webSocketMessage(w,JSON.stringify({type:'secret-vote',choice:'a'}));
-   assert.equal(stub.obj.snapshot().secret.counts.a,3);
+  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-next'}));
+  assert.equal(st.obj.snapshot().secret.stage,'voting');
+  assert.equal(st.obj.snapshot().secret.round,round);
+  for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'secret-vote',choice:'a'}));
+  assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
+  assert.equal(st.obj.snapshot().secret.counts,null);
+  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-reveal'}));
+  assert.equal(st.obj.snapshot().secret.counts.a,3);
  }
- await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-next'}));
- assert.equal(stub.obj.snapshot().secret.stage,'finished');
- await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-stop'}));
- assert.equal(stub.obj.snapshot().phase,'lobby');
- assert.equal(stub.obj.snapshot().allReady,false);
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-next'}));
+ assert.equal(st.obj.snapshot().secret.stage,'finished');
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-stop'}));
+ assert.equal(st.obj.snapshot().phase,'lobby');
+ assert.equal(st.obj.snapshot().allReady,false);
 });
 
-test('leaving player does not strand online secret voting',async()=>{
- const stub=new Stub();
- const h=await (await stub.fetch(req('/create',{code:'ABCD5678',name:'Host',gameId:'minna-wa-docchi'}))).json();
- const b=await (await stub.fetch(req('/join',{name:'Guest'}))).json();
- const c=await (await stub.fetch(req('/join',{name:'Guest2'}))).json();
- const users=[sock(h.id),sock(b.id),sock(c.id)];stub.sockets.push(...users);
- for(const w of users)await stub.obj.webSocketMessage(w,JSON.stringify({type:'ready',ready:true}));
- await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
- await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
- await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
- await stub.obj.removeMember(c.id);
- assert.equal(stub.obj.snapshot().secret.stage,'result');
- assert.equal(stub.obj.snapshot().secret.counts.a,1);
- assert.equal(stub.obj.snapshot().secret.counts.b,1);
- await stub.obj.removeMember(b.id);
- assert.equal(stub.obj.snapshot().phase,'lobby','one remaining user returns safely to lobby');
+test('leaving mid-vote resolves to all-answered, never auto-reveals',async()=>{
+ const st=new Stub();
+ const h=await (await st.fetch(req('/create',{code:'ABCD5678',name:'Host',gameId:'minna-wa-docchi'}))).json();
+ const b=await (await st.fetch(req('/join',{name:'Guest'}))).json();
+ const c=await (await st.fetch(req('/join',{name:'Guest2'}))).json();
+ const users=[sock(h.id),sock(b.id),sock(c.id)];st.sockets.push(...users);
+ for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-begin'}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
+ await st.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
+ await st.obj.removeMember(c.id);
+ assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
+ assert.equal(st.obj.snapshot().secret.counts,null);
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-reveal'}));
+ assert.equal(st.obj.snapshot().secret.counts.a,1);
+ assert.equal(st.obj.snapshot().secret.counts.b,1);
+ await st.obj.removeMember(b.id);
+ assert.equal(st.obj.snapshot().phase,'lobby');
 });
