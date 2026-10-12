@@ -1,0 +1,165 @@
+/* 放課後ゲーム部 / 共通オンラインロビー v1 (ゲーム本体接続前) */
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const icons=['🐯','🐼','🦊','🐧','🐶','🐱','🐰','🐸','🦄','🎮'];
+const names={
+ 'minna-wa-docchi':'みんなはどっち？','kyokasho-tower':'教科書タワー',
+ 'kankaku-meter':'感覚メーター','pitadome-challenge':'ピタ止めチャレンジ',
+ 'link-burst':'リンクバースト！','nise-transfer-student':'ニセ転校生を探せ！',
+ 'gesture-battle':'ジェスチャーバトル'
+};
+const STORE='houkago-online-session-v1';
+const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
+const configured=/^https:\/\/[A-Za-z0-9.-]+$/.test(base)||/^http:\/\/localhost:\d+$/.test(base);
+let icon=icons[0],session=null,room=null,ws=null,retry=0,timer=null,leaving=false;
+const supplied=(new URLSearchParams(location.search).get('room')||'').toUpperCase();
+if(/^[A-Z2-9]{8}$/.test(supplied))$('code').value=supplied;
+function notice(text,good=false){
+ const el=$('notice');el.hidden=!text;el.classList.toggle('ok',good);el.textContent=text||'';
+}
+function connected(value){
+ $('connection').textContent=value?'接続中':'接続待ち・再接続中';
+ $('connection').classList.toggle('connected',value);
+ $('ready').disabled=!value;
+}
+function busy(value){$('create').disabled=value||!configured;$('join').disabled=value||!configured}
+icons.forEach(value=>{
+ const b=document.createElement('button');b.type='button';b.className='icon-option'+(value===icon?' selected':'');
+ b.textContent=value;b.setAttribute('aria-label',value);
+ b.addEventListener('click',()=>{
+   icon=value;document.querySelectorAll('.icon-option').forEach(el=>el.classList.toggle('selected',el===b));
+ });
+ $('icons').append(b);
+});
+for(const [key,label] of Object.entries(names)){
+ const option=document.createElement('option');option.value=key;option.textContent=label;$('game-in-room').append(option);
+}
+function stopSocket(){
+ clearTimeout(timer);timer=null;
+ if(ws){const old=ws;ws=null;old.onclose=null;old.onerror=null;try{old.close()}catch{}}
+}
+function backToEntry(message){
+ stopSocket();session=null;room=null;sessionStorage.removeItem(STORE);
+ $('entry').hidden=false;$('room-panel').hidden=true;history.replaceState(null,'',location.pathname);
+ busy(false);if(message)notice(message);
+}
+const persist=()=>{if(session)sessionStorage.setItem(STORE,JSON.stringify(session))};
+const invite=()=>new URL('?room='+encodeURIComponent(room?.code||''),location.href).href;
+async function post(path,body){
+ const r=await fetch(base+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
+ const answer=await r.json().catch(()=>({ok:false,error:'通信を確認してね'}));
+ if(!r.ok||!answer.ok)throw Error(answer.error||'接続できませんでした');
+ return answer;
+}
+function nameInput(){
+ const name=$('nickname').value.trim().slice(0,16);
+ if(!name){notice('名前を入力してね');$('nickname').focus();return null}
+ return name;
+}
+function enter(answer){
+ session={code:answer.code,id:answer.id,token:answer.token,name:$('nickname').value.trim().slice(0,16)};
+ persist();room=answer.room;$('entry').hidden=true;$('room-panel').hidden=false;
+ history.replaceState(null,'','?room='+encodeURIComponent(session.code));
+ notice('部屋に入れたよ！',true);connected(false);draw();connect();
+}
+$('create').addEventListener('click',async()=>{
+ const name=nameInput();if(!name||!configured)return;
+ busy(true);notice('部屋を作成中…',true);
+ try{enter(await post('/api/rooms',{name,icon,gameId:$('game').value}))}
+ catch(error){notice(error.message);busy(false)}
+});
+$('join').addEventListener('click',async()=>{
+ const name=nameInput(),code=$('code').value.trim().toUpperCase();
+ if(!name||!configured)return;
+ if(!/^[A-Z2-9]{8}$/.test(code)){notice('招待コードは8文字だよ');return}
+ busy(true);notice('部屋を探しているよ…',true);
+ try{enter(await post('/api/rooms/'+code+'/join',{name,icon}))}
+ catch(error){notice(error.message);busy(false)}
+});
+const send=command=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(command))};
+function draw(){
+ if(!room)return;
+ $('room-code').textContent=room.code;
+ $('game-name').textContent=names[room.gameId]||room.gameId;
+ $('game-in-room').value=room.gameId;
+ $('member-count').textContent=room.members.length+' / '+(room.maxPlayers||10)+'人';
+ const host=room.hostId===session?.id;
+ $('change-game').hidden=!host;if(!host)$('game-change').hidden=true;
+ const self=room.members.find(m=>m.id===session?.id);
+ $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
+ $('ready').disabled=ws?.readyState!==WebSocket.OPEN;
+ $('waiting').textContent=room.allReady?'全員準備OK！ ゲーム本体のオンライン接続は次の工程で追加するよ。':
+   'ゲームのオンライン接続はまだ準備中。ここでは部屋の動作を確認できるよ。';
+ $('members').replaceChildren();
+ room.members.forEach(m=>{
+  const row=document.createElement('div');row.className='member';
+  const avatar=document.createElement('span');avatar.className='member-icon';avatar.textContent=m.icon||'🎮';
+  const label=document.createElement('strong');label.textContent=m.name;
+  if(m.id===room.hostId){const badge=document.createElement('em');badge.textContent=' ホスト';label.append(badge)}
+  if(m.id===session?.id){const badge=document.createElement('em');badge.textContent='（自分）';label.append(badge)}
+  const status=document.createElement('span');status.className='member-status'+(m.connected&&m.ready?' ready':'');
+  status.textContent=!m.connected?'オフライン':m.ready?'準備OK':'待機中';
+  row.append(avatar,label,status);
+  if(host&&m.id!==session.id){
+   const remove=document.createElement('button');remove.type='button';remove.textContent='退出させる';
+   remove.addEventListener('click',()=>{if(confirm(m.name+'を退出させる？'))send({type:'remove',memberId:m.id})});
+   row.append(remove);
+  }
+  $('members').append(row);
+ });
+}
+function connect(){
+ if(!session||!configured)return;
+ stopSocket();connected(false);
+ const endpoint=base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+encodeURIComponent(session.token);
+ const current=new WebSocket(endpoint);ws=current;
+ current.onopen=()=>{if(ws!==current)return;retry=0;connected(true);notice('オンライン接続できたよ',true)};
+ current.onmessage=event=>{
+  if(ws!==current)return;
+  let msg;try{msg=JSON.parse(event.data)}catch{return}
+  if(msg.type==='welcome'||msg.type==='room'){room=msg.room;draw()}
+  else if(msg.type==='left'){backToEntry('部屋から退出したよ');leaving=false}
+  else if(msg.type==='error')notice(msg.error||'通信エラー');
+ };
+ current.onclose=event=>{
+  if(ws!==current||leaving)return;
+  ws=null;connected(false);
+  if([4000,4002,4003].includes(event.code)){backToEntry('部屋が終了したか、参加情報が無効だよ');return}
+  retry=Math.min(retry+1,6);
+  timer=setTimeout(connect,Math.min(1500*(2**(retry-1)),15000));
+ };
+ current.onerror=()=>{};
+}
+$('ready').addEventListener('click',()=>{
+ const me=room?.members.find(m=>m.id===session?.id);
+ if(me)send({type:'ready',ready:!me.ready});
+});
+$('change-game').addEventListener('click',()=>{$('game-change').hidden=!$('game-change').hidden});
+$('apply-game').addEventListener('click',()=>{
+ send({type:'game',gameId:$('game-in-room').value});$('game-change').hidden=true;
+});
+$('copy').addEventListener('click',async()=>{
+ try{await navigator.clipboard.writeText(invite());notice('招待URLをコピーしたよ',true)}
+ catch{notice('コピーできなかったよ。コードを友達に教えてね')}
+});
+$('share').addEventListener('click',async()=>{
+ if(navigator.share){try{await navigator.share({title:'放課後ゲーム部 オンラインルーム',url:invite()})}catch{}}
+ else $('copy').click();
+});
+$('leave').addEventListener('click',()=>{
+ if(!confirm('部屋から退出する？'))return;
+ leaving=true;send({type:'leave'});
+ timer=setTimeout(()=>{backToEntry('退出したよ');leaving=false},3000);
+});
+try{
+ const saved=JSON.parse(sessionStorage.getItem(STORE)||'null');
+ if(saved&&/^[A-Z2-9]{8}$/.test(saved.code)&&/^[a-f0-9]{64}$/.test(saved.token)&&(!supplied||supplied===saved.code)){
+  session=saved;$('nickname').value=saved.name||'';
+  $('entry').hidden=true;$('room-panel').hidden=false;
+  room={code:saved.code,gameId:'minna-wa-docchi',hostId:null,members:[],maxPlayers:10};
+  draw();if(configured)connect();
+ }
+}catch{sessionStorage.removeItem(STORE)}
+if(!configured){busy(false);notice('オンラインサーバーの接続設定前です。現在準備中のため、まだ部屋には入れないよ。')}
+})();
