@@ -1,4 +1,4 @@
-/* 放課後ゲーム部 / みんなはどっち？ ONLINE ひみつ投票 */
+/* 放課後ゲーム部 / みんなはどっち？ ONLINE 2モード */
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
@@ -6,7 +6,7 @@ const STORE='houkago-online-session-v1';
 const CUSTOM_STORE='houkago_docchi_custom_v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const params=new URLSearchParams(location.search),requested=params.get('room')||'';
-let session=null,room=null,ws=null,voted=false,retry=0,timer=null,exiting=false,composing=false,lastScreenKey='';
+let session=null,room=null,ws=null,voted=false,myChoice=null,predicted=false,retry=0,timer=null,exiting=false,composing=false,lastScreenKey='';
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
 if(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session.token)||
  (requested&&requested!==session.code)||!/^https:\/\/[a-z0-9.-]+$/i.test(base)){
@@ -182,6 +182,77 @@ function draw(){
  }
  $('leave-room').textContent=myHost?'ゲームを中止して全員をロビーへ戻す':'部屋から退出する';
 }
+// Preserve the existing secret-vote rendering, then layer battle-only stages on top.
+const baseDraw=draw;
+draw=function(){
+ baseDraw();
+ if(!room||room.phase!=='secret')return;
+ const g=room.secret||{},isHost=host(),battle=g.mode==='battle',stage=g.stage;
+ const pending=stage==='setup'&&!g.modeSelected;
+ $('mode-stage').hidden=!pending;
+ $('mode-host').hidden=!isHost;
+ $('mode-guest').hidden=isHost;
+ $('choose-battle').disabled=$('choose-secret').disabled=!socketReady();
+ if(pending){
+   $('setup-stage').hidden=true;
+   $('page-heading').textContent='モードをえらぶ';
+   $('progress-header').hidden=true;
+ }
+ if(stage==='setup'){
+   $('setup-stage').hidden=pending;
+   if(!pending)$('secret-genre-note').hidden=battle;
+ }
+ if(stage==='voting'&&battle){
+   $('vote-stage').hidden=!!myChoice;
+   $('predict-stage').hidden=!myChoice||predicted;
+   $('prediction-wait-stage').hidden=!myChoice||!predicted;
+   $('page-heading').textContent=myChoice?(predicted?'回答しました':'みんなの答えを予想'):'自分の回答';
+   const q=g.question||{};
+   $('predict-selected').textContent='あなたが選んだのは「'+(myChoice==='a'?q.a:q.b)+'」';
+   $('predict-majority').disabled=$('predict-minority').disabled=!socketReady()||predicted;
+   $('prediction-wait-status').textContent='回答完了 '+g.answered+' / '+g.total+'人';
+   const privacy=document.querySelector('.online-privacy-hint');if(privacy)privacy.hidden=true;
+ }
+ if(stage==='result'){
+   $('anonymous-banner').hidden=battle;
+   $('secret-talk').hidden=battle;
+   $('battle-result-details').hidden=!battle;
+   $('next-round').textContent=g.round>=g.roundCount?(battle?'最終結果を見る':'おわる'):'次のお題へ';
+   const list=$('battle-result-list');list.replaceChildren();
+   if(battle&&g.battleResult){
+     list.append(addText('p',g.battleResult.tie?'同数！ 全員0点。':'予想が当たったら1点！','online-battle-note'));
+     const q=g.question||{};
+     for(const p of g.battleResult.players||[]){
+       const row=addText('div','','battle-result-row');
+       row.append(addText('span',(p.icon||'')+' '+p.name),
+         addText('strong',p.answer==='a'?q.a:q.b),
+         addText('em',p.prediction==='majority'?'多数派予想':'少数派予想'),
+         addText('b',p.gain?'+1点':'0点'));
+       list.append(row);
+     }
+   }
+ }
+ if(stage==='finished'){
+   $('page-heading').textContent=battle?'最終結果':'ひみつ投票 おわり！';
+   $('final-heading').textContent=battle?'よみあいバトル終了！':'ひみつ投票 おわり！';
+   $('final-description').textContent=battle?'みんなの読み合いはどうだった？':'誰がどっちを選んだかは、最後まで秘密のまま。';
+   const ranking=$('battle-ranking');ranking.hidden=!battle;ranking.replaceChildren();
+   if(battle){
+     const sorted=[...room.members].sort((a,b)=>(g.scores?.[b.id]||0)-(g.scores?.[a.id]||0));
+     let rank=0,last=null;
+     sorted.forEach((p,i)=>{
+       const score=g.scores?.[p.id]||0;
+       if(score!==last){rank=i+1;last=score}
+       const row=addText('div','','rank-row rank-'+rank);
+       row.append(addText('b',rank+'位'),addText('span',p.icon+' '+p.name),addText('strong',score+'点'));
+       ranking.append(row);
+     });
+   }
+ }
+ if(stage==='preview'&&battle)$('preview-sensitive').hidden=true;
+ $('room-brief').textContent=stage==='preview'?'まずは全員でお題を確認':
+   'オンライン · '+(battle?'よみあいバトル':'ひみつ投票')+' ／ '+room.members.length+'人参加 · 招待コード '+room.code;
+};
 function connect(){
  if(!session)return;
  clearTimeout(timer);
@@ -192,7 +263,9 @@ function connect(){
  current.onmessage=event=>{
   if(current!==ws)return;
   let data;try{data=JSON.parse(event.data)}catch{return}
-  if(data.type==='welcome'||data.type==='room'){room=data.room;voted=!!data.voted;draw()}
+  if(data.type==='welcome'||data.type==='room'){
+    room=data.room;voted=!!data.voted;myChoice=data.myChoice||null;predicted=!!data.predicted;draw()
+   }
   else if(data.type==='left')goLobby(true);
   else if(data.type==='error')say(data.error||'エラーが発生したよ');
  };
@@ -264,6 +337,14 @@ $('include-custom').addEventListener('change',()=>{
  send({type:'secret-config',categories:g.selectedCategories,roundCount:g.roundCount,
   includeCustom:$('include-custom').checked});
 });
+for(const mode of ['battle','secret'])$('choose-'+mode).addEventListener('click',()=>{
+ if(room?.secret?.stage!=='setup'||!host())return;
+ send({type:'secret-mode',mode});
+});
+$('back-to-mode').addEventListener('click',()=>{
+ if(room?.secret?.stage!=='setup'||!host())return;
+ send({type:'secret-mode',mode:null});
+});
 $('begin').addEventListener('click',()=>send({type:'secret-begin'}));
 $('accept-question').addEventListener('click',()=>{
  if(!host()||room?.secret?.stage!=='preview'||composing)return;
@@ -291,7 +372,12 @@ $('round-question-form').addEventListener('submit',e=>{
 });
 for(const choice of ['a','b'])$('vote-'+choice).addEventListener('click',()=>{
  if(room?.secret?.stage!=='voting'||voted||!socketReady())return;
- voted=true;draw();send({type:'secret-vote',choice});
+ voted=true;if(room.secret.mode==='battle')myChoice=choice;
+ draw();send({type:'secret-vote',choice});
+});
+for(const prediction of ['majority','minority'])$('predict-'+prediction).addEventListener('click',()=>{
+ if(room?.secret?.stage!=='voting'||room.secret.mode!=='battle'||!myChoice||predicted||!socketReady())return;
+ predicted=true;draw();send({type:'battle-predict',prediction});
 });
 $('reveal').addEventListener('click',()=>send({type:'secret-reveal'}));
 $('next-round').addEventListener('click',()=>send({type:'secret-next'}));
