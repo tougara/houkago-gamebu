@@ -21,6 +21,14 @@ const cleanQuestion=x=>{
  if(!fields[0]||!fields[1]||!fields[2]||fields[0].length>70||fields[1].length>30||fields[2].length>30)return null;
  return {category:'マイお題',q:fields[0],a:fields[1],b:fields[2]};
 };
+const questionKey=q=>JSON.stringify([q.category,q.q,q.a,q.b]);
+const availablePreviewQuestions=g=>{
+ const pool=SECRET_QUESTIONS.filter(q=>g.settings.categories.includes(q.category))
+  .concat(g.settings.includeCustom?g.customQuestions:[]);
+ const reserved=new Set((g.roundQuestions||[]).map(questionKey));
+ for(const key of g.skippedKeys||[])reserved.add(key);
+ return pool.filter(q=>!reserved.has(questionKey(q)));
+};
 const secretView=room=>{
  if(!room.secret)return null;
  const g=room.secret,questions=g.roundQuestions||g.indices?.map(i=>SECRET_QUESTIONS[i])||[];
@@ -31,7 +39,8 @@ const secretView=room=>{
    includeCustom:g.settings?.includeCustom??true,customQuestions:g.customQuestions||[],
    poolCount:SECRET_QUESTIONS.filter(q=>(g.settings?.categories||DEFAULT_CATEGORIES).includes(q.category)).length+
     ((g.settings?.includeCustom??true)?(g.customQuestions?.length||0):0),
-   question,answered:g.stage==='voting'?Object.keys(g.votes||{}).length:g.answeredCount||room.members.length,
+   question,alternatives:g.stage==='preview'?availablePreviewQuestions(g).length:0,
+   answered:g.stage==='voting'?Object.keys(g.votes||{}).length:g.answeredCount||room.members.length,
    total:room.members.length,counts:g.stage==='result'?g.counts:null
  };
 };
@@ -186,7 +195,7 @@ export class OnlineRoom{
     const shuffled=pool.map((_,i)=>i);
     shuffled.sort((a,b)=>random[a]-random[b]);
     g.roundQuestions=shuffled.slice(0,g.settings.roundCount).map(i=>pool[i]);
-    g.stage='voting';g.round=0;g.votes={};g.counts=null;g.answeredCount=0;
+    g.stage='preview';g.round=0;g.skippedKeys=[];g.votes={};g.counts=null;g.answeredCount=0;
     return true;
   }
   async connect(request){
@@ -253,6 +262,33 @@ export class OnlineRoom{
       if(!this.room.secret||this.room.secret.stage!=='setup'||id!==this.room.hostId)return;
       if(this.beginSecret())await this.saveAndBroadcast();return;
     }
+    if(data.type==='secret-accept-question'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='preview'||id!==this.room.hostId)return;
+      g.stage='voting';g.votes={};g.counts=null;g.answeredCount=0;
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-change-question'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='preview'||id!==this.room.hostId)return;
+      const choices=availablePreviewQuestions(g);
+      if(!choices.length)return;
+      const current=g.roundQuestions[g.round];
+      if(current)g.skippedKeys.push(questionKey(current));
+      const random=new Uint32Array(1);
+      crypto.getRandomValues(random);
+      g.roundQuestions[g.round]=choices[random[0]%choices.length];
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-use-question'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='preview'||id!==this.room.hostId)return;
+      const q=cleanQuestion(data.question);if(!q)return;
+      // An original question returns everyone to the preview, as in offline mode.
+      // Do not auto-reveal a vote or disclose any participant answer.
+      g.roundQuestions[g.round]=q;
+      await this.saveAndBroadcast();return;
+    }
     if(data.type==='secret-vote'){
       const g=this.room.secret;
       if(!g||g.stage!=='voting'||!['a','b'].includes(data.choice)||g.votes[id])return;
@@ -269,7 +305,7 @@ export class OnlineRoom{
       const g=this.room.secret;
       if(!g||this.room.hostId!==id||g.stage!=='result')return;
       if(g.round+1>=(g.settings?.roundCount||DEFAULT_ROUNDS))g.stage='finished';
-      else{g.round++;g.stage='voting';g.votes={};g.counts=null;g.answeredCount=0}
+      else{g.round++;g.stage='preview';g.votes={};g.counts=null;g.answeredCount=0}
       await this.saveAndBroadcast();return;
     }
     if(data.type==='secret-stop'){
