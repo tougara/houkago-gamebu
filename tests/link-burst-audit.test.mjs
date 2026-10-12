@@ -9,6 +9,9 @@ const solo=load('games/link-burst/game.js');
 const versus=load('games/link-burst/versus/match.js');
 const engineCode=load('games/link-burst/versus/engine.js');
 const versusCSS=load('games/link-burst/versus/play.css');
+const readyScreenSource=load('games/link-burst/versus/versus.js');
+const gameCatalog=load('games/index.html');
+const readyScreenCSS=load('games/link-burst/versus/versus.css');
 const scope={window:{}};
 vm.runInNewContext(engineCode,scope);
 const engine=scope.window.LinkBurstVersusEngine;
@@ -27,6 +30,47 @@ test('Solo and versus share LINK-weighted score formula',()=>{
   }
   assert.equal(soloScore(4,1,1)+soloScore(4,2,1),1450);
   assert.ok(soloScore(4,1,1)+soloScore(4,2,1)>soloScore(8,1,2));
+});
+
+test('Ready-screen JAM guide matches the actual attack table and overtime rules',()=>{
+  for(const [link,attack] of [[2,4],[3,11],[4,24]]){
+    assert.equal(engine.attackFor(link,1),attack);
+    assert.ok(readyScreenSource.includes(link+' LINKで'+attack+'個'));
+  }
+  assert.equal(engine.attackFor(1,2),3);
+  assert.ok(readyScreenSource.includes('1 LINKでも2 COMBOなら3個'));
+  assert.ok(readyScreenSource.includes('3 COMBO以上なら＋6個'));
+  const guideWaves=[
+    [0,'1回14個'],
+    [90000,'1分30秒〜：21個'],
+    [180000,'3分〜：28個'],
+    [240000,'4分〜：30個']
+  ];
+  for(const [ms,label] of guideWaves){
+    assert.ok(readyScreenSource.includes(label));
+    assert.equal(engine.jamWaveSize({elapsedMs:ms}),[14,21,28,30][guideWaves.findIndex(x=>x[0]===ms)]);
+  }
+  assert.equal(engine.attackFor(4,1,180000),30);
+  assert.equal(engine.attackFor(4,1,240000),36);
+  assert.ok(readyScreenSource.includes('1.25倍'));
+  assert.ok(readyScreenSource.includes('1.5倍'));
+  assert.ok(readyScreenSource.includes('最大90個'));
+  assert.ok(readyScreenSource.includes('中央に新しいペアを出せなくなった方が負け'));
+  assert.ok(readyScreenSource.includes('安全な区切りで着弾'));
+  assert.ok(readyScreenCSS.includes('.versus-rules-card .versus-jam-rules'));
+  assert.ok(!readyScreenSource.includes('最大7個ずつ着弾'));
+});
+
+test('Game-selection and solo rules no longer advertise unfinished versus mode',()=>{
+  assert.ok(!solo.includes('SETUP PREVIEW'));
+  assert.ok(!solo.includes('試合はまだ制作中'));
+  assert.ok(!solo.includes('対戦は準備画面から順番に開発中'));
+  assert.ok(solo.includes('6つの項目で説明するよ'));
+  assert.ok(solo.includes('操作可能時間120秒'));
+  assert.ok(solo.includes('MAX LINK</small><strong data-max-link'));
+  assert.ok(gameCatalog.includes('data-categories="1人 2人 2人対戦 パズル スコアアタック"'));
+  assert.ok(gameCatalog.includes('<h2>リンクバースト！</h2>'));
+  assert.ok(gameCatalog.includes('<span>1人・2人</span><span>パズル</span>'));
 });
 
 test('JAM targets available columns instead of KO on a full edge',()=>{
