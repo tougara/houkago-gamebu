@@ -1010,3 +1010,60 @@ body.registry-open{overflow:hidden}
     padding:12px 14px 6px;
   }
 }
+
+/* 2026-10-12: home offline / online direct entry.
+   Keep both choices together; reserve bottom space for existing menu and resume button. */
+.home-page .home-play-actions{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:10px;
+}
+.home-page .home-play-actions .home-cta{
+  width:100%;
+  min-width:0;
+}
+.home-page .home-online-cta{
+  background:linear-gradient(180deg,#55baff,#117bdf);
+  color:#fff;
+  border-color:#fff;
+  box-shadow:0 7px 0 #07569b,0 13px 24px rgba(5,45,97,.28);
+}
+.home-page .home-online-cta:active{
+  box-shadow:0 2px 0 #07569b,0 6px 16px rgba(5,45,97,.22);
+}
+.home-page .home-online-cta:focus-visible,
+.home-page .home-offline-cta:focus-visible{
+  outline:3px solid #fff;
+  outline-offset:4px;
+}
+/* A sixth action should not push the bottom menu outside the smartphone screen. */
+.home-page .hero-action-wrap{
+  top:auto;
+  bottom:max(16px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+}
+@media(max-height:740px){
+  .home-page .hero-action-wrap:not(.hg-has-resume){
+    bottom:max(10px,env(safe-area-inset-bottom));
+  }
+  .home-page .home-play-actions{gap:7px}
+  .home-page .home-play-actions .home-cta{
+    min-height:50px;
+    padding:10px 15px;
+    font-size:clamp(16px,4.5vw,21px);
+  }
+}
+@media(max-height:620px){
+  .home-page .home-play-actions{gap:6px}
+  .home-page .home-play-actions .home-cta{
+    min-height:44px;
+    padding:7px 12px;
+    font-size:clamp(15px,4vw,19px);
+  }
+  .home-page .hero-action-wrap:not(.hg-has-resume){
+    bottom:max(6px,env(safe-area-inset-bottom));
+  }
+  .home-page .hero-logo-wrap{top:22%}
+  .home-page .site-logo{max-height:29dvh}
+}
