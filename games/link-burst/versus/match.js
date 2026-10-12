@@ -136,6 +136,21 @@
    }
  }
  function playable(){return !match.paused&&!match.ended&&match.countdown<=0&&landscape()&&document.visibilityState!=='hidden'}
+ // Fit large scores into the shared middle console without hiding digits.
+ // Run only when the score changes, a new round starts or the window resizes.
+ function fitScore(el,value,force){
+   const shown=Number(value||0).toLocaleString('ja-JP');
+   if(!force&&el.textContent===shown)return;
+   el.textContent=shown;
+   el.style.fontSize='';
+   const width=el.clientWidth;
+   if(!width)return;
+   let px=parseFloat(window.getComputedStyle(el).fontSize)||24;
+   while(el.scrollWidth>width+1&&px>12){
+     px-=1;
+     el.style.fontSize=px+'px';
+   }
+ }
  function drawArena(i,force){
    const st=match.games[i];
    const piece=st.piece;
@@ -187,7 +202,8 @@
        fx.dataset.power=String(Math.min(8,link+Math.max(0,combo-1)));
      }else{delete fx.dataset.step;delete fx.dataset.phase}
    }
-   const score=root.querySelector('[data-score="'+i+'"]');if(score)score.textContent=st.score.toLocaleString('ja-JP');
+   const score=root.querySelector('[data-score="'+i+'"]');
+   if(score)fitScore(score,st.score,force);
    const link=root.querySelector('[data-link="'+i+'"]');if(link)link.textContent=String(st.maxLink);
    const incoming=engine.incomingCount(st);
    const jam=root.querySelector('[data-jam="'+i+'"]');if(jam)jam.textContent=String(incoming);
@@ -512,11 +528,13 @@
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')pause(true)});
  window.addEventListener('resize',function(){
    if(!landscape()){stop();releaseAll()}
-   updateOverlays();if(landscape())continueLoop();
+   updateOverlays();
+   if(landscape()){draw(true);continueLoop();}
  });
  window.addEventListener('orientationchange',function(){
    if(!landscape()){stop();releaseAll()}
-   updateOverlays();if(landscape())continueLoop();
+   updateOverlays();
+   if(landscape()){draw(true);continueLoop();}
  });
  match.players=selectPlayers();
  if(match.players.length!==2){
