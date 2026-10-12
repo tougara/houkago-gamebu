@@ -42,7 +42,8 @@
          '<button class="v-control v-control-down" type="button" data-side="'+i+'" data-action="down" aria-label="'+side+'P 高速落下">↓</button>'+
        '</div>'+
        '<div class="arena-board-stack">'+
-         '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+
+         '<div class="arena-field-wrap"><div class="arena-field" data-board="'+i+'" aria-label="'+side+'Pの7列13段盤面"></div></div>'+ 
+         '<div class="v-chain-fx" data-chain-fx="'+i+'" hidden aria-live="off"><strong></strong><span></span></div>'+
        '</div>'+
        '<aside class="arena-next">'+
          '<div class="v-next-entry"><small>NEXT</small><div data-next="'+i+'"></div></div>'+
@@ -145,6 +146,7 @@
        return rot.map(function(o,n){return {x:piece.x+o[0],y:piece.y+o[1],color:n?piece.b:piece.a}});
      })())if(c.y>=engine.HIDDEN)visible.set(c.y+':'+c.x,c.color);
      const charged=new Set(st.phase==='charge'?st.groups.flat().map(function(v){return v.y+':'+v.x}):[]);
+     const bursting=new Set(st.phase==='burst'?st.burstCells:[]);
      const ghosts=engine.ghost(st);
      let html='';
      for(let row=engine.HIDDEN;row<engine.ROWS;row++)for(let x=0;x<engine.COLS;x++){
@@ -153,10 +155,30 @@
        const gh=color?null:ghosts.get(key);
        const value=color||gh;
        html+='<span class="v-cell '+(row<engine.HIDDEN+2?'warning':'')+'">'+
-         (value?'<i class="v-block '+value+(gh?' ghost':'')+(charged.has(key)?' charged':'')+'">'+engine.SYMBOL[value]+'</i>':'')+'</span>';
+         (value?'<i class="v-block '+value+(gh?' ghost':'')+(charged.has(key)?' charged':'')+(bursting.has(key)?' bursting':'')+'">'+engine.SYMBOL[value]+'</i>':'')+'</span>';
      }
      const board=root.querySelector('[data-board="'+i+'"]');
      if(board)board.innerHTML=html;
+   }
+   const fx=root.querySelector('[data-chain-fx="'+i+'"]');
+   if(fx){
+     const active=['charge','burst','gravity','settle'].includes(st.phase)&&(st.groups.length>0||st.link>0);
+     fx.hidden=!active;
+     if(active){
+       const link=st.phase==='charge'?st.link+1:st.link;
+       const combo=st.phase==='charge'?st.groups.length:st.currentCombo;
+       const key=link+':'+combo;
+       if(fx.dataset.step!==key){
+         fx.dataset.step=key;
+         fx.querySelector('strong').textContent=link+' LINK!';
+         fx.querySelector('span').textContent=combo>=2?combo+' COMBO!':'CHAIN!';
+         fx.classList.remove('pop');
+         void fx.offsetWidth;
+         fx.classList.add('pop');
+       }
+       fx.dataset.phase=st.phase;
+       fx.dataset.power=String(Math.min(5,link));
+     }else{delete fx.dataset.step;delete fx.dataset.phase}
    }
    const score=root.querySelector('[data-score="'+i+'"]');if(score)score.textContent=st.score.toLocaleString('ja-JP');
    const link=root.querySelector('[data-link="'+i+'"]');if(link)link.textContent=String(st.maxLink);
@@ -220,7 +242,14 @@
  function launchJamFlight(from,count){
    const target=root.querySelector('[data-jam-flight]');
    if(!target||count<=0)return;
-   target.innerHTML='<span class="jam-projectile" data-from="'+from+'">J <small>×'+count+'</small></span>';
+   // A short fast projectile for each send, without discarding a simultaneous
+   // counterattack's animation.
+   const particle=document.createElement('span');
+   particle.className='jam-projectile';
+   particle.dataset.from=String(from);
+   particle.innerHTML='J <small>×'+count+'</small>';
+   target.appendChild(particle);
+   setTimeout(function(){particle.remove()},300);
  }
  // Resolve both players at the SAME boundary. Each player uses their attack
  // to cancel existing incoming JAM first, then simultaneous new attacks
