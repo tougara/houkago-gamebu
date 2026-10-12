@@ -39,16 +39,14 @@ function goLobby(clear=false){
 function addText(tag,text,cls){
  const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;
 }
-function setSections(stage){
- for(const id of ['setup-stage','vote-stage','all-answered-stage','result-stage','finished-stage'])
-  $(id).hidden=id!==stage+'-stage';
-}
 function renderCategories(g){
  const list=$('category-options');
  list.replaceChildren();
  const selected=g.selectedCategories||[];
  for(const category of g.categories||[]){
-  const button=addText('button',category,'option-btn'+(selected.includes(category)?' selected':''));
+  const special=['恋バナ','ちょっとディープ'].includes(category);
+   const button=addText('button',category,'category-chip'+(selected.includes(category)?' selected':'')+(special?' deep':''));
+   if(special)button.append(addText('small',' 任意'));
   button.type='button';button.disabled=!socketReady();
   button.addEventListener('click',()=>{
    const updated=selected.includes(category)?selected.filter(c=>c!==category):[...selected,category];
@@ -60,7 +58,7 @@ function renderCategories(g){
 function renderRounds(g){
  const list=$('round-options');list.replaceChildren();
  for(const count of [3,5,7,10]){
-  const button=addText('button',count+'問',count===g.roundCount?'selected':'');
+  const button=addText('button',count+'問','choice-chip'+(count===g.roundCount?' selected':''));
   button.type='button';button.disabled=!socketReady();
   button.addEventListener('click',()=>send({type:'secret-config',categories:g.selectedCategories,
     roundCount:count,includeCustom:g.includeCustom}));
@@ -76,13 +74,14 @@ function renderCustom(g){
   remove.addEventListener('click',()=>send({type:'secret-custom-delete',index:i}));
   row.append(label,remove);list.append(row);
  });
- $('question-total').textContent='選択中：'+(g.selectedCategories||[]).length+'ジャンル · マイお題 '+(g.customQuestions||[]).length+'問（最大20問）';
+ const available=Number(g.poolCount)||0;
+ $('question-total').replaceChildren(document.createTextNode('この設定で出るお題：'));
+ $('question-total').append(addText('strong',available+'問'));
+ $('custom-count').textContent='保存中 '+storedQuestions().length+'問';
  const stored=storedQuestions();
  $('import-saved').disabled=!socketReady()||stored.length===0||(g.customQuestions||[]).length>=20;
  $('import-saved').textContent='保存済みのお題を読み込む（'+stored.length+'問）';
- const hasBuiltin=(g.selectedCategories||[]).length>0;
- const hasCustom=g.includeCustom&&(g.customQuestions||[]).length>=g.roundCount;
- $('begin').disabled=!socketReady()||(!hasBuiltin&&!hasCustom);
+ $('begin').disabled=!socketReady()||available<g.roundCount;
 }
 function draw(){
  if(!room)return;
@@ -90,7 +89,13 @@ function draw(){
  const g=room.secret||{},myHost=host(),stage=g.stage||'setup';
  $('game-shell').hidden=false;
  $('member-panel').hidden=false;
- $('room-brief').textContent='招待コード '+room.code+' ／ '+room.members.length+'人で参加中';
+ const titles={setup:'ジャンル・お題',voting:'自分の回答',allAnswered:'全員の回答が完了',
+  result:g.round+'問目の結果',finished:'ひみつ投票 おわり！'};
+ $('page-heading').textContent=titles[stage]||'みんなはどっち？';
+ document.querySelector('.online-docchi').className='docchi-app online-docchi screen-'+
+   (stage==='setup'?'options':stage==='voting'?'answer':stage);
+ $('progress-header').hidden=stage==='setup';
+ $('room-brief').textContent='オンライン · ひみつ投票 ／ '+room.members.length+'人参加 · 招待コード '+room.code;
  $('stage-label').textContent=stage==='setup'?'ゲームの準備':stage==='voting'?'回答中':stage==='allAnswered'?'全員回答完了':stage==='result'?'結果発表':stage==='finished'?'ゲーム終了':'準備中';
  $('round-info').textContent=stage==='setup'?'':g.round+' / '+g.roundCount+'問';
  $('member-count').textContent=room.members.length+'人';
@@ -119,7 +124,8 @@ function draw(){
  if(stage==='voting'){
   const q=g.question||{};
   $('question-category').textContent=q.category||'お題';
-  $('question-text').textContent=q.q||'読み込み中';
+  $('question-category').classList.toggle('deep',['恋バナ','ちょっとディープ'].includes(q.category));
+  $('question-text').textContent=q.q||'お題を確認しています…';
   $('vote-a-label').textContent=q.a||'A';
   $('vote-b-label').textContent=q.b||'B';
   $('vote-a').disabled=$('vote-b').disabled=voted||!socketReady();
@@ -132,16 +138,14 @@ function draw(){
   $('reveal-wait').hidden=myHost;
  }
  if(stage==='result'){
-  const q=g.question||{},c=g.counts||{a:0,b:0},total=Math.max(1,(c.a||0)+(c.b||0));
+  const q=g.question||{},c=g.counts||{a:0,b:0};
   $('result-question').textContent=q.q||'';
-  $('result-a-text').textContent='A：'+(q.a||'');
-  $('result-b-text').textContent='B：'+(q.b||'');
+  $('result-a-text').textContent=q.a||'';
+  $('result-b-text').textContent=q.b||'';
   $('result-a-count').textContent=(c.a||0)+'人';
   $('result-b-count').textContent=(c.b||0)+'人';
-  $('result-a-bar').style.width=(100*(c.a||0)/total)+'%';
-  $('result-b-bar').style.width=(100*(c.b||0)/total)+'%';
   $('next-round').hidden=!myHost;$('next-round').disabled=!socketReady();
-  $('next-round').textContent=g.round>=g.roundCount?'最終結果へ':'次のお題へ';
+  $('next-round').textContent=g.round>=g.roundCount?'おわる':'次のお題へ';
   $('next-wait').hidden=myHost;
  }
  if(stage==='finished'){
@@ -209,6 +213,24 @@ $('import-saved').addEventListener('click',()=>{
   if(send({type:'secret-custom-add',question:{q:q.q,a:q.a,b:q.b}})){count++;seen.add(key)}
  }
  say(count?'保存済みから'+count+'問を読み込んだよ':'追加できるお題はなかったよ',count>0);
+});
+$('select-all').addEventListener('click',()=>{
+ const g=room?.secret;if(!g||!host()||g.stage!=='setup')return;
+ const all=g.categories||[],active=g.selectedCategories||[];
+ send({type:'secret-config',categories:active.length===all.length?[]:[...all],
+  roundCount:g.roundCount,includeCustom:g.includeCustom});
+});
+$('toggle-custom-list').addEventListener('click',()=>{
+ const details=$('custom-details');
+ details.hidden=!details.hidden;
+ $('toggle-custom-list').textContent=details.hidden?'一覧':'閉じる';
+});
+$('game-list-link').addEventListener('click',e=>{
+ e.preventDefault();
+ if(!confirm('オンラインゲームを終了してゲーム一覧に戻る？'))return;
+ if(host())send({type:'secret-stop'});else send({type:'leave'});
+ exiting=true;
+ setTimeout(()=>location.assign('../../games/'),400);
 });
 $('include-custom').addEventListener('change',()=>{
  const g=room?.secret;if(!g||!host())return;
