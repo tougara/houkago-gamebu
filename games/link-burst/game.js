@@ -150,10 +150,10 @@
   }
 
   function playTypeScreen(){
-    return topNav()+heading('遊び方をえらぶ','1人用か2人対戦を選んでね。対戦は準備画面から順番に開発中。')+
+    return topNav()+heading('遊び方をえらぶ','1人でスコアを伸ばす？ それともスマホ1台で2人対戦？')+
       '<div class="choice-grid">'+
         '<button class="choice-card solo" data-play-type="solo"><span class="mode-badge">PLAYABLE</span><strong>1人であそぶ</strong><span>ENDLESSと2 MINUTES。連鎖とハイスコアに挑戦。</span></button>'+
-        '<button class="choice-card versus" data-play-type="versus"><span class="mode-badge">SETUP PREVIEW</span><strong>2人で対戦</strong><span>2人を選んで横画面の準備へ。試合はまだ制作中。</span></button>'+
+        '<button class="choice-card versus" data-play-type="versus"><span class="mode-badge">PLAYABLE</span><strong>2人で対戦</strong><span>2人を選んでJAM BATTLE！ 横画面で同時対戦できるよ。</span></button>'+
       '</div>';
   }
 
@@ -171,7 +171,7 @@
       '</section>'+
       '<div class="choice-grid">'+
         '<button class="choice-card solo" data-mode="endless"><span class="mode-badge">ENDLESS</span><strong>エンドレス</strong><span>時間とともにどんどん加速。長く生き残るほど難しくなる！</span></button>'+
-        '<button class="choice-card solo" data-mode="timed"><span class="mode-badge">2 MINUTES</span><strong>2分スコアアタック</strong><span>120秒でどこまで得点できるか勝負。</span></button>'+
+        '<button class="choice-card solo" data-mode="timed"><span class="mode-badge">2 MINUTES</span><strong>2分スコアアタック</strong><span>操作可能時間120秒で得点勝負！ 連鎖演出中は時計が止まるよ。</span></button>'+
       '</div>';
   }
 
@@ -210,10 +210,10 @@
   }
 
   function rulesScreen(){
-    return topNav()+heading('あそびかた','基本は4つ。置いたあとの分離がポイント。')+
+    return topNav()+heading('あそびかた','ブロックの分離・連鎖・得点まで6つの項目で説明するよ。')+
       '<div class="rules-wrap">'+
         '<section class="card rule-card"><h2>1. 最初は縦2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色（青・赤・黄・緑）から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
-        '<section class="card rule-card"><h2>2. LOCKすると2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
+        '<section class="card rule-card"><h2>2. 着地したら2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
         '<section class="card rule-card"><h2>3. 同じ色を4個以上つなげる</h2><p>上下左右につながった同色4個以上で消去。消したあとにまた4個つながると2 LINK、3 LINK…と続きます。</p></section>'+
         '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span class="demo-left">←</span><span class="demo-right">→</span><span class="demo-rotate">↻</span><span class="demo-down">↓</span></div><p>←→は長押し移動、↓は高速落下、↻は90°右回転。<br>PCでは A＝左、S＝下、D＝右、Space／Enter＝回転。矢印キーでも操作できます。</p></section>'+ 
         '<section class="card rule-card"><h2>5. 得点とLINK・COMBO</h2><p>同じ色4個で400点。4個ずつ2 LINKなら合計1,450点。8個を2グループ同時消去する2 COMBOは1,400点。LINKが重なるほど得点が伸びます。</p><p>計算式：消去数×100×LINK ＋（COMBO−1）×400 ＋（消去数−4）×50 ＋（LINK−1）×250（マイナスになる項目は0）。</p></section>'+ 
@@ -231,7 +231,7 @@
     return '<section class="play-hud">'+
         '<div class="score-panel">'+
           '<div class="hud-box score-box"><small>SCORE</small><strong data-score>0</strong><em data-best-score>MY BEST 0</em></div>'+
-          '<div class="hud-box link" aria-label="最大連鎖数"><small>LINK</small><strong data-max-link>0</strong></div>'+
+          '<div class="hud-box link" aria-label="最大連鎖数"><small>MAX LINK</small><strong data-max-link>0</strong></div>'+
           '<div class="hud-box"><small data-third-label>'+(state.mode==='timed'?'TIME':'BLOCKS')+'</small><strong data-third-value>0</strong></div>'+
         '</div>'+
       '</section>'+
