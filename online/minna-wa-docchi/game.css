@@ -78,3 +78,34 @@ html,body{background:#e9eef4;color:#17213b}
  #vote-stage .big-answers button{min-height:145px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
+
+/* よみあいバトル＋ひみつ投票共通の追加画面 */
+#mode-stage .game-logo{display:block;max-width:95%;margin:9px auto 22px}
+#mode-stage .mode-grid{gap:13px}
+#mode-stage .mode-card{min-width:0}
+#mode-stage .mode-start-btn{width:100%;margin-top:13px}
+.online-back-mode{margin:0 0 10px;min-height:42px}
+.online-prediction-selected{margin:9px 0 17px;color:#667085;font-weight:900;font-size:15px}
+#predict-stage .predict-card{margin-top:13px;padding:21px 15px}
+#predict-stage .predict-grid button{min-width:0;min-height:138px}
+#predict-stage .predict-grid button:disabled{opacity:.52}
+#prediction-wait-stage .online-wait{margin:12px 0;padding:27px 16px}
+#prediction-wait-stage .online-wait h2{margin:0 0 10px;font-size:23px}
+#prediction-wait-stage .online-wait p{font-weight:800;font-size:13px;line-height:1.6;color:#667085}
+.online-battle-results{margin:14px 0;padding:16px 14px}
+.online-battle-results h2{font-size:24px;margin:0 0 9px}
+.online-battle-note{color:#53617b;font-size:13px;font-weight:900;padding:8px;background:#f0f8ff;border-radius:10px}
+.online-battle-results .battle-result-row{min-width:0}
+.online-battle-results .battle-result-row span{overflow-wrap:anywhere}
+.online-battle-results .battle-result-row strong{overflow-wrap:anywhere}
+#battle-ranking .rank-row{min-width:0}
+#battle-ranking .rank-row span{overflow-wrap:anywhere}
+@media(max-width:390px){
+ #mode-stage .mode-card h2{font-size:23px}
+ #mode-stage .mode-card p{font-size:13px}
+ #predict-stage .predict-grid button{min-height:120px;padding:10px 6px}
+ #predict-stage .predict-grid strong{font-size:21px}
+ #battle-ranking .rank-row{grid-template-columns:42px minmax(0,1fr) auto;padding:11px;gap:7px}
+ #battle-ranking .rank-row strong{font-size:18px}
+}
