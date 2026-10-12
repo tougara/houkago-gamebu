@@ -298,7 +298,7 @@
         '<div class="ranking-head"><strong>'+(mode==='endless'?'ENDLESS':'2 MINUTES')+' TOP10</strong>'+
           '<button type="button" class="rank-edit-toggle" data-rank-edit aria-label="'+(state.rankEdit?'編集をおわる':'記録を編集')+'">'+
             (state.rankEdit?'<span>編集を</span><span>おわる</span>':'<span>記録を</span><span>編集</span>')+'</button>'+
-        '</div>'+rankingRows(mode)+'</section>'+
+        '</div>'+rankingRows(mode)+'<p class="ranking-rule-note">旧得点は以前の計算式による記録です。削除せず保存しています。</p></section>'+
       (state.rankEdit?'<button type="button" class="btn secondary rank-clear" data-rank-clear>このランキングをすべて削除</button>':'')+
       '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-ranking-back>← もどる</button></div>';
   }
@@ -310,7 +310,7 @@
       return '<div class="ranking-row '+(state.rankResult&&state.rankResult.entryId===x.id?'current':'')+(state.rankEdit?' is-editing':'')+'">'+
         '<div class="rank-no">'+(i+1)+'</div>'+
         '<div class="rank-player"><span>'+esc(x.icon)+'</span><strong>'+esc(x.name)+'</strong></div>'+
-        '<div class="rank-score"><strong>'+x.score+'</strong><small>MAX LINK '+x.maxLink+'</small></div>'+
+        '<div class="rank-score"><strong>'+x.score+'</strong><small>MAX LINK '+x.maxLink+(x.scoringVersion<2?' ／ 旧得点':'')+'</small></div>'+
         (state.rankEdit?'<button type="button" class="rank-delete" data-rank-delete="'+esc(x.id)+'" aria-label="'+esc(x.name)+'の'+x.score+'点の記録を削除">削除</button>':'')+
       '</div>';
     }).join('')+'</div>';
@@ -1261,6 +1261,7 @@
       score:Math.max(0,Number(x&&x.score)||0),
       maxLink:Math.max(0,Number(x&&x.maxLink)||0),
       clears:Math.max(0,Number(x&&x.clears)||0),
+      scoringVersion:Number(x&&x.scoringVersion)>=2?2:1,
       at:Number(x&&x.at)||0
     };
   }
@@ -1307,6 +1308,7 @@
       score:state.score,
       maxLink:state.maxLink,
       clears:state.clears,
+      scoringVersion:2,
       at:Date.now()
     };
     r[state.mode]=sortRanking(before.concat([entry]));
