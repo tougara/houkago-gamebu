@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111d38"><title>オンラインルーム | 放課後ゲーム部</title><link rel="stylesheet" href="./lobby.css"></head>
+<body>
+<main class="online-page">
+ <nav class="top-nav"><a href="../games/">← ゲームをえらぶ</a><a href="../">トップへ</a></nav>
+ <header class="hero"><img class="brand" src="../houkago_gamebu_logo_transparent.png" alt="放課後ゲーム部">
+   <p class="eyebrow">ONLINE ROOM — 準備版</p><h1>友達と同じ部屋に集合！</h1>
+   <p>招待コードで集まるオンラインルーム。会員登録はいらないよ。</p></header>
+ <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+ <section id="entry" class="panel" aria-label="部屋への入室">
+  <label for="nickname">表示する名前（16文字まで）</label><input id="nickname" maxlength="16" autocomplete="nickname" placeholder="名前を入力">
+  <div class="label-row">アイコンを選ぶ</div><div id="icons" class="icons" role="group" aria-label="アイコン"></div>
+  <div class="split">
+   <div class="entry-part"><h2>新しい部屋をつくる</h2><label for="game">遊びたいゲーム</label>
+    <select id="game">
+     <option value="minna-wa-docchi">みんなはどっち？</option>
+     <option value="kyokasho-tower">教科書タワー</option>
+     <option value="kankaku-meter">感覚メーター</option>
+     <option value="pitadome-challenge">ピタ止めチャレンジ</option>
+     <option value="link-burst">リンクバースト！</option>
+     <option value="nise-transfer-student">ニセ転校生を探せ！</option>
+     <option value="gesture-battle">ジェスチャーバトル</option>
+    </select><button id="create" type="button" class="primary">部屋をつくる</button></div>
+   <div class="entry-part"><h2>友達の部屋に参加する</h2><label for="code">8文字の招待コード</label>
+    <input id="code" maxlength="8" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="例：AB7K92CD">
+    <button id="join" type="button">部屋に参加する</button></div>
+  </div>
+  <p class="hint">友達同士で招待して遊ぼう。現在は部屋の動作確認版で、ゲームはまだ開始できないよ。</p>
+ </section>
+ <section id="room-panel" class="panel" aria-label="オンラインルーム" hidden>
+  <div class="room-head"><span id="connection" class="online-status">接続中…</span><span class="room-expiry">部屋の期限：作成から2時間</span></div>
+  <p class="room-caption">招待コード</p><div id="room-code" class="room-code">--------</div>
+  <div class="room-commands"><button id="copy" type="button">招待URLをコピー</button><button id="share" type="button">友達に共有</button></div>
+  <div class="room-game"><div><small>選択中のゲーム</small><strong id="game-name">みんなはどっち？</strong></div>
+   <button id="change-game" type="button" hidden>変更</button></div>
+  <div id="game-change" class="game-change" hidden><label for="game-in-room">ゲームを選び直す（準備完了は解除されるよ）</label><select id="game-in-room"></select>
+   <button type="button" id="apply-game">変更する</button></div>
+  <div class="member-head"><h2>参加メンバー</h2><span id="member-count">0 / 10人</span></div>
+  <div id="members" class="members"></div>
+  <div class="room-bottom"><button id="ready" type="button" class="primary" disabled>準備完了にする</button>
+   <p id="waiting" class="hint">ゲーム本体との連携は次の工程で追加するよ。</p>
+   <button id="leave" type="button" class="leave">部屋から退出</button></div>
+ </section>
+</main>
+<script src="./config.js"></script><script src="./lobby.js"></script>
+</body></html>
