@@ -3,6 +3,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const STORE='houkago-online-session-v1';
+const CUSTOM_STORE='houkago_docchi_custom_v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const params=new URLSearchParams(location.search),requested=params.get('room')||'';
 let session=null,room=null,ws=null,voted=false,retry=0,timer=null,exiting=false;
@@ -13,6 +14,20 @@ if(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session
  return;
 }
 const host=()=>room?.hostId===session.id;
+function storedQuestions(){
+ try{
+  const items=JSON.parse(localStorage.getItem(CUSTOM_STORE)||'[]');
+  return Array.isArray(items)?items.filter(q=>q&&typeof q.q==='string'&&typeof q.a==='string'&&typeof q.b==='string'):[];
+ }catch{return []}
+}
+function rememberQuestion(q){
+ try{
+  const items=storedQuestions();
+  if(!items.some(x=>x.q===q.q&&x.a===q.a&&x.b===q.b)){
+   items.push(q);localStorage.setItem(CUSTOM_STORE,JSON.stringify(items.slice(-100)));
+  }
+ }catch{}
+}
 const socketReady=()=>ws?.readyState===WebSocket.OPEN;
 const say=(message,ok=false)=>{const el=$('notice');el.hidden=!message;el.textContent=message||'';el.classList.toggle('ok',ok)};
 const send=message=>{if(socketReady()){ws.send(JSON.stringify(message));return true}say('通信が切れているよ。再接続まで待ってね。');return false};
@@ -62,6 +77,9 @@ function renderCustom(g){
   row.append(label,remove);list.append(row);
  });
  $('question-total').textContent='選択中：'+(g.selectedCategories||[]).length+'ジャンル · マイお題 '+(g.customQuestions||[]).length+'問（最大20問）';
+ const stored=storedQuestions();
+ $('import-saved').disabled=!socketReady()||stored.length===0||(g.customQuestions||[]).length>=20;
+ $('import-saved').textContent='保存済みのお題を読み込む（'+stored.length+'問）';
  const hasBuiltin=(g.selectedCategories||[]).length>0;
  const hasCustom=g.includeCustom&&(g.customQuestions||[]).length>=g.roundCount;
  $('begin').disabled=!socketReady()||(!hasBuiltin&&!hasCustom);
@@ -170,8 +188,22 @@ $('custom-form').addEventListener('submit',e=>{
  const question={q:$('custom-q').value.trim(),a:$('custom-a').value.trim(),b:$('custom-b').value.trim()};
  if(!question.q||!question.a||!question.b){say('質問とA・Bの答えをすべて入力してね');return}
  if(send({type:'secret-custom-add',question})){
+  rememberQuestion(question);
   $('custom-q').value='';$('custom-a').value='';$('custom-b').value='';
  }
+});
+$('import-saved').addEventListener('click',()=>{
+ if(!host()||room?.secret?.stage!=='setup'||!socketReady())return;
+ const existing=room.secret.customQuestions||[];
+ const seen=new Set(existing.map(q=>[q.q,q.a,q.b].join('|')));
+ let count=0;
+ for(const q of storedQuestions()){
+  const key=[q.q,q.a,q.b].join('|');
+  if(seen.has(key)||count+existing.length>=20)continue;
+  if(q.q.length>70||q.a.length>30||q.b.length>30||!q.q.trim()||!q.a.trim()||!q.b.trim())continue;
+  if(send({type:'secret-custom-add',question:{q:q.q,a:q.a,b:q.b}})){count++;seen.add(key)}
+ }
+ say(count?'保存済みから'+count+'問を読み込んだよ':'追加できるお題はなかったよ',count>0);
 });
 $('include-custom').addEventListener('change',()=>{
  const g=room?.secret;if(!g||!host())return;
