@@ -71,6 +71,7 @@
   let repeatId=null;
   let countdownTimer=null;
   let soloFinishTimer=null;
+  let runSerial=0; // Invalidate callbacks from any previous game.
 
   function makeBoard(){
     return Array.from({length:ROWS},()=>Array(COLS).fill(null));
@@ -80,14 +81,16 @@
   }
   function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
   function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
-  async function delay(ms){
+  async function delay(ms,serial=runSerial){
     let remaining=ms;
     while(remaining>0){
+      if(serial!==runSerial||!state.gameStarted)return false;
       if(state.paused){await sleep(60);continue}
       const step=Math.min(remaining,60);
       await sleep(step);
       remaining-=step;
     }
+    return serial===runSerial&&state.gameStarted;
   }
   function reducedMotion(){return document.documentElement.dataset.hgMotion==='reduced'}
   function vibrate(pattern){settingsApi&&settingsApi.vibrate&&settingsApi.vibrate(pattern)}
@@ -225,7 +228,7 @@
   function playScreen(){
     return '<section class="play-hud">'+
         '<div class="score-panel">'+
-          '<div class="hud-box score-box"><small>SCORE</small><strong data-score>0</strong><em data-best-score>BEST 0</em></div>'+
+          '<div class="hud-box score-box"><small>SCORE</small><strong data-score>0</strong><em data-best-score>MY BEST 0</em></div>'+
           '<div class="hud-box link" aria-label="最大連鎖数"><small>LINK</small><strong data-max-link>0</strong></div>'+
           '<div class="hud-box"><small data-third-label>'+(state.mode==='timed'?'TIME':'BLOCKS')+'</small><strong data-third-value>0</strong></div>'+
         '</div>'+
@@ -261,9 +264,10 @@
   function resultScreen(){
     const r=state.rankResult||{};
     let banner='チャレンジ終了';
-    if(r.modeBest)banner='最高記録！';
-    else if(r.rank)banner='ランキング '+r.rank+'位！';
+    if(r.modeBest)banner='自己ベスト＆ランキング1位更新！';
     else if(r.personalBest)banner='自己ベスト更新！';
+    else if(r.rankingTop)banner='ランキング1位更新！';
+    else if(r.rank)banner='ランキング '+r.rank+'位！';
     const reason=r.reason==='time'?'2分終了':(r.reason==='topout'?'GAME OVER':'RESULT');
     return topNav()+heading(reason,state.mode==='timed'?'2 MINUTES':'ENDLESS')+
       '<section class="card result-card">'+
@@ -476,6 +480,7 @@
       stopLoop();
       clearCountdownTimer();
       state.countdownActive=false;
+      runSerial++;
       state.gameStarted=false;
       state.paused=false;
       state.resolving=false;
@@ -715,6 +720,7 @@
   }
 
   function beginGame(mode){
+    runSerial++;
     clearSoloFinale();
     loadPlayer();
     state.mode=mode||'endless';
@@ -824,6 +830,7 @@
 
   async function lockPiece(){
     if(state.resolving||!state.piece||!state.gameStarted)return;
+    const serial=runSerial;
     state.resolving=true;
     releaseControls();
     const cells=pieceCells(state.piece,state.piece.x,state.piece.y,state.piece.rot);
@@ -832,19 +839,19 @@
     state.pieces++;
     drawBoard();
     vibrate(9);
-    await delay(120);
-    await applyGravityAnimated();
-    await resolveClears();
+    if(!await delay(120,serial))return;
+    if(!await applyGravityAnimated(undefined,serial))return;
+    await resolveClears(serial);
 
-    if(!state.gameStarted)return;
+    if(serial!==runSerial||!state.gameStarted)return;
     if(state.timeExpired){finishGame('time');return}
-    if(hiddenOccupied()){finishGame('topout');return}
-
+    // Spawn performs the exact same central pair collision check as versus.
     state.resolving=false;
     spawnPiece();
   }
 
-  async function applyGravityAnimated(stepMs){
+  async function applyGravityAnimated(stepMs,serial=runSerial){
+    if(serial!==runSerial||!state.gameStarted)return false;
     stepMs=Number(stepMs)||76;
     let safety=0;
     while(safety++<ROWS+2){
@@ -861,10 +868,11 @@
       if(!moved.length)break;
       state.fallingKeys=new Set(moved);
       drawBoard();
-      await delay(stepMs);
+      if(!await delay(stepMs,serial))return false;
       state.fallingKeys.clear();
     }
     drawBoard();
+    return serial===runSerial&&state.gameStarted;
   }
 
   function findGroups(){
@@ -897,16 +905,18 @@
     const base=cleared*100*link;
     const comboBonus=Math.max(0,combo-1)*400;
     const bigBonus=Math.max(0,cleared-4)*50;
-    return base+comboBonus+bigBonus;
+    const linkBonus=Math.max(0,link-1)*250;
+    return base+comboBonus+bigBonus+linkBonus;
   }
 
-  async function resolveClears(){
+  async function resolveClears(serial=runSerial){
+    if(serial!==runSerial||!state.gameStarted)return 0;
     let link=0;
     let groups=findGroups();
     if(!groups.length)return 0;
 
     state.chainActive=true;
-    while(state.gameStarted&&groups.length){
+    while(serial===runSerial&&state.gameStarted&&groups.length){
       link++;
       const cells=[].concat.apply([],groups);
       const total=cells.length;
@@ -924,8 +934,7 @@
       showChainBanner(link,combo,power);
       drawBoard();
       pulseChainFlash(link,combo,power,'charge');
-      await delay(chargeWait);
-      if(!state.gameStarted)break;
+      if(!await delay(chargeWait,serial))return 0;
 
       // 2) Impact: score appears exactly when the blocks burst.
       state.maxLink=Math.max(state.maxLink,link);
@@ -949,20 +958,20 @@
       else if(power>=2)vibrate([14,10,18]);
       else vibrate(12);
 
-      await delay(clearWait);
+      if(!await delay(clearWait,serial))return 0;
       cells.forEach(function(cell){state.board[cell.y][cell.x]=null});
       state.clearingKeys.clear();
       drawBoard();
-      await delay(110);
+      if(!await delay(110,serial))return 0;
 
       // 3) Fallout: let the player watch the board collapse before checking the next link.
-      await applyGravityAnimated(link>=2?94:84);
-      await delay(150);
+      if(!await applyGravityAnimated(link>=2?94:84,serial))return 0;
+      if(!await delay(150,serial))return 0;
 
       groups=findGroups();
       if(groups.length){
         showContinueCue(link+1);
-        await delay(betweenWait);
+        if(!await delay(betweenWait,serial))return 0;
       }
     }
 
@@ -1032,7 +1041,7 @@
     const best=document.querySelector('[data-best-score]');
     if(score)score.textContent=String(state.score);
     if(link)link.textContent=String(state.maxLink);
-    if(best){const rows=sortRanking(loadRankings()[state.mode]||[]);best.textContent='BEST '+(rows[0]?rows[0].score:0)}
+    if(best)best.textContent='MY BEST '+personalBestFor(state.mode)
     if(third)third.textContent=state.mode==='timed'?formatTime(state.timeLeft):String(state.pieces);
     const one=document.querySelector('[data-next-one]');
     const two=document.querySelector('[data-next-two]');
@@ -1306,7 +1315,8 @@
     return {
       entryId:entry.id,
       rank:index>=0?index+1:null,
-      modeBest:state.score>oldModeBest,
+      modeBest:state.score>oldModeBest&&state.score>oldPersonalBest,
+      rankingTop:state.score>oldModeBest,
       personalBest:state.score>oldPersonalBest,
       reason:reason
     };
@@ -1323,6 +1333,7 @@
 
   function finishGame(reason){
     if(!state.gameStarted)return;
+    runSerial++;
     stopLoop();
     releaseControls();
     state.gameStarted=false;
@@ -1352,8 +1363,9 @@
     const rank=state.rankResult||{};
     const headline=reason==='time'?'TIME UP!':'GAME OVER!';
     const kicker=state.mode==='timed'?'2 MINUTES':'ENDLESS MODE';
-    const award=rank.modeBest?'NEW HIGH SCORE!':
+    const award=rank.modeBest?'NEW PERSONAL BEST!':
       rank.personalBest?'PERSONAL BEST!':
+      rank.rankingTop?'RANKING TOP!':
       rank.rank?'RANK IN!  '+rank.rank+'位':'CHALLENGE COMPLETE';
     const finale=document.createElement('div');
     finale.className='lb-solo-finale';
@@ -1452,6 +1464,7 @@
   }
   function restoreResume(saved){
     if(!saved)return;
+    runSerial++;
     clearSoloFinale();
     clearCountdownTimer();
     state.countdownActive=false;
@@ -1491,10 +1504,11 @@
   }
   async function stabilizeAfterRestore(){
     if(!state.gameStarted)return;
-    await applyGravityAnimated();
-    await resolveClears();
+    const serial=runSerial;
+    if(!await applyGravityAnimated(undefined,serial))return;
+    await resolveClears(serial);
+    if(serial!==runSerial||!state.gameStarted)return;
     if(state.timeExpired){finishGame('time');return}
-    if(hiddenOccupied()){finishGame('topout');return}
     state.resolving=false;
     spawnPiece();
   }
