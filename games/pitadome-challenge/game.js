@@ -665,7 +665,8 @@ function rankingScreen(){
   return topNav()+heading('ハイスコアランキング','この端末のTOP10')+
     '<div class="rank-tabs"><button class="'+(mode==='ten'?'selected':'')+'" data-rank-mode="ten">10ラウンド</button><button class="'+(mode==='endless'?'selected':'')+'" data-rank-mode="endless">エンドレス</button></div>'+
     '<div class="rank-tabs difficulty-tabs"><button class="'+(difficulty==='easy'?'selected':'')+'" data-rank-difficulty="easy">かんたん</button><button class="'+(difficulty==='normal'?'selected':'')+'" data-rank-difficulty="normal">通常</button></div>'+
-    '<section class="card ranking-card"><div class="ranking-head"><strong>'+((mode==='ten')?'10ラウンド':'エンドレス')+'・'+(difficulty==='easy'?'かんたん':'通常')+' TOP10</strong><button class="small-btn" data-rank-edit>'+(state.rankEdit?'編集をおわる':'記録を編集')+'</button></div>'+rankingRows(mode,difficulty)+'</section>'+
+    '<section class="card ranking-card"><div class="ranking-head"><strong>'+((mode==='ten')?'10ラウンド':'エンドレス')+'・'+(difficulty==='easy'?'かんたん':'通常')+' TOP10</strong><button type="button" class="small-btn rank-edit-toggle" data-rank-edit aria-label="'+(state.rankEdit?'編集をおわる':'記録を編集')+'">'+
+      (state.rankEdit?'<span>編集を</span><span>おわる</span>':'<span>記録を</span><span>編集</span>')+'</button></div>'+rankingRows(mode,difficulty)+'</section>'+
     (state.rankEdit?'<button class="btn secondary full rank-clear" data-rank-clear>このランキングをすべて削除</button>':'')+
     '<button class="btn secondary full rules-bottom-back" data-rank-back>← もどる</button>';
 }
