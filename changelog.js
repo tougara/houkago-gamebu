@@ -3,7 +3,7 @@ globalThis.HOUKAGO_CHANGELOG=[
   {
     "date": "2026-10-12",
     "datetime": "2026-10-12T22:57:48.000+09:00",
-    "category": "minna-wa-docchi",
+    "category": "docchi",
     "major": true,
     "title": "みんなはどっち？ オンラインによみあいバトルを追加",
     "changes": [
