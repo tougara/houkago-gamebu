@@ -29,6 +29,8 @@ const secretView=room=>{
    stage:g.stage,round:g.stage==='setup'?0:g.round+1,roundCount:g.settings?.roundCount||DEFAULT_ROUNDS,
    categories:CATEGORIES,selectedCategories:g.settings?.categories||DEFAULT_CATEGORIES,
    includeCustom:g.settings?.includeCustom??true,customQuestions:g.customQuestions||[],
+   poolCount:SECRET_QUESTIONS.filter(q=>(g.settings?.categories||DEFAULT_CATEGORIES).includes(q.category)).length+
+    ((g.settings?.includeCustom??true)?(g.customQuestions?.length||0):0),
    question,answered:g.stage==='voting'?Object.keys(g.votes||{}).length:g.answeredCount||room.members.length,
    total:room.members.length,counts:g.stage==='result'?g.counts:null
  };
