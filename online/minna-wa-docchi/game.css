@@ -1,0 +1,58 @@
+.online-docchi{max-width:670px;margin:0 auto;min-height:100dvh;padding:10px 13px max(42px,env(safe-area-inset-bottom))}
+.docchi-head{padding:8px 0 16px;text-align:center}
+.docchi-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.docchi-topline a{border:1px solid #6b8fb5;color:#f4f9ff;background:#192d4d;padding:9px 13px;border-radius:12px;text-decoration:none;font-weight:900;font-size:13px}
+.docchi-logo{display:block;width:min(370px,92%);max-height:170px;object-fit:contain;margin:auto}
+.docchi-mode{font-weight:1000;letter-spacing:.1em;color:#ffe4a3;font-size:13px}
+#room-brief{font-size:12px;color:#cbdcf1;margin:8px 0 0}
+.docchi-board{padding:18px 15px 24px;border-radius:23px;border:1px solid #648aba;background:linear-gradient(145deg,rgba(21,42,77,.99),rgba(14,28,54,.99));box-shadow:0 12px 30px #0008}
+.docchi-board h1{font-size:clamp(24px,6vw,34px);line-height:1.35;margin:15px 0;color:#fff}
+.docchi-board h2{font-size:17px;line-height:1.45;margin:24px 0 11px}
+.section-note{font-size:13px;color:#cbdaf1;line-height:1.7}
+.round-bar{display:flex;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid #365a8a;font-size:12px;font-weight:1000;color:#bdeeff}
+.option-pills{display:flex;gap:8px;flex-wrap:wrap}
+.option-pills button{min-height:43px;border-radius:999px;border:1px solid #7296bb;background:#223c5f;color:#eaf4ff;font-size:13px;padding:8px 15px;font-weight:950}
+.option-pills button.selected{background:#ffe4a3;color:#392b27;border:2px solid #fff5d0}
+.category-options button{border-radius:11px}
+.check-setting{margin:5px 0 14px;display:flex;align-items:center;gap:9px;font-size:14px;color:#fff}
+.check-setting input{width:20px;height:20px;min-height:0;padding:0;accent-color:#74d9ff}
+.custom-form{display:grid;gap:9px;border-radius:13px;border:1px solid #557aa8;padding:14px;background:#112743}
+.custom-form label{margin:0}
+.custom-form input{margin-top:5px}
+.custom-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.soft-btn{min-height:45px;padding:10px 12px;border:1px solid #9acded;border-radius:12px;background:#27496d;color:#f6fbff;font-weight:950}
+.custom-list{margin-top:13px;display:grid;gap:8px}
+.custom-item{padding:10px 12px;border:1px solid #557499;border-radius:12px;background:#1d3455;display:flex;align-items:center;gap:10px}
+.custom-item span{flex:1;min-width:0;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
+.custom-item button{min-height:38px;border:1px solid #b78094;border-radius:10px;background:#533342;color:#ffe6ea;font-size:12px;font-weight:900;padding:8px}
+.main-action{display:block;margin-top:17px;width:100%;min-height:58px;font-size:17px;font-weight:1000;border-radius:15px}
+.wait-card{padding:24px 16px;text-align:center;border:1px solid #5c8cb9;background:#1c365a;border-radius:15px;font-weight:900;line-height:1.6}
+.category-tag{display:inline-block;margin-top:15px;padding:6px 10px;color:#d7e9ff;font-weight:950;font-size:12px;border-radius:999px;border:1px solid #688fbe;background:#264568}
+#question-text{min-height:65px}
+.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:22px 0}
+.answer-grid button{display:grid;justify-items:center;align-content:center;gap:10px;min-width:0;min-height:145px;padding:13px 8px;background:linear-gradient(160deg,#398bd0,#205995);border:2px solid #b0e0ff;border-radius:18px;color:#fff;font-weight:1000;box-shadow:0 7px 12px #0005}
+.answer-grid button+button{background:linear-gradient(160deg,#d46ba0,#883e73);border-color:#ffc4e3}
+.answer-grid button small{font-size:15px;letter-spacing:.08em}
+.answer-grid button strong{font-size:clamp(17px,5vw,26px);line-height:1.3;overflow-wrap:anywhere}
+.answer-grid button:disabled{opacity:.5;box-shadow:none}
+.vote-help{text-align:center}
+.big-moment{text-align:center;padding:15px 0 4px}
+.big-moment h1{font-size:clamp(29px,7vw,43px)}
+.moment-icon{width:85px;height:85px;border-radius:50%;background:#ffe6a3;color:#3c3b3b;font-size:46px;font-weight:1000;display:grid;place-items:center;margin:15px auto;box-shadow:0 0 24px #ffdf9866}
+.big-moment p{font-weight:850;line-height:1.7}
+.result-choice{padding:13px;background:#1e4473;border-radius:14px;border:1px solid #81b6ec;margin:14px 0}
+.result-choice.b{background:#633d6c;border-color:#e6acd4}
+.result-top{display:flex;justify-content:space-between;align-items:center;gap:9px;font-size:15px;font-weight:900}
+.result-top span{overflow-wrap:anywhere}
+.result-top strong{white-space:nowrap;font-size:clamp(22px,6vw,32px);color:#fff1ac}
+.result-track{height:12px;border-radius:99px;background:#0d2149;margin-top:12px;overflow:hidden}
+.result-track>div{height:100%;background:#90dfff;width:0;transition:width .7s ease}
+.result-choice.b .result-track>div{background:#ffa3d3}
+.member-panel{margin-top:14px;padding:14px;border-radius:16px;border:1px solid #3d5c80;background:#14233c}
+.member-panel h2{margin:0 0 10px;font-size:14px}
+.member-panel h2 span{float:right;color:#c5d7ef}
+.member-chips{display:flex;gap:8px;flex-wrap:wrap}
+.member-chip{display:inline-flex;align-items:center;gap:4px;background:#284369;border:1px solid #4f719d;padding:7px 11px;border-radius:99px;font-size:13px;font-weight:900}
+.exit-game{display:block;width:100%;margin-top:18px;border-radius:12px;background:#402e43;border:1px solid #9c6079;color:#ffe8ef;font-weight:900;padding:12px}
+@media(max-width:380px){.docchi-board{padding:14px 11px}.online-docchi{padding:8px 9px 35px}.answer-grid{gap:8px}.answer-grid button{min-height:112px}}
+@media(prefers-reduced-motion:reduce){.result-track>div{transition:none}}
