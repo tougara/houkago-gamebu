@@ -13,3 +13,89 @@ button.primary,.entry-part button,.game-change button{min-height:47px;padding:9p
 .room-bottom{display:grid;gap:10px;margin-top:17px}.room-bottom .primary{width:100%;font-size:18px}.room-bottom .hint{text-align:center;margin:0}.room-bottom .leave{min-height:44px;background:#422b3e;color:#ffe6ec;border:1px solid #8e5776;border-radius:11px;font-weight:900}
 @media(max-width:550px){.split{grid-template-columns:1fr}.online-page{padding:10px 10px 30px}.panel{padding:14px}.entry-part{padding:14px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* オンライン「みんなはどっち？」ひみつ投票・先行実装 */
+.secret-game{
+  margin-top:20px;
+  padding:19px 15px;
+  border:2px solid #8bdcf6;
+  border-radius:19px;
+  background:linear-gradient(150deg,#193961,#122745 55%,#172846);
+  box-shadow:0 0 20px #3b9cc333;
+  display:grid;
+  gap:14px;
+}
+.secret-progress{
+  color:#b7eaff;
+  font-weight:1000;
+  font-size:12px;
+  letter-spacing:.025em;
+}
+.secret-game h2{
+  color:#f4f8ff;
+  font-weight:1000;
+  font-size:clamp(21px,5vw,28px);
+  line-height:1.4;
+  margin:0;
+  overflow-wrap:anywhere;
+}
+.secret-count{
+  font-weight:850;
+  color:#e2f2ff;
+  text-align:center;
+  margin:0;
+  line-height:1.6;
+}
+.secret-choices,.secret-result{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+}
+.secret-choices button{
+  min-width:0;
+  min-height:110px;
+  border:2px solid #9ad6fa;
+  border-radius:16px;
+  background:linear-gradient(#225a9a,#163965);
+  color:white;
+  padding:12px 8px;
+  display:grid;
+  gap:7px;
+  justify-items:center;
+  align-content:center;
+  font-weight:1000;
+}
+.secret-choices button+button{border-color:#ffa5d1;background:linear-gradient(#963d74,#6c2b5b)}
+.secret-choices small{
+  color:#d7f2ff;
+  font-weight:1000;
+  font-size:13px;
+}
+.secret-choices strong{font-size:clamp(16px,4vw,23px);line-height:1.35;overflow-wrap:anywhere}
+.secret-result>div{
+  border-radius:13px;
+  padding:14px 10px;
+  background:#183c66;
+  display:grid;
+  gap:8px;
+  justify-items:center;
+  text-align:center;
+  border:1px solid #8acaef;
+}
+.secret-result>div+div{background:#562f59;border-color:#ec8cbd}
+.secret-result span{font-size:13px;font-weight:800;overflow-wrap:anywhere}
+.secret-result strong{font-size:clamp(26px,7vw,38px);font-variant-numeric:tabular-nums;color:#fff2ac}
+.secret-game>.primary{width:100%;min-height:50px;font-size:16px}
+.secret-game>#secret-end{
+  min-height:45px;
+  color:#e9f5ff;
+  background:#243e60;
+  border:1px solid #7ca5ce;
+  border-radius:11px;
+  font-weight:950;
+}
+@media(max-width:380px){
+ .secret-choices{gap:6px}
+ .secret-choices button{min-height:96px;padding:8px 6px}
+ .secret-game{padding:14px 10px}
+}
