@@ -99,8 +99,13 @@ function draw(){
   memberList.append(addText('span',(m.icon||'')+' '+m.name+(m.id===room.hostId?'［ホスト］':''),'member-chip'));
  }
  for(const id of ['setup-stage','vote-stage','all-answered-stage','result-stage','finished-stage'])$(id).hidden=true;
- const active=stage==='allAnswered'?'all-answered-stage':stage==='finished'?'finished-stage':stage+'-stage';
- if($(active))$(active).hidden=false;
+ // Worker protocol sends "voting", while the DOM section is "vote-stage".
+ // Keep an explicit mapping so a valid phase can never silently blank the screen.
+ const sectionByStage={setup:'setup-stage',voting:'vote-stage',allAnswered:'all-answered-stage',
+  result:'result-stage',finished:'finished-stage'};
+ const active=sectionByStage[stage];
+ if(active&&$(active))$(active).hidden=false;
+ else say('画面の読み込み状態が一致しません。再接続を待ってね。');
  if(stage==='setup'){
   $('host-setup').hidden=!myHost;$('guest-setup').hidden=myHost;
   if(myHost){
