@@ -328,6 +328,7 @@
    const particle=document.createElement('span');
    particle.className='jam-projectile';
    particle.dataset.from=String(from);
+   particle.dataset.power=count>=14?'high':'normal';
    particle.innerHTML='J <small>×'+count+'</small>';
    target.appendChild(particle);
    setTimeout(function(){particle.remove()},300);
