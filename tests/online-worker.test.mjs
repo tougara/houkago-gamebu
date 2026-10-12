@@ -386,7 +386,7 @@ test('online phases render question and answers with offline layout and no blank
  for(const [stage,visible] of Object.entries(screens)){
   const room={code:'ABCD2345',phase:'secret',hostId:'p1',
     members:[{id:'p1',icon:'🐯',name:'ホスト'},{id:'p2',icon:'🐼',name:'ゲスト'}],
-    secret:{stage,question,round:1,roundCount:5,categories:['友だち'],
+    secret:{stage,mode:'secret',modeSelected:true,question,round:1,roundCount:5,categories:['友だち'],
       selectedCategories:['友だち'],customQuestions:[],includeCustom:true,
       poolCount:20,alternatives:5,answered:1,total:2,counts:stage==='result'?{a:1,b:1}:null}};
   assert.doesNotThrow(()=>sock.onmessage({data:JSON.stringify({type:'room',room,voted:false})}),stage);
@@ -422,5 +422,37 @@ test('online phases render question and answers with offline layout and no blank
     assert.equal(els['result-b-count'].textContent,'1人');
   }
  }
+ const members=[{id:'p1',icon:'🐯',name:'ホスト'},{id:'p2',icon:'🐼',name:'ゲスト'}];
+ const battleRoom=(stage,extras={})=>({code:'ABCD2345',phase:'secret',hostId:'p1',members,
+  secret:{stage,mode:'battle',modeSelected:true,round:1,roundCount:3,question,answered:0,total:2,
+   selectedCategories:['学校'],categories:['学校'],customQuestions:[],includeCustom:false,poolCount:20,
+   counts:stage==='result'?{a:1,b:1}:null,...extras}});
+ sock.onmessage({data:JSON.stringify({type:'room',room:battleRoom('setup',{mode:null,modeSelected:false}),voted:false})});
+ assert.equal(els['mode-stage'].hidden,false,'online mode selector must display');
+ assert.equal(els['setup-stage'].hidden,true,'genre selection only after mode chosen');
+ els['choose-battle'].handlers.click();
+ assert.equal(sock.sent.at(-1).type,'secret-mode');
+ assert.equal(sock.sent.at(-1).mode,'battle');
+ sock.onmessage({data:JSON.stringify({type:'room',room:battleRoom('voting'),voted:false})});
+ assert.equal(els['vote-stage'].hidden,false);
+ sock.onmessage({data:JSON.stringify({type:'room',room:battleRoom('voting'),voted:true,myChoice:'a',predicted:false})});
+ assert.equal(els['vote-stage'].hidden,true);
+ assert.equal(els['predict-stage'].hidden,false,'battle prediction appears after own vote');
+ assert.ok(els['predict-selected'].textContent.includes('公園'));
+ els['predict-majority'].handlers.click();
+ assert.equal(sock.sent.at(-1).type,'battle-predict');
+ assert.equal(sock.sent.at(-1).prediction,'majority');
+ assert.equal(els['prediction-wait-stage'].hidden,false,'prediction confirmation waits for everyone');
+ sock.onmessage({data:JSON.stringify({type:'room',room:battleRoom('result',{
+  battleResult:{tie:true,players:[
+   {id:'p1',name:'ホスト',icon:'🐯',answer:'a',prediction:'majority',gain:0,score:0},
+   {id:'p2',name:'ゲスト',icon:'🐼',answer:'b',prediction:'minority',gain:0,score:0}
+  ]},scores:{p1:0,p2:0}}),voted:false})});
+ assert.equal(els['battle-result-details'].hidden,false);
+ assert.equal(els['anonymous-banner'].hidden,true);
+ assert.ok(els['battle-result-list'].children.length>=3,'battle individual result rows appear');
+ sock.onmessage({data:JSON.stringify({type:'room',room:battleRoom('finished',{scores:{p1:3,p2:1}}),voted:false})});
+ assert.equal(els['battle-ranking'].hidden,false,'final battle standings appear');
+ assert.equal(els['battle-ranking'].children.length,2);
  assert.deepEqual(navigation,[],'game stage updates should not leave game URL');
 });
