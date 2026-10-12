@@ -44,7 +44,7 @@
    summary.innerHTML='<strong>'+visible.length+'件</strong>の更新を表示　·　<strong>'+majorCount+'件</strong>の大型更新';
    const sorted=visible.slice().sort(function(a,b){
      if(a.date!==b.date)return b.date.localeCompare(a.date);
-     return Date.parse(a.datetime)-Date.parse(b.datetime);
+     return Date.parse(b.datetime)-Date.parse(a.datetime);
    });
    let previousDate='';
    list.innerHTML=sorted.length?sorted.map(function(x){
