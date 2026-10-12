@@ -1,5 +1,6 @@
-/* 放課後ゲーム部 共通オンラインルーム Worker (ゲーム開始機能は別工程) */
-const TTL=2*60*60*1000, MAX=10;
+/* 放課後ゲーム部 共通オンラインルーム Worker (ひみつ投票を先行対応) */
+import {SECRET_QUESTIONS} from './secret-questions.js';
+const TTL=2*60*60*1000, MAX=10, SECRET_ROUNDS=5;
 const ALPHABET='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE=/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 const TOKEN=/^[a-f0-9]{64}$/;
@@ -11,7 +12,19 @@ const safeName=x=>typeof x==='string'?x.trim().replace(/[\u0000-\u001f\u007f<>]/
 const randomCode=()=>{let a=new Uint8Array(8);crypto.getRandomValues(a);return [...a].map(b=>ALPHABET[b%ALPHABET.length]).join('')};
 const randomToken=()=>{let a=new Uint8Array(32);crypto.getRandomValues(a);return [...a].map(b=>b.toString(16).padStart(2,'0')).join('')};
 async function digest(s){const v=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(v)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,expiresAt:room.expiresAt,phase:'lobby',maxPlayers:MAX,members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
+const secretView=room=>{
+  if(!room.secret)return null;
+  const g=room.secret;
+  return {
+    stage:g.stage,round:g.round+1,roundCount:SECRET_ROUNDS,
+    question:SECRET_QUESTIONS[g.indices[g.round]],
+    answered:Object.keys(g.votes).length,total:room.members.length,
+    counts:g.stage==='voting'?null:g.counts
+  };
+};
+const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,
+  expiresAt:room.expiresAt,phase:room.secret?'secret':'lobby',secret:secretView(room),
+  maxPlayers:MAX,members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
 const cors=origin=>({'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'Content-Type'});
 async function readBody(request){
   if(Number(request.headers.get('content-length'))>1024)return null;
@@ -29,7 +42,7 @@ export default {
     const url=new URL(request.url),origin=request.headers.get('Origin');
     const allowed=[env.ALLOWED_ORIGIN,'http://localhost:8788','http://127.0.0.1:8788'].filter(Boolean);
     if(request.method==='GET'&&url.pathname==='/api/health')
-      return response({ok:true,mode:'lobby-only',version:1},200,allowed.includes(origin)?cors(origin):{});
+      return response({ok:true,mode:'lobby-and-secret',version:2},200,allowed.includes(origin)?cors(origin):{});
     if(!allowed.includes(origin))return err('許可されていないアクセスです',403);
     const headers=cors(origin),reply=(data,status=200)=>response(data,status,headers);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -103,6 +116,7 @@ export class OnlineRoom{
   }
   async join(request){
     if(!this.active())return err('部屋が見つからないか期限切れです',404);
+    if(this.room.secret)return err('ゲーム中は新しく参加できません。終了後に試してね',409);
     if(this.room.members.length>=MAX)return err('満員です',409);
     const {name,icon}=await request.json();
     if(!safeName(name))return err('名前が必要です',400);
@@ -122,8 +136,32 @@ export class OnlineRoom{
   send(ws,data){try{ws.send(JSON.stringify(data))}catch{}}
   broadcast(){
     if(!this.room)return;
-    const data={type:'room',room:this.snapshot()};
-    for(const ws of this.sockets())this.send(ws,data);
+    const room=this.snapshot();
+    for(const ws of this.sockets()){
+      const id=ws.deserializeAttachment()?.id;
+      this.send(ws,{type:'room',room,voted:!!this.room.secret?.votes?.[id]});
+    }
+  }
+  async saveAndBroadcast(){
+    await this.ctx.storage.put('room',this.room);
+    this.broadcast();
+  }
+  finishVotingIfReady(){
+    const g=this.room?.secret;
+    if(!g||g.stage!=='voting'||Object.keys(g.votes).length!==this.room.members.length)return;
+    g.counts={a:Object.values(g.votes).filter(v=>v==='a').length,
+      b:Object.values(g.votes).filter(v=>v==='b').length};
+    // Ballots are never published and are discarded once counts are calculated.
+    g.votes={};
+    g.stage='result';
+  }
+  startSecret(){
+    const random=new Uint32Array(SECRET_QUESTIONS.length);
+    crypto.getRandomValues(random);
+    const shuffled=SECRET_QUESTIONS.map((_,i)=>i);
+    shuffled.sort((a,b)=>random[a]-random[b]);
+    this.room.secret={stage:'voting',round:0,indices:shuffled.slice(0,SECRET_ROUNDS),
+      votes:{},counts:null};
   }
   async connect(request){
     if(!this.active())return err('部屋が見つからないか期限切れです',404);
@@ -135,7 +173,8 @@ export class OnlineRoom{
     const [client,server]=Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({id:player.id});
-    this.send(server,{type:'welcome',selfId:player.id,room:this.snapshot()});
+    this.send(server,{type:'welcome',selfId:player.id,room:this.snapshot(),
+      voted:!!this.room.secret?.votes?.[player.id]});
     this.broadcast();
     return new Response(null,{status:101,webSocket:client});
   }
@@ -146,14 +185,39 @@ export class OnlineRoom{
     const id=ws.deserializeAttachment()?.id,player=this.room.members.find(m=>m.id===id);
     if(!player)return void ws.close(4003,'unauthorized');
     if(data.type==='ready'){
-      if(typeof data.ready!=='boolean')return;
+      if(this.room.secret||typeof data.ready!=='boolean')return;
       player.ready=data.ready;await this.ctx.storage.put('room',this.room);this.broadcast();return;
     }
     if(data.type==='game'){
-      if(this.room.hostId!==id||!GAMES.has(data.gameId))return;
+      if(this.room.secret||this.room.hostId!==id||!GAMES.has(data.gameId))return;
       this.room.gameId=data.gameId;
       for(const m of this.room.members)m.ready=false;
       await this.ctx.storage.put('room',this.room);this.broadcast();return;
+    }
+    if(data.type==='secret-start'){
+      if(this.room.secret||this.room.hostId!==id||this.room.gameId!=='minna-wa-docchi'||!this.snapshot().allReady)return;
+      this.startSecret();
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-vote'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='voting'||!['a','b'].includes(data.choice)||g.votes[id])return;
+      g.votes[id]=data.choice;
+      this.finishVotingIfReady();
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-next'){
+      const g=this.room.secret;
+      if(!g||this.room.hostId!==id||g.stage!=='result')return;
+      if(g.round+1>=SECRET_ROUNDS)g.stage='finished';
+      else{g.round++;g.stage='voting';g.votes={};g.counts=null}
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-stop'){
+      if(!this.room.secret||this.room.hostId!==id)return;
+      this.room.secret=null;
+      for(const member of this.room.members)member.ready=false;
+      await this.saveAndBroadcast();return;
     }
     if(data.type==='remove'){
       if(id!==this.room.hostId||data.memberId===id||typeof data.memberId!=='string')return;
@@ -165,6 +229,13 @@ export class OnlineRoom{
     if(!this.room||!this.room.members.some(m=>m.id===id))return;
     this.room.members=this.room.members.filter(m=>m.id!==id);
     if(this.room.hostId===id)this.room.hostId=this.room.members[0]?.id||null;
+    if(this.room.secret){
+      delete this.room.secret.votes[id];
+      if(this.room.members.length<2){
+        this.room.secret=null;
+        for(const member of this.room.members)member.ready=false;
+      }else this.finishVotingIfReady();
+    }
     for(const ws of this.sockets())if(ws.deserializeAttachment()?.id===id){
       this.send(ws,{type:'left'});try{ws.close(4002,'left')}catch{}
     }
