@@ -1,26 +1,37 @@
 /* 放課後ゲーム部 共通オンラインルーム Worker (ひみつ投票を先行対応) */
 import {SECRET_QUESTIONS} from './secret-questions.js';
-const TTL=2*60*60*1000, MAX=10, SECRET_ROUNDS=5;
+const TTL=2*60*60*1000, MAX=10;
+const ROUND_OPTIONS=[3,5,7,10], DEFAULT_ROUNDS=5;
+const CATEGORIES=[...new Set(SECRET_QUESTIONS.map(q=>q.category))];
+const DEFAULT_CATEGORIES=CATEGORIES.filter(c=>!['恋バナ','ちょっとディープ'].includes(c));
 const ALPHABET='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE=/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 const TOKEN=/^[a-f0-9]{64}$/;
 const GAMES=new Set(['minna-wa-docchi','kyokasho-tower','kankaku-meter','pitadome-challenge','link-burst','nise-transfer-student','gesture-battle']);
-const ICONS=new Set(['🐯','🐼','🦊','🐧','🐶','🐱','🐰','🐸','🦄','🎮']);
+const ICONS=new Set(['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','🦍','🦄','👻']);
 const response=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store',...headers}});
 const err=(text,status=400)=>response({ok:false,error:text},status);
 const safeName=x=>typeof x==='string'?x.trim().replace(/[\u0000-\u001f\u007f<>]/g,'').slice(0,16):'';
 const randomCode=()=>{let a=new Uint8Array(8);crypto.getRandomValues(a);return [...a].map(b=>ALPHABET[b%ALPHABET.length]).join('')};
 const randomToken=()=>{let a=new Uint8Array(32);crypto.getRandomValues(a);return [...a].map(b=>b.toString(16).padStart(2,'0')).join('')};
 async function digest(s){const v=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(v)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+const cleanQuestion=x=>{
+ if(!x||typeof x!=='object')return null;
+ const fields=['q','a','b'].map(k=>typeof x[k]==='string'?x[k].trim().replace(/[\u0000-\u001f\u007f<>]/g,''):'');
+ if(!fields[0]||!fields[1]||!fields[2]||fields[0].length>70||fields[1].length>30||fields[2].length>30)return null;
+ return {category:'マイお題',q:fields[0],a:fields[1],b:fields[2]};
+};
 const secretView=room=>{
-  if(!room.secret)return null;
-  const g=room.secret;
-  return {
-    stage:g.stage,round:g.round+1,roundCount:SECRET_ROUNDS,
-    question:SECRET_QUESTIONS[g.indices[g.round]],
-    answered:Object.keys(g.votes).length,total:room.members.length,
-    counts:g.stage==='voting'?null:g.counts
-  };
+ if(!room.secret)return null;
+ const g=room.secret,questions=g.roundQuestions||g.indices?.map(i=>SECRET_QUESTIONS[i])||[];
+ const question=g.stage==='setup'?null:questions[g.round]||null;
+ return {
+   stage:g.stage,round:g.stage==='setup'?0:g.round+1,roundCount:g.settings?.roundCount||DEFAULT_ROUNDS,
+   categories:CATEGORIES,selectedCategories:g.settings?.categories||DEFAULT_CATEGORIES,
+   includeCustom:g.settings?.includeCustom??true,customQuestions:g.customQuestions||[],
+   question,answered:g.stage==='voting'?Object.keys(g.votes||{}).length:g.answeredCount||room.members.length,
+   total:room.members.length,counts:g.stage==='result'?g.counts:null
+ };
 };
 const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,
   expiresAt:room.expiresAt,phase:room.secret?'secret':'lobby',secret:secretView(room),
@@ -42,7 +53,7 @@ export default {
     const url=new URL(request.url),origin=request.headers.get('Origin');
     const allowed=[env.ALLOWED_ORIGIN,'http://localhost:8788','http://127.0.0.1:8788'].filter(Boolean);
     if(request.method==='GET'&&url.pathname==='/api/health')
-      return response({ok:true,mode:'lobby-and-secret',version:2},200,allowed.includes(origin)?cors(origin):{});
+      return response({ok:true,mode:'lobby-and-secret',version:3},200,allowed.includes(origin)?cors(origin):{});
     if(!allowed.includes(origin))return err('許可されていないアクセスです',403);
     const headers=cors(origin),reply=(data,status=200)=>response(data,status,headers);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -95,7 +106,7 @@ export class OnlineRoom{
   async limit(request){
     const {kind}=await request.json();
     if(!['create','join'].includes(kind))return err('bad input');
-    const now=Date.now(),period=kind==='create'?3600000:600000,max=kind==='create'?4:40;
+    const now=Date.now(),period=kind==='create'?60000:600000,max=kind==='create'?60:40;
     const items=(await this.ctx.storage.get(kind)||[]).filter(t=>t>now-period);
     if(items.length>=max)return err('rate limited',429);
     items.push(now);await this.ctx.storage.put(kind,items);
@@ -151,17 +162,30 @@ export class OnlineRoom{
     if(!g||g.stage!=='voting'||Object.keys(g.votes).length!==this.room.members.length)return;
     g.counts={a:Object.values(g.votes).filter(v=>v==='a').length,
       b:Object.values(g.votes).filter(v=>v==='b').length};
-    // Ballots are never published and are discarded once counts are calculated.
+    g.answeredCount=this.room.members.length;
     g.votes={};
-    g.stage='result';
+    // Hold at the "all answered" screen. Host reveals results explicitly.
+    g.stage='allAnswered';
   }
   startSecret(){
-    const random=new Uint32Array(SECRET_QUESTIONS.length);
+    this.room.secret={
+      stage:'setup',round:0,settings:{roundCount:DEFAULT_ROUNDS,
+        categories:[...DEFAULT_CATEGORIES],includeCustom:true},
+      customQuestions:[],roundQuestions:[],votes:{},counts:null,answeredCount:0
+    };
+  }
+  beginSecret(){
+    const g=this.room.secret;
+    const pool=SECRET_QUESTIONS.filter(q=>g.settings.categories.includes(q.category))
+      .concat(g.settings.includeCustom?g.customQuestions:[]);
+    if(pool.length<g.settings.roundCount)return false;
+    const random=new Uint32Array(pool.length);
     crypto.getRandomValues(random);
-    const shuffled=SECRET_QUESTIONS.map((_,i)=>i);
+    const shuffled=pool.map((_,i)=>i);
     shuffled.sort((a,b)=>random[a]-random[b]);
-    this.room.secret={stage:'voting',round:0,indices:shuffled.slice(0,SECRET_ROUNDS),
-      votes:{},counts:null};
+    g.roundQuestions=shuffled.slice(0,g.settings.roundCount).map(i=>pool[i]);
+    g.stage='voting';g.round=0;g.votes={};g.counts=null;g.answeredCount=0;
+    return true;
   }
   async connect(request){
     if(!this.active())return err('部屋が見つからないか期限切れです',404);
@@ -199,6 +223,34 @@ export class OnlineRoom{
       this.startSecret();
       await this.saveAndBroadcast();return;
     }
+    if(data.type==='secret-config'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='setup'||id!==this.room.hostId)return;
+      const categories=data.categories;
+      if(!Array.isArray(categories)||categories.length>CATEGORIES.length||
+         categories.some(c=>typeof c!=='string'||!CATEGORIES.includes(c))||
+         !ROUND_OPTIONS.includes(data.roundCount)||typeof data.includeCustom!=='boolean')return;
+      g.settings={roundCount:data.roundCount,categories:[...new Set(categories)],includeCustom:data.includeCustom};
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-custom-add'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='setup'||id!==this.room.hostId||g.customQuestions.length>=20)return;
+      const q=cleanQuestion(data.question);if(!q)return;
+      if(g.customQuestions.some(x=>x.q===q.q&&x.a===q.a&&x.b===q.b))return;
+      g.customQuestions.push(q);
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-custom-delete'){
+      const g=this.room.secret;
+      if(!g||g.stage!=='setup'||id!==this.room.hostId||
+         !Number.isInteger(data.index)||data.index<0||data.index>=g.customQuestions.length)return;
+      g.customQuestions.splice(data.index,1);await this.saveAndBroadcast();return;
+    }
+    if(data.type==='secret-begin'){
+      if(!this.room.secret||this.room.secret.stage!=='setup'||id!==this.room.hostId)return;
+      if(this.beginSecret())await this.saveAndBroadcast();return;
+    }
     if(data.type==='secret-vote'){
       const g=this.room.secret;
       if(!g||g.stage!=='voting'||!['a','b'].includes(data.choice)||g.votes[id])return;
@@ -206,11 +258,16 @@ export class OnlineRoom{
       this.finishVotingIfReady();
       await this.saveAndBroadcast();return;
     }
+    if(data.type==='secret-reveal'){
+      const g=this.room.secret;
+      if(!g||id!==this.room.hostId||g.stage!=='allAnswered')return;
+      g.stage='result';await this.saveAndBroadcast();return;
+    }
     if(data.type==='secret-next'){
       const g=this.room.secret;
       if(!g||this.room.hostId!==id||g.stage!=='result')return;
-      if(g.round+1>=SECRET_ROUNDS)g.stage='finished';
-      else{g.round++;g.stage='voting';g.votes={};g.counts=null}
+      if(g.round+1>=(g.settings?.roundCount||DEFAULT_ROUNDS))g.stage='finished';
+      else{g.round++;g.stage='voting';g.votes={};g.counts=null;g.answeredCount=0}
       await this.saveAndBroadcast();return;
     }
     if(data.type==='secret-stop'){
