@@ -268,9 +268,10 @@ export class OnlineRoom{
     if(data.type==='secret-mode'){
       const g=this.room.secret;
       if(!g||g.stage!=='setup'||id!==this.room.hostId||
-         !['secret','battle'].includes(data.mode))return;
+         ![null,'secret','battle'].includes(data.mode))return;
       g.mode=data.mode;
       g.settings.categories=defaultCategoriesFor(g.mode);
+      if(g.mode===null)g.settings.includeCustom=false;
       await this.saveAndBroadcast();return;
     }
     if(data.type==='secret-config'){
