@@ -5,7 +5,7 @@
 <main class="online-page">
  <nav class="top-nav"><a href="../games/">← ゲームをえらぶ</a><a href="../">トップへ</a></nav>
  <header class="hero"><img class="brand" src="../houkago_gamebu_logo_transparent.png" alt="放課後ゲーム部">
-   <p class="eyebrow">ONLINE ROOM — 準備版</p><h1>友達と同じ部屋に集合！</h1>
+   <p class="eyebrow">ONLINE ROOM — 先行プレイ版</p><h1>友達と同じ部屋に集合！</h1>
    <p>招待コードで集まるオンラインルーム。会員登録はいらないよ。</p></header>
  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
  <section id="entry" class="panel" aria-label="部屋への入室">
@@ -26,7 +26,7 @@
     <input id="code" maxlength="8" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="例：AB7K92CD">
     <button id="join" type="button">部屋に参加する</button></div>
   </div>
-  <p class="hint">友達同士で招待して遊ぼう。現在は部屋の動作確認版で、ゲームはまだ開始できないよ。</p>
+  <p class="hint">招待で集まって「みんなはどっち？」のひみつ投票をオンラインで先行プレイ！ ほかの作品は準備中だよ。</p>
  </section>
  <section id="room-panel" class="panel" aria-label="オンラインルーム" hidden>
   <div class="room-head"><span id="connection" class="online-status">接続中…</span><span class="room-expiry">部屋の期限：作成から2時間</span></div>
@@ -38,8 +38,25 @@
    <button type="button" id="apply-game">変更する</button></div>
   <div class="member-head"><h2>参加メンバー</h2><span id="member-count">0 / 10人</span></div>
   <div id="members" class="members"></div>
-  <div class="room-bottom"><button id="ready" type="button" class="primary" disabled>準備完了にする</button>
-   <p id="waiting" class="hint">ゲーム本体との連携は次の工程で追加するよ。</p>
+  <section id="secret-game" class="secret-game" aria-label="オンラインひみつ投票" hidden>
+    <div class="secret-progress" id="secret-progress"></div>
+    <h2 id="secret-question"></h2>
+    <p class="secret-count" id="secret-status" aria-live="polite"></p>
+    <div id="secret-choices" class="secret-choices">
+      <button type="button" id="secret-a"><small>A</small><strong id="secret-a-label"></strong></button>
+      <button type="button" id="secret-b"><small>B</small><strong id="secret-b-label"></strong></button>
+    </div>
+    <div id="secret-result" class="secret-result" hidden>
+      <div><span id="secret-a-result-label"></span><strong id="secret-a-count"></strong></div>
+      <div><span id="secret-b-result-label"></span><strong id="secret-b-count"></strong></div>
+    </div>
+    <button type="button" id="secret-next" class="primary" hidden>次のお題へ</button>
+    <button type="button" id="secret-end" hidden>部屋の準備に戻る</button>
+  </section>
+  <div class="room-bottom">
+   <button id="ready" type="button" class="primary" disabled>準備完了にする</button>
+   <button id="start-secret" type="button" class="primary" hidden disabled>ひみつ投票を始める（5問）</button>
+   <p id="waiting" class="hint">全員準備OKになったらホストがゲームを始められるよ。</p>
    <button id="leave" type="button" class="leave">部屋から退出</button></div>
  </section>
 </main>
