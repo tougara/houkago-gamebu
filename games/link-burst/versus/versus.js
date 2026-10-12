@@ -177,7 +177,8 @@
       '<section class="card versus-rules-card">'+
         '<strong>2人で対戦</strong>'+
         '<p>4色のブロックを4個以上つなげて消そう。先に積み上がった方が負けだよ。</p>'+
-        '<small>JAMで攻撃！ 連鎖でCOUNTERして打ち返そう（試作版・対戦記録は未実装）</small>'+
+        '<small>2 LINKからJAMで攻撃！ 最大7個ずつ着弾し、連鎖で相殺（COUNTER）できます。勝敗は共通プレイヤー記録に保存されます。</small>'+ 
+        '<p class="versus-key-help">PC操作：1P＝A（左）・S（下）・D（右）・Space（回転） ／ 2P＝← ↓ →（移動）・Enter（回転）。左右は長押しできます。</p>'+
       '</section>'+
       '<div class="stack versus-actions">'+
         '<button type="button" class="btn" data-launch>2人で対戦をはじめる →</button>'+
