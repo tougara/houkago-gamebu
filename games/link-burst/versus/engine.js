@@ -93,7 +93,7 @@
     return groups;
   }
   function scoreGain(cleared,link,combo){
-    return cleared*100*link+Math.max(0,combo-1)*400+Math.max(0,cleared-4)*50;
+    return cleared*100*link+Math.max(0,combo-1)*400+Math.max(0,cleared-4)*50+Math.max(0,link-1)*250;
   }
   function attackFor(link,maxCombo){
     if(link<=0)return 0;
@@ -220,13 +220,25 @@
       if(batch.readyAfter>st.pieces)continue;
       const take=Math.min(room,batch.count);
       batch.count-=take;room-=take;
+      let added=0;
       for(let j=0;j<take;j++){
-        const x=st.jamCursor++%COLS;
+        // Choose the next available column. A full edge column is not an
+        // automatic KO while the central spawn location remains playable.
+        let chosen=-1;
+        for(let step=0;step<COLS;step++){
+          const x=(st.jamCursor+step)%COLS;
+          if(!st.board[0][x]){chosen=x;break;}
+        }
+        if(chosen<0)break; // No room: keep remaining JAM pending.
+        st.jamCursor=(chosen+1)%COLS;
         let y=ROWS-1;
-        while(y>=0&&st.board[y][x])y--;
-        if(y<0){st.over=true;st.piece=null;st.phase='over';return dropped;}
-        st.board[y][x]='jam';dropped++;
+        while(y>=0&&st.board[y][chosen])y--;
+        st.board[y][chosen]='jam';dropped++;added++;
       }
+      // Retain any JAM which could not be placed; never silently discard it.
+      batch.count+=take-added;
+      room+=take-added;
+      if(added<take)break;
     }
     st.jamQueue=st.jamQueue.filter(function(b){return b.count>0});
     if(dropped){compress(st);notice(st,'JAM ×'+dropped);}
