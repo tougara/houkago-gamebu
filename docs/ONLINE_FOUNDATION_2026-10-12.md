@@ -3,7 +3,7 @@
 ## 現在地
 GitHubにオンラインルーム用フロントエンドとCloudflare Workerを**独立して準備**。
 旧来のスマホ1台モード7作品・ランキング・セーブは変更しない。
-**オンラインゲーム開始・CloudflareへのWorker公開・実機動作確認は未実施。**
+**Cloudflare Workersへの公開と `/api/health` 応答確認が完了。オンラインロビーのブラウザ接続試験とゲーム本体の同期対応は未実施。**
 
 ## 無料制約
 - Workers Freeのみ。SQLite Durable Objects＋WebSocket Hibernation API。課金有効化やPaid契約は不要。
@@ -13,11 +13,11 @@ GitHubにオンラインルーム用フロントエンドとCloudflare Workerを
 - チャット・ランダムマッチ・カメラ・音声なし。ゲーム本体接続前はスタートできない。
 - 負荷により無料枠を超えるとAPIが失敗する。保証された無制限無料サービスではない。
 
-## Cloudflare公開手順（実施前）
-1. CloudflareがWorkers Freeプランであると確認。
-2. リポジトリの `worker/` で `npm install` → `npm run deploy`。新規SQLite DOはWranglerで自動作成。
-3. 発行された **実際の** `https://...workers.dev` を確認。
-4. `online/config.js` の `window.HOUKAGO_ONLINE_API_URL` に実URLを設定しGitHubへ反映。
+## Cloudflare公開・接続手順（実施状況）
+1. Workers + Durable Objectsを利用するWorker `houkago-online-api` の公開が完了。課金設定の実地確認は引き続き必要。
+2. GitHub連携ビルドで `npm install --prefix worker` → `cd worker && npx wrangler deploy` が成功。`ROOMS` バインディング表示を確認。
+3. `https://houkago-online-api.kenkyo11.workers.dev/api/health` にてユーザーのブラウザで `{"ok":true,"mode":"lobby-only","version":1}` の応答を確認。
+4. `online/config.js` に実URL `https://houkago-online-api.kenkyo11.workers.dev` を設定しGitHub `main` へ反映済み。
 5. `/online/` へ2端末でアクセスし、作成・参加・準備完了・再接続・退出・無料枠使用状況を検証。
 6. 本番検証が済むまでトップ画面へオンライン導線は設置しない。
 7. 最初に「みんなはどっち？」の「ひみつ投票」を接続する（別工程）。
