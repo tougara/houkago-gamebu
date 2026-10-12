@@ -8,6 +8,7 @@ const load=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const solo=load('games/link-burst/game.js');
 const versus=load('games/link-burst/versus/match.js');
 const engineCode=load('games/link-burst/versus/engine.js');
+const versusCSS=load('games/link-burst/versus/play.css');
 const scope={window:{}};
 vm.runInNewContext(engineCode,scope);
 const engine=scope.window.LinkBurstVersusEngine;
@@ -100,6 +101,37 @@ test('Versus score visual and JAM forecast use the server-side engine numbers',(
   assert.ok(versus.includes('engine.scoreGain('));
   assert.ok(versus.includes('function showBattleCue('));
   assert.ok(versus.includes("particle.dataset.power=count>=14"));
+});
+
+test('Central scoreboard fits its contents without truncating large scores',()=>{
+  const code=extract(versus,' function fitScore(',' function drawArena(');
+  const fit=new Function('window',code+'\nreturn fitScore;')({
+    getComputedStyle:()=>({fontSize:'29px'})
+  });
+  const el={
+    textContent:'',clientWidth:100,style:{fontSize:''},
+    get scrollWidth(){
+      const size=parseFloat(this.style.fontSize)||29;
+      return Math.ceil(this.textContent.length*size*.59);
+    }
+  };
+  fit(el,12650,true);
+  assert.equal(el.textContent,'12,650');
+  assert.ok(el.scrollWidth<=el.clientWidth+1);
+  fit(el,1234567,true);
+  assert.equal(el.textContent,'1,234,567');
+  assert.ok(el.scrollWidth<=el.clientWidth+1);
+});
+
+test('WIN/LOSE/DRAW effects are anchored to each puzzle field rather than entire arena',()=>{
+  assert.ok(versusCSS.includes('Versus V11: wider central scoreboard and board-centered victory stamps'));
+  assert.ok(versusCSS.includes('.arena[data-finish] .arena-board-stack::after'));
+  assert.ok(versusCSS.includes('.arena[data-finish="win"] .arena-board-stack::after'));
+  assert.ok(versusCSS.includes('.arena[data-finish="lose"] .arena-board-stack::after'));
+  assert.ok(versusCSS.includes('.arena[data-finish="draw"] .arena-board-stack::after'));
+  assert.ok(versusCSS.includes('clamp(116px,11.5vw,154px)'));
+  assert.ok(versusCSS.includes('clamp(76px,11vw,92px)'));
+  assert.ok(versus.includes("arena.dataset.finish=winningSide<0?'draw'"));
 });
 
 test('Solo KO is determined by spawn collision and canceled runs cannot continue',()=>{
