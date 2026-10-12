@@ -4,7 +4,7 @@
   const COLS=7,ROWS=15,HIDDEN=2,LOCK_MS=300;
   const COLORS=['blue','red','yellow','green'];
   const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇',jam:'J'};
-  const ATTACK=[0,0,1,3,6,10,14,18,21],JAM_WAVE=7,ATTACK_MAX=21;
+  const ATTACK=[0,0,2,5,9,13,17,21,24],JAM_WAVE=7,ATTACK_MAX=26;
   const ROT=[[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[-1,0]],[[0,0],[0,-1]]];
   function board(){return Array.from({length:ROWS},()=>Array(COLS).fill(null))}
   function cells(piece,x,y,rot){
@@ -37,7 +37,7 @@
   function make(player,pairSource){
     const st={player:player||null,board:board(),piece:null,queue:[],score:0,maxLink:0,maxCombo:0,
       clears:0,pieces:0,over:false,phase:'falling',fallMs:0,lockMs:0,phaseMs:0,
-      link:0,groups:[],currentCombo:0,flashMs:0,
+      link:0,groups:[],currentCombo:0,flashMs:0,burstCells:[],
       elapsedMs:0,turnMaxCombo:0,readyAttack:0,jamQueue:[],jamCursor:0,
       receivedJam:0,sentJam:0,counteredJam:0,clearedJam:0,notice:'',noticeMs:0,
       pairSource:typeof pairSource==='function'?pairSource:null,pairIndex:0};
@@ -108,7 +108,7 @@
   function scan(st){
     const groups=findGroups(st);
     if(groups.length){
-      st.groups=groups;st.phase='charge';st.phaseMs=185;return;
+      st.groups=groups;st.phase='charge';st.phaseMs=350;return;
     }
     st.groups=[];st.phaseMs=0;
     if(topOut(st)){st.over=true;st.phase='over';st.piece=null;return}
@@ -132,8 +132,18 @@
     st.maxLink=Math.max(st.maxLink,link);
     st.maxCombo=Math.max(st.maxCombo,combo);
     st.turnMaxCombo=Math.max(st.turnMaxCombo,combo);
-    st.clears+=total;st.link=link;
-    // Only JAM directly touching a cleared COLOR disappears; no diagonal or chain explosion.
+    st.clears+=total;st.link=link;st.currentCombo=combo;
+    // Keep the lit blocks on the board through the visible burst phase.
+    st.burstCells=groups.flat().map(function(p){return p.y+':'+p.x});
+    st.phase='burst';
+    st.phaseMs=240;
+    st.flashMs=420;
+  }
+  function finishBurst(st){
+    if(st.phase!=='burst')return;
+    const groups=st.groups;
+    // Only JAM directly touching a cleared COLOR disappears; no diagonal
+    // or JAM-to-JAM explosion. Resolve before removing colored blocks.
     const adjacentJam=new Set();
     for(const g of groups)for(const p of g)for(const d of [[1,0],[-1,0],[0,1],[0,-1]]){
       const x=p.x+d[0],y=p.y+d[1];
@@ -141,25 +151,42 @@
     }
     for(const g of groups)for(const p of g)st.board[p.y][p.x]=null;
     for(const key of adjacentJam){
-      const pos=key.split(':');st.board[Number(pos[0])][Number(pos[1])]=null;
+      const pos=key.split(':');
+      st.board[Number(pos[0])][Number(pos[1])]=null;
     }
     st.clearedJam+=adjacentJam.size;
-    st.groups=[];
-    compress(st);
-    st.phase='settle';
-    st.phaseMs=135;
-    st.flashMs=360;
+    st.groups=[];st.burstCells=[];
+    // Recalculate gravity one row at a time so falling blocks are visible.
+    st.phase='gravity';st.phaseMs=76;
+  }
+  function gravityStep(st){
+    let moved=false;
+    for(let y=ROWS-2;y>=0;y--)for(let x=0;x<COLS;x++){
+      if(st.board[y][x]&&!st.board[y+1][x]){
+        st.board[y+1][x]=st.board[y][x];st.board[y][x]=null;moved=true;
+      }
+    }
+    return moved;
   }
   function speed(st){
-    const steps=st.pieces<20?0:Math.floor((st.pieces-20)/8)+1;
-    const byPieces=Math.max(120,820-steps*40);
-    // Continuous speed-up at 90,150,210,270,330 seconds, without sudden jumps.
-    const minute=st.elapsedMs/60000,points=[[0,820],[1.5,700],[2.5,560],[3.5,430],[4.5,320],[5.5,240]];
-    let timed=points[points.length-1][1];
-    if(minute<=0)timed=820;
-    else for(let i=1;i<points.length;i++)if(minute<=points[i][0]){
-      const a=points[i-1],b=points[i];
-      timed=a[1]+(b[1]-a[1])*(minute-a[0])/(b[0]-a[0]);break;
+    // One extra gentle opening stage; after 8 pairs / 30 seconds the
+    // existing acceleration curve is followed, delayed by that stage.
+    const byPieces=st.pieces<8
+      ?920-Math.round(st.pieces*100/8)
+      :Math.max(120,820-(st.pieces<20?0:(Math.floor((st.pieces-20)/8)+1))*40);
+    const elapsed=Math.max(0,st.elapsedMs);
+    const warmup=30000;
+    let timed;
+    if(elapsed<warmup)timed=920-100*elapsed/warmup;
+    else{
+      const minute=(elapsed-warmup)/60000;
+      const points=[[0,820],[1.5,700],[2.5,560],[3.5,430],[4.5,320],[5.5,240]];
+      timed=points[points.length-1][1];
+      if(minute<=0)timed=820;
+      else for(let i=1;i<points.length;i++)if(minute<=points[i][0]){
+        const a=points[i-1],b=points[i];
+        timed=a[1]+(b[1]-a[1])*(minute-a[0])/(b[0]-a[0]);break;
+      }
     }
     return Math.max(120,Math.round(Math.min(byPieces,timed)));
   }
@@ -223,6 +250,19 @@
     if(st.phase==='charge'){
       st.phaseMs-=dt;
       if(st.phaseMs<=0)finishClear(st);
+      return;
+    }
+    if(st.phase==='burst'){
+      st.phaseMs-=dt;
+      if(st.phaseMs<=0)finishBurst(st);
+      return;
+    }
+    if(st.phase==='gravity'){
+      st.phaseMs-=dt;
+      if(st.phaseMs<=0){
+        if(gravityStep(st))st.phaseMs=76;
+        else{st.phase='settle';st.phaseMs=150}
+      }
       return;
     }
     if(st.phase==='settle'){
