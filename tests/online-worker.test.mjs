@@ -106,6 +106,8 @@ test('host-only setup offers 10 genres, custom questions and 3/5/7/10 round choi
  assert.equal(st.obj.snapshot().secret.stage,'setup','two questions cannot fill three rounds');
  await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-config',roundCount:3,categories:['学校のホンネ'],includeCustom:true}));
  await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-begin'}));
+ assert.equal(st.obj.snapshot().secret.stage,'preview');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-accept-question'}));
  assert.equal(st.obj.snapshot().secret.stage,'voting');
  assert.equal(st.obj.snapshot().secret.roundCount,3);
  assert.ok(['学校のホンネ','マイお題'].includes(st.obj.snapshot().secret.question.category));
@@ -121,6 +123,8 @@ test('all answered screen hides results until host reveals; full 5 rounds stay a
  for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-begin'}));
+ assert.equal(st.obj.snapshot().secret.stage,'preview');
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-accept-question'}));
  assert.equal(st.obj.snapshot().secret.stage,'voting');
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
  await st.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
@@ -142,8 +146,10 @@ test('all answered screen hides results until host reveals; full 5 rounds stay a
  assert.equal(st.obj.snapshot().secret.round,1);
  for(let round=2;round<=5;round++){
   await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-next'}));
-  assert.equal(st.obj.snapshot().secret.stage,'voting');
+  assert.equal(st.obj.snapshot().secret.stage,'preview');
   assert.equal(st.obj.snapshot().secret.round,round);
+  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-accept-question'}));
+  assert.equal(st.obj.snapshot().secret.stage,'voting');
   for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'secret-vote',choice:'a'}));
   assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
   assert.equal(st.obj.snapshot().secret.counts,null);
@@ -166,6 +172,7 @@ test('leaving mid-vote resolves to all-answered, never auto-reveals',async()=>{
  for(const u of users)await st.obj.webSocketMessage(u,JSON.stringify({type:'ready',ready:true}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-begin'}));
+ await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-accept-question'}));
  await st.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
  await st.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
  await st.obj.removeMember(c.id);
@@ -178,6 +185,55 @@ test('leaving mid-vote resolves to all-answered, never auto-reveals',async()=>{
  assert.equal(st.obj.snapshot().phase,'lobby');
 });
 
+
+test('host preview accepts, skips and composes a shared question without guest control',async()=>{
+ const st=new Stub();
+ const h=await (await st.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'minna-wa-docchi'}))).json();
+ const b=await (await st.fetch(req('/join',{name:'Guest'}))).json();
+ const host=sock(h.id),guest=sock(b.id);st.sockets.push(host,guest);
+ for(const w of [host,guest])await st.obj.webSocketMessage(w,JSON.stringify({type:'ready',ready:true}));
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-start'}));
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-begin'}));
+ const first=st.obj.snapshot().secret;
+ assert.equal(first.stage,'preview');
+ assert.ok(first.question?.q);
+ assert.ok(first.alternatives>0);
+ await st.obj.webSocketMessage(guest,JSON.stringify({type:'secret-accept-question'}));
+ assert.equal(st.obj.snapshot().secret.stage,'preview','guest cannot approve');
+ await st.obj.webSocketMessage(guest,JSON.stringify({type:'secret-change-question'}));
+ assert.equal(st.obj.snapshot().secret.question.q,first.question.q,'guest cannot skip');
+ await st.obj.webSocketMessage(guest,JSON.stringify({type:'secret-use-question',question:{q:'guest q',a:'a',b:'b'}}));
+ assert.equal(st.obj.snapshot().secret.question.q,first.question.q,'guest cannot author');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-change-question'}));
+ const changed=st.obj.snapshot().secret;
+ assert.notDeepEqual(changed.question,first.question,'a skipped question must change');
+ assert.equal(changed.stage,'preview');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-change-question'}));
+ assert.notDeepEqual(st.obj.snapshot().secret.question,first.question,'skip does not immediately reuse an old question');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-use-question',question:{q:'放課後に遊ぶなら？',a:'公園',b:'ゲーム'}}));
+ const manual=st.obj.snapshot().secret;
+ assert.equal(manual.stage,'preview','manual question returns to preview not voting');
+ assert.equal(manual.question.q,'放課後に遊ぶなら？');
+ assert.equal(manual.question.a,'公園');
+ assert.equal(manual.question.b,'ゲーム');
+ assert.equal(manual.question.category,'マイお題');
+ const traffic=JSON.stringify(guest.events);
+ assert.ok(traffic.includes('放課後に遊ぶなら？'),'everyone receives custom question');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-accept-question'}));
+ assert.equal(st.obj.snapshot().secret.stage,'voting');
+ assert.equal(st.obj.snapshot().secret.answered,0);
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-change-question'}));
+ assert.equal(st.obj.snapshot().secret.question.q,'放課後に遊ぶなら？','cannot skip during voting');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-vote',choice:'a'}));
+ await st.obj.webSocketMessage(guest,JSON.stringify({type:'secret-vote',choice:'b'}));
+ assert.equal(st.obj.snapshot().secret.stage,'allAnswered');
+ assert.equal(st.obj.snapshot().secret.counts,null,'never automatically reveals');
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-reveal'}));
+ await st.obj.webSocketMessage(host,JSON.stringify({type:'secret-next'}));
+ assert.equal(st.obj.snapshot().secret.stage,'preview','next round must preview a new question');
+ assert.equal(st.obj.snapshot().secret.round,2);
+ assert.ok(st.obj.snapshot().secret.question?.q);
+});
 
 test('online phases render question and answers with offline layout and no blank voting view',()=>{
  const html=readFileSync(new URL('../online/minna-wa-docchi/index.html',import.meta.url),'utf8');
@@ -231,7 +287,7 @@ test('online phases render question and answers with offline layout and no blank
      win,doc,location,storage,storage,MockSocket,MockQuery,()=>{},()=>{},()=>true);
  const sock=sockets[0];sock.onopen();
  const question={q:'放課後に遊ぶなら？',a:'公園',b:'ゲーム',category:'友だち'};
- const screens={setup:'setup-stage',voting:'vote-stage',allAnswered:'all-answered-stage',
+ const screens={setup:'setup-stage',preview:'question-stage',voting:'vote-stage',allAnswered:'all-answered-stage',
    result:'result-stage',finished:'finished-stage'};
  for(const [stage,visible] of Object.entries(screens)){
   const room={code:'ABCD2345',phase:'secret',hostId:'p1',
@@ -241,6 +297,13 @@ test('online phases render question and answers with offline layout and no blank
       poolCount:20,answered:1,total:2,counts:stage==='result'?{a:1,b:1}:null}};
   assert.doesNotThrow(()=>sock.onmessage({data:JSON.stringify({type:'room',room,voted:false})}),stage);
   assert.equal(els[visible].hidden,false,'expected visible stage '+stage);
+  if(stage==='preview'){
+    assert.equal(els['preview-question'].textContent,question.q);
+    assert.equal(els['preview-a'].textContent,question.a);
+    assert.equal(els['preview-b'].textContent,question.b);
+    assert.equal(els['preview-host-controls'].hidden,false);
+    assert.equal(els['preview-guest-wait'].hidden,true);
+  }
   if(stage==='voting'){
     assert.equal(els['question-text'].textContent,question.q);
     assert.equal(els['vote-a-label'].textContent,question.a);
