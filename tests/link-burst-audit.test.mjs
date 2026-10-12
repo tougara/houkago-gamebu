@@ -99,7 +99,7 @@ test('Versus score visual and JAM forecast use the server-side engine numbers',(
   assert.ok(versus.includes('engine.jamPressure('));
   assert.ok(versus.includes('engine.scoreGain('));
   assert.ok(versus.includes('function showBattleCue('));
-  assert.ok(versus.includes('data-power=count>=14'));
+  assert.ok(versus.includes("particle.dataset.power=count>=14"));
 });
 
 test('Solo KO is determined by spawn collision and canceled runs cannot continue',()=>{
