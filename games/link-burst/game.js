@@ -754,14 +754,15 @@
 
   function fallInterval(){
     if(state.mode==='timed'){
-      const elapsed=120-state.timeLeft;
-      return Math.max(460,760-elapsed*2);
+      const elapsed=Math.max(0,120-state.timeLeft);
+      // Extra gentle opening (first 20 seconds), then preserve the
+      // previous -2ms/sec acceleration curve.
+      if(elapsed<20)return Math.round(900-(140*elapsed/20));
+      return Math.max(460,760-(elapsed-20)*2);
     }
-    // ENDLESS: play time is the main acceleration axis. Stages interpolate
-    // smoothly between these fall intervals (milliseconds per cell).
-    // Placing many pairs gives a smaller extra boost, so skilled players
-    // cannot keep an easy pace simply by clearing blocks efficiently.
-    const stages=[760,630,490,350,240,160,105,85]; // minute 0..7+
+    // ENDLESS: add one slower opening minute, then follow the previous
+    // minute-by-minute pace and the existing placements boost unchanged.
+    const stages=[900,760,630,490,350,240,160,105,85]; // minute 0..8+
     const minutes=Math.max(0,state.elapsedMs)/60000;
     const index=Math.min(stages.length-1,Math.floor(minutes));
     const fraction=index===stages.length-1?0:minutes-index;
