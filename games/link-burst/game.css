@@ -1843,3 +1843,92 @@ html[data-hg-motion="reduced"] .lb-finale-actions{animation:none}
 html[data-hg-motion="reduced"] .lb-finale-flash,
 html[data-hg-motion="reduced"] .lb-finale-ring,
 html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
+
+
+/* Link Burst rankings: mode-scoped record editing */
+.screen-ranking .ranking-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.screen-ranking .ranking-head>strong{
+  min-width:0;
+  font-size:clamp(15px,4vw,19px);
+  line-height:1.35;
+  font-weight:1000;
+}
+.screen-ranking .rank-edit-toggle{
+  flex:0 0 92px;
+  width:92px;
+  min-width:92px;
+  min-height:60px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  padding:7px 8px;
+  border:1px solid rgba(106,216,255,.53);
+  border-radius:13px;
+  background:rgba(42,90,141,.28);
+  color:#e5f7ff;
+  font:inherit;
+  font-size:14px;
+  font-weight:1000;
+  line-height:1.2;
+  text-align:center;
+}
+.screen-ranking .rank-edit-toggle span{
+  display:block;
+  white-space:nowrap;
+  overflow-wrap:normal;
+  word-break:keep-all;
+}
+.screen-ranking .rank-edit-toggle:focus-visible,
+.screen-ranking .rank-delete:focus-visible,
+.screen-ranking .rank-clear:focus-visible{
+  outline:3px solid #ffed8b;
+  outline-offset:2px;
+}
+.screen-ranking .ranking-row.is-editing{
+  grid-template-columns:35px minmax(0,1fr) auto auto;
+  gap:6px;
+}
+.screen-ranking .rank-delete{
+  min-width:48px;
+  min-height:40px;
+  padding:7px 8px;
+  border:1px solid rgba(255,145,160,.58);
+  border-radius:10px;
+  background:rgba(155,39,63,.26);
+  color:#ffdbdf;
+  font:inherit;
+  font-size:12px;
+  font-weight:1000;
+}
+.screen-ranking .rank-clear{
+  display:block;
+  width:100%;
+  margin:0 0 10px;
+  min-height:47px;
+  border:1px solid rgba(245,137,157,.54);
+  background:rgba(162,46,71,.15);
+  color:#8e233a;
+}
+@media(max-width:450px){
+  .screen-ranking .ranking-row.is-editing{
+    grid-template-columns:35px minmax(0,1fr) auto;
+  }
+  .screen-ranking .ranking-row.is-editing .rank-delete{
+    grid-column:2/-1;
+    width:100%;
+    min-height:39px;
+  }
+}
+@media(max-width:350px){
+  .screen-ranking .ranking-head>strong{font-size:14px}
+  .screen-ranking .rank-edit-toggle{flex-basis:84px;width:84px;min-width:84px;font-size:13px}
+}
+
