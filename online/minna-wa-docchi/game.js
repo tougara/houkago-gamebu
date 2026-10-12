@@ -6,7 +6,7 @@ const STORE='houkago-online-session-v1';
 const CUSTOM_STORE='houkago_docchi_custom_v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const params=new URLSearchParams(location.search),requested=params.get('room')||'';
-let session=null,room=null,ws=null,voted=false,retry=0,timer=null,exiting=false;
+let session=null,room=null,ws=null,voted=false,retry=0,timer=null,exiting=false,composing=false,lastScreenKey='';
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
 if(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session.token)||
  (requested&&requested!==session.code)||!/^https:\/\/[a-z0-9.-]+$/i.test(base)){
@@ -89,11 +89,18 @@ function draw(){
  const g=room.secret||{},myHost=host(),stage=g.stage||'setup';
  $('game-shell').hidden=false;
  $('member-panel').hidden=false;
- const titles={setup:'ジャンル・お題',voting:'自分の回答',allAnswered:'全員の回答が完了',
+ const titles={setup:'ジャンル・お題',preview:'お題の確認',voting:'自分の回答',allAnswered:'全員の回答が完了',
   result:g.round+'問目の結果',finished:'ひみつ投票 おわり！'};
- $('page-heading').textContent=titles[stage]||'みんなはどっち？';
+ const displayStage=stage==='preview'&&composing&&myHost?'compose':stage;
+ if(stage!=='preview')composing=false;
+ $('page-heading').textContent=displayStage==='compose'?'お題を考える':titles[stage]||'みんなはどっち？';
  document.querySelector('.online-docchi').className='docchi-app online-docchi screen-'+
-   (stage==='setup'?'options':stage==='voting'?'answer':stage);
+   (stage==='setup'?'options':stage==='voting'?'answer':displayStage);
+ const screenKey=stage+':'+g.round+':'+(g.question?.q||'')+':'+(displayStage==='compose'?'compose':'');
+ if(lastScreenKey!==screenKey){
+   lastScreenKey=screenKey;
+   if(typeof window.scrollTo==='function')window.scrollTo({top:0,behavior:'instant'});
+ }
  $('progress-header').hidden=stage==='setup';
  $('room-brief').textContent='オンライン · ひみつ投票 ／ '+room.members.length+'人参加 · 招待コード '+room.code;
  $('stage-label').textContent=stage==='setup'?'ゲームの準備':stage==='voting'?'回答中':stage==='allAnswered'?'全員回答完了':stage==='result'?'結果発表':stage==='finished'?'ゲーム終了':'準備中';
@@ -103,11 +110,11 @@ function draw(){
  for(const m of room.members){
   memberList.append(addText('span',(m.icon||'')+' '+m.name+(m.id===room.hostId?'［ホスト］':''),'member-chip'));
  }
- for(const id of ['setup-stage','vote-stage','all-answered-stage','result-stage','finished-stage'])$(id).hidden=true;
+ for(const id of ['setup-stage','question-stage','compose-stage','vote-stage','all-answered-stage','result-stage','finished-stage'])$(id).hidden=true;
  // Worker protocol sends "voting", while the DOM section is "vote-stage".
  // Keep an explicit mapping so a valid phase can never silently blank the screen.
- const sectionByStage={setup:'setup-stage',voting:'vote-stage',allAnswered:'all-answered-stage',
-  result:'result-stage',finished:'finished-stage'};
+ const sectionByStage={setup:'setup-stage',preview:displayStage==='compose'?'compose-stage':'question-stage',
+  voting:'vote-stage',allAnswered:'all-answered-stage',result:'result-stage',finished:'finished-stage'};
  const active=sectionByStage[stage];
  if(active&&$(active))$(active).hidden=false;
  else say('画面の読み込み状態が一致しません。再接続を待ってね。');
@@ -120,6 +127,22 @@ function draw(){
    $('custom-q').disabled=!socketReady();$('custom-a').disabled=!socketReady();$('custom-b').disabled=!socketReady();
    $('custom-form').querySelector('button').disabled=!socketReady()||(g.customQuestions||[]).length>=20;
   }else $('guest-setup').textContent='ホストがジャンルやお題を設定中。設定が終わると全員同時にゲームが始まるよ。';
+ }
+ if(stage==='preview'){
+   const q=g.question||{},sensitive=['恋バナ','ちょっとディープ'].includes(q.category);
+   $('preview-category').textContent=q.category||'お題';
+   $('preview-category').classList.toggle('deep',sensitive);
+   $('preview-question').textContent=q.q||'お題を準備しています…';
+   $('preview-a').textContent=q.a||'A';
+   $('preview-b').textContent=q.b||'B';
+   $('preview-sensitive').hidden=!sensitive||displayStage==='compose';
+   $('preview-host-controls').hidden=!myHost;
+   $('preview-guest-wait').hidden=myHost;
+   $('accept-question').disabled=!socketReady()||!q.q;
+   $('change-question').disabled=!socketReady()||!g.alternatives;
+   $('change-question').textContent=g.alternatives?'別のお題にする':'別のお題がありません';
+   $('compose-question').disabled=!socketReady();
+   $('use-round-question').disabled=!socketReady();
  }
  if(stage==='voting'){
   const q=g.question||{};
@@ -238,6 +261,30 @@ $('include-custom').addEventListener('change',()=>{
   includeCustom:$('include-custom').checked});
 });
 $('begin').addEventListener('click',()=>send({type:'secret-begin'}));
+$('accept-question').addEventListener('click',()=>{
+ if(!host()||room?.secret?.stage!=='preview'||composing)return;
+ send({type:'secret-accept-question'});
+});
+$('change-question').addEventListener('click',()=>{
+ if(!host()||room?.secret?.stage!=='preview'||composing||!room.secret.alternatives)return;
+ send({type:'secret-change-question'});
+});
+$('compose-question').addEventListener('click',()=>{
+ if(!host()||room?.secret?.stage!=='preview')return;
+ composing=true;draw();
+});
+$('back-to-preview').addEventListener('click',()=>{composing=false;draw()});
+$('round-question-form').addEventListener('submit',e=>{
+ e.preventDefault();
+ if(!host()||room?.secret?.stage!=='preview'||!composing)return;
+ const question={q:$('round-q').value.trim(),a:$('round-a').value.trim(),b:$('round-b').value.trim()};
+ if(!question.q||!question.a||!question.b){say('質問とA・Bをすべて入力してね');return}
+ if(send({type:'secret-use-question',question})){
+   rememberQuestion(question);
+   $('round-q').value='';$('round-a').value='';$('round-b').value='';
+   composing=false;draw();
+ }
+});
 for(const choice of ['a','b'])$('vote-'+choice).addEventListener('click',()=>{
  if(room?.secret?.stage!=='voting'||voted||!socketReady())return;
  voted=true;draw();send({type:'secret-vote',choice});
