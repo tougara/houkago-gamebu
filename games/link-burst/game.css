@@ -1914,8 +1914,8 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
   margin:0 0 10px;
   min-height:47px;
   border:1px solid rgba(245,137,157,.54);
-  background:rgba(162,46,71,.15);
-  color:#8e233a;
+  background:rgba(162,46,71,.30);
+  color:#ffe3e9;
 }
 @media(max-width:450px){
   .screen-ranking .ranking-row.is-editing{
