@@ -6,7 +6,7 @@
  const SELECT_KEY='houkago_link_burst_versus_players_v1';
  if(!root||!engine)return;
  const match={players:[],games:[],raf:0,last:0,paused:false,ended:false,
-   countdown:3500,held:new Map(),keys:new Set(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[],finishTimer:0};
+   countdown:3500,held:new Map(),keys:new Set(),keyHeld:new Map(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[],finishTimer:0};
  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
  function landscape(){return window.matchMedia?window.matchMedia('(orientation: landscape)').matches:window.innerWidth>window.innerHeight}
  function selectPlayers(){
@@ -111,6 +111,7 @@
  function releaseAll(){
    for(const id of Array.from(match.held.keys()))releasePointer(id);
    match.keys.clear();
+   match.keyHeld.clear();
  }
  function stop(){
    if(match.raf){cancelAnimationFrame(match.raf);match.raf=0}
@@ -202,8 +203,9 @@
    },reduced?450:2250);
  }
  function repeatActions(dt){
-   for(const held of match.held.values()){
-     if(held.action!=='left'&&held.action!=='right')continue;
+   // Use the same horizontal movement cadence for touch and PC keyboard.
+   function repeatHeld(held){
+     if(held.action!=='left'&&held.action!=='right')return;
      held.elapsed+=dt;
      let repeatCount=0;
      while(held.elapsed>=held.nextRepeat&&repeatCount++<3){
@@ -211,6 +213,8 @@
        held.nextRepeat+=82;
      }
    }
+   for(const held of match.held.values())repeatHeld(held);
+   for(const held of match.keyHeld.values())repeatHeld(held);
  }
  // A quick non-blocking visual makes the send readable right away.
  function launchJamFlight(from,count){
@@ -346,23 +350,45 @@
    }
    if(e.target.closest('[data-retry]')){newRound();return}
  });
+ // Physical key codes keep the controls stable on different PC keyboard layouts.
+ // 1P: A / S / D and Space. 2P: arrows left / down / right and Enter.
+ const keyMap={
+   KeyA:['a',0,'left'],KeyS:['s',0,'down'],KeyD:['d',0,'right'],Space:['space',0,'rotate'],
+   ArrowLeft:['arrowleft',1,'left'],ArrowDown:['arrowdown',1,'down'],
+   ArrowRight:['arrowright',1,'right'],Enter:['enter',1,'rotate'],NumpadEnter:['enter',1,'rotate']
+ };
+ const fallbackKeys={
+   a:'KeyA',s:'KeyS',d:'KeyD',' ':'Space',
+   arrowleft:'ArrowLeft',arrowdown:'ArrowDown',arrowright:'ArrowRight',enter:'Enter'
+ };
+ function keyBinding(e){
+   const code=keyMap[e.code]?e.code:fallbackKeys[String(e.key||'').toLowerCase()];
+   return code?keyMap[code]:null;
+ }
  window.addEventListener('keydown',function(e){
-   const lower=e.key.toLowerCase();
-   if(lower==='escape'){
+   if(e.isComposing)return;
+   if(e.key==='Escape'){
      e.preventDefault();
      if(match.confirmBack){match.confirmBack=false;updateOverlays()}
      else if(match.paused)resume();
      else pause(false);
      return;
    }
-   const mapping={a:[0,'left'],d:[0,'right'],s:[0,'down'],w:[0,'rotate'],
-     arrowleft:[1,'left'],arrowright:[1,'right'],arrowdown:[1,'down'],arrowup:[1,'rotate']};
-   const mapped=mapping[lower];
-   if(!mapped)return;
-   e.preventDefault();if(match.keys.has(lower))return;
-   match.keys.add(lower);command(mapped[0],mapped[1]);
+   const binding=keyBinding(e);
+   // Keep normal Enter/Space behavior on pause and result buttons.
+   if(!binding||!playable())return;
+   e.preventDefault();
+   const [id,side,action]=binding;
+   if(match.keys.has(id))return;
+   match.keys.add(id);
+   match.keyHeld.set(id,{side,action,elapsed:0,nextRepeat:230});
+   command(side,action);
  });
- window.addEventListener('keyup',function(e){match.keys.delete(e.key.toLowerCase())});
+ window.addEventListener('keyup',function(e){
+   const binding=keyBinding(e);if(!binding)return;
+   match.keys.delete(binding[0]);
+   match.keyHeld.delete(binding[0]);
+ });
  window.addEventListener('blur',function(){releaseAll();pause(true)});
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')pause(true)});
  window.addEventListener('resize',function(){
