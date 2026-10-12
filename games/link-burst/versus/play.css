@@ -1507,3 +1507,53 @@ html[data-hg-motion="reduced"] .vs-finale-actions{animation:none;transition:none
 html[data-hg-motion="reduced"] .vs-finale-flash,
 html[data-hg-motion="reduced"] .vs-finale-ring,
 html[data-hg-motion="reduced"] .vs-finale-impact{display:none}
+/* Desktop NEXT preview: square blocks on both arenas (2026-10-12) */
+/* Keep mobile controls and 7x13 fields untouched. The old 30x60px desktop
+   preview constraint made NEXT pairs far too small next to the full-size field.
+   Give each of the 4 upcoming blocks a fixed square grid track instead. */
+@media (min-width:900px) and (orientation:landscape){
+  .arena-core > .arena-next{
+    padding:7px 2px;
+    gap:10px;
+  }
+  .arena-core .v-next-entry{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:4px;
+    min-width:0;
+    width:100%;
+  }
+  .arena-core .v-next-entry small{
+    font-size:clamp(9px,.77vw,12px);
+    line-height:1.2;
+  }
+  .arena-core .v-next-second{
+    padding-top:8px;
+  }
+  .arena-core .v-next-entry .v-mini{
+    --desktop-next-cell:clamp(29px,2.5vw,38px);
+    display:grid;
+    grid-template-columns:var(--desktop-next-cell);
+    grid-template-rows:repeat(2,var(--desktop-next-cell));
+    width:var(--desktop-next-cell);
+    height:auto;
+    gap:3px;
+    margin:0 auto;
+    min-width:0;
+    min-height:0;
+    flex:none;
+  }
+  .arena-core .v-next-entry .v-mini .v-block{
+    width:var(--desktop-next-cell);
+    height:var(--desktop-next-cell);
+    min-width:0;
+    min-height:0;
+    aspect-ratio:1/1;
+    font-size:clamp(15px,1.35vw,21px);
+    line-height:1;
+    display:grid;
+    place-items:center;
+  }
+}
