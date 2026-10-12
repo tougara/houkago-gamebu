@@ -291,11 +291,12 @@ button{font:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transp
 .board-cell{
   min-width:0;min-height:0;
   position:relative;
-  border-radius:3px;
-  background:rgba(103,146,204,.135);
-  outline:1px solid rgba(174,210,255,.11)
+  display:grid;
+  place-items:center;
+  border-radius:2px;
+  background:rgba(103,146,204,.095);
 }
-.board-cell.danger-row{background:rgba(250,94,112,.12)}
+.board-cell.danger-row{background:rgba(250,94,112,.10)}
 .block{
   position:absolute;
   inset:1px;
