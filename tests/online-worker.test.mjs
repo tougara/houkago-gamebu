@@ -80,3 +80,70 @@ test('room max 10 and automatic expiry; rate limiter rejects repeated creation',
  }
  assert.ok(limited);
 });
+
+test('three-player online secret ballot reveals counts but not individual answers',async()=>{
+ const stub=new Stub(),hostCreated=await stub.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'minna-wa-docchi',icon:'🐯'}));
+ assert.equal(hostCreated.status,201);
+ const h=await hostCreated.json();
+ const b=await (await stub.fetch(req('/join',{name:'B',icon:'🐼'}))).json();
+ const c=await (await stub.fetch(req('/join',{name:'C',icon:'🦊'}))).json();
+ const users=[sock(h.id),sock(b.id),sock(c.id)];
+ stub.sockets.push(...users);
+ for(const w of users)await stub.obj.webSocketMessage(w,JSON.stringify({type:'ready',ready:true}));
+ assert.equal(stub.obj.snapshot().allReady,true);
+ await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-start'}));
+ assert.equal(stub.obj.room.secret,undefined,'guest must never start');
+ await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
+ assert.equal(stub.obj.snapshot().phase,'secret');
+ assert.equal(stub.obj.snapshot().secret.roundCount,5);
+ assert.ok(stub.obj.snapshot().secret.question.q);
+ assert.ok(!['恋バナ','ちょっとディープ'].includes(stub.obj.snapshot().secret.question.category));
+ assert.equal(stub.obj.snapshot().secret.counts,null);
+ assert.equal((await stub.fetch(req('/join',{name:'Late'}))).status,409,'joining mid-game is blocked');
+ await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
+ await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
+ await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'b'}));
+ assert.equal(stub.obj.snapshot().secret.answered,2);
+ assert.equal(stub.obj.snapshot().secret.counts,null);
+ await stub.obj.webSocketMessage(users[2],JSON.stringify({type:'secret-vote',choice:'a'}));
+ const after=stub.obj.snapshot();
+ assert.equal(after.secret.stage,'result');
+ assert.equal(after.secret.counts.a,2);
+ assert.equal(after.secret.counts.b,1);
+ assert.deepEqual(stub.obj.room.secret.votes,{},'raw ballots discarded at tally');
+ const traffic=JSON.stringify(users.flatMap(w=>w.events));
+ assert.ok(!traffic.includes('"votes"'),'no raw votes sent to clients');
+ assert.ok(!traffic.includes('"indices"'),'unseen future questions not sent to clients');
+ await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-next'}));
+ assert.equal(stub.obj.snapshot().secret.round,1,'only host can advance');
+ for(let round=2;round<=5;round++){
+   await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-next'}));
+   assert.equal(stub.obj.snapshot().secret.stage,'voting');
+   assert.equal(stub.obj.snapshot().secret.round,round);
+   for(const w of users)await stub.obj.webSocketMessage(w,JSON.stringify({type:'secret-vote',choice:'a'}));
+   assert.equal(stub.obj.snapshot().secret.counts.a,3);
+ }
+ await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-next'}));
+ assert.equal(stub.obj.snapshot().secret.stage,'finished');
+ await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-stop'}));
+ assert.equal(stub.obj.snapshot().phase,'lobby');
+ assert.equal(stub.obj.snapshot().allReady,false);
+});
+
+test('leaving player does not strand online secret voting',async()=>{
+ const stub=new Stub();
+ const h=await (await stub.fetch(req('/create',{code:'ABCD5678',name:'Host',gameId:'minna-wa-docchi'}))).json();
+ const b=await (await stub.fetch(req('/join',{name:'Guest'}))).json();
+ const c=await (await stub.fetch(req('/join',{name:'Guest2'}))).json();
+ const users=[sock(h.id),sock(b.id),sock(c.id)];stub.sockets.push(...users);
+ for(const w of users)await stub.obj.webSocketMessage(w,JSON.stringify({type:'ready',ready:true}));
+ await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-start'}));
+ await stub.obj.webSocketMessage(users[0],JSON.stringify({type:'secret-vote',choice:'a'}));
+ await stub.obj.webSocketMessage(users[1],JSON.stringify({type:'secret-vote',choice:'b'}));
+ await stub.obj.removeMember(c.id);
+ assert.equal(stub.obj.snapshot().secret.stage,'result');
+ assert.equal(stub.obj.snapshot().secret.counts.a,1);
+ assert.equal(stub.obj.snapshot().secret.counts.b,1);
+ await stub.obj.removeMember(b.id);
+ assert.equal(stub.obj.snapshot().phase,'lobby','one remaining user returns safely to lobby');
+});
