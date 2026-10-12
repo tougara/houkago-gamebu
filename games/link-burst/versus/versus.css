@@ -65,3 +65,33 @@
   line-height:1.65;
   overflow-wrap:anywhere;
 }
+
+/* Current JAM guide on the ready screen: collapsed by default */
+.versus-rules-card .versus-jam-rules{
+  margin:10px 0 0;
+  border:1px solid rgba(128,210,251,.32);
+  border-radius:10px;
+  background:rgba(23,55,98,.22);
+  overflow:hidden;
+}
+.versus-rules-card .versus-jam-rules summary{
+  padding:9px 12px;
+  font-weight:900;
+  font-size:12px;
+  line-height:1.5;
+  cursor:pointer;
+  color:#d5efff;
+}
+.versus-rules-card .versus-jam-rules[open] summary{
+  border-bottom:1px solid rgba(128,210,251,.24);
+}
+.versus-rules-card .versus-jam-rules p{
+  padding:8px 12px 0;
+  margin:0;
+  font-size:11px;
+  font-weight:750;
+  line-height:1.6;
+}
+.versus-rules-card .versus-jam-rules p:last-child{
+  padding-bottom:11px;
+}
