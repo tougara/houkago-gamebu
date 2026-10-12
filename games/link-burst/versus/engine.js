@@ -4,7 +4,7 @@
   const COLS=7,ROWS=15,HIDDEN=2,LOCK_MS=300;
   const COLORS=['blue','red','yellow','green'];
   const SYMBOL={blue:'○',red:'△',yellow:'★',green:'◇',jam:'J'};
-  const ATTACK=[0,0,2,5,9,13,17,21,24],JAM_WAVE=7,ATTACK_MAX=26;
+  const ATTACK=[0,0,4,11,24,35,46,58,70],JAM_WAVE_MAX=30,ATTACK_MAX=90;
   const ROT=[[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[-1,0]],[[0,0],[0,-1]]];
   function board(){return Array.from({length:ROWS},()=>Array(COLS).fill(null))}
   function cells(piece,x,y,rot){
@@ -37,7 +37,7 @@
   function make(player,pairSource){
     const st={player:player||null,board:board(),piece:null,queue:[],score:0,maxLink:0,maxCombo:0,
       clears:0,pieces:0,over:false,phase:'falling',fallMs:0,lockMs:0,phaseMs:0,
-      link:0,groups:[],currentCombo:0,flashMs:0,burstCells:[],
+      link:0,groups:[],currentCombo:0,flashMs:0,burstCells:[],lastGain:0,lastClearCombo:0,
       elapsedMs:0,turnMaxCombo:0,readyAttack:0,jamQueue:[],jamCursor:0,
       receivedJam:0,sentJam:0,counteredJam:0,clearedJam:0,notice:'',noticeMs:0,
       pairSource:typeof pairSource==='function'?pairSource:null,pairIndex:0};
@@ -95,10 +95,23 @@
   function scoreGain(cleared,link,combo){
     return cleared*100*link+Math.max(0,combo-1)*400+Math.max(0,cleared-4)*50+Math.max(0,link-1)*250;
   }
-  function attackFor(link,maxCombo){
+  function jamWaveSize(st){
+    const elapsed=Math.max(0,st&&Number(st.elapsedMs)||0);
+    if(elapsed>=240000)return JAM_WAVE_MAX; // 4 min onward: up to 30 = Puyo-like max wave
+    if(elapsed>=180000)return 28;
+    if(elapsed>=90000)return 21;
+    return 14; // opening: two 7-cell rows at most
+  }
+  function jamPressure(st){
+    const elapsed=Math.max(0,st&&Number(st.elapsedMs)||0);
+    return elapsed>=240000?1.5:elapsed>=180000?1.25:1;
+  }
+  function attackFor(link,maxCombo,elapsedMs=0){
     if(link<=0)return 0;
-    const base=ATTACK[Math.min(link,8)];
-    return Math.min(ATTACK_MAX,base+Math.min(2,Math.max(0,maxCombo-1)));
+    const base=ATTACK[Math.min(Math.max(1,Math.floor(link)),8)];
+    const comboBonus=Math.min(6,Math.max(0,Math.floor(maxCombo||1)-1)*3);
+    const raw=base+comboBonus;
+    return Math.min(ATTACK_MAX,Math.floor(raw*jamPressure({elapsedMs})));
   }
   function topOut(st){
     // Only KO when a new pair cannot spawn at the center (y=1,2).
@@ -113,7 +126,7 @@
     st.groups=[];st.phaseMs=0;
     if(topOut(st)){st.over=true;st.phase='over';st.piece=null;return}
     // Hold at a safe boundary until both boards' attacks have been resolved.
-    st.readyAttack=attackFor(st.link,st.turnMaxCombo);
+    st.readyAttack=attackFor(st.link,st.turnMaxCombo,st.elapsedMs);
     st.phase='interturn';st.piece=null;
   }
   function lock(st){
@@ -121,14 +134,16 @@
     for(const c of cells(st.piece,st.piece.x,st.piece.y,st.piece.rot))st.board[c.y][c.x]=c.color;
     st.piece=null;st.pieces++;
     compress(st);
-    st.link=0;st.turnMaxCombo=0;st.readyAttack=0;
+    st.link=0;st.turnMaxCombo=0;st.readyAttack=0;st.lastGain=0;st.lastClearCombo=0;
     scan(st);
   }
   function finishClear(st){
     if(st.phase!=='charge')return;
     const groups=st.groups,total=groups.reduce(function(n,g){return n+g.length},0);
     const combo=groups.length,link=st.link+1;
-    st.score+=scoreGain(total,link,combo);
+    st.lastGain=scoreGain(total,link,combo);
+    st.lastClearCombo=combo;
+    st.score+=st.lastGain;
     st.maxLink=Math.max(st.maxLink,link);
     st.maxCombo=Math.max(st.maxCombo,combo);
     st.turnMaxCombo=Math.max(st.turnMaxCombo,combo);
@@ -214,7 +229,7 @@
     st.receivedJam+=count;
   }
   function dropDueJam(st){
-    let room=JAM_WAVE,dropped=0;
+    let room=jamWaveSize(st),dropped=0;
     for(const batch of st.jamQueue){
       if(!room)break;
       if(batch.readyAfter>st.pieces)continue;
@@ -317,7 +332,7 @@
   global.LinkBurstVersusEngine=Object.freeze({
     COLS:COLS,ROWS:ROWS,HIDDEN:HIDDEN,COLORS:COLORS,SYMBOL:SYMBOL,
     make:make,move:move,rotate:rotate,down:down,tick:tick,ghost:ghost,
-    findGroups:findGroups,scoreGain:scoreGain,speed:speed,
+    findGroups:findGroups,scoreGain:scoreGain,speed:speed,jamWaveSize:jamWaveSize,jamPressure:jamPressure,
     attackFor,counterJam,queueJam,incomingCount,finishTurn,notice
   });
 })(window);
