@@ -93,7 +93,9 @@ function draw(){
   result:g.round+'問目の結果',finished:'ひみつ投票 おわり！'};
  const displayStage=stage==='preview'&&composing&&myHost?'compose':stage;
  if(stage!=='preview')composing=false;
- $('page-heading').textContent=displayStage==='compose'?'お題を考える':titles[stage]||'みんなはどっち？';
+ $('page-heading').textContent=stage==='preview'&&displayStage!=='compose'?
+   g.round+' / '+g.roundCount+'問':
+   displayStage==='compose'?'お題を考える':titles[stage]||'みんなはどっち？';
  document.querySelector('.online-docchi').className='docchi-app online-docchi screen-'+
    (stage==='setup'?'options':stage==='voting'?'answer':displayStage);
  const screenKey=stage+':'+g.round+':'+(g.question?.q||'')+':'+(displayStage==='compose'?'compose':'');
@@ -101,9 +103,11 @@ function draw(){
    lastScreenKey=screenKey;
    if(typeof window.scrollTo==='function')window.scrollTo({top:0,behavior:'instant'});
  }
- $('progress-header').hidden=stage==='setup';
- $('room-brief').textContent='オンライン · ひみつ投票 ／ '+room.members.length+'人参加 · 招待コード '+room.code;
- $('stage-label').textContent=stage==='setup'?'ゲームの準備':stage==='voting'?'回答中':stage==='allAnswered'?'全員回答完了':stage==='result'?'結果発表':stage==='finished'?'ゲーム終了':'準備中';
+ $('progress-header').hidden=stage==='setup'||stage==='preview';
+ $('room-brief').textContent=stage==='preview'&&displayStage!=='compose'?
+   'まずは全員でお題を確認':
+   'オンライン · ひみつ投票 ／ '+room.members.length+'人参加 · 招待コード '+room.code;
+ $('stage-label').textContent=stage==='setup'?'ゲームの準備':stage==='preview'?'お題確認中':stage==='voting'?'回答中':stage==='allAnswered'?'全員回答完了':stage==='result'?'結果発表':stage==='finished'?'ゲーム終了':'準備中';
  $('round-info').textContent=stage==='setup'?'':g.round+' / '+g.roundCount+'問';
  $('member-count').textContent=room.members.length+'人';
  const memberList=$('member-list');memberList.replaceChildren();
