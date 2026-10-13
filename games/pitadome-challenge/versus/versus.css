@@ -722,3 +722,17 @@ html,body{min-height:100%;background:#06111c}
 @media(prefers-reduced-motion:reduce){
   .pv-app .pv-cutin *,.pv-app .pv-cutin::before,.pv-vs-recovery-bar>i{animation:none!important;transition:none!important}
 }
+
+/* Recovery gauge confirms the exact frame where 350 points are converted. */
+.pv-vs-recovery.is-max{
+ border-color:#fff4a8;background:rgba(255,217,91,.3);
+ box-shadow:0 0 25px rgba(255,217,91,.65),inset 0 0 15px rgba(252,231,164,.18);
+ animation:pvGaugeMax .55s ease-out both;
+}
+.pv-vs-recovery.is-max .pv-vs-recovery-title>span{color:#fff6c7;text-shadow:0 0 11px #f7bc2c}
+.pv-vs-recovery.is-max .pv-vs-recovery-bar>i{
+ background:linear-gradient(90deg,#ffe097,#fffbcc,#fff);
+ box-shadow:0 0 20px #fff4a3;
+}
+@keyframes pvGaugeMax{0%{filter:brightness(2.5);transform:scale(1.04)}100%{filter:brightness(1);transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.pv-vs-recovery.is-max{animation:none}}
