@@ -200,17 +200,6 @@ html,body{min-height:100%;background:#06111c}
 .pv-result-strip>span{overflow:hidden;text-overflow:ellipsis}
 .pv-result-strip>small{display:none}
 .pv-result-strip.is-miss>strong{color:#ffb3bc}
-.pv-hit-overlay{
- position:absolute;z-index:3;left:0;right:0;top:24%;bottom:29%;
- display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
- background:rgba(6,20,30,.88);border-radius:14px;pointer-events:none;
- animation:pvResultReveal 1.15s ease-out both;
-}
-.pv-hit-overlay>strong{font-weight:1000;font-size:clamp(27px,9dvh,66px);color:#ffe6a4}
-.pv-hit-overlay>span{font-weight:1000;font-size:clamp(14px,4dvh,25px);color:#fff}
-.pv-hit-overlay.tier-perfect>strong{color:#fff8c3;text-shadow:0 0 22px #f9c748}
-.pv-hit-overlay.is-out>strong{color:#ffb2bd}
-@keyframes pvResultReveal{0%{opacity:0;transform:scale(.89)}16%{opacity:1;transform:scale(1.03)}62%{opacity:1;transform:scale(1)}100%{opacity:0;visibility:hidden}}
 @keyframes pvWarn{0%{filter:brightness(1.8)}100%{filter:brightness(1)}}
 .pv-rotate-overlay{
  position:fixed;inset:0;z-index:100;display:grid;place-content:center;text-align:center;
@@ -226,7 +215,6 @@ html,body{min-height:100%;background:#06111c}
  .pv-vs-player{gap:clamp(3px,.9dvh,6px)}
  .pv-vs-reward{font-size:9px}
  .pv-play-center{grid-template-rows:20px minmax(36px,20%) minmax(26px,13%) minmax(38px,1fr) minmax(56px,23%) minmax(21px,auto);gap:3px}
- .pv-hit-overlay{top:22%;bottom:31%}
 }
 @media(max-height:340px) and (orientation:landscape){
  .pv-duel{grid-template-rows:28px minmax(0,1fr);gap:3px}
@@ -258,7 +246,6 @@ html,body{min-height:100%;background:#06111c}
  .pv-play-center{padding:4px}
 }
 @media(prefers-reduced-motion:reduce){
- .pv-hit-overlay{animation:none;display:none}
  .pv-safe-range.is-attacked{animation:none}
 }
 @media(orientation:portrait){
