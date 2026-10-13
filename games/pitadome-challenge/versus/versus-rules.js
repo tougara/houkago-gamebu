@@ -22,10 +22,15 @@
    // GREAT or better without PERFECT: e=1..3, three consecutive own stops earns one special.
    const streak=error>=1&&error<=3?(previous.greatStreak||0)+1:0;
    const triple=streak>=3;
-   const points=Math.round(baseScore(error)*comboMultiplierFor(combo));
+   const mushinActive=!!previous.mushinActive;
+   const points=Math.round(baseScore(error)*comboMultiplierFor(combo)*(mushinActive?1.5:1));
+   const gained=error===0?40:error===1?30:error<=3?20:0;
+   const gauge=mushinActive?(previous.quiet||0):Math.min(100,(previous.quiet||0)+gained);
+   const mushinReady=!mushinActive&&gauge>=100;
+   const quiet=mushinReady?0:gauge;
    const accrued=(previous.charge||0)+points;
    return {value:resultValue,error,tier:kind,perfect,combo,greatStreak:triple?0:streak,
-     triple,points,total:(previous.score||0)+points,charge:accrued%CHARGE_LIMIT,
+     triple,points,mushinActive,quiet,mushinReady,total:(previous.score||0)+points,charge:accrued%CHARGE_LIMIT,
      chargeReward:Math.floor(accrued/CHARGE_LIMIT),special:perfect||triple,safe};
  }
  function applyRewards(life,attempt){
