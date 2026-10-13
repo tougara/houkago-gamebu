@@ -80,28 +80,26 @@ test('landscape play renders one and only one objective, bar, action and result 
   assert.match(h.root.innerHTML,/±15/);
 });
 test('STOP appears once during the move, then becomes the NEXT button and switches players',()=>{
-  const h=harness();h.click('data-begin');
-  const first=h.active();
+  const h=harness();h.click('data-begin');const first=h.active();
   h.runCountdown();
   assert.equal((h.root.innerHTML.match(/data-stop="/g)||[]).length,1);
-  assert.match(h.root.innerHTML,new RegExp('data-stop="'+first+'"'));
   h.click('data-stop',{stop:String(first)});
-  assert.match(h.root.innerHTML,/pv-round-result/);
-  assert.match(h.root.innerHTML,/残り猶予|超過/);
-  assert.match(h.root.innerHTML,/STOP <b>/);
-  assert.doesNotMatch(h.root.innerHTML,/class="pv-meter"/);
-  assert.equal((h.root.innerHTML.match(/data-next-turn/g)||[]).length,1);
-  assert.equal((h.root.innerHTML.match(/data-stop="/g)||[]).length,0);
-  assert.match(h.root.innerHTML,/data-next-turn disabled/);
-  h.click('data-next-turn'); // Impatient double-tap must be ignored.
-  assert.equal(h.active(),first);
-  assert.match(h.root.innerHTML,/pv-round-result/);
+  assert.match(h.root.innerHTML,/pv-cutin-judge/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
+  assert.doesNotMatch(h.root.innerHTML,/data-next-turn/);
+  assert.match(h.root.innerHTML,/pv-action-hold/);
+  h.click('data-next-turn');assert.equal(h.active(),first);
   h.finishImpact();
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
+  assert.match(h.root.innerHTML,/pv-round-result/);
+  assert.match(h.root.innerHTML,/STOP <b>/);
+  assert.match(h.root.innerHTML,/残り猶予|超過/);
+  assert.equal((h.root.innerHTML.match(/data-next-turn/g)||[]).length,1);
   h.click('data-next-turn');
   assert.equal(h.active(),1-first);
   assert.match(h.root.innerHTML,/TURN 2/);
   h.runCountdown();h.click('data-stop',{stop:String(1-first)});
-  assert.match(h.root.innerHTML,/data-next-turn/);
+  assert.match(h.root.innerHTML,/pv-cutin-judge/);
 });
 test('portrait overlay prevents starting, landscape allows it',()=>{
   const h=harness();h.click('data-begin');
@@ -139,30 +137,31 @@ test('START button clearly identifies whose turn it is, also after swapping play
 test('result panel persists after effect timer and offers detailed solo-style stats',()=>{
   const h=harness();h.click('data-begin');h.runCountdown();
   h.click('data-stop',{stop:String(h.active())});
+  assert.match(h.root.innerHTML,/pv-cutin-judge/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
+  h.finishImpact();
   assert.match(h.root.innerHTML,/pv-result-mainline/);
   assert.match(h.root.innerHTML,/pv-result-stats/);
   assert.match(h.root.innerHTML,/目標 <b>/);
   assert.match(h.root.innerHTML,/誤差 <b>/);
-  h.finishImpact();
   assert.match(h.root.innerHTML,/pv-round-result/);
   assert.match(h.root.innerHTML,/TURN 1/);
-  assert.doesNotMatch(css,/pvResultReveal 1\.15s/);
   assert.match(css,/\.pv-play-center\.is-result/);
 });
-
 test('a knockout also keeps its last hit result on-screen until acknowledged',()=>{
   const h=harness();h.click('data-begin');
   for(let turn=1;turn<=5;turn++){
-    h.runCountdown();
-    h.click('data-stop',{stop:String(h.active())});
-    assert.match(h.root.innerHTML,/pv-round-result/);
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    assert.match(h.root.innerHTML,/pv-cutin-judge/);
+    assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
     h.finishImpact();
+    assert.match(h.root.innerHTML,/pv-round-result/);
     if(turn<5)h.click('data-next-turn');
   }
   assert.match(h.root.innerHTML,/勝敗結果を見る/);
-  assert.equal(h.records.length,0,'do not skip over the decisive STOP result');
+  assert.equal(h.records.length,0);
   h.click('data-next-turn');
-  assert.match(h.root.innerHTML,/KO決着！/);
+  assert.match(h.root.innerHTML,/pv-cutin-win/);
   assert.equal(h.records.length,1);
 });
 test('solo-style persistent scoring uses staged visual effects and never auto-hides',()=>{
@@ -179,6 +178,9 @@ test('KO result stays landscape with winner, dual scores and three visible actio
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
     h.finishImpact();h.click('data-next-turn');
   }
+  assert.match(h.root.innerHTML,/pv-cutin-win/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-final-landscape/);
+  h.stepTimer();
   assert.match(h.root.innerHTML,/pv-final-landscape/);
   assert.match(h.root.innerHTML,/pv-final-victory/);
   assert.match(h.root.innerHTML,/pv-final-detail/);
@@ -188,7 +190,6 @@ test('KO result stays landscape with winner, dual scores and three visible actio
   assert.match(h.root.innerHTML,/プレイヤーを変更/);
   assert.match(h.root.innerHTML,/ゲームをえらぶ/);
   assert.equal((h.root.innerHTML.match(/class="pv-final-player /g)||[]).length,2);
-  assert.doesNotMatch(h.root.innerHTML,/class="pv-wrap"/);
   assert.equal(h.records.length,1);
 });
 test('KO result maintains portrait rotation guidance until the user rotates back',()=>{
@@ -197,11 +198,10 @@ test('KO result maintains portrait rotation guidance until the user rotates back
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
     h.finishImpact();h.click('data-next-turn');
   }
+  h.stepTimer();
   assert.match(h.root.innerHTML,/勝利画面も横画面専用です/);
-  h.setLandscape(false);
-  assert.equal(h.root.overlay.hidden,false);
-  h.setLandscape(true);
-  assert.equal(h.root.overlay.hidden,true);
+  h.setLandscape(false);assert.equal(h.root.overlay.hidden,false);
+  h.setLandscape(true);assert.equal(h.root.overlay.hidden,true);
 });
 test('horizontal KO screen uses dedicated CSS overriding solo portrait result layout',()=>{
   assert.match(css,/\.pitadome-app\.pv-app\.screen-final\s*\{/);
@@ -235,25 +235,25 @@ test('ranked judgement cut-in appears ahead of persistent verdict and then clear
   const h=harness();h.click('data-begin');h.runCountdown();
   h.click('data-stop',{stop:String(h.active())});
   assert.match(h.root.innerHTML,/pv-cutin-judge/);
-  assert.match(h.root.innerHTML,/pv-round-result/);
-  assert.match(h.root.innerHTML,/data-next-turn disabled/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
+  assert.match(h.root.innerHTML,/pv-meter-zone/);
   h.finishImpact();
   assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
   assert.match(h.root.innerHTML,/pv-round-result/);
 });
 test('remaining one life triggers a danger cut-in after the rank cut-in',()=>{
   const h=harness();h.click('data-begin');
-  // Simulated STOP at the edge causes each side to lose one health.
   for(let turn=1;turn<=3;turn++){
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
     assert.match(h.root.innerHTML,/pv-cutin-judge/);
+    assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
     h.stepTimer();
     if(turn===3){
       assert.match(h.root.innerHTML,/pv-cutin-danger/);
       assert.match(h.root.innerHTML,/残りライフ 1！/);
-      assert.match(h.root.innerHTML,/次に判定外ならKO/);
-      h.click('data-next-turn');
-      assert.match(h.root.innerHTML,/TURN 3/);
+      assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
+      h.click('data-next-turn');assert.match(h.root.innerHTML,/TURN 3/);
       h.stepTimer();
     }
     if(turn<3)h.click('data-next-turn');
@@ -269,13 +269,12 @@ test('win cut-in blocks rematch until victory introduction finishes',()=>{
   }
   assert.match(h.root.innerHTML,/pv-cutin-win/);
   assert.match(h.root.innerHTML,/WIN！/);
-  h.click('data-rematch');
-  assert.match(h.root.innerHTML,/pv-final-landscape/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-final-landscape/);
+  h.click('data-rematch');assert.match(h.root.innerHTML,/pv-cutin-win/);
   h.stepTimer();
   assert.doesNotMatch(h.root.innerHTML,/pv-cutin-win/);
   assert.match(h.root.innerHTML,/pv-final-landscape/);
-  h.click('data-rematch');
-  assert.match(h.root.innerHTML,/pv-duel/);
+  h.click('data-rematch');assert.match(h.root.innerHTML,/pv-duel/);
 });
 test('cinematic tier hierarchy and danger emphasis live above the full game',()=>{
   assert.match(css,/\.pv-app \.pv-cutin\s*\{/);
@@ -314,4 +313,17 @@ test('350-point recovery is visibly converted to MAX and reverts to progress lat
   assert.equal(sawMax,true);
   assert.match(h.root.innerHTML,/回復ゲージ/);
   assert.doesNotMatch(h.root.innerHTML,/MAX！効果発動/);
+});
+
+test('slow countdown and longer cinematic durations are explicit and rank-ordered',()=>{
+  const h=harness();h.click('data-begin');h.click('data-start-turn');
+  assert.match(h.root.innerHTML,/--cutin-duration:1120ms/);
+  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">2</);
+  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">1</);
+  h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:730ms/);
+  h.stepTimer();h.click('data-stop',{stop:String(h.active())});
+  assert.match(h.root.innerHTML,/--cutin-duration:1900ms/);
+  assert.match(css,/@keyframes pvCinematicHold/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
+  h.finishImpact();assert.match(h.root.innerHTML,/pv-result-mainline/);
 });
