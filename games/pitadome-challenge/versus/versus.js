@@ -294,12 +294,20 @@
   }
   function countdown(){
     if(state.screen!=='battle'||state.phase!=='ready'||!landscape())return;
-    stopTimers();state.phase='countdown';state.countdown=3;render();
+    stopTimers();state.phase='countdown';state.countdown=3;
+    setCutin('countdown','3',state.players[activeIndex()].name+' のチャレンジ');
+    render();
     function step(){
       if(state.phase!=='countdown'||state.screen!=='battle'||!landscape())return;
-      state.countdown--;
-      if(state.countdown===0){startMotion();return}
-      render();state.timer=setTimeout(step,650);
+      if(state.countdown>1){
+        state.countdown--;
+        setCutin('countdown',String(state.countdown),state.players[activeIndex()].name+' のチャレンジ');
+        render();state.timer=setTimeout(step,650);
+      }else if(state.countdown===1){
+        state.countdown=0;
+        setCutin('start','START！','STOPの準備！');
+        render();state.timer=setTimeout(step,410);
+      }else startMotion();
     }
     state.timer=setTimeout(step,650);
   }
@@ -325,7 +333,7 @@
   }
   function startMotion(){
     if(state.screen!=='battle'||state.phase!=='countdown'||!landscape())return;
-    state.phase='moving';
+    state.phase='moving';state.cutin=null;
     state.motion=rules.initialMotion(state.profile);
     state.value=state.motion.value;state.lastTs=performance.now();
     render();state.raf=requestAnimationFrame(motionFrame);
@@ -345,23 +353,37 @@
     state.charges[i]=attempt.charge;state.scores[i]=attempt.total;
     state.quiet[i]=attempt.quiet;state.mushinReady[i]=attempt.mushinReady;
     if(attempt.perfect)state.perfects[i]++;
+    const lifeBefore=state.lives[i];
     const reward=rules.applyRewards(state.lives[i],attempt);
     state.lives[i]=reward.life;
     const other=1-i;
     state.pendingPressure[other]=Math.min(rules.MAX_PRESSURE,state.pendingPressure[other]+reward.pressure);
     state.result={attempt,reward,winner:reward.life<=0?other:null};
     state.phase='judged';state.resultReady=false;
+    const rank=attempt.error>attempt.safe?'out':attempt.tier;
+    const labels={perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'SAFE！',out:'OUT！'};
+    const scoreLabel='＋'+attempt.points+' POINT';
+    const extra=attempt.chargeReward?'　回復ゲージMAX！':attempt.special?'　特別効果発動！':'';
+    setCutin('judge',labels[rank],scoreLabel+extra,rank,'JUDGEMENT');
     render();
-    // Solo's result screen persists until user advances. Protect the entry
-    // impact animation from accidental immediate double-taps.
     const judgedTurn=state.turnNo;
+    const shouldWarn=lifeBefore>1&&reward.life===1;
+    const duration={perfect:1400,excellent:1120,great:950,good:700,safe:650,out:850}[rank];
+    function unlockResult(){
+      if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
+      state.cutin=null;state.resultReady=true;
+      render();
+    }
     state.timer=setTimeout(()=>{
       state.timer=0;
       if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
-      state.resultReady=true;
-      const next=root.querySelector('[data-next-turn]');
-      if(next){next.disabled=false;next.removeAttribute('aria-disabled')}
-    },1100);
+      if(shouldWarn){
+        setCutin('danger','残りライフ 1！','次に判定外ならKO！','','DANGER');
+        render();
+        state.timer=setTimeout(()=>{state.timer=0;unlockResult()},1250);
+      }else unlockResult();
+    },duration);
+
   }
   function nextTurn(){
     if(state.phase!=='judged'||!state.resultReady)return;
@@ -375,8 +397,15 @@
     const metrics={};const scores={};
     ids.forEach((id,i)=>{if(id){metrics[id]={totalPerfects:state.perfects[i]};scores[id]=state.scores[i]}});
     registry.recordGame({gameId:'pitadome-challenge-versus',participants:state.players,winners:[ids[winner]],scores,metrics});
-    state.screen='final';
     stopTimers();
+    state.screen='final';
+    const champion=state.players[winner];
+    setCutin('win','WIN！',champion.icon+' '+champion.name+'！','',((winner+1)+'P CHAMPION'));
+    state.timer=setTimeout(()=>{
+      state.timer=0;
+      if(state.screen!=='final')return;
+      state.cutin=null;render();
+    },1650);
   }
   function quit(){
     if(state.screen!=='battle'){switchScreen('select');return}
@@ -392,6 +421,7 @@
   root.addEventListener('click',function(e){
     const b=e.target.closest('button');if(!b)return;
     if(b.hasAttribute('data-stop')){stopPlayer(Number(b.dataset.stop));return}
+    if(state.screen==='final'&&state.cutin)return;
     if(b.hasAttribute('data-home')){if(state.screen==='battle'&&!window.confirm('対戦をやめてゲーム一覧へ戻る？'))return;stopTimers();location.href='../../';return}
     if(b.hasAttribute('data-back')){if(state.screen==='select'||state.screen==='final'){location.href='../';return}
       if(state.screen==='form')switchScreen(state.editId?'manage':'pick');
