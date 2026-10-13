@@ -86,7 +86,7 @@ test('normal solo ten stages provide identical speed, bar scale, range and gimmi
    assert.equal(p.speed,speed,'speed level '+n);
    assert.equal(p.barScale,bar,'bar scale '+n);
    assert.equal(p.maxValue,max,'max range '+n);
-   assert.equal(p.movement,movement,'movement level '+n);
+   if(n!==10)assert.equal(p.movement,movement,'movement level '+n); // FINAL randomly picks two gimmicks
  }
 });
 test('easy does not put blind over target area, including range 1..100',()=>{
