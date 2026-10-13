@@ -80,8 +80,9 @@
   function activeIndex(){return state.currentSide}
   function stopSummary(i){
     const a=state.attempts[i];if(!a)return '<span>STOP待ち</span>';
+    const clearance=a.safe-a.error;
     return '<span>'+({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')+
-      ' / STOP '+a.value+' / 誤差 '+a.error+' / ＋'+a.points+'点</span>';
+      ' / STOP '+a.value+' / 誤差 '+a.error+' / '+(clearance>=0?'猶予あと '+clearance:'許容超過 '+Math.abs(clearance))+'</span>';
   }
   function meterLabels(){
     const p=state.profile;if(!p)return '';
@@ -145,7 +146,7 @@
     const lower=Math.max(prof.minValue,prof.target-state.activeSafe),upper=Math.min(prof.maxValue,prof.target+state.activeSafe);
     return '<div class="pv-battle"><div class="pv-top"><button class="nav-pill" type="button" data-leave>← 対戦をやめる</button>'+
       '<div class="pv-round-title">TURN '+state.turnNo+' / LEVEL '+prof.level+'・'+(state.difficulty==='easy'?'かんたん':'通常')+'</div></div>'+
-      '<div class="pv-safety"><span class="pv-safe-title">'+esc(state.players[activeIndex()].name)+' の合格範囲</span>'+
+      '<div class="pv-safety '+(state.activePressure?'is-attacked':'')+'"><span class="pv-safe-title">'+esc(state.players[activeIndex()].name)+' の合格範囲</span>'+
       '<strong>±'+state.activeSafe+'</strong><b>'+lower+' 〜 '+upper+'</b>'+
       (state.activePressure?'<span class="pv-safe-attack">妨害 −'+state.activePressure+' / 基本±'+prof.baseSafe+'</span>':'<span class="pv-safe-basic">基本±'+prof.baseSafe+'</span>')+'</div>'+
       '<div class="pv-panels">'+panel(0)+panel(1)+'</div>'+
