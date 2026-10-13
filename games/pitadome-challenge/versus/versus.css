@@ -167,3 +167,11 @@ html,body{min-height:100%;background:#06111c}
  .pv-battle .pv-console .pv-judge-copy{display:none}
  .pv-battle .pv-console .pv-impact-line strong{font-size:clamp(15px,4.6vh,25px)}
 }
+
+/* Solo-equivalent quiet meter on each player's turn. */
+.pv-battle .pv-quiet{display:flex;align-items:center;gap:4px;width:100%;color:#f7e4b8;font-size:clamp(8px,1.9vh,11px);font-weight:900;min-height:13px}
+.pv-battle .pv-quiet>span{white-space:nowrap}
+.pv-battle .pv-quiet>i{flex:1;min-width:18px;height:7px;background:rgba(255,255,255,.15);border-radius:7px;overflow:hidden}
+.pv-battle .pv-quiet>i>b{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#a78949,#fff5b5);transition:width .15s}
+.pv-battle .pv-quiet>em{font-style:normal;color:#ffe16f;white-space:nowrap}
+@media(max-height:350px) and (orientation:landscape){.pv-battle .pv-quiet{min-height:10px}.pv-battle .pv-quiet>i{height:5px}}
