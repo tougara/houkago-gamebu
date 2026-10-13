@@ -158,3 +158,42 @@ test('solo-style persistent scoring uses staged visual effects and never auto-hi
   assert.match(css,/\.pv-result-spark/);
   assert.doesNotMatch(css,/pvResultReveal/);
 });
+
+test('KO result stays landscape with winner, dual scores and three visible actions',()=>{
+  const h=harness();h.click('data-begin');
+  for(let turn=1;turn<=5;turn++){
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    h.finishImpact();h.click('data-next-turn');
+  }
+  assert.match(h.root.innerHTML,/pv-final-landscape/);
+  assert.match(h.root.innerHTML,/pv-final-victory/);
+  assert.match(h.root.innerHTML,/pv-final-detail/);
+  assert.match(h.root.innerHTML,/pv-final-players/);
+  assert.match(h.root.innerHTML,/pv-final-decisive/);
+  assert.match(h.root.innerHTML,/同じ2人でもう一度/);
+  assert.match(h.root.innerHTML,/プレイヤーを変更/);
+  assert.match(h.root.innerHTML,/ゲームをえらぶ/);
+  assert.equal((h.root.innerHTML.match(/class="pv-final-player /g)||[]).length,2);
+  assert.doesNotMatch(h.root.innerHTML,/class="pv-wrap"/);
+  assert.equal(h.records.length,1);
+});
+test('KO result maintains portrait rotation guidance until the user rotates back',()=>{
+  const h=harness();h.click('data-begin');
+  for(let turn=1;turn<=5;turn++){
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    h.finishImpact();h.click('data-next-turn');
+  }
+  assert.match(h.root.innerHTML,/勝利画面も横画面専用です/);
+  h.setLandscape(false);
+  assert.equal(h.root.overlay.hidden,false);
+  h.setLandscape(true);
+  assert.equal(h.root.overlay.hidden,true);
+});
+test('horizontal KO screen uses dedicated CSS overriding solo portrait result layout',()=>{
+  assert.match(css,/\.pitadome-app\.pv-app\.screen-final\s*\{/);
+  assert.match(css,/\.pv-final-landscape\s*\{/);
+  assert.match(css,/grid-template-columns:minmax\(195px/);
+  assert.match(css,/\.pv-final-actions\s*\{/);
+  assert.match(css,/@media\(max-height:390px\) and \(orientation:landscape\)/);
+  assert.match(css,/@media\(orientation:portrait\)/);
+});
