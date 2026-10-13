@@ -1,0 +1,86 @@
+/* Pitadome: separate turn-based knockout game. Solo game stays untouched. */
+html,body{min-height:100%;background:#06111c}
+.pv-app{width:100%;max-width:1150px;min-height:100dvh;margin:0 auto;padding:max(8px,env(safe-area-inset-top)) 9px max(12px,env(safe-area-inset-bottom));color:#f7f3e8}
+.pv-app button{touch-action:manipulation}
+.pv-wrap{max-width:700px;margin:0 auto}
+.pv-wrap .screen-heading h1{font-size:clamp(22px,6vw,30px)}
+.pv-current{margin:12px 0;padding:14px;border:1px solid rgba(236,215,165,.34);border-radius:19px;background:rgba(4,16,27,.87)}
+.pv-current>strong{display:block;margin-bottom:8px}
+.pv-person{display:flex;align-items:center;gap:10px;min-height:65px}
+.pv-person+.pv-person{border-top:1px solid rgba(241,221,162,.2)}
+.pv-person-icon{width:45px;flex:none;font-size:30px;text-align:center}
+.pv-person-data{flex:1;min-width:0}
+.pv-person-data small{display:block;font-size:11px;color:#efd69b;font-weight:900}
+.pv-person-data strong{display:block;font-size:clamp(16px,4.5vw,21px);overflow-wrap:anywhere}
+.pv-person button,.pv-mini-btn{min-width:75px;min-height:43px;padding:8px 11px;border-radius:13px;border:1px solid rgba(239,215,153,.55);background:rgba(255,255,255,.11);color:#fff;font-weight:900}
+.pv-person button:disabled{opacity:.45}
+.pv-wrap .mode-card{width:100%}
+.pv-action{width:100%;margin-top:12px}
+.pv-note{color:#d9e0e8;font-size:13px;font-weight:700;line-height:1.65;margin:8px 0}
+.pv-tip{color:#f8dc91;font-size:12px}
+.pv-list{display:grid;gap:7px;padding:10px;border-radius:16px;background:rgba(4,15,26,.8)}
+.pv-choice{width:100%;display:flex;align-items:center;gap:11px;min-height:54px;padding:8px 11px;border-radius:12px;border:1px solid rgba(236,215,165,.3);background:rgba(255,255,255,.07);color:#fff;text-align:left}
+.pv-choice>span{font-size:28px}.pv-choice strong{flex:1;font-size:17px}.pv-choice small{font-size:11px;color:#c3d0df}
+.pv-choice:disabled{opacity:.35}.pv-choice.selected{border-color:#ffe08a;background:rgba(246,206,117,.2)}
+.pv-setup-actions{display:grid;gap:9px;margin-top:10px}
+.pv-form{display:grid;gap:12px;margin-top:12px;padding:16px;border-radius:18px;background:rgba(4,16,27,.89)}
+.pv-form label{font-size:13px;font-weight:900}
+.pv-form input{width:100%;min-height:48px;padding:10px;border-radius:10px;border:1px solid #c8d1de;background:#fff;color:#152332;font-size:18px}
+.pv-icons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.pv-icons button{min-height:49px;border-radius:12px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.07);font-size:27px}
+.pv-icons button.selected{border:2px solid #ffe086;background:rgba(255,225,126,.24)}
+.pv-icons button:disabled{opacity:.25}.pv-error{min-height:1em;color:#ffc1c1;font-size:12px}
+.pv-rules{padding:13px 15px;margin:11px 0;background:rgba(5,18,31,.89);border:1px solid rgba(236,215,165,.34);border-radius:18px}
+.pv-rules p{margin:5px 0;font-size:13px;line-height:1.6}.pv-rules h2{font-size:19px;margin:0 0 9px}
+.pv-diff-choice{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.pv-diff-choice button{padding:13px 8px;background:rgba(255,255,255,.1);color:#fff;border-radius:13px;border:1px solid rgba(236,215,165,.35);font-weight:900}
+.pv-diff-choice button.selected{background:#ebca79;color:#181710}
+.pv-battle{display:flex;flex-direction:column;gap:7px;min-height:calc(100dvh - 18px)}
+.pv-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pv-top .nav-pill{min-height:36px;padding:6px 10px;font-size:12px}
+.pv-round-title{text-align:center;font-size:clamp(14px,2.9vw,20px);font-weight:1000;line-height:1.3}
+.pv-safety{text-align:center;white-space:nowrap;color:#ffe291;font-weight:1000;font-size:clamp(13px,2.9vw,22px)}
+.pv-shared-target{text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;min-height:45px;border-radius:15px;background:rgba(8,23,37,.92);border:1px solid rgba(240,219,155,.3)}
+.pv-shared-target strong{font-size:clamp(25px,6vw,41px);color:#ffe08a;line-height:1}
+.pv-shared-target span{font-size:clamp(10px,2.2vw,14px);font-weight:900}
+.pv-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;flex:1;min-height:0}
+.pv-panel{min-width:0;position:relative;display:flex;flex-direction:column;gap:8px;padding:clamp(8px,1.5vw,14px);border-radius:21px;border:2px solid rgba(255,255,255,.18);background:rgba(5,17,30,.9);opacity:.65;transition:border-color .16s,opacity .16s,box-shadow .16s}
+.pv-panel.pv-active{opacity:1;border-color:#ffe38d;box-shadow:inset 0 0 0 1px rgba(255,228,143,.26),0 0 18px rgba(244,208,106,.17)}
+.pv-panel.pv-done{opacity:.87;border-color:rgba(119,222,181,.65)}
+.pv-panel-top{display:flex;align-items:center;gap:7px;min-height:37px}
+.pv-panel-icon{font-size:clamp(21px,3vw,30px)}
+.pv-panel-name{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(12px,2.3vw,19px);font-weight:1000}
+.pv-panel-side{color:#f0ce8e;font-size:11px;font-weight:1000}
+.pv-lives{color:#ff9fb2;font-size:clamp(15px,3.2vw,24px);font-weight:900;letter-spacing:2px;white-space:nowrap}
+.pv-stats{font-size:clamp(10px,1.8vw,13px);color:#dce2ed;font-weight:900;display:flex;justify-content:space-between;gap:4px}
+.pv-panel-status{text-align:center;min-height:23px;font-size:clamp(11px,2vw,16px);font-weight:1000;color:#f7dea0}
+.pv-panel-target{font-size:11px;font-weight:800;text-align:center;color:#becbd9}
+.pv-lane-wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:70px}
+.pv-meter{position:relative;width:100%;height:52px;margin:0 auto}
+.pv-meter-line{position:absolute;inset:17px 1px 19px;border-radius:999px;background:linear-gradient(90deg,#9cb5c8,#f9d587,#9cb5c8);border:1px solid #fff7d0}
+.pv-meter-cursor{position:absolute;top:5px;left:0;width:5px;height:41px;transform:translateX(-50%);border-radius:6px;background:#fff9cf;box-shadow:0 0 10px 3px rgba(253,227,130,.6);z-index:3}
+.pv-meter-target{position:absolute;top:8px;width:3px;height:35px;background:#5ee0ff;opacity:.8;z-index:1}
+.pv-meter-blind{position:absolute;top:12px;height:30px;border-radius:8px;background:repeating-linear-gradient(120deg,#0b1829,#0b1829 8px,#17273b 8px,#17273b 16px);z-index:2;border:1px solid #415572}
+.pv-meter-labels{display:flex;justify-content:space-between;color:#a9baca;font-size:10px;font-weight:900;margin-top:42px}
+.pv-stop{width:100%;min-height:clamp(70px,17vh,120px);border:2px solid #ffe78d;border-radius:18px;background:linear-gradient(#fff98c,#ffd22b 55%,#efab08);box-shadow:0 5px 0 #9c650d;color:#332408;font-weight:1000;font-size:clamp(20px,4.5vw,37px);touch-action:none}
+.pv-stop:disabled{opacity:.35;filter:grayscale(.7);box-shadow:none}
+.pv-panel.pv-active .pv-stop:enabled{animation:pvBreath 1s ease-in-out infinite}
+.pv-panel-summary{font-size:clamp(10px,2vw,14px);text-align:center;font-weight:1000;min-height:23px;color:#ffebba}
+.pv-console{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:65px;padding:8px;border-radius:17px;background:rgba(9,25,42,.95);border:1px solid rgba(236,215,165,.32);text-align:center}
+.pv-console p{margin:0;font-weight:900;font-size:clamp(12px,2.3vw,16px)}
+.pv-console .pv-next{min-height:46px;min-width:min(350px,90%);padding:8px 15px;border:1px solid #ffdc8c;border-radius:13px;background:linear-gradient(#ffe780,#e7ab3d);color:#211705;font-weight:1000;font-size:clamp(13px,2.6vw,17px)}
+.pv-console small{font-weight:700;color:#cfdee8;font-size:11px}
+.pv-result{flex:1;display:grid;gap:11px;align-content:start;padding:clamp(10px,3vw,22px);border-radius:19px;border:1px solid rgba(245,211,136,.45);background:rgba(5,18,30,.92)}
+.pv-result h1{text-align:center;font-size:clamp(30px,8vw,58px);margin:0;color:#ffe391}
+.pv-result h2{text-align:center;margin:0;font-size:18px}
+.pv-result-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.pv-result-card{text-align:center;border:1px solid rgba(241,220,163,.3);border-radius:14px;background:rgba(255,255,255,.06);padding:12px 7px}
+.pv-result-card strong{font-size:clamp(22px,4vw,30px);display:block}.pv-result-card small{font-size:12px;color:#cddaea}
+.pv-result-card .pv-heart{color:#ffa0b1}
+.pv-result .btn{width:100%}
+.pv-result-log{text-align:left;max-height:160px;overflow:auto;font-size:12px;color:#d5dce5}
+.pv-alert{color:#ffd781;font-weight:900}
+@keyframes pvBreath{50%{filter:brightness(1.15)}}
+@media(max-width:520px){.pv-battle{gap:5px}.pv-panels{gap:5px}.pv-panel{padding:6px;border-radius:14px;gap:5px}.pv-panel-top{flex-wrap:wrap;gap:2px}.pv-panel-side{width:100%}.pv-stop{min-height:76px}.pv-console{min-height:65px}.pv-app{padding:6px}.pv-meter{height:48px}.pv-lane-wrap{min-height:65px}}
+@media(max-height:430px) and (orientation:landscape){.pv-battle{gap:4px}.pv-shared-target{min-height:36px}.pv-panel{gap:3px;padding:5px 9px}.pv-panel-top{min-height:25px}.pv-lane-wrap{min-height:53px}.pv-meter{height:42px}.pv-stop{min-height:53px}.pv-panel-status,.pv-panel-summary{min-height:15px}.pv-console{min-height:52px}.pv-console .pv-next{min-height:36px}.pv-lives{font-size:18px}}
+@media(prefers-reduced-motion:reduce){.pv-panel.pv-active .pv-stop:enabled{animation:none}.pv-panel{transition:none}}
