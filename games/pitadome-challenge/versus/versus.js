@@ -98,7 +98,7 @@
     const playing=active&&['moving','ready','countdown'].includes(state.phase);
     const v=a?a.value:state.profile.minValue,pct=((moving?state.value:v)-state.profile.minValue)/(state.profile.maxValue-state.profile.minValue)*100;
     const label=active&&state.phase!=='judged'?(moving?'いまだ！ STOP！':state.phase==='countdown'?'カウント中':'準備してね'):
-      a?({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||''):'相手の番';
+      a?(a.error>a.safe?'範囲外！ 誤差'+a.error+' / 合格±'+a.safe:({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')):'相手の番';
     const b=state.profile.blind?'<div class="pv-meter-blind" style="left:'+state.profile.blindStart+'%;width:'+(state.profile.blindEnd-state.profile.blindStart)+'%"></div>':'';
     const show=moving||Boolean(a);
     const pressure=active?'基本±'+state.profile.baseSafe+(state.activePressure?' − 妨害'+state.activePressure:'')+' → ±'+state.activeSafe:'次の判定は順番になったら表示';
@@ -127,8 +127,8 @@
       if(a.special)bonuses.push((a.perfect?'PERFECT':'3連続GREAT')+'：回復＋1・妨害−2');
       if(a.chargeReward)bonuses.push('500点達成：'+(r.healed>Number(a.special)?'回復':'満タンなら妨害'));
       if(r.damage)bonuses.push('判定外：ライフ−1');
-      return '<div class="pv-impact-line tier-'+a.tier+'"><strong>'+({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')+'</strong><b>＋'+a.points+' POINT</b></div>'+
-      '<p class="pv-judge-copy">'+esc(who.name)+(a.special?'　特別効果発動！':'')+
+      return '<div class="pv-impact-line tier-'+a.tier+'"><strong>'+(a.error>a.safe?'判定外！':({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||''))+'</strong><b>＋'+a.points+' POINT</b></div>'+
+      '<p class="pv-judge-copy">'+esc(who.name)+'　誤差'+a.error+' / 合格±'+a.safe+(a.special?'　特別効果発動！':'')+
       (bonuses.length?'　'+esc(bonuses.join(' / ')):'')+'</p>'+
       '<button class="pv-next" type="button" data-next-turn>次は '+esc(state.players[1-activeIndex()].name)+' の番</button>';
     }
