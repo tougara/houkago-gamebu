@@ -3,6 +3,7 @@
   const root=document.getElementById('pitadome-versus');
   const registry=window.HoukagoPlayers;
   const rules=window.PitadomeVersusRules;
+  const settingsApi=window.HoukagoSettings;
   if(!root||!registry||!rules)return;
   const KEY='houkago_pitadome_versus_players_v1';
   const state={
@@ -288,6 +289,9 @@
       combo:state.combos[i],greatStreak:state.greatStreaks[i],charge:state.charges[i],score:state.scores[i],
       quiet:state.quiet[i],mushinActive:state.mushin[i]
     },state.activeSafe);
+    if(attempt.tier==='perfect')settingsApi?.vibrate?.([28,22,70]);
+    else if(attempt.tier==='excellent')settingsApi?.vibrate?.([24,18,45]);
+    else if(attempt.tier==='great')settingsApi?.vibrate?.(24);
     state.attempts[i]=attempt;state.combos[i]=attempt.combo;state.greatStreaks[i]=attempt.greatStreak;
     state.charges[i]=attempt.charge;state.scores[i]=attempt.total;
     state.quiet[i]=attempt.quiet;state.mushinReady[i]=attempt.mushinReady;
