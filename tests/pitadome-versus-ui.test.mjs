@@ -35,19 +35,26 @@ function harness(){
     const button={dataset:data,hasAttribute:field=>field===key,closest:selector=>selector==='button'?button:null};
     events.click({target:button});
   }
-  function runCountdown(){click('data-start-turn');for(let i=0;i<3;i++){
+  function runCountdown(){click('data-start-turn');for(let i=0;i<4;i++){
     const first=timers.entries().next().value;
     assert.ok(first,'expected countdown timer');timers.delete(first[0]);first[1]();
   }}
   function active(){const match=root.innerHTML.match(/class="pv-vs-player is-active" data-side="([01])"/);
     assert.ok(match,'one active player must be shown');return Number(match[1]);
   }
-  function finishImpact(){
+  function stepTimer(){
     const item=timers.entries().next().value;
-    assert.ok(item,'result entry lock timer must be set');
+    assert.ok(item,'a pending animation timer must be set');
     timers.delete(item[0]);item[1]();
   }
-  return {root,events,records,click,runCountdown,finishImpact,active,setLandscape:v=>{landscape=v;events.win_resize()}};
+  function finishImpact(){
+    // Danger cut-in can follow the judgement cut-in when health reaches one.
+    for(let n=0;n<3;n++){
+      if(!timers.size)break;
+      stepTimer();
+    }
+  }
+  return {root,events,records,click,stepTimer,runCountdown,finishImpact,active,setLandscape:v=>{landscape=v;events.win_resize()}};
 }
 test('before starting, the two-player registration screen is preserved',()=>{
   const h=harness();
@@ -196,4 +203,80 @@ test('horizontal KO screen uses dedicated CSS overriding solo portrait result la
   assert.match(css,/\.pv-final-actions\s*\{/);
   assert.match(css,/@media\(max-height:390px\) and \(orientation:landscape\)/);
   assert.match(css,/@media\(orientation:portrait\)/);
+});
+
+test('huge 3-2-1-START overlay is centered above gameplay before the bar begins',()=>{
+  const h=harness();h.click('data-begin');h.click('data-start-turn');
+  assert.match(h.root.innerHTML,/pv-cutin-countdown/);
+  assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">2</);
+  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">1</);
+  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-start/);
+  assert.match(h.root.innerHTML,/START！/);
+  h.stepTimer();assert.match(h.root.innerHTML,/data-stop="/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
+});
+test('heal gauge is the primary status and the score is secondary',()=>{
+  const h=harness();h.click('data-begin');
+  assert.equal((h.root.innerHTML.match(/pv-vs-recovery-title/g)||[]).length,2);
+  assert.equal((h.root.innerHTML.match(/pv-vs-recovery-bar/g)||[]).length,2);
+  assert.match(h.root.innerHTML,/回復ゲージ/);
+  assert.match(h.root.innerHTML,/0 \/ 350/);
+  assert.match(h.root.innerHTML,/pv-vs-score-secondary/);
+});
+test('ranked judgement cut-in appears ahead of persistent verdict and then clears',()=>{
+  const h=harness();h.click('data-begin');h.runCountdown();
+  h.click('data-stop',{stop:String(h.active())});
+  assert.match(h.root.innerHTML,/pv-cutin-judge/);
+  assert.match(h.root.innerHTML,/pv-round-result/);
+  assert.match(h.root.innerHTML,/data-next-turn disabled/);
+  h.finishImpact();
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
+  assert.match(h.root.innerHTML,/pv-round-result/);
+});
+test('remaining one life triggers a danger cut-in after the rank cut-in',()=>{
+  const h=harness();h.click('data-begin');
+  // Simulated STOP at the edge causes each side to lose one health.
+  for(let turn=1;turn<=3;turn++){
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    assert.match(h.root.innerHTML,/pv-cutin-judge/);
+    h.stepTimer();
+    if(turn===3){
+      assert.match(h.root.innerHTML,/pv-cutin-danger/);
+      assert.match(h.root.innerHTML,/残りライフ 1！/);
+      assert.match(h.root.innerHTML,/次に判定外ならKO/);
+      h.click('data-next-turn');
+      assert.match(h.root.innerHTML,/TURN 3/);
+      h.stepTimer();
+    }
+    if(turn<3)h.click('data-next-turn');
+  }
+  assert.match(h.root.innerHTML,/pv-round-result/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
+});
+test('win cut-in blocks rematch until victory introduction finishes',()=>{
+  const h=harness();h.click('data-begin');
+  for(let turn=1;turn<=5;turn++){
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    h.finishImpact();h.click('data-next-turn');
+  }
+  assert.match(h.root.innerHTML,/pv-cutin-win/);
+  assert.match(h.root.innerHTML,/WIN！/);
+  h.click('data-rematch');
+  assert.match(h.root.innerHTML,/pv-final-landscape/);
+  h.stepTimer();
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-win/);
+  assert.match(h.root.innerHTML,/pv-final-landscape/);
+  h.click('data-rematch');
+  assert.match(h.root.innerHTML,/pv-duel/);
+});
+test('cinematic tier hierarchy and danger emphasis live above the full game',()=>{
+  assert.match(css,/\.pv-app \.pv-cutin\s*\{/);
+  assert.match(css,/position:fixed;inset:0;z-index:80/);
+  assert.match(css,/\.pv-cutin-perfect/);
+  assert.match(css,/\.pv-cutin-excellent/);
+  assert.match(css,/\.pv-cutin-great/);
+  assert.match(css,/\.pv-cutin-danger/);
+  assert.match(css,/\.pv-cutin-win/);
+  assert.match(css,/\.pv-vs-recovery-bar/);
 });
