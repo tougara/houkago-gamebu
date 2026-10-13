@@ -736,3 +736,50 @@ html,body{min-height:100%;background:#06111c}
 }
 @keyframes pvGaugeMax{0%{filter:brightness(2.5);transform:scale(1.04)}100%{filter:brightness(1);transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.pv-vs-recovery.is-max{animation:none}}
+
+
+/* V6 cinematic pacing: each scene has a deliberate hold, then fades out
+   BEFORE the detailed result panel is inserted in the DOM. */
+.pv-app .pv-cutin{
+ animation:pvCinematicHold var(--cutin-duration,2500ms) ease-in-out both;
+}
+@keyframes pvCinematicHold{
+  0%{opacity:0;filter:brightness(1.65)}
+  8%{opacity:1;filter:brightness(1.16)}
+  23%{filter:brightness(1)}
+  77%{opacity:1;filter:brightness(1)}
+  91%{opacity:.98}
+  100%{opacity:0}
+}
+/* Countdowns have a readable full-second cadence, not short jump cuts. */
+.pv-app .pv-cutin-countdown .pv-cutin-title{
+ animation:pvSlowCountHit 1.08s cubic-bezier(.17,1,.23,1) both;
+}
+@keyframes pvSlowCountHit{
+  0%{opacity:0;transform:scale(2.15);filter:blur(8px)}
+  24%{opacity:1;transform:scale(.94);filter:blur(0)}
+  45%{transform:scale(1.06)}
+  73%{transform:scale(1)}
+  100%{transform:scale(1)}
+}
+.pv-app .pv-cutin-start .pv-cutin-title{
+ animation:pvSlowStart .72s cubic-bezier(.16,1.3,.22,1) both;
+}
+@keyframes pvSlowStart{
+  0%{opacity:0;transform:scale(1.8)}
+  55%{opacity:1;transform:scale(.98)}
+  100%{transform:scale(1)}
+}
+/* Hide the underlying score button until the fanfare ends; not a duplicate label. */
+.pv-action-hold{
+ display:flex;width:100%;height:100%;min-height:0;
+ align-items:center;justify-content:center;
+ color:#ffe3a6;font-size:clamp(13px,3.3dvh,22px);font-weight:1000;
+ border:1px solid rgba(251,224,145,.24);border-radius:16px;
+ background:rgba(9,23,37,.46);
+}
+.pv-app.screen-final .pv-final-intro{width:100%;height:100%;background:transparent}
+@media(prefers-reduced-motion:reduce){
+ .pv-app .pv-cutin,.pv-app .pv-cutin-countdown .pv-cutin-title,
+ .pv-app .pv-cutin-start .pv-cutin-title{animation:none!important}
+}
