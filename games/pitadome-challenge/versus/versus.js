@@ -126,7 +126,7 @@
   function resultEffects(attempt){
     if(!['perfect','excellent','great'].includes(attempt.tier)||attempt.error>attempt.safe)return '';
     const count=attempt.perfect?18:12;
-    const sparks=Array.from({length:count},(_,i)=>'<i class="pv-result-spark" style="--i:'+i+';--count:'+count+'"></i>').join('');
+    const sparks=Array.from({length:count},(_,i)=>'<i class="pv-result-spark" style="--i:'+i+';--step:'+(360/count)+'deg"></i>').join('');
     const rays=Array.from({length:12},(_,i)=>'<i class="pv-result-ray" style="--i:'+i+'"></i>').join('');
     return '<div class="pv-result-effects" aria-hidden="true"><div class="pv-result-rays">'+rays+
       '</div><div class="pv-result-sparks">'+sparks+'</div><div class="pv-result-ring"></div></div>';
