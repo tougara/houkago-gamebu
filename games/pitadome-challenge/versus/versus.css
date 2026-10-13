@@ -84,3 +84,75 @@ html,body{min-height:100%;background:#06111c}
 @media(max-width:520px){.pv-battle{gap:5px}.pv-panels{gap:5px}.pv-panel{padding:6px;border-radius:14px;gap:5px}.pv-panel-top{flex-wrap:wrap;gap:2px}.pv-panel-side{width:100%}.pv-stop{min-height:76px}.pv-console{min-height:65px}.pv-app{padding:6px}.pv-meter{height:48px}.pv-lane-wrap{min-height:65px}}
 @media(max-height:430px) and (orientation:landscape){.pv-battle{gap:4px}.pv-shared-target{min-height:36px}.pv-panel{gap:3px;padding:5px 9px}.pv-panel-top{min-height:25px}.pv-lane-wrap{min-height:53px}.pv-meter{height:42px}.pv-stop{min-height:53px}.pv-panel-status,.pv-panel-summary{min-height:15px}.pv-console{min-height:52px}.pv-console .pv-next{min-height:36px}.pv-lives{font-size:18px}}
 @media(prefers-reduced-motion:reduce){.pv-panel.pv-active .pv-stop:enabled{animation:none}.pv-panel{transition:none}}
+
+/* V2 – link-burst-style landscape lock and accurate solo Pitadome meter. */
+.pv-app.screen-battle{width:100%;max-width:none;height:100dvh;min-height:0;overflow:hidden;padding:max(3px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))}
+.pv-app.screen-battle .pv-battle{height:100%;min-height:0;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:5px}
+.pv-battle .pv-panels{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+.pv-battle .pv-panel{min-height:0;display:flex;flex-direction:column;gap:3px;padding:7px 9px;background:rgba(5,17,30,.86);border-radius:17px;border:2px solid rgba(218,224,223,.25)}
+.pv-battle .pv-panel.pv-active{border-color:#ffe18a;opacity:1;box-shadow:0 0 18px rgba(241,211,131,.3),inset 0 0 15px rgba(255,215,124,.12)}
+.pv-battle .pv-panel:not(.pv-active){opacity:.79}
+.pv-battle .pv-panel-top{min-height:24px;gap:5px}
+.pv-battle .pv-panel-icon{font-size:clamp(19px,4.5vh,29px)}
+.pv-battle .pv-panel-name{font-size:clamp(12px,3.8vh,22px)}
+.pv-battle .pv-panel-side{font-size:clamp(10px,2.5vh,13px)}
+.pv-battle-hud{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.pv-battle-hud strong{font-size:clamp(11px,2.7vh,18px);white-space:nowrap;color:#ffdc8e}
+.pv-battle .pv-lives{font-size:clamp(15px,3.9vh,24px);letter-spacing:1px}
+.pv-battle .pv-stats{display:flex;flex-wrap:wrap;justify-content:space-between;gap:3px;line-height:1.2}
+.pv-battle .pv-stats span{font-size:clamp(8px,1.9vh,11px)}
+.pv-battle .pv-panel-status{font-size:clamp(12px,3.1vh,20px);min-height:22px;font-weight:1000;color:#ffdf96}
+.pv-battle .pv-panel-status.pv-perfect{font-size:clamp(17px,4.1vh,29px);color:#fff0ad;text-shadow:0 0 16px #dfb85e}
+.pv-battle .pv-panel-target{display:flex;align-items:baseline;justify-content:center;gap:6px;flex-wrap:wrap;color:#fff}
+.pv-battle .pv-panel-target strong{font-size:clamp(35px,9.8vh,74px);line-height:1;font-weight:1000;color:#fff;text-shadow:0 4px 13px rgba(0,0,0,.42)}
+.pv-battle .pv-panel-target small{font-size:clamp(11px,2.6vh,16px);font-weight:950;color:#ffde8b}
+.pv-battle .pv-panel-target span{width:100%;text-align:center;font-size:clamp(8px,1.9vh,11px);color:#efe0af;font-weight:800}
+.pv-battle .pv-lane-wrap{flex:1;min-height:43px;display:flex;align-items:center;justify-content:center}
+.pv-battle .pv-meter-shell{min-width:45%;max-width:100%;transition:width .2s ease}
+.pv-battle .pv-meter{height:42px}
+.pv-battle .pv-meter-line{position:absolute;left:0;right:0;top:12px;height:14px;bottom:auto;inset:auto;border-radius:999px;background:linear-gradient(90deg,#c7d7e7,#f2d58f,#c7d7e7);box-shadow:inset 0 0 0 2px rgba(255,255,255,.3),0 4px 14px rgba(0,0,0,.3)}
+.pv-battle .pv-meter-cursor{position:absolute;top:0;left:0;width:6px;height:42px;transform:translateX(-50%);border-radius:999px;background:#fff6c7;box-shadow:0 0 16px #fff3aa,0 0 28px rgba(244,203,102,.65);z-index:3}
+.pv-battle .pv-meter-cursor.blind{opacity:0}
+.pv-battle .pv-meter-blind{top:9px;height:22px;background:linear-gradient(90deg,rgba(1,6,10,.72),rgba(1,6,10,.96),rgba(1,6,10,.72));border-radius:10px;border:0;box-shadow:0 0 15px rgba(0,0,0,.45);z-index:2}
+.pv-battle .pv-meter-labels{position:relative;height:18px;margin:0;color:#e1e6ec;font-size:clamp(8px,2.2vh,13px);font-weight:900}
+.pv-battle .pv-meter-labels span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.pv-battle .pv-meter-labels span:first-child{transform:translateX(0)}
+.pv-battle .pv-meter-labels span:last-child{transform:translateX(-100%)}
+.pv-battle .pv-meter-easy span{font-size:clamp(7px,1.5vh,10px)}
+.pv-battle .pv-stop{min-height:clamp(50px,14vh,88px);border:2px solid #fff09c;border-radius:15px;background:linear-gradient(180deg,#fff98f,#ffe34d 40%,#ffc31f 74%,#f3a300);box-shadow:0 5px 0 #a46d0e;color:#221608;font-size:clamp(22px,6vh,40px)}
+.pv-battle .pv-stop:disabled{opacity:.3;filter:grayscale(.8)}
+.pv-battle .pv-panel-summary{min-height:17px;font-size:clamp(9px,2.1vh,13px);color:#fff0bd}
+.pv-battle .pv-person-safe{font-size:clamp(9px,2vh,13px);min-height:20px;padding:3px 4px;text-align:center;background:rgba(239,198,118,.08);border:1px solid rgba(241,216,141,.2);border-radius:7px;color:#c6d5e1;line-height:1.3}
+.pv-battle .pv-person-safe.is-current{background:rgba(249,205,108,.16);color:#ffe18e;border-color:rgba(252,226,143,.65);font-weight:950}
+.pv-battle .pv-top{min-height:30px}
+.pv-battle .pv-safety{line-height:1.3;font-size:clamp(11px,2.7vh,16px);white-space:normal}
+.pv-battle .pv-console{min-height:clamp(42px,11vh,69px);padding:3px 8px;border-radius:12px;gap:3px}
+.pv-battle .pv-console .pv-next{min-height:clamp(32px,7.5vh,46px);padding:5px 10px}
+.pv-battle .pv-console p{font-size:clamp(11px,2.8vh,17px);line-height:1.3}
+.pv-battle .pv-countdown{font-size:clamp(34px,10vh,65px);line-height:1;color:#ffdf8c}
+.pv-battle .pv-round-title{font-size:clamp(11px,3vh,18px)}
+.pv-rotate-overlay{position:fixed;inset:0;z-index:200;background:rgba(4,15,27,.98);display:grid;place-content:center;text-align:center;padding:20px}
+.pv-rotate-overlay strong{display:block;font-size:clamp(24px,7vw,38px);color:#ffe39a}
+.pv-rotate-overlay p{font-size:15px;color:#dfe8f1;line-height:1.7}
+.pv-rotate-overlay[hidden]{display:none!important}
+.pv-battle .pv-panel.pv-hit-perfect{animation:pvPerfectImpact .65s ease-out;border-color:#ffdf69;box-shadow:0 0 37px rgba(255,218,98,.85),inset 0 0 35px rgba(255,244,183,.18)}
+.pv-battle .pv-panel.pv-hit-perfect .pv-panel-status{animation:pvHitText .75s cubic-bezier(.16,1.4,.33,1)}
+.pv-battle .pv-panel.pv-hit-great{animation:pvGreatImpact .55s ease-out}
+.pv-battle .pv-judge-copy{font-weight:1000}
+@keyframes pvPerfectImpact{0%{filter:brightness(2);transform:scale(1.015)}65%{filter:brightness(1.3)}100%{filter:brightness(1);transform:scale(1)}}
+@keyframes pvGreatImpact{0%{filter:brightness(1.5)}100%{filter:brightness(1)}}
+@keyframes pvHitText{0%{transform:scale(.78);opacity:.3}58%{transform:scale(1.16);opacity:1}100%{transform:scale(1)}}
+@media(max-height:375px) and (orientation:landscape){
+ .pv-battle .pv-panel{padding:4px 6px;gap:2px}
+ .pv-battle .pv-top{min-height:24px}
+ .pv-battle .pv-panel-top{min-height:19px}
+ .pv-battle .pv-panel-target strong{font-size:clamp(27px,9vh,45px)}
+ .pv-battle .pv-lane-wrap{min-height:29px}
+ .pv-battle .pv-meter{height:35px}
+ .pv-battle .pv-meter-cursor{height:35px}
+ .pv-battle .pv-stop{min-height:clamp(40px,11vh,56px)}
+ .pv-battle .pv-panel-summary{min-height:15px}
+ .pv-battle .pv-panel-status{min-height:16px}
+ .pv-battle .pv-console{min-height:38px}
+}
+@media(prefers-reduced-motion:reduce){.pv-panel.pv-hit-perfect,.pv-panel.pv-hit-great,.pv-panel.pv-hit-perfect .pv-panel-status{animation:none!important}}
