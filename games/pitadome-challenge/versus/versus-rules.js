@@ -5,9 +5,9 @@
  root.PitadomeVersusRules=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const NORMAL_SAFE=[12,12,9,9,7,7,5,5,3,3,2,2,1,1,0];
- const EASY_SAFE=[15,15,12,12,10,10,8,8,6,6,4,4,2,2,1,1,0];
- const CHARGE_LIMIT=500,MAX_PRESSURE=3;
+ const NORMAL_SAFE=[15,15,12,12,10,10,8,8,6,6,5,5,4,4,3,3,2,2,1,1,0];
+ const EASY_SAFE=[20,20,18,18,16,16,14,14,12,12,10,10,8,8,6,6,4,4,2,2,1,1,0];
+ const CHARGE_LIMIT=350,MAX_PRESSURE=3;
  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
  function levelForTurn(turn){return Math.ceil(Math.max(1,turn)/2)}
  function baseSafe(turn,difficulty){const a=difficulty==='easy'?EASY_SAFE:NORMAL_SAFE;return a[clamp(levelForTurn(turn)-1,0,a.length-1)]}
