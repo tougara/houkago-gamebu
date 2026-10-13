@@ -10,8 +10,8 @@ test('each single stop advances a turn; profile/difficulty advances every pair',
  assert.equal(r.levelForTurn(20),10);
 });
 test('normal and easy eventually demand exact zero error',()=>{
- assert.deepEqual([1,5,9,17,23,29].map(t=>r.baseSafe(t,'normal')),[12,9,7,3,2,0]);
- assert.deepEqual([1,5,9,17,23,33].map(t=>r.baseSafe(t,'easy')),[15,12,10,6,4,0]);
+ assert.deepEqual([1,5,9,17,23,29,41].map(t=>r.baseSafe(t,'normal')),[15,12,10,6,5,3,0]);
+ assert.deepEqual([1,5,9,17,23,33,45].map(t=>r.baseSafe(t,'easy')),[20,18,16,12,10,4,0]);
 });
 test('pressure caps at three and can never make safe negative',()=>{
  assert.equal(r.effectiveSafe(12,2),10);
@@ -48,22 +48,22 @@ test('scoring follows solo grades and combo multiplier, never timing',()=>{
  assert.equal(r.comboMultiplierFor(2),1.1);assert.equal(r.comboMultiplierFor(10),1.5);
  assert.equal(Object.hasOwn(r.evaluateStop(27,28),'fast'),false);
 });
-test('score crosses 500 threshold; heals if missing life',()=>{
- const a=r.evaluateStop(45,40,{charge:480,score:200},10);
+test('score crosses 350 threshold; heals if missing life',()=>{
+ const a=r.evaluateStop(45,40,{charge:330,score:200},10);
  assert.equal(a.chargeReward,1);
  const fx=r.applyRewards(1,a);
  assert.equal(fx.life,2);assert.equal(fx.healed,1);assert.equal(fx.pressure,0);
 });
-test('score crosses 500 at full health; applies -1 instead',()=>{
- const a=r.evaluateStop(45,40,{charge:480},10),fx=r.applyRewards(3,a);
+test('score crosses 350 at full health; applies -1 instead',()=>{
+ const a=r.evaluateStop(45,40,{charge:330},10),fx=r.applyRewards(3,a);
  assert.equal(fx.healed,0);assert.equal(fx.pressure,1);
 });
 test('perfect + score charge both at full life cap pressure to 3',()=>{
- const a=r.evaluateStop(40,40,{charge:470},10),fx=r.applyRewards(3,a);
+ const a=r.evaluateStop(40,40,{charge:340},10),fx=r.applyRewards(3,a);
  assert.equal(fx.pressure,3);
 });
-test('perfect heals first, so a 500-point charge does not over-heal',()=>{
- const a=r.evaluateStop(40,40,{charge:470},10),fx=r.applyRewards(2,a);
+test('perfect heals first, so a 350-point charge does not over-heal',()=>{
+ const a=r.evaluateStop(40,40,{charge:340},10),fx=r.applyRewards(2,a);
  assert.equal(fx.life,3);assert.equal(fx.healed,1);assert.equal(fx.pressure,3);
 });
 test('miss instantly loses a life; no extra attack damage occurs',()=>{
@@ -119,4 +119,17 @@ test('quiet gauge accumulates by solo accuracy grades',()=>{
  assert.equal(excellent.quiet,70);
  const imperfect=r.evaluateStop(65,50,{quiet:70},10);
  assert.equal(imperfect.quiet,70);
+});
+
+test('current safe calculation can be shown as an explicit stop value range',()=>{
+ const target=34,profile=r.roundProfile(1,'normal',()=>0.3);
+ assert.equal(profile.baseSafe,15);
+ const safe=r.effectiveSafe(profile.baseSafe,2);
+ assert.equal(safe,13);
+ assert.deepEqual([Math.max(profile.minValue,target-safe),Math.min(profile.maxValue,target+safe)],[21,47]);
+});
+test('350 score threshold is enough for about four excellent consecutive stops',()=>{
+ let p={combo:0,charge:0,score:0},rewards=0;
+ for(let i=0;i<4;i++){const a=r.evaluateStop(55,54,p,15);rewards+=a.chargeReward;p={combo:a.combo,charge:a.charge,score:a.total};}
+ assert.equal(rewards,1);
 });
