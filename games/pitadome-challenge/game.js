@@ -227,6 +227,7 @@ function modeScreen(){
     '<div class="mode-grid">'+
       '<button class="mode-card" data-mode="ten"><div class="mode-badges"><span class="mode-badge">約1〜2分</span><span class="mode-badge">全10ラウンド</span></div><strong>10ラウンドチャレンジ</strong><span>10回の合計点で自己ベストを狙おう。</span></button>'+
       '<button class="mode-card" data-mode="endless"><div class="mode-badges"><span class="mode-badge">ENDLESS</span><span class="mode-badge">ライフ3</span></div><strong>エンドレスチャレンジ</strong><span>ライフがなくなるまで、どこまで続けられるか挑戦。</span></button>'+
+      '<button class="mode-card" data-versus-mode><div class="mode-badges"><span class="mode-badge">2人対戦</span><span class="mode-badge">KO BATTLE</span></div><strong>2人で対戦</strong><span>2画面で交互にSTOP！ セーフ範囲が狭くなるライフ制の対戦。</span></button>'+
     '</div><button class="btn secondary full" style="margin-top:12px" data-ranking>ハイスコアランキング</button>';
 }
 function difficultyScreen(){
@@ -787,6 +788,7 @@ function bind(){
   document.querySelector('[data-player-select]')?.addEventListener('click',()=>{state.memberReturn='title';go('playerSelect')});
   document.querySelector('[data-change-player]')?.addEventListener('click',()=>{state.memberReturn='mode';go('playerSelect')});
   document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.mode;go('difficulty')}));
+  document.querySelector('[data-versus-mode]')?.addEventListener('click',()=>{location.href='versus/'});
   document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>beginGame(state.mode,b.dataset.difficulty)));
   document.querySelector('[data-open-player-list]')?.addEventListener('click',()=>go('playerList'));
   document.querySelectorAll('[data-solo-player-id]').forEach(b=>b.addEventListener('click',()=>{
