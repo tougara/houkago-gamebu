@@ -39,7 +39,7 @@
     return nav()+'<div class="pv-wrap">'+heading('2人KO対戦','スマホ1台で交互にSTOP！')+currentPlayers(true)+
       '<div class="pv-rules"><h2>勝ち方</h2><p>1人1回ずつ完全交代！ STOPしたその場で得点・ライフ・判定を確定し、相手に交代するよ。</p>'+
       '<p>ライフ3。セーフ範囲を外すと−1。PERFECTはライフ＋1＆次の相手のセーフ範囲−2！</p>'+
-      '<p>GREAT以上（PERFECT以外）3連続も同じ効果。累計500点ごとにライフ＋1、満タンなら相手のセーフ範囲−1。</p>'+
+      '<p>GREAT以上（PERFECT以外）3連続も同じ効果。累計350点ごとにライフ＋1、満タンなら相手のセーフ範囲−1。</p>'+
       '<p>妨害は次の相手の1回だけ・最大−3。早押し加点なし。得点は回復のために使い、勝敗はKOで決める。</p></div>'+
       '<div class="pv-rules"><h2>むずかしさ</h2><div class="pv-diff-choice">'+
       '<button type="button" data-diff="easy" class="'+(state.difficulty==='easy'?'selected':'')+'">かんたん</button>'+
@@ -101,7 +101,9 @@
       a?(a.error>a.safe?'範囲外！ 誤差'+a.error+' / 合格±'+a.safe:({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')):'相手の番';
     const b=state.profile.blind?'<div class="pv-meter-blind" style="left:'+state.profile.blindStart+'%;width:'+(state.profile.blindEnd-state.profile.blindStart)+'%"></div>':'';
     const show=moving||Boolean(a);
-    const pressure=active?'基本±'+state.profile.baseSafe+(state.activePressure?' − 妨害'+state.activePressure:'')+' → ±'+state.activeSafe:'次の判定は順番になったら表示';
+    const pressure=active?'基本 ±'+state.profile.baseSafe+(state.activePressure?' / 妨害 −'+state.activePressure:''):'次の番に判定を表示';
+    const low=state.profile.target-state.activeSafe,high=state.profile.target+state.activeSafe;
+    const safeText=active?'合格：'+Math.max(state.profile.minValue,low)+'〜'+Math.min(state.profile.maxValue,high):'　';
     return '<section class="pv-panel '+(playing?'pv-active':active?'pv-done':'')+' '+(active&&state.phase==='judged'&&a?'pv-hit-'+a.tier:'')+'" data-side="'+i+'">'+
       '<div class="pv-panel-top"><span class="pv-panel-icon">'+esc(p.icon)+'</span><strong class="pv-panel-name">'+esc(p.name)+'</strong><span class="pv-panel-side">'+(i+1)+'P</span></div>'+
       '<div class="pv-battle-hud"><span class="pv-lives">'+heart(state.lives[i])+'</span><strong>SCORE '+state.scores[i]+'</strong></div>'+
@@ -109,18 +111,19 @@
       '<div class="pv-quiet"><span>静ゲージ '+state.quiet[i]+'%</span><i><b style="width:'+state.quiet[i]+'%"></b></i>'+(active&&state.mushin[i]?'<em>無心 ×1.5</em>':'')+'</div>'+ 
       '<div class="pv-panel-status '+(a&&a.tier==='perfect'?'pv-perfect':'')+'">'+label+'</div>'+
       '<div class="pv-panel-target"><strong>'+state.profile.target+'</strong><small>をねらえ！</small><span>'+state.profile.gimmicks.map(esc).join('・')+'</span></div>'+
+      '<div class="pv-person-safe '+(active?'is-current':'')+'"><span>'+esc(pressure)+'</span><strong>'+esc(safeText)+'</strong></div>'+
       '<div class="pv-lane-wrap"><div class="pv-meter-shell" style="width:'+Math.round(state.profile.barScale*100)+'%">'+
       '<div class="pv-meter"><div class="pv-meter-line"></div>'+b+
       (show?'<div class="pv-meter-cursor" id="pv-cursor-'+i+'" style="left:'+pct+'%"></div>':'')+'</div>'+meterLabels()+'</div></div>'+
       '<button type="button" class="pv-stop" data-stop="'+i+'" '+(moving?'':'disabled')+'>STOP！</button>'+
       '<div class="pv-panel-summary">'+(a?stopSummary(i):'<span>　</span>')+'</div>'+
-      '<div class="pv-person-safe '+(active?'is-current':'')+'">'+esc(pressure)+'</div>'+
+
       '</section>';
   }
   function consoleHtml(){
     const who=state.players[activeIndex()];
     if(state.phase==='ready')return '<p>'+esc(who.name)+' の番！</p><button class="pv-next" type="button" data-start-turn>準備OK！ START</button>';
-    if(state.phase==='countdown')return '<strong class="pv-countdown">'+state.countdown+'</strong>';
+    if(state.phase==='countdown')return '<span class="pv-countdown-label">合格 ±'+state.activeSafe+'</span><strong class="pv-countdown">'+state.countdown+'</strong>';
     if(state.phase==='moving')return '<p>'+esc(who.name)+' がプレイ中！</p>';
     if(state.phase==='judged'){
       const a=state.result.attempt,r=state.result.reward;
@@ -128,7 +131,7 @@
       if(a.special)bonuses.push((a.perfect?'PERFECT':'3連続GREAT')+'：回復＋1・妨害−2');
       if(a.mushinActive)bonuses.push('無心 ×1.5');
       if(a.mushinReady)bonuses.push('静ゲージ満タン：次の自分の番で無心');
-      if(a.chargeReward)bonuses.push('500点達成：'+(r.healed>Number(a.special)?'回復':'満タンなら妨害'));
+      if(a.chargeReward)bonuses.push('350点達成：'+(r.healed>Number(a.special)?'回復':'満タンなら妨害'));
       if(r.damage)bonuses.push('判定外：ライフ−1');
       return '<div class="pv-impact-line tier-'+a.tier+'"><strong>'+(a.error>a.safe?'判定外！':({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||''))+'</strong><b>＋'+a.points+' POINT</b></div>'+
       '<p class="pv-judge-copy">'+esc(who.name)+'　誤差'+a.error+' / 合格±'+a.safe+(a.special?'　特別効果発動！':'')+
@@ -139,10 +142,12 @@
   }
   function battleScreen(){
     const prof=state.profile;
+    const lower=Math.max(prof.minValue,prof.target-state.activeSafe),upper=Math.min(prof.maxValue,prof.target+state.activeSafe);
     return '<div class="pv-battle"><div class="pv-top"><button class="nav-pill" type="button" data-leave>← 対戦をやめる</button>'+
       '<div class="pv-round-title">TURN '+state.turnNo+' / LEVEL '+prof.level+'・'+(state.difficulty==='easy'?'かんたん':'通常')+'</div></div>'+
-      '<div class="pv-safety">基本セーフ ±'+prof.baseSafe+'　／　現在 '+esc(state.players[activeIndex()].name)+'：±'+state.activeSafe+
-      (state.activePressure?'（妨害 −'+state.activePressure+'）':'')+'</div>'+
+      '<div class="pv-safety"><span class="pv-safe-title">'+esc(state.players[activeIndex()].name)+' の合格範囲</span>'+
+      '<strong>±'+state.activeSafe+'</strong><b>'+lower+' 〜 '+upper+'</b>'+
+      (state.activePressure?'<span class="pv-safe-attack">妨害 −'+state.activePressure+' / 基本±'+prof.baseSafe+'</span>':'<span class="pv-safe-basic">基本±'+prof.baseSafe+'</span>')+'</div>'+
       '<div class="pv-panels">'+panel(0)+panel(1)+'</div>'+
       '<div class="pv-console">'+consoleHtml()+'</div>'+
       '<div class="pv-rotate-overlay" data-rotate hidden><div><strong>スマホを横向きにしてね</strong><p>リンクバーストと同じ横画面専用だよ。<br>縦画面ではSTOPできません。</p></div></div></div>';
@@ -290,7 +295,7 @@
   },{passive:false});
   root.addEventListener('click',function(e){
     const b=e.target.closest('button');if(!b)return;
-    if(b.hasAttribute('data-stop'))return;
+    if(b.hasAttribute('data-stop')){stopPlayer(Number(b.dataset.stop));return}
     if(b.hasAttribute('data-home')){if(state.screen==='battle'&&!window.confirm('対戦をやめてゲーム一覧へ戻る？'))return;stopTimers();location.href='../../';return}
     if(b.hasAttribute('data-back')){if(state.screen==='select'||state.screen==='final'){location.href='../';return}
       if(state.screen==='form')switchScreen(state.editId?'manage':'pick');
