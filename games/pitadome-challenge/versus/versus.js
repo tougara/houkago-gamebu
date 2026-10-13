@@ -185,16 +185,39 @@
   }
 
   function finalScreen(){
-    const w=state.result?.winner;
-    return nav()+'<div class="pv-wrap">'+heading('KO決着！','全'+state.turnNo+'ターンの勝負')+
-      '<section class="pv-result"><h1>WIN！</h1><h2>'+esc(state.players[w].icon+' '+state.players[w].name)+' の勝利！</h2>'+
-      '<div class="pv-result-grid">'+state.players.map((p,i)=>'<div class="pv-result-card"><small>'+(i+1)+'P</small><strong>'+esc(p.icon)+'</strong>'+
-      '<strong>'+esc(p.name)+'</strong><div class="pv-heart">'+heart(state.lives[i])+'</div><small>SCORE '+state.scores[i]+'</small><small>PERFECT '+state.perfects[i]+'回</small></div>').join('')+'</div>'+
-      '<div class="pv-rules"><h2>決着：TURN '+state.turnNo+' / 判定 ±'+state.activeSafe+'</h2><p>'+esc(state.players[activeIndex()].name)+'：STOP '+
-        state.result.attempt.value+' / 誤差 '+state.result.attempt.error+'</p></div>'+
-      '<button class="btn full" type="button" data-rematch>同じ2人でもう一度</button>'+
-      '<button class="btn secondary full" type="button" data-new-players>プレイヤーを変更</button>'+
-      '<button class="btn secondary full" type="button" data-home>ゲームをえらぶ</button></section></div>';
+    const winner=state.result?.winner;
+    const loser=1-winner;
+    const win=state.players[winner],lose=state.players[loser];
+    const detail=state.result?.attempt;
+    const playerResult=(p,i)=>'<article class="pv-final-player '+(i===winner?'is-winner':'is-loser')+'">'+
+      '<div class="pv-final-player-name"><span class="pv-final-player-icon">'+esc(p.icon)+'</span>'+
+      '<div><small>'+(i+1)+'P'+(i===winner?' / WINNER':'')+'</small><strong>'+esc(p.name)+'</strong></div></div>'+
+      '<div class="pv-final-player-life">'+heart(state.lives[i])+'</div>'+
+      '<div class="pv-final-player-stats"><span>SCORE <b>'+state.scores[i]+'</b></span>'+
+      '<span>PERFECT <b>'+state.perfects[i]+'回</b></span></div>'+
+      '</article>';
+    return '<div class="pv-final-landscape">'+
+      '<header class="pv-final-header"><button type="button" class="pv-final-back" data-back>← モード選択へ</button>'+
+      '<strong>KO決着！ <span>TURN '+state.turnNo+' / '+(state.difficulty==='easy'?'かんたん':'通常')+'</span></strong></header>'+
+      '<div class="pv-final-content">'+
+      '<section class="pv-final-victory" aria-label="勝者">'+
+      '<span class="pv-final-win-tag">WINNER</span>'+
+      '<h1>WIN！</h1>'+
+      '<div class="pv-final-winner-name"><span>'+esc(win.icon)+'</span><strong>'+esc(win.name)+'</strong></div>'+
+      '<p>'+(winner+1)+'Pの勝利！</p></section>'+
+      '<section class="pv-final-detail">'+
+      '<div class="pv-final-players">'+state.players.map(playerResult).join('')+'</div>'+
+      '<div class="pv-final-decisive"><strong>決着：TURN '+state.turnNo+' / 合格 ±'+state.activeSafe+'</strong>'+
+      '<span>'+esc(lose.name)+'：STOP '+detail.value+' / 誤差 '+detail.error+'</span></div>'+
+      '</section></div>'+
+      '<footer class="pv-final-actions">'+
+      '<button type="button" class="pv-final-primary" data-rematch>同じ2人でもう一度</button>'+
+      '<button type="button" class="pv-final-secondary" data-new-players>プレイヤーを変更</button>'+
+      '<button type="button" class="pv-final-secondary" data-home>ゲームをえらぶ</button>'+
+      '</footer>'+
+      '<div class="pv-rotate-overlay" data-rotate hidden><div><strong>スマホを横向きにしてね</strong>'+
+      '<p>勝利画面も横画面専用です。<br>横向きにすると結果と再戦ボタンが表示されます。</p></div></div>'+
+      '</div>';
   }
   function render(){
     if(['select','pick','manage','form'].includes(state.screen))syncIds();
