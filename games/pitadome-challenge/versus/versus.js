@@ -8,9 +8,9 @@
   const state={
     screen:'select',ids:[],targetSlot:0,editId:null,formIcon:'',
     difficulty:'normal',round:1,profile:null,players:[],
-    lives:[3,3],perfects:[0,0],attempts:[null,null],
-    order:[0,1],turn:0,phase:'ready',countdown:3,
-    value:0,dir:1,elapsed:0,lastTs:0,raf:0,timer:0,
+    lives:[3,3],perfects:[0,0],attempts:[null,null],scores:[0,0],combos:[0,0],greatStreaks:[0,0],charges:[0,0],quiet:[0,0],mushin:[false,false],mushinReady:[false,false],pendingPressure:[0,0],activePressure:0,activeSafe:12,
+    currentSide:0,turnNo:1,starter:0,lastStarter:null,phase:'ready',countdown:3,
+    motion:null,value:0,dir:1,elapsed:0,lastTs:0,raf:0,timer:0,
     result:null,recorded:false,notice:''
   };
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -37,13 +37,14 @@
   }
   function selectScreen(){
     return nav()+'<div class="pv-wrap">'+heading('2人KO対戦','スマホ1台で交互にSTOP！')+currentPlayers(true)+
-      '<div class="pv-rules"><h2>勝ち方</h2><p>2人ともライフ3。毎ラウンド、同じ目標・同じ難しさで先攻と後攻が交互にSTOPするよ。</p>'+
-      '<p>セーフ範囲を外すとライフ−1。PERFECTならライフ＋1（最大3）、相手がPERFECTでなければ相手に1ダメージ！</p>'+
-      '<p>ラウンドが進むほどセーフ範囲は狭くなる。早押し加点はなし。両者のSTOP後に結果をまとめて判定するよ。</p></div>'+
+      '<div class="pv-rules"><h2>勝ち方</h2><p>1人1回ずつ完全交代！ STOPしたその場で得点・ライフ・判定を確定し、相手に交代するよ。</p>'+
+      '<p>ライフ3。セーフ範囲を外すと−1。PERFECTはライフ＋1＆次の相手のセーフ範囲−2！</p>'+
+      '<p>GREAT以上（PERFECT以外）3連続も同じ効果。累計500点ごとにライフ＋1、満タンなら相手のセーフ範囲−1。</p>'+
+      '<p>妨害は次の相手の1回だけ・最大−3。早押し加点なし。得点は回復のために使い、勝敗はKOで決める。</p></div>'+
       '<div class="pv-rules"><h2>むずかしさ</h2><div class="pv-diff-choice">'+
       '<button type="button" data-diff="easy" class="'+(state.difficulty==='easy'?'selected':'')+'">かんたん</button>'+
       '<button type="button" data-diff="normal" class="'+(state.difficulty==='normal'?'selected':'')+'">通常</button></div>'+
-      '<p class="pv-note">後半は誤差±1、最後は誤差0だけがセーフ！ 2人とも同時にライフ0なら引き分け。</p></div>'+
+      '<p class="pv-note">後半は±1、最後はピッタリのみ！ 先攻は初戦ランダム、再戦では入れ替わるよ。</p></div>'+
       '<button class="btn full pv-action" type="button" data-begin>2人で対戦をはじめる</button>'+
       (state.notice?'<p class="pv-error">'+esc(state.notice)+'</p>':'')+'</div>';
   }
@@ -76,77 +77,89 @@
       '</form></div>';
   }
   function heart(life){return '♥'.repeat(clamp(life,0,3))+'♡'.repeat(3-clamp(life,0,3))}
-  function activeIndex(){return state.order[state.turn]}
+  function activeIndex(){return state.currentSide}
   function stopSummary(i){
-    const a=state.attempts[i];
-    if(!a)return '<span>STOP待ち</span>';
-    return '<span>'+(a.perfect?'PERFECT！':a.error<=state.profile.safe?'SAFE':'OUT')+' / STOP '+a.value+' / 誤差 '+a.error+'</span>';
+    const a=state.attempts[i];if(!a)return '<span>STOP待ち</span>';
+    return '<span>'+({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')+
+      ' / STOP '+a.value+' / 誤差 '+a.error+' / ＋'+a.points+'点</span>';
   }
-  function meterLabels(){return '<div class="pv-meter-labels"><span>0</span><span>50</span><span>100</span></div>'}
+  function meterLabels(){
+    const p=state.profile;if(!p)return '';
+    if(state.difficulty==='easy')return '<div class="pv-meter-labels pv-meter-easy">'+Array.from({length:10},(_,i)=>{
+      const v=(i+1)*10,at=((v-1)/99)*100;return '<span style="left:'+at+'%">'+v+'</span>';
+    }).join('')+'</div>';
+    const at=((p.refPoint-p.minValue)/(p.maxValue-p.minValue))*100;
+    return '<div class="pv-meter-labels"><span style="left:0%">'+p.minValue+'</span>'+
+      '<span style="left:'+at+'%">'+p.refPoint+'</span><span style="left:100%">'+p.maxValue+'</span></div>';
+  }
   function panel(i){
-    const p=state.players[i],a=state.attempts[i];
-    const active=state.phase==='moving'&&activeIndex()===i;
-    const focused=!a&&activeIndex()===i&&['ready','countdown','moving'].includes(state.phase);
-    const status=a?(a.perfect?'PERFECT！':a.error<=state.profile.safe?'セーフ！':'範囲外！'):
-      focused?(state.phase==='moving'?'いまだ！ STOP！':state.phase==='countdown'?'カウント中':'順番待機完了'):'相手のターンを待ってね';
-    const cursorPct=clamp(state.value,0,100);
-    const target=state.profile.target;
-    const blind=state.profile.blind;
-    const showing=active||a;
-    const pct=a?a.value:active?cursorPct:0;
-    return '<section class="pv-panel '+(active?'pv-active':a?'pv-done':focused?'pv-active':'')+'" data-side="'+i+'">'+
+    const p=state.players[i],a=state.attempts[i],active=activeIndex()===i;
+    const moving=active&&state.phase==='moving';
+    const playing=active&&['moving','ready','countdown'].includes(state.phase);
+    const v=a?a.value:state.profile.minValue,pct=((moving?state.value:v)-state.profile.minValue)/(state.profile.maxValue-state.profile.minValue)*100;
+    const label=active&&state.phase!=='judged'?(moving?'いまだ！ STOP！':state.phase==='countdown'?'カウント中':'準備してね'):
+      a?({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||''):'相手の番';
+    const b=state.profile.blind?'<div class="pv-meter-blind" style="left:'+state.profile.blindStart+'%;width:'+(state.profile.blindEnd-state.profile.blindStart)+'%"></div>':'';
+    const show=moving||Boolean(a);
+    const pressure=active?'基本±'+state.profile.baseSafe+(state.activePressure?' − 妨害'+state.activePressure:'')+' → ±'+state.activeSafe:'次の判定は順番になったら表示';
+    return '<section class="pv-panel '+(playing?'pv-active':active?'pv-done':'')+'" data-side="'+i+'">'+
       '<div class="pv-panel-top"><span class="pv-panel-icon">'+esc(p.icon)+'</span><strong class="pv-panel-name">'+esc(p.name)+'</strong><span class="pv-panel-side">'+(i+1)+'P</span></div>'+
-      '<div class="pv-lives" data-lives="'+i+'">'+heart(state.lives[i])+'</div>'+
-      '<div class="pv-stats"><span>PERFECT '+state.perfects[i]+'</span><span>'+(a?'誤差 '+a.error:'挑戦待ち')+'</span></div>'+
-      '<div class="pv-panel-status" data-status="'+i+'">'+status+'</div>'+
-      '<div class="pv-panel-target">目標 '+target+'</div>'+
-      '<div class="pv-lane-wrap"><div style="width:100%"><div class="pv-meter">'+
-      '<div class="pv-meter-line"></div><div class="pv-meter-target" style="left:'+target+'%"></div>'+
-      (blind?'<div class="pv-meter-blind" style="left:'+blind.start+'%;width:'+(blind.end-blind.start)+'%"></div>':'')+
-      (showing?'<div class="pv-meter-cursor" id="pv-cursor-'+i+'" style="left:'+pct+'%;'+(blind&&pct>=blind.start&&pct<=blind.end?'visibility:hidden':'')+'"></div>':'')+
-      '</div>'+meterLabels()+'</div></div>'+
-      '<button type="button" class="pv-stop" data-stop="'+i+'" '+(active?'':'disabled')+'>STOP！</button>'+
-      '<div class="pv-panel-summary">'+(a?stopSummary(i):'　')+'</div></section>';
+      '<div class="pv-battle-hud"><span class="pv-lives">'+heart(state.lives[i])+'</span><strong>SCORE '+state.scores[i]+'</strong></div>'+
+      '<div class="pv-stats"><span>COMBO '+state.combos[i]+' ×'+rules.comboMultiplierFor(state.combos[i]).toFixed(1)+'</span><span>GREAT連続 '+state.greatStreaks[i]+'/3</span><span>回復まで '+(rules.CHARGE_LIMIT-state.charges[i])+'pt</span></div>'+
+      '<div class="pv-panel-status '+(a&&a.tier==='perfect'?'pv-perfect':'')+'">'+label+'</div>'+
+      '<div class="pv-panel-target"><strong>'+state.profile.target+'</strong><small>をねらえ！</small><span>'+state.profile.gimmicks.map(esc).join('・')+'</span></div>'+
+      '<div class="pv-lane-wrap"><div class="pv-meter-shell" style="width:'+Math.round(state.profile.barScale*100)+'%">'+
+      '<div class="pv-meter"><div class="pv-meter-line"></div>'+b+
+      (show?'<div class="pv-meter-cursor" id="pv-cursor-'+i+'" style="left:'+pct+'%"></div>':'')+'</div>'+meterLabels()+'</div></div>'+
+      '<button type="button" class="pv-stop" data-stop="'+i+'" '+(moving?'':'disabled')+'>STOP！</button>'+
+      '<div class="pv-panel-summary">'+(a?stopSummary(i):'<span>　</span>')+'</div>'+
+      '<div class="pv-person-safe '+(active?'is-current':'')+'">'+esc(pressure)+'</div>'+
+      '</section>';
   }
   function consoleHtml(){
-    if(state.phase==='ready')return '<p>'+(activeIndex()+1)+'P '+esc(state.players[activeIndex()].name)+' の番！</p>'+
-      '<button class="pv-next" type="button" data-start-turn>準備OK！ スタート</button>';
-    if(state.phase==='countdown')return '<p style="font-size:clamp(28px,7vw,48px);color:#ffe393">'+state.countdown+'</p>';
-    if(state.phase==='moving')return '<p>'+(activeIndex()+1)+'P がプレイ中！ バーを見てSTOP！</p><small>相手のボタンは押せないよ</small>';
-    if(state.phase==='handoff')return '<p>'+esc(state.players[state.order[1]].name)+' の番に交代！</p>'+
-      '<button class="pv-next" type="button" data-handoff>後攻の準備へ</button>';
+    const who=state.players[activeIndex()];
+    if(state.phase==='ready')return '<p>'+esc(who.name)+' の番！</p><button class="pv-next" type="button" data-start-turn>準備OK！ START</button>';
+    if(state.phase==='countdown')return '<strong class="pv-countdown">'+state.countdown+'</strong>';
+    if(state.phase==='moving')return '<p>'+esc(who.name)+' がプレイ中！</p>';
     if(state.phase==='judged'){
-      const a=state.attempts,r=state.result;
-      const line=r.damage.map((n,i)=>state.players[i].name+' '+(n?'−1':'−0')+(r.healed[i]?' / 回復＋1':'')).join('　｜　');
-      return '<p>ROUND '+state.round+' の判定：'+esc(line)+'</p>'+
-        '<button class="pv-next" type="button" data-next-round>次のラウンドへ</button>';
+      const a=state.result.attempt,r=state.result.reward;
+      const bonuses=[];
+      if(a.special)bonuses.push((a.perfect?'PERFECT':'3連続GREAT')+'：回復＋1・妨害−2');
+      if(a.chargeReward)bonuses.push('500点達成：'+(r.healed>Number(a.special)?'回復':'満タンなら妨害'));
+      if(r.damage)bonuses.push('判定外：ライフ−1');
+      return '<p class="pv-judge-copy">'+esc(who.name)+'：'+({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')+' ＋'+a.points+'点'+
+      (bonuses.length?'　'+esc(bonuses.join(' / ')):'')+'</p>'+
+      '<button class="pv-next" type="button" data-next-turn>次は '+esc(state.players[1-activeIndex()].name)+' の番</button>';
     }
     return '';
   }
   function battleScreen(){
     const prof=state.profile;
-    return '<div class="pv-battle"><div class="pv-top"><button class="nav-pill" type="button" data-leave>← 対戦をやめる</button><div class="pv-round-title">ROUND '+state.round+' / '+(state.difficulty==='easy'?'かんたん':'通常')+'</div></div>'+
-      '<div class="pv-safety">セーフ範囲 ±'+prof.safe+(prof.safe===0?'（ピッタリのみ）':'')+'</div>'+
-      '<div class="pv-shared-target"><span>この数字をねらえ！</span><strong>'+prof.target+'</strong></div>'+
+    return '<div class="pv-battle"><div class="pv-top"><button class="nav-pill" type="button" data-leave>← 対戦をやめる</button>'+
+      '<div class="pv-round-title">TURN '+state.turnNo+' / LEVEL '+prof.level+'・'+(state.difficulty==='easy'?'かんたん':'通常')+'</div></div>'+
+      '<div class="pv-safety">基本セーフ ±'+prof.baseSafe+'　／　現在 '+esc(state.players[activeIndex()].name)+'：±'+state.activeSafe+
+      (state.activePressure?'（妨害 −'+state.activePressure+'）':'')+'</div>'+
       '<div class="pv-panels">'+panel(0)+panel(1)+'</div>'+
-      '<div class="pv-console">'+consoleHtml()+'</div></div>';
+      '<div class="pv-console">'+consoleHtml()+'</div>'+
+      '<div class="pv-rotate-overlay" data-rotate hidden><div><strong>スマホを横向きにしてね</strong><p>リンクバーストと同じ横画面専用だよ。<br>縦画面ではSTOPできません。</p></div></div></div>';
   }
   function finalScreen(){
-    const w=state.result?.winner,draw=w==null;
-    return nav()+'<div class="pv-wrap">'+heading('KO決着！','全'+state.round+'ラウンドの勝負')+
-      '<section class="pv-result"><h1>'+(draw?'DRAW！':'WIN！')+'</h1>'+
-      '<h2>'+(draw?'同時KOで引き分け！':esc(state.players[w].icon+' '+state.players[w].name)+' の勝利！')+'</h2>'+
+    const w=state.result?.winner;
+    return nav()+'<div class="pv-wrap">'+heading('KO決着！','全'+state.turnNo+'ターンの勝負')+
+      '<section class="pv-result"><h1>WIN！</h1><h2>'+esc(state.players[w].icon+' '+state.players[w].name)+' の勝利！</h2>'+
       '<div class="pv-result-grid">'+state.players.map((p,i)=>'<div class="pv-result-card"><small>'+(i+1)+'P</small><strong>'+esc(p.icon)+'</strong>'+
-      '<strong>'+esc(p.name)+'</strong><div class="pv-heart">'+heart(state.lives[i])+'</div><small>PERFECT '+state.perfects[i]+'回</small></div>').join('')+'</div>'+
-      '<div class="pv-rules"><h2>決着ラウンド '+state.round+' / セーフ ±'+state.profile.safe+'</h2>'+state.attempts.map((a,i)=>'<p>'+(i+1)+'P '+esc(state.players[i].name)+'：STOP '+a.value+' / 誤差 '+a.error+(a.perfect?'（PERFECT！）':a.error<=state.profile.safe?'（セーフ）':'（範囲外）')+'</p>').join('')+'</div>'+
+      '<strong>'+esc(p.name)+'</strong><div class="pv-heart">'+heart(state.lives[i])+'</div><small>SCORE '+state.scores[i]+'</small><small>PERFECT '+state.perfects[i]+'回</small></div>').join('')+'</div>'+
+      '<div class="pv-rules"><h2>決着：TURN '+state.turnNo+' / 判定 ±'+state.activeSafe+'</h2><p>'+esc(state.players[activeIndex()].name)+'：STOP '+
+        state.result.attempt.value+' / 誤差 '+state.result.attempt.error+'</p></div>'+
       '<button class="btn full" type="button" data-rematch>同じ2人でもう一度</button>'+
       '<button class="btn secondary full" type="button" data-new-players>プレイヤーを変更</button>'+
       '<button class="btn secondary full" type="button" data-home>ゲームをえらぶ</button></section></div>';
   }
   function render(){
-    if(state.screen==='select'||state.screen==='pick'||state.screen==='manage'||state.screen==='form')syncIds();
+    if(['select','pick','manage','form'].includes(state.screen))syncIds();
     root.className='pitadome-app pv-app screen-'+state.screen;
     root.innerHTML=({select:selectScreen,pick:pickScreen,manage:manageScreen,form:formScreen,battle:battleScreen,final:finalScreen}[state.screen]||selectScreen)();
+    syncRotate();
   }
   function stopTimers(){
     if(state.raf)cancelAnimationFrame(state.raf);
@@ -161,11 +174,14 @@
     state.formIcon=edit?edit.icon:registry.ICONS.find(icon=>!used.has(icon));
     state.notice='';switchScreen('form');
   }
-  function beginRound(){
-    state.profile=rules.roundProfile(state.round,state.difficulty);
-    state.order=[rules.firstPlayer(state.round),1-rules.firstPlayer(state.round)];
-    state.turn=0;state.attempts=[null,null];state.phase='ready';
-    state.result=null;state.value=0;state.dir=1;state.elapsed=0;
+  function beginTurn(){
+    state.currentSide=state.starter===0?(state.turnNo-1)%2:1-(state.turnNo-1)%2;
+    // Each pair gets the same target, moving profile and baseline safe range.
+    if(state.turnNo%2===1||!state.profile)state.profile=rules.roundProfile(state.turnNo,state.difficulty);
+    state.activePressure=state.pendingPressure[state.currentSide];
+    state.pendingPressure[state.currentSide]=0;
+    state.activeSafe=rules.effectiveSafe(state.profile.baseSafe,state.activePressure);
+    state.phase='ready';state.motion=null;state.value=state.profile.minValue;
     switchScreen('battle');
   }
   function beginMatch(){
@@ -174,83 +190,83 @@
     state.players=state.ids.map(id=>roster().find(p=>p.id===id));
     if(state.players.some(p=>!p)){state.notice='メンバー情報を確認してね。';render();return}
     saveIds();
-    state.lives=[3,3];state.perfects=[0,0];state.round=1;state.recorded=false;beginRound();
+    state.starter=state.lastStarter==null?rules.chooseRandom():1-state.lastStarter;
+    state.lastStarter=state.starter;
+    state.lives=[3,3];state.perfects=[0,0];state.scores=[0,0];state.combos=[0,0];
+    state.greatStreaks=[0,0];state.charges=[0,0];state.pendingPressure=[0,0];
+    state.quiet=[0,0];state.mushin=[false,false];state.mushinReady=[false,false];
+    state.attempts=[null,null];state.turnNo=1;state.profile=null;state.recorded=false;
+    beginTurn();
   }
   function countdown(){
-    if(state.screen!=='battle'||state.phase!=='ready')return;
+    if(state.screen!=='battle'||state.phase!=='ready'||!landscape())return;
     stopTimers();state.phase='countdown';state.countdown=3;render();
     function step(){
-      if(state.phase!=='countdown'||state.screen!=='battle')return;
+      if(state.phase!=='countdown'||state.screen!=='battle'||!landscape())return;
       state.countdown--;
       if(state.countdown===0){startMotion();return}
-      render();state.timer=setTimeout(step,630);
+      render();state.timer=setTimeout(step,650);
     }
-    state.timer=setTimeout(step,630);
+    state.timer=setTimeout(step,650);
   }
-  function speedMultiplier(){
-    const p=state.profile;
-    if(p.movement==='accel')return Math.min(1.45,.75+state.elapsed*.13);
-    if(p.movement==='change')return .8+.35*(1+Math.sin(state.elapsed*2.2));
-    return 1;
+  function landscape(){return window.matchMedia?window.matchMedia('(orientation: landscape)').matches:window.innerWidth>window.innerHeight}
+  function syncRotate(){
+    const overlay=root.querySelector('[data-rotate]');if(overlay)overlay.hidden=landscape();
   }
   function updatePosition(ts){
     if(!state.lastTs){state.lastTs=ts;return}
-    const dt=clamp((ts-state.lastTs)/1000,0,.07);
-    state.lastTs=ts;state.elapsed+=dt;
-    const delta=dt*state.profile.speed*speedMultiplier();
-    let next=state.value+state.dir*delta;
-    if(next>100){next=200-next;state.dir=-1}
-    if(next<0){next=-next;state.dir=1}
-    state.value=clamp(next,0,100);
+    const dt=Math.min(.04,Math.max(0,(ts-state.lastTs)/1000));state.lastTs=ts;
+    state.motion=rules.advanceMotion(state.motion,dt,state.profile);
+    state.value=state.motion.value;
   }
   function paintCursor(){
-    const i=activeIndex(),el=document.getElementById('pv-cursor-'+i);
-    if(!el)return;
-    const pct=state.value,b=state.profile.blind;
-    el.style.left=pct+'%';
-    el.style.visibility=b&&pct>=b.start&&pct<=b.end?'hidden':'visible';
+    const i=activeIndex(),el=document.getElementById('pv-cursor-'+i);if(!el)return;
+    const p=state.profile,at=((state.value-p.minValue)/(p.maxValue-p.minValue))*100;
+    el.style.left=at+'%';
+    el.classList.toggle('blind',p.blind&&at>=p.blindStart&&at<=p.blindEnd);
   }
   function motionFrame(ts){
-    if(state.phase!=='moving'||state.screen!=='battle')return;
-    updatePosition(ts);paintCursor();
-    state.raf=requestAnimationFrame(motionFrame);
+    if(state.phase!=='moving'||state.screen!=='battle'||!landscape())return;
+    updatePosition(ts);paintCursor();state.raf=requestAnimationFrame(motionFrame);
   }
   function startMotion(){
-    if(state.screen!=='battle'||state.phase!=='countdown')return;
+    if(state.screen!=='battle'||state.phase!=='countdown'||!landscape())return;
     state.phase='moving';
-    state.value=0;state.dir=1;state.elapsed=0;state.lastTs=performance.now();
+    state.motion=rules.initialMotion(state.profile);
+    state.value=state.motion.value;state.lastTs=performance.now();
     render();state.raf=requestAnimationFrame(motionFrame);
   }
   function stopPlayer(i){
-    if(state.screen!=='battle'||state.phase!=='moving'||activeIndex()!==i)return;
-    updatePosition(performance.now());
-    const a=rules.evaluateStop(state.value,state.profile.target);
-    stopTimers();state.attempts[i]=a;
-    if(a.perfect)state.perfects[i]++;
-    if(state.turn===0){state.phase='handoff'}
-    else judgeRound();
-    render();
+    if(state.screen!=='battle'||state.phase!=='moving'||activeIndex()!==i||!landscape())return;
+    updatePosition(performance.now());stopTimers();
+    const p=state.profile;
+    const attempt=rules.evaluateStop(state.value,p.target,{
+      combo:state.combos[i],greatStreak:state.greatStreaks[i],charge:state.charges[i],score:state.scores[i]
+    },state.activeSafe);
+    state.attempts[i]=attempt;state.combos[i]=attempt.combo;state.greatStreaks[i]=attempt.greatStreak;
+    state.charges[i]=attempt.charge;state.scores[i]=attempt.total;
+    if(attempt.perfect)state.perfects[i]++;
+    const reward=rules.applyRewards(state.lives[i],attempt);
+    state.lives[i]=reward.life;
+    const other=1-i;
+    state.pendingPressure[other]=Math.min(rules.MAX_PRESSURE,state.pendingPressure[other]+reward.pressure);
+    state.result={attempt,reward,winner:reward.life<=0?other:null};
+    if(reward.life<=0){finishMatch();render();return}
+    state.phase='judged';render();
   }
-  function handoff(){
-    if(state.phase!=='handoff')return;
-    state.turn=1;state.phase='ready';state.value=0;state.lastTs=0;render();
-  }
-  function judgeRound(){
-    state.result=rules.resolveRound(state.lives,state.attempts,state.profile.safe);
-    state.lives=state.result.lives;
-    if(state.result.knockout){finishMatch();return}
-    state.phase='judged';
+  function nextTurn(){
+    if(state.phase!=='judged')return;
+    state.turnNo++;beginTurn();
   }
   function finishMatch(){
-    if(!state.recorded){
-      state.recorded=true;
-      const ids=state.players.map(p=>registry.resolveId(p));
-      const winners=state.result.winner==null?[]:[ids[state.result.winner]];
-      const metrics={};
-      ids.forEach((id,i)=>{if(id)metrics[id]={totalPerfects:state.perfects[i],totalDraws:state.result.winner==null?1:0}});
-      registry.recordGame({gameId:'pitadome-challenge-versus',participants:state.players,winners,metrics});
-    }
+    if(state.recorded)return;
+    state.recorded=true;
+    const ids=state.players.map(p=>registry.resolveId(p)),winner=state.result.winner;
+    const metrics={};const scores={};
+    ids.forEach((id,i)=>{if(id){metrics[id]={totalPerfects:state.perfects[i]};scores[id]=state.scores[i]}});
+    registry.recordGame({gameId:'pitadome-challenge-versus',participants:state.players,winners:[ids[winner]],scores,metrics});
     state.screen='final';
+    stopTimers();
   }
   function quit(){
     if(state.screen!=='battle'){switchScreen('select');return}
@@ -282,8 +298,8 @@
     if(b.hasAttribute('data-begin')){beginMatch();return}
     if(b.hasAttribute('data-leave')){quit();return}
     if(b.hasAttribute('data-start-turn')){countdown();return}
-    if(b.hasAttribute('data-handoff')){handoff();return}
-    if(b.hasAttribute('data-next-round')){if(state.phase!=='judged')return;state.round++;beginRound();return}
+
+    if(b.hasAttribute('data-next-turn')){nextTurn();return}
     if(b.hasAttribute('data-rematch')){beginMatch();return}
     if(b.hasAttribute('data-new-players')){switchScreen('select');return}
   });
@@ -317,9 +333,11 @@
   });
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden'&&state.screen==='battle'&&['moving','countdown'].includes(state.phase)){
-      stopTimers();state.phase='ready';state.value=0;render();
+      stopTimers();state.phase='ready';state.motion=null;state.value=state.profile.minValue;render();
     }
   });
+  window.addEventListener('resize',()=>{if(state.screen==='battle'&&['moving','countdown'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
+  window.addEventListener('orientationchange',()=>{if(state.screen==='battle'&&['moving','countdown'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
   window.addEventListener('pagehide',stopTimers);
   state.ids=readIds();syncIds();render();
 })();
