@@ -143,7 +143,7 @@
       '<strong>TURN '+state.turnNo+' / LEVEL '+p.level+'・'+(state.difficulty==='easy'?'かんたん':'通常')+'</strong></header>'+
       '<div class="pv-duel-body">'+
       playerCard(0)+
-      '<main class="pv-play-center '+(state.activePressure?'is-pressured':'')+'">'+
+      '<section class="pv-play-center '+(state.activePressure?'is-pressured':'')+'">'+
       '<div class="pv-turn-heading"><span>'+esc(player.icon)+' '+esc(player.name)+' の番</span><small>'+esc(p.gimmicks.join('・'))+'</small></div>'+
       '<div class="pv-objective"><span>目標</span><strong>'+p.target+'</strong></div>'+
       '<div class="pv-safe-range '+(state.activePressure?'is-attacked':'')+'"><span>合格</span><strong>'+lo+'〜'+hi+'</strong><b>±'+state.activeSafe+'</b>'+
@@ -155,7 +155,7 @@
       '<div class="pv-action-slot">'+actionHtml()+'</div>'+
       result+
       (state.phase==='judged'?'<div class="pv-hit-overlay '+(a.error>a.safe?'is-out':'tier-'+a.tier)+'" aria-hidden="true"><strong>'+verdictText(a)+'</strong><span>＋'+a.points+' POINT</span></div>':'')+
-      '</main>'+
+      '</section>'+
       playerCard(1)+
       '</div>'+
       '<div class="pv-rotate-overlay" data-rotate hidden><div><strong>スマホを横向きにしてね</strong><p>横画面専用です。縦画面ではゲームを停止します。</p></div></div>'+
