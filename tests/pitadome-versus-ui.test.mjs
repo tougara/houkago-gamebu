@@ -135,3 +135,26 @@ test('result panel persists after effect timer and offers detailed solo-style st
   assert.doesNotMatch(css,/pvResultReveal 1\.15s/);
   assert.match(css,/\.pv-play-center\.is-result/);
 });
+
+test('a knockout also keeps its last hit result on-screen until acknowledged',()=>{
+  const h=harness();h.click('data-begin');
+  for(let turn=1;turn<=5;turn++){
+    h.runCountdown();
+    h.click('data-stop',{stop:String(h.active())});
+    assert.match(h.root.innerHTML,/pv-round-result/);
+    h.finishImpact();
+    if(turn<5)h.click('data-next-turn');
+  }
+  assert.match(h.root.innerHTML,/勝敗結果を見る/);
+  assert.equal(h.records.length,0,'do not skip over the decisive STOP result');
+  h.click('data-next-turn');
+  assert.match(h.root.innerHTML,/KO決着！/);
+  assert.equal(h.records.length,1);
+});
+test('solo-style persistent scoring uses staged visual effects and never auto-hides',()=>{
+  assert.match(css,/\.pv-result-mainline/);
+  assert.match(css,/@keyframes pvResultWordLand/);
+  assert.match(css,/@keyframes pvResultScoreLand/);
+  assert.match(css,/\.pv-result-spark/);
+  assert.doesNotMatch(css,/pvResultReveal/);
+});
