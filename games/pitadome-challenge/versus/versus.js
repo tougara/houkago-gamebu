@@ -11,7 +11,7 @@
     lives:[3,3],perfects:[0,0],attempts:[null,null],scores:[0,0],combos:[0,0],greatStreaks:[0,0],charges:[0,0],quiet:[0,0],mushin:[false,false],mushinReady:[false,false],pendingPressure:[0,0],activePressure:0,activeSafe:12,
     currentSide:0,turnNo:1,starter:0,lastStarter:null,phase:'ready',countdown:3,
     motion:null,value:0,dir:1,elapsed:0,lastTs:0,raf:0,timer:0,
-    result:null,recorded:false,notice:''
+    result:null,resultReady:false,recorded:false,notice:''
   };
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
@@ -113,54 +113,76 @@
   }
   function actionHtml(){
     const i=activeIndex(),who=state.players[i];
-    if(state.phase==='ready')return '<button class="pv-game-action pv-action-start" type="button" data-start-turn>準備OK！ START</button>';
+    if(state.phase==='ready')return '<button class="pv-game-action pv-action-start" type="button" data-start-turn>'+
+      '<span class="pv-action-player">'+(i+1)+'P '+esc(who.icon)+' '+esc(who.name)+' の準備</span>'+
+      '<strong>準備OK！ START</strong></button>';
     if(state.phase==='countdown')return '<div class="pv-action-countdown" aria-live="polite">'+state.countdown+'</div>';
     if(state.phase==='moving')return '<button class="pv-game-action pv-action-stop" type="button" data-stop="'+i+'">STOP！</button>';
-    if(state.phase==='judged')return '<button class="pv-game-action pv-action-next" type="button" data-next-turn>次は '+esc(state.players[1-i].name)+' の番　›</button>';
+    if(state.phase==='judged')return '<button class="pv-game-action pv-action-next" type="button" data-next-turn'+
+      (state.resultReady?'':' disabled aria-disabled="true"')+'>'+
+      (state.result.winner!=null?'勝敗結果を見る':'次は '+(1-i+1)+'P '+esc(state.players[1-i].name)+' の番')+'　›</button>';
     return '';
   }
+  function resultEffects(attempt){
+    if(!['perfect','excellent','great'].includes(attempt.tier)||attempt.error>attempt.safe)return '';
+    const count=attempt.perfect?18:12;
+    const sparks=Array.from({length:count},(_,i)=>'<i class="pv-result-spark" style="--i:'+i+';--count:'+count+'"></i>').join('');
+    const rays=Array.from({length:12},(_,i)=>'<i class="pv-result-ray" style="--i:'+i+'"></i>').join('');
+    return '<div class="pv-result-effects" aria-hidden="true"><div class="pv-result-rays">'+rays+
+      '</div><div class="pv-result-sparks">'+sparks+'</div><div class="pv-result-ring"></div></div>';
+  }
+
   function battleScreen(){
     const p=state.profile,i=activeIndex(),player=state.players[i],a=state.result?.attempt;
+    const isResult=state.phase==='judged';
     const lo=Math.max(p.minValue,p.target-state.activeSafe),hi=Math.min(p.maxValue,p.target+state.activeSafe);
     const range=p.maxValue-p.minValue,pct=((state.phase==='moving'?state.value:(a?a.value:p.minValue))-p.minValue)/range*100;
-    const showCursor=state.phase==='moving'||state.phase==='judged';
+    const showCursor=state.phase==='moving';
     const blind=p.blind?'<div class="pv-meter-blind" style="left:'+p.blindStart+'%;width:'+(p.blindEnd-p.blindStart)+'%"></div>':'';
-    const help=state.phase==='ready'?'準備ができたらスタート':
-      state.phase==='countdown'?'バーが動き出したらSTOP！':
-      state.phase==='moving'?'目標の数字に合わせてSTOP！':
-      ('STOP '+a.value+'　誤差 '+a.error+'　'+(a.error<=a.safe?'猶予あと '+(a.safe-a.error):'超過 '+(a.error-a.safe)));
-    const bonuses=state.phase==='judged'?[
-      a.special?(a.perfect?'PERFECT特典':'3連続GREAT特典')+'：回復＋1・次の相手に−2':'',
-      a.chargeReward?'350点達成：回復または妨害':'',
-      state.result.reward.damage?'ライフ−1':'',
-      a.mushinReady?'次の自分の番で無心':''
-    ].filter(Boolean):[];
-    const result=state.phase==='judged'?
-      '<div class="pv-result-strip '+(a.error>a.safe?'is-miss':'is-hit')+'"><strong>'+verdictText(a)+'</strong><span>＋'+a.points+'点 / '+esc(help)+'</span>'+(bonuses.length?'<small>'+esc(bonuses.join(' ・ '))+'</small>':'')+'</div>':
-      '<div class="pv-result-strip is-hint"><span>'+esc(help)+'</span></div>';
+    const hint=state.phase==='ready'?'準備ができたらスタート':
+      state.phase==='countdown'?'バーが動いたらSTOP！':
+      state.phase==='moving'?'目標の数字に合わせてSTOP！':'結果を確認してから次へ';
+    let stage;
+    if(isResult){
+      const leftover=a.safe-a.error,losing=a.error>a.safe;
+      const notes=[];
+      if(a.special)notes.push((a.perfect?'PERFECT':'3連続GREAT')+'：回復＋1／相手に妨害−2');
+      if(a.chargeReward)notes.push('350点達成：回復または妨害');
+      if(state.result.reward.damage)notes.push('ライフ−1');
+      if(a.mushinActive)notes.push('無心 ×1.5');
+      if(a.mushinReady)notes.push('次回「無心」');
+      stage='<div class="pv-round-result '+(losing?'is-out':'tier-'+a.tier)+'" role="status" aria-label="今回の判定結果">'+
+        resultEffects(a)+
+        '<div class="pv-result-mainline"><strong>'+verdictText(a)+'</strong><b>＋'+a.points+'<small> POINT</small></b></div>'+
+        '<div class="pv-result-stats"><span>目標 <b>'+p.target+'</b></span><span>STOP <b>'+a.value+'</b></span>'+
+        '<span>誤差 <b>'+a.error+'</b></span><span>'+(leftover>=0?'残り猶予':'超過')+' <b>'+Math.abs(leftover)+'</b></span></div>'+
+        '<div class="pv-result-note">'+esc(notes.join('　・　')||'得点を獲得！')+'</div></div>';
+    }else{
+      stage='<div class="pv-objective"><span>目標</span><strong>'+p.target+'</strong></div>'+
+        '<div class="pv-safe-range '+(state.activePressure?'is-attacked':'')+'"><span>合格</span><strong>'+lo+'〜'+hi+'</strong><b>±'+state.activeSafe+'</b>'+
+        (state.activePressure?'<small>妨害 −'+state.activePressure+'</small>':'')+'</div>'+
+        '<div class="pv-meter-zone"><div class="pv-meter-shell" style="width:'+Math.round(p.barScale*100)+'%">'+
+        '<div class="pv-meter"><div class="pv-meter-line"></div>'+blind+
+        (showCursor?'<div id="pv-cursor-'+i+'" class="pv-meter-cursor'+(p.blind&&pct>=p.blindStart&&pct<=p.blindEnd?' blind':'')+'" style="left:'+pct+'%"></div>':'')+
+        '</div>'+meterLabels()+'</div></div>';
+    }
     return '<div class="pv-duel">'+
       '<header class="pv-duel-head"><button class="pv-duel-quit" type="button" data-leave>← 対戦をやめる</button>'+
       '<strong>TURN '+state.turnNo+' / LEVEL '+p.level+'・'+(state.difficulty==='easy'?'かんたん':'通常')+'</strong></header>'+
       '<div class="pv-duel-body">'+
       playerCard(0)+
-      '<section class="pv-play-center '+(state.activePressure?'is-pressured':'')+'">'+
+      '<section class="pv-play-center '+(isResult?'is-result ':'')+(state.activePressure?'is-pressured':'')+'">'+
       '<div class="pv-turn-heading"><span>'+esc(player.icon)+' '+esc(player.name)+' の番</span><small>'+esc(p.gimmicks.join('・'))+'</small></div>'+
-      '<div class="pv-objective"><span>目標</span><strong>'+p.target+'</strong></div>'+
-      '<div class="pv-safe-range '+(state.activePressure?'is-attacked':'')+'"><span>合格</span><strong>'+lo+'〜'+hi+'</strong><b>±'+state.activeSafe+'</b>'+
-      (state.activePressure?'<small>妨害 −'+state.activePressure+'</small>':'')+'</div>'+
-      '<div class="pv-meter-zone"><div class="pv-meter-shell" style="width:'+Math.round(p.barScale*100)+'%">'+
-      '<div class="pv-meter"><div class="pv-meter-line"></div>'+blind+
-      (showCursor?'<div id="pv-cursor-'+i+'" class="pv-meter-cursor'+(p.blind&&pct>=p.blindStart&&pct<=p.blindEnd?' blind':'')+'" style="left:'+pct+'%"></div>':'')+
-      '</div>'+meterLabels()+'</div></div>'+
+      stage+
       '<div class="pv-action-slot">'+actionHtml()+'</div>'+
-      result+
-      (state.phase==='judged'?'<div class="pv-hit-overlay '+(a.error>a.safe?'is-out':'tier-'+a.tier)+'" aria-hidden="true"><strong>'+verdictText(a)+'</strong><span>＋'+a.points+' POINT</span></div>':'')+
+      '<div class="pv-result-strip '+(isResult?'is-result-footer':'is-hint')+'"><span>'+esc(hint)+'</span></div>'+
       '</section>'+
       playerCard(1)+
       '</div>'+
       '<div class="pv-rotate-overlay" data-rotate hidden><div><strong>スマホを横向きにしてね</strong><p>横画面専用です。縦画面ではゲームを停止します。</p></div></div>'+
       '</div>';
   }
+
   function finalScreen(){
     const w=state.result?.winner;
     return nav()+'<div class="pv-wrap">'+heading('KO決着！','全'+state.turnNo+'ターンの勝負')+
@@ -203,6 +225,7 @@
     state.activeSafe=rules.effectiveSafe(state.profile.baseSafe,state.activePressure);
     state.attempts[state.currentSide]=null;
     state.phase='ready';state.motion=null;state.value=state.profile.minValue;
+    state.resultReady=false;
     switchScreen('battle');
   }
   function beginMatch(){
@@ -216,7 +239,7 @@
     state.lives=[3,3];state.perfects=[0,0];state.scores=[0,0];state.combos=[0,0];
     state.greatStreaks=[0,0];state.charges=[0,0];state.pendingPressure=[0,0];
     state.quiet=[0,0];state.mushin=[false,false];state.mushinReady=[false,false];
-    state.attempts=[null,null];state.turnNo=1;state.profile=null;state.recorded=false;
+    state.attempts=[null,null];state.turnNo=1;state.profile=null;state.recorded=false;state.resultReady=false;
     beginTurn();
   }
   function countdown(){
@@ -274,11 +297,22 @@
     const other=1-i;
     state.pendingPressure[other]=Math.min(rules.MAX_PRESSURE,state.pendingPressure[other]+reward.pressure);
     state.result={attempt,reward,winner:reward.life<=0?other:null};
-    if(reward.life<=0){finishMatch();render();return}
-    state.phase='judged';render();
+    state.phase='judged';state.resultReady=false;
+    render();
+    // Solo's result screen persists until user advances. Protect the entry
+    // impact animation from accidental immediate double-taps.
+    const judgedTurn=state.turnNo;
+    state.timer=setTimeout(()=>{
+      state.timer=0;
+      if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
+      state.resultReady=true;
+      const next=root.querySelector('[data-next-turn]');
+      if(next){next.disabled=false;next.removeAttribute('aria-disabled')}
+    },1100);
   }
   function nextTurn(){
-    if(state.phase!=='judged')return;
+    if(state.phase!=='judged'||!state.resultReady)return;
+    if(state.result.winner!=null){finishMatch();render();return}
     state.turnNo++;beginTurn();
   }
   function finishMatch(){
