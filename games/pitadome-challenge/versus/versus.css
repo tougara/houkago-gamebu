@@ -175,3 +175,119 @@ html,body{min-height:100%;background:#06111c}
 .pv-battle .pv-quiet>i>b{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#a78949,#fff5b5);transition:width .15s}
 .pv-battle .pv-quiet>em{font-style:normal;color:#ffe16f;white-space:nowrap}
 @media(max-height:350px) and (orientation:landscape){.pv-battle .pv-quiet{min-height:10px}.pv-battle .pv-quiet>i{height:5px}}
+
+/* V3 – bounded, touch-safe landscape layout; no stacking over the STOP or next button. */
+.pv-app.screen-battle{overflow:hidden;isolation:isolate}
+.pv-app.screen-battle .pv-battle{
+  height:100%;min-height:0;overflow:hidden;
+  display:grid;grid-template-rows:38px 50px minmax(0,1fr) 74px;
+  gap:6px;
+}
+.pv-app.screen-battle .pv-battle .pv-top{min-height:0;align-self:stretch}
+.pv-app.screen-battle .pv-battle .pv-safety{
+  min-height:0;overflow:hidden;
+  display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:clamp(8px,2vw,24px);
+  background:rgba(6,19,34,.92);border:1px solid rgba(253,217,127,.5);border-radius:12px;
+  padding:3px 12px;font-size:clamp(13px,2.8vh,21px);
+}
+.pv-battle .pv-safety .pv-safe-title{font-weight:950;color:#fff;white-space:nowrap}
+.pv-battle .pv-safety strong{color:#ffe173;font-size:clamp(24px,5.3vh,39px);line-height:1;white-space:nowrap}
+.pv-battle .pv-safety b{font-size:clamp(18px,4.4vh,31px);color:#fff;line-height:1;white-space:nowrap}
+.pv-battle .pv-safety .pv-safe-attack{font-size:clamp(11px,2.4vh,15px);font-weight:950;color:#ffc0c9;white-space:nowrap}
+.pv-battle .pv-safety .pv-safe-basic{font-size:clamp(10px,2.3vh,15px);font-weight:800;color:#d0dae7;white-space:nowrap}
+.pv-app.screen-battle .pv-battle .pv-panels{min-height:0;overflow:hidden;gap:8px}
+.pv-app.screen-battle .pv-battle .pv-panel{
+  display:grid;min-height:0;max-height:100%;overflow:hidden;
+  grid-template-rows:31px 27px 18px 15px 27px 56px 43px minmax(39px,1fr) 80px 19px;
+  row-gap:3px;align-content:stretch;justify-items:stretch;
+  padding:8px 12px;position:relative;isolation:isolate;
+}
+.pv-app.screen-battle .pv-panel > *{min-width:0;min-height:0;max-width:100%}
+.pv-app.screen-battle .pv-panel .pv-panel-top{min-height:0;height:100%}
+.pv-app.screen-battle .pv-panel .pv-battle-hud{align-self:center}
+.pv-app.screen-battle .pv-panel .pv-stats{align-self:center;flex-wrap:nowrap;gap:4px}
+.pv-app.screen-battle .pv-panel .pv-stats span{white-space:nowrap}
+.pv-app.screen-battle .pv-panel .pv-quiet{align-self:center}
+.pv-app.screen-battle .pv-panel .pv-panel-status{min-height:0;align-self:center;line-height:1.2;text-align:center}
+.pv-app.screen-battle .pv-panel .pv-panel-target{min-height:0;align-content:center;align-self:center}
+.pv-app.screen-battle .pv-panel .pv-person-safe{
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px 12px;
+  min-height:0;overflow:hidden;line-height:1.12;
+  padding:2px 6px;align-self:stretch;
+}
+.pv-app.screen-battle .pv-panel .pv-person-safe span{font-size:clamp(9px,1.95vh,13px);font-weight:800}
+.pv-app.screen-battle .pv-panel .pv-person-safe strong{font-size:clamp(16px,3.6vh,26px);font-weight:1000;color:#fff;white-space:nowrap}
+.pv-app.screen-battle .pv-panel .pv-person-safe.is-current{background:rgba(245,187,53,.2);border:1px solid #f0d278}
+.pv-app.screen-battle .pv-panel .pv-lane-wrap{width:100%;min-height:0;overflow:visible;margin:0;align-self:center}
+.pv-app.screen-battle .pv-panel .pv-meter-shell{min-height:0;align-self:center}
+.pv-app.screen-battle .pv-panel .pv-stop{
+  display:block;box-sizing:border-box;align-self:stretch;justify-self:stretch;
+  width:100%;height:100%;max-height:100%;min-height:0!important;
+  margin:0!important;padding:4px 10px!important;
+  position:relative;z-index:1;border-radius:15px;
+  font-size:clamp(25px,5.8vh,43px);line-height:1;
+  touch-action:none;pointer-events:auto;
+}
+.pv-app.screen-battle .pv-panel .pv-stop:disabled{pointer-events:none}
+.pv-app.screen-battle .pv-panel .pv-panel-summary{
+  min-height:0;max-height:100%;overflow:hidden;
+  align-self:center;font-size:clamp(10px,2.1vh,13px);
+  line-height:1.2;
+}
+.pv-app.screen-battle .pv-battle .pv-console{
+  position:relative;z-index:5;min-width:0;min-height:0;height:100%;overflow:hidden;
+  display:flex;flex-direction:row;align-items:center;justify-content:center;
+  gap:12px;padding:5px 12px;margin:0;border-radius:14px;
+  background:rgba(6,19,34,.97);
+}
+.pv-app.screen-battle .pv-battle .pv-console:has(.pv-next){
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(175px,32%);
+  grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:2px 9px;
+}
+.pv-app.screen-battle .pv-battle .pv-console .pv-next{
+  grid-column:2;grid-row:1 / span 2;
+  display:block;position:relative;z-index:6;align-self:center;justify-self:stretch;
+  width:100%;min-width:0;height:calc(100% - 3px);min-height:42px;max-height:64px;
+  padding:5px 10px;font-size:clamp(13px,3.2vh,22px);line-height:1.12;
+  touch-action:manipulation;pointer-events:auto;
+}
+.pv-app.screen-battle .pv-battle .pv-console > p:not(.pv-judge-copy){grid-column:1;grid-row:1 / span 2;align-self:center;justify-self:center}
+.pv-app.screen-battle .pv-battle .pv-console .pv-impact-line{grid-column:1;grid-row:1;min-width:0;overflow:hidden}
+.pv-app.screen-battle .pv-battle .pv-console .pv-judge-copy{
+  grid-column:1;grid-row:2;min-width:0;align-self:center;
+  width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:clamp(10px,2.1vh,14px);display:block;
+}
+.pv-app.screen-battle .pv-battle .pv-console .pv-countdown-label{color:#ffe39a;font-weight:1000}
+.pv-app.screen-battle .pv-battle .pv-console .pv-countdown{line-height:1}
+@media(max-height:500px) and (orientation:landscape){
+  .pv-app.screen-battle .pv-battle{grid-template-rows:30px 42px minmax(0,1fr) 58px;gap:4px}
+  .pv-app.screen-battle .pv-battle .pv-panel{grid-template-rows:25px 23px 17px 12px 20px 43px 34px minmax(27px,1fr) 57px 0;gap:2px;padding:5px 9px}
+  .pv-app.screen-battle .pv-panel .pv-panel-summary{display:none}
+  .pv-app.screen-battle .pv-panel .pv-panel-target strong{font-size:clamp(27px,8vh,40px)}
+  .pv-app.screen-battle .pv-battle .pv-person-safe strong{font-size:clamp(15px,4vh,22px)}
+  .pv-app.screen-battle .pv-battle .pv-console .pv-next{min-height:38px}
+}
+@media(max-height:395px) and (orientation:landscape){
+  .pv-app.screen-battle .pv-battle{grid-template-rows:26px 37px minmax(0,1fr) 53px;gap:3px}
+  .pv-app.screen-battle .pv-battle .pv-panel{grid-template-rows:23px 19px 0 0 17px 37px 29px minmax(24px,1fr) 48px 0;gap:2px;padding:4px 7px}
+  .pv-app.screen-battle .pv-panel .pv-stats,.pv-app.screen-battle .pv-panel .pv-quiet{display:none}
+  .pv-app.screen-battle .pv-panel .pv-panel-status{font-size:12px}
+  .pv-app.screen-battle .pv-battle .pv-safety{gap:8px;padding:1px 6px}
+  .pv-app.screen-battle .pv-battle .pv-safety .pv-safe-title{font-size:11px}
+  .pv-app.screen-battle .pv-battle .pv-safety strong{font-size:22px}
+  .pv-app.screen-battle .pv-battle .pv-safety b{font-size:19px}
+  .pv-app.screen-battle .pv-battle .pv-safety .pv-safe-basic,.pv-app.screen-battle .pv-battle .pv-safety .pv-safe-attack{font-size:10px}
+  .pv-app.screen-battle .pv-battle .pv-panel .pv-panel-target strong{font-size:30px}
+  .pv-app.screen-battle .pv-battle .pv-panel .pv-stop{font-size:27px}
+  .pv-app.screen-battle .pv-battle .pv-console .pv-judge-copy{display:none}
+  .pv-app.screen-battle .pv-battle .pv-console .pv-impact-line{grid-row:1 / span 2}
+  .pv-app.screen-battle .pv-battle .pv-console{padding:3px 8px}
+}
+@media(max-height:320px) and (orientation:landscape){
+  .pv-app.screen-battle .pv-battle{grid-template-rows:24px 32px minmax(0,1fr) 46px;gap:2px}
+  .pv-app.screen-battle .pv-battle .pv-panel{grid-template-rows:20px 17px 0 0 0 28px 25px minmax(20px,1fr) 40px 0;gap:1px;padding:2px 5px}
+  .pv-app.screen-battle .pv-panel .pv-panel-status{display:none}
+  .pv-app.screen-battle .pv-panel .pv-panel-target strong{font-size:23px}
+  .pv-app.screen-battle .pv-panel .pv-stop{font-size:24px}
+}
