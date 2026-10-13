@@ -30,6 +30,9 @@ function harness(forcedError=null){
     Math:Object.create(Math)};
   context.Math.random=()=>0.1;
   vm.runInNewContext(rulesJs,{globalThis:win});
+  // Fix the practice target to 50 so immediate-stop KO tests are deterministic.
+  const originalProfile=win.PitadomeVersusRules.roundProfile;
+  win.PitadomeVersusRules.roundProfile=(...args)=>({...originalProfile(...args),target:50});
   if(forcedError!==null){
     const original=win.PitadomeVersusRules.evaluateStop;
     win.PitadomeVersusRules.evaluateStop=(value,target,previous,safe)=>original(target+forcedError,target,previous,safe);
