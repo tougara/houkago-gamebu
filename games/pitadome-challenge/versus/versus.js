@@ -12,7 +12,7 @@
     lives:[3,3],perfects:[0,0],attempts:[null,null],scores:[0,0],combos:[0,0],greatStreaks:[0,0],charges:[0,0],quiet:[0,0],mushin:[false,false],mushinReady:[false,false],pendingPressure:[0,0],activePressure:0,activeSafe:12,
     currentSide:0,turnNo:1,starter:0,lastStarter:null,phase:'ready',countdown:3,
     motion:null,value:0,dir:1,elapsed:0,lastTs:0,raf:0,timer:0,
-    result:null,resultReady:false,recorded:false,notice:''
+    result:null,resultReady:false,recorded:false,notice:'',cutin:null
   };
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
@@ -101,10 +101,13 @@
     return '<aside class="pv-vs-player '+(active?'is-active':'is-waiting')+'" data-side="'+i+'">'+
       '<div class="pv-vs-head"><span class="pv-vs-avatar">'+esc(p.icon)+'</span><div class="pv-vs-identity"><small>'+(i+1)+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
       '<div class="pv-vs-heart" aria-label="ライフ'+state.lives[i]+'">'+heart(state.lives[i])+'</div>'+
-      '<div class="pv-vs-score"><span>SCORE</span><strong>'+state.scores[i]+'</strong></div>'+
+      '<div class="pv-vs-recovery" aria-label="回復ゲージ '+state.charges[i]+' / '+rules.CHARGE_LIMIT+'">'+
+      '<div class="pv-vs-recovery-title"><strong>回復ゲージ</strong><span>'+state.charges[i]+' / '+rules.CHARGE_LIMIT+'</span></div>'+
+      '<div class="pv-vs-recovery-bar"><i style="width:'+(100*state.charges[i]/rules.CHARGE_LIMIT).toFixed(1)+'%"></i></div></div>'+
+      '<div class="pv-vs-score pv-vs-score-secondary"><span>SCORE</span><strong>'+state.scores[i]+'</strong></div>'+
       '<div class="pv-vs-status">'+esc(status)+'</div>'+
       '<div class="pv-vs-detail"><span>COMBO '+state.combos[i]+'</span><span>GREAT '+state.greatStreaks[i]+'/3</span></div>'+
-      '<div class="pv-vs-reward">回復まで '+(rules.CHARGE_LIMIT-state.charges[i])+'pt</div>'+
+
       '<div class="pv-vs-quiet"><span>静 '+state.quiet[i]+'%</span><i><b style="width:'+state.quiet[i]+'%"></b></i></div>'+
       '</aside>';
   }
@@ -117,7 +120,7 @@
     if(state.phase==='ready')return '<button class="pv-game-action pv-action-start" type="button" data-start-turn>'+
       '<span class="pv-action-player">'+(i+1)+'P '+esc(who.icon)+' '+esc(who.name)+' の準備</span>'+
       '<strong>準備OK！ START</strong></button>';
-    if(state.phase==='countdown')return '<div class="pv-action-countdown" aria-live="polite">'+state.countdown+'</div>';
+    if(state.phase==='countdown')return '<div class="pv-action-countdown" aria-hidden="true">バーが動いたらSTOP！</div>';
     if(state.phase==='moving')return '<button class="pv-game-action pv-action-stop" type="button" data-stop="'+i+'">STOP！</button>';
     if(state.phase==='judged')return '<button class="pv-game-action pv-action-next" type="button" data-next-turn'+
       (state.resultReady?'':' disabled aria-disabled="true"')+'>'+
@@ -219,16 +222,39 @@
       '<p>勝利画面も横画面専用です。<br>横向きにすると結果と再戦ボタンが表示されます。</p></div></div>'+
       '</div>';
   }
+  // Full-screen cut-ins sit above both the bar and the target. Every scene is
+  // transient and controlled by the same turn timer; no queued animation can
+  // leak into the next turn, rematch, or results screen.
+  function cutinHtml(){
+    const fx=state.cutin;if(!fx)return '';
+    const kind=fx.kind,rank=fx.rank||'';
+    const isJudge=kind==='judge',isWin=kind==='win';
+    const particles=(isJudge&&['perfect','excellent','great'].includes(rank)||isWin)?
+      Array.from({length:kind==='win'||rank==='perfect'?26:rank==='excellent'?16:9},(_,i)=>
+        '<i style="--n:'+i+';--step:'+((360/(kind==='win'||rank==='perfect'?26:rank==='excellent'?16:9)))+'deg"></i>').join(''):'';
+    return '<div class="pv-cutin pv-cutin-'+kind+' '+(rank?'pv-cutin-'+rank:'')+'" aria-live="assertive" role="status">'+
+      '<div class="pv-cutin-dimmer"></div><div class="pv-cutin-beam"></div>'+
+      '<div class="pv-cutin-burst" aria-hidden="true">'+particles+'</div>'+
+      '<div class="pv-cutin-content">'+(fx.kicker?'<span class="pv-cutin-kicker">'+esc(fx.kicker)+'</span>':'')+
+      '<strong class="pv-cutin-title">'+esc(fx.title)+'</strong>'+
+      (fx.subtitle?'<span class="pv-cutin-subtitle">'+esc(fx.subtitle)+'</span>':'')+
+      (isWin?'<span class="pv-cutin-crown" aria-hidden="true">★ WINNER ★</span>':'')+
+      '</div></div>';
+  }
+  function setCutin(kind,title,subtitle='',rank='',kicker=''){
+    state.cutin={kind,title,subtitle,rank,kicker};
+  }
+
   function render(){
     if(['select','pick','manage','form'].includes(state.screen))syncIds();
     root.className='pitadome-app pv-app screen-'+state.screen;
-    root.innerHTML=({select:selectScreen,pick:pickScreen,manage:manageScreen,form:formScreen,battle:battleScreen,final:finalScreen}[state.screen]||selectScreen)();
+    root.innerHTML=({select:selectScreen,pick:pickScreen,manage:manageScreen,form:formScreen,battle:battleScreen,final:finalScreen}[state.screen]||selectScreen)()+cutinHtml();
     syncRotate();
   }
   function stopTimers(){
     if(state.raf)cancelAnimationFrame(state.raf);
     if(state.timer)clearTimeout(state.timer);
-    state.raf=0;state.timer=0;
+    state.raf=0;state.timer=0;state.cutin=null;
   }
   function switchScreen(screen){stopTimers();state.screen=screen;render();window.scrollTo(0,0)}
   function showForm(id){
