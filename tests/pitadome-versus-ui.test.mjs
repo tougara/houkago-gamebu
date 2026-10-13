@@ -6,7 +6,7 @@ const js=readFileSync(new URL('../games/pitadome-challenge/versus/versus.js',imp
 const rulesJs=readFileSync(new URL('../games/pitadome-challenge/versus/versus-rules.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../games/pitadome-challenge/versus/versus.css',import.meta.url),'utf8');
 
-function harness(){
+function harness(forcedError=null){
   const events={},timers=new Map(),frames=new Map();
   let seq=0,landscape=true,clock=10;
   const players=[{id:'a',name:'アルファ',icon:'🐶'},{id:'b',name:'ベータ',icon:'🐱'}],records=[];
@@ -30,6 +30,10 @@ function harness(){
     Math:Object.create(Math)};
   context.Math.random=()=>0.1;
   vm.runInNewContext(rulesJs,{globalThis:win});
+  if(forcedError!==null){
+    const original=win.PitadomeVersusRules.evaluateStop;
+    win.PitadomeVersusRules.evaluateStop=(value,target,previous,safe)=>original(target+forcedError,target,previous,safe);
+  }
   vm.runInNewContext(js,context);
   function click(key,data={}){
     const button={dataset:data,hasAttribute:field=>field===key,closest:selector=>selector==='button'?button:null};
@@ -279,4 +283,32 @@ test('cinematic tier hierarchy and danger emphasis live above the full game',()=
   assert.match(css,/\.pv-cutin-danger/);
   assert.match(css,/\.pv-cutin-win/);
   assert.match(css,/\.pv-vs-recovery-bar/);
+});
+
+test('PERFECT > EXCELLENT > GREAT full-screen judgement tiers are independently rendered',()=>{
+  for(const [error,tier,title] of [[0,'perfect','PERFECT！'],[1,'excellent','EXCELLENT！'],[2,'great','GREAT！']]){
+    const h=harness(error);h.click('data-begin');h.runCountdown();
+    h.click('data-stop',{stop:String(h.active())});
+    assert.match(h.root.innerHTML,new RegExp('pv-cutin-judge pv-cutin-'+tier));
+    assert.match(h.root.innerHTML,new RegExp(title));
+    assert.match(h.root.innerHTML,/pv-cutin-burst/);
+    h.finishImpact();assert.match(h.root.innerHTML,/pv-round-result/);
+  }
+});
+
+test('350-point recovery is visibly converted to MAX and reverts to progress later',()=>{
+  const h=harness(0);h.click('data-begin');
+  let sawMax=false;
+  for(let turn=1;turn<=7;turn++){
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    if(h.root.innerHTML.includes('MAX！効果発動')){
+      sawMax=true;
+      assert.match(h.root.innerHTML,/pv-vs-recovery is-max/);
+      assert.match(h.root.innerHTML,/pv-vs-recovery-bar/);
+    }
+    h.finishImpact();h.click('data-next-turn');
+  }
+  assert.equal(sawMax,true);
+  assert.match(h.root.innerHTML,/回復ゲージ/);
+  assert.doesNotMatch(h.root.innerHTML,/MAX！効果発動/);
 });
