@@ -102,7 +102,7 @@
     const b=state.profile.blind?'<div class="pv-meter-blind" style="left:'+state.profile.blindStart+'%;width:'+(state.profile.blindEnd-state.profile.blindStart)+'%"></div>':'';
     const show=moving||Boolean(a);
     const pressure=active?'基本±'+state.profile.baseSafe+(state.activePressure?' − 妨害'+state.activePressure:'')+' → ±'+state.activeSafe:'次の判定は順番になったら表示';
-    return '<section class="pv-panel '+(playing?'pv-active':active?'pv-done':'')+'" data-side="'+i+'">'+
+    return '<section class="pv-panel '+(playing?'pv-active':active?'pv-done':'')+' '+(active&&state.phase==='judged'&&a?'pv-hit-'+a.tier:'')+'" data-side="'+i+'">'+
       '<div class="pv-panel-top"><span class="pv-panel-icon">'+esc(p.icon)+'</span><strong class="pv-panel-name">'+esc(p.name)+'</strong><span class="pv-panel-side">'+(i+1)+'P</span></div>'+
       '<div class="pv-battle-hud"><span class="pv-lives">'+heart(state.lives[i])+'</span><strong>SCORE '+state.scores[i]+'</strong></div>'+
       '<div class="pv-stats"><span>COMBO '+state.combos[i]+' ×'+rules.comboMultiplierFor(state.combos[i]).toFixed(1)+'</span><span>GREAT連続 '+state.greatStreaks[i]+'/3</span><span>回復まで '+(rules.CHARGE_LIMIT-state.charges[i])+'pt</span></div>'+
@@ -127,7 +127,8 @@
       if(a.special)bonuses.push((a.perfect?'PERFECT':'3連続GREAT')+'：回復＋1・妨害−2');
       if(a.chargeReward)bonuses.push('500点達成：'+(r.healed>Number(a.special)?'回復':'満タンなら妨害'));
       if(r.damage)bonuses.push('判定外：ライフ−1');
-      return '<p class="pv-judge-copy">'+esc(who.name)+'：'+({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')+' ＋'+a.points+'点'+
+      return '<div class="pv-impact-line tier-'+a.tier+'"><strong>'+({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||'')+'</strong><b>＋'+a.points+' POINT</b></div>'+
+      '<p class="pv-judge-copy">'+esc(who.name)+(a.special?'　特別効果発動！':'')+
       (bonuses.length?'　'+esc(bonuses.join(' / ')):'')+'</p>'+
       '<button class="pv-next" type="button" data-next-turn>次は '+esc(state.players[1-activeIndex()].name)+' の番</button>';
     }
