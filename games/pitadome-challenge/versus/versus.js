@@ -138,6 +138,7 @@
       '<h2>'+(draw?'同時KOで引き分け！':esc(state.players[w].icon+' '+state.players[w].name)+' の勝利！')+'</h2>'+
       '<div class="pv-result-grid">'+state.players.map((p,i)=>'<div class="pv-result-card"><small>'+(i+1)+'P</small><strong>'+esc(p.icon)+'</strong>'+
       '<strong>'+esc(p.name)+'</strong><div class="pv-heart">'+heart(state.lives[i])+'</div><small>PERFECT '+state.perfects[i]+'回</small></div>').join('')+'</div>'+
+      '<div class="pv-rules"><h2>決着ラウンド '+state.round+' / セーフ ±'+state.profile.safe+'</h2>'+state.attempts.map((a,i)=>'<p>'+(i+1)+'P '+esc(state.players[i].name)+'：STOP '+a.value+' / 誤差 '+a.error+(a.perfect?'（PERFECT！）':a.error<=state.profile.safe?'（セーフ）':'（範囲外）')+'</p>').join('')+'</div>'+
       '<button class="btn full" type="button" data-rematch>同じ2人でもう一度</button>'+
       '<button class="btn secondary full" type="button" data-new-players>プレイヤーを変更</button>'+
       '<button class="btn secondary full" type="button" data-home>ゲームをえらぶ</button></section></div>';
