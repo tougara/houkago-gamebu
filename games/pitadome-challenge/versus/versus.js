@@ -106,6 +106,7 @@
       '<div class="pv-panel-top"><span class="pv-panel-icon">'+esc(p.icon)+'</span><strong class="pv-panel-name">'+esc(p.name)+'</strong><span class="pv-panel-side">'+(i+1)+'P</span></div>'+
       '<div class="pv-battle-hud"><span class="pv-lives">'+heart(state.lives[i])+'</span><strong>SCORE '+state.scores[i]+'</strong></div>'+
       '<div class="pv-stats"><span>COMBO '+state.combos[i]+' ×'+rules.comboMultiplierFor(state.combos[i]).toFixed(1)+'</span><span>GREAT連続 '+state.greatStreaks[i]+'/3</span><span>回復まで '+(rules.CHARGE_LIMIT-state.charges[i])+'pt</span></div>'+
+      '<div class="pv-quiet"><span>静ゲージ '+state.quiet[i]+'%</span><i><b style="width:'+state.quiet[i]+'%"></b></i>'+(active&&state.mushin[i]?'<em>無心 ×1.5</em>':'')+'</div>'+ 
       '<div class="pv-panel-status '+(a&&a.tier==='perfect'?'pv-perfect':'')+'">'+label+'</div>'+
       '<div class="pv-panel-target"><strong>'+state.profile.target+'</strong><small>をねらえ！</small><span>'+state.profile.gimmicks.map(esc).join('・')+'</span></div>'+
       '<div class="pv-lane-wrap"><div class="pv-meter-shell" style="width:'+Math.round(state.profile.barScale*100)+'%">'+
@@ -125,6 +126,8 @@
       const a=state.result.attempt,r=state.result.reward;
       const bonuses=[];
       if(a.special)bonuses.push((a.perfect?'PERFECT':'3連続GREAT')+'：回復＋1・妨害−2');
+      if(a.mushinActive)bonuses.push('無心 ×1.5');
+      if(a.mushinReady)bonuses.push('静ゲージ満タン：次の自分の番で無心');
       if(a.chargeReward)bonuses.push('500点達成：'+(r.healed>Number(a.special)?'回復':'満タンなら妨害'));
       if(r.damage)bonuses.push('判定外：ライフ−1');
       return '<div class="pv-impact-line tier-'+a.tier+'"><strong>'+(a.error>a.safe?'判定外！':({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'セーフ！',miss:'ミス！'}[a.tier]||''))+'</strong><b>＋'+a.points+' POINT</b></div>'+
@@ -179,6 +182,8 @@
     state.currentSide=state.starter===0?(state.turnNo-1)%2:1-(state.turnNo-1)%2;
     // Each pair gets the same target, moving profile and baseline safe range.
     if(state.turnNo%2===1||!state.profile)state.profile=rules.roundProfile(state.turnNo,state.difficulty);
+    state.mushin[state.currentSide]=state.mushinReady[state.currentSide];
+    state.mushinReady[state.currentSide]=false;
     state.activePressure=state.pendingPressure[state.currentSide];
     state.pendingPressure[state.currentSide]=0;
     state.activeSafe=rules.effectiveSafe(state.profile.baseSafe,state.activePressure);
@@ -243,10 +248,12 @@
     updatePosition(performance.now());stopTimers();
     const p=state.profile;
     const attempt=rules.evaluateStop(state.value,p.target,{
-      combo:state.combos[i],greatStreak:state.greatStreaks[i],charge:state.charges[i],score:state.scores[i]
+      combo:state.combos[i],greatStreak:state.greatStreaks[i],charge:state.charges[i],score:state.scores[i],
+      quiet:state.quiet[i],mushinActive:state.mushin[i]
     },state.activeSafe);
     state.attempts[i]=attempt;state.combos[i]=attempt.combo;state.greatStreaks[i]=attempt.greatStreak;
     state.charges[i]=attempt.charge;state.scores[i]=attempt.total;
+    state.quiet[i]=attempt.quiet;state.mushinReady[i]=attempt.mushinReady;
     if(attempt.perfect)state.perfects[i]++;
     const reward=rules.applyRewards(state.lives[i],attempt);
     state.lives[i]=reward.life;
