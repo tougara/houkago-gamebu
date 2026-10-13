@@ -182,6 +182,7 @@
     state.activePressure=state.pendingPressure[state.currentSide];
     state.pendingPressure[state.currentSide]=0;
     state.activeSafe=rules.effectiveSafe(state.profile.baseSafe,state.activePressure);
+    state.attempts[state.currentSide]=null;
     state.phase='ready';state.motion=null;state.value=state.profile.minValue;
     switchScreen('battle');
   }
