@@ -42,7 +42,12 @@ function harness(){
   function active(){const match=root.innerHTML.match(/class="pv-vs-player is-active" data-side="([01])"/);
     assert.ok(match,'one active player must be shown');return Number(match[1]);
   }
-  return {root,events,records,click,runCountdown,active,setLandscape:v=>{landscape=v;events.win_resize()}};
+  function finishImpact(){
+    const item=timers.entries().next().value;
+    assert.ok(item,'result entry lock timer must be set');
+    timers.delete(item[0]);item[1]();
+  }
+  return {root,events,records,click,runCountdown,finishImpact,active,setLandscape:v=>{landscape=v;events.win_resize()}};
 }
 test('before starting, the two-player registration screen is preserved',()=>{
   const h=harness();
@@ -67,10 +72,17 @@ test('STOP appears once during the move, then becomes the NEXT button and switch
   assert.equal((h.root.innerHTML.match(/data-stop="/g)||[]).length,1);
   assert.match(h.root.innerHTML,new RegExp('data-stop="'+first+'"'));
   h.click('data-stop',{stop:String(first)});
-  assert.match(h.root.innerHTML,/pv-hit-overlay/);
-  assert.match(h.root.innerHTML,/猶予あと|超過/);
+  assert.match(h.root.innerHTML,/pv-round-result/);
+  assert.match(h.root.innerHTML,/残り猶予|超過/);
+  assert.match(h.root.innerHTML,/STOP <b>/);
+  assert.doesNotMatch(h.root.innerHTML,/class="pv-meter"/);
   assert.equal((h.root.innerHTML.match(/data-next-turn/g)||[]).length,1);
   assert.equal((h.root.innerHTML.match(/data-stop="/g)||[]).length,0);
+  assert.match(h.root.innerHTML,/data-next-turn disabled/);
+  h.click('data-next-turn'); // Impatient double-tap must be ignored.
+  assert.equal(h.active(),first);
+  assert.match(h.root.innerHTML,/pv-round-result/);
+  h.finishImpact();
   h.click('data-next-turn');
   assert.equal(h.active(),1-first);
   assert.match(h.root.innerHTML,/TURN 2/);
@@ -94,6 +106,32 @@ test('the duel CSS uses dedicated bounded rows rather than two full game panels'
   assert.match(css,/\.pv-play-center\s*\{/);
   assert.match(css,/\.pv-action-slot\s*\{/);
   assert.match(css,/\.pv-game-action\s*\{/);
-  assert.match(css,/\.pv-hit-overlay\s*\{/);
+  assert.match(css,/\.pv-round-result\s*\{/);
   assert.doesNotMatch(css,/\.pv-battle \.pv-panel\{/);
+});
+
+test('START button clearly identifies whose turn it is, also after swapping players',()=>{
+  const h=harness();h.click('data-begin');
+  const first=h.active(),name=first===0?'アルファ':'ベータ';
+  assert.match(h.root.innerHTML,new RegExp((first+1)+'P.*'+name+' の準備'));
+  assert.match(h.root.innerHTML,/準備OK！ START/);
+  h.runCountdown();
+  h.click('data-stop',{stop:String(first)});
+  h.finishImpact();
+  h.click('data-next-turn');
+  const second=1-first;
+  assert.match(h.root.innerHTML,new RegExp((second+1)+'P.*'+(second===0?'アルファ':'ベータ')+' の準備'));
+});
+test('result panel persists after effect timer and offers detailed solo-style stats',()=>{
+  const h=harness();h.click('data-begin');h.runCountdown();
+  h.click('data-stop',{stop:String(h.active())});
+  assert.match(h.root.innerHTML,/pv-result-mainline/);
+  assert.match(h.root.innerHTML,/pv-result-stats/);
+  assert.match(h.root.innerHTML,/目標 <b>/);
+  assert.match(h.root.innerHTML,/誤差 <b>/);
+  h.finishImpact();
+  assert.match(h.root.innerHTML,/pv-round-result/);
+  assert.match(h.root.innerHTML,/TURN 1/);
+  assert.doesNotMatch(css,/pvResultReveal 1\.15s/);
+  assert.match(css,/\.pv-play-center\.is-result/);
 });
