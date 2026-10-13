@@ -98,12 +98,14 @@
   function playerCard(i){
     const p=state.players[i],active=i===activeIndex(),last=state.attempts[i];
     const status=active?'プレイ中':(last?'前回 '+(last.error<=last.safe?'合格':'判定外')+' / 誤差'+last.error:'待機中');
+    const maxFlash=active&&state.phase==='judged'&&Boolean(state.result?.attempt?.chargeReward);
+    const gaugeValue=maxFlash?rules.CHARGE_LIMIT:state.charges[i];
     return '<aside class="pv-vs-player '+(active?'is-active':'is-waiting')+'" data-side="'+i+'">'+
       '<div class="pv-vs-head"><span class="pv-vs-avatar">'+esc(p.icon)+'</span><div class="pv-vs-identity"><small>'+(i+1)+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
       '<div class="pv-vs-heart" aria-label="ライフ'+state.lives[i]+'">'+heart(state.lives[i])+'</div>'+
-      '<div class="pv-vs-recovery" aria-label="回復ゲージ '+state.charges[i]+' / '+rules.CHARGE_LIMIT+'">'+
-      '<div class="pv-vs-recovery-title"><strong>回復ゲージ</strong><span>'+state.charges[i]+' / '+rules.CHARGE_LIMIT+'</span></div>'+
-      '<div class="pv-vs-recovery-bar"><i style="width:'+(100*state.charges[i]/rules.CHARGE_LIMIT).toFixed(1)+'%"></i></div></div>'+
+      '<div class="pv-vs-recovery '+(maxFlash?'is-max':'')+'" aria-label="回復ゲージ '+gaugeValue+' / '+rules.CHARGE_LIMIT+'">'+
+      '<div class="pv-vs-recovery-title"><strong>回復ゲージ</strong><span>'+(maxFlash?'MAX！効果発動':gaugeValue+' / '+rules.CHARGE_LIMIT)+'</span></div>'+
+      '<div class="pv-vs-recovery-bar"><i style="width:'+(100*gaugeValue/rules.CHARGE_LIMIT).toFixed(1)+'%"></i></div></div>'+
       '<div class="pv-vs-score pv-vs-score-secondary"><span>SCORE</span><strong>'+state.scores[i]+'</strong></div>'+
       '<div class="pv-vs-status">'+esc(status)+'</div>'+
       '<div class="pv-vs-detail"><span>COMBO '+state.combos[i]+'</span><span>GREAT '+state.greatStreaks[i]+'/3</span></div>'+
