@@ -103,3 +103,20 @@ test('motion follows solo direction and bounces at the ends',()=>{
  const step=r.advanceMotion({...x,value:99,dir:1},.04,p);
  assert.ok(step.value<=100);assert.equal(step.dir,-1);
 });
+
+test('solo quiet gauge fills at 100 and activates one future score boost',()=>{
+ const first=r.evaluateStop(50,50,{quiet:80},10);
+ assert.equal(first.mushinReady,true);
+ assert.equal(first.quiet,0);
+ const boosted=r.evaluateStop(50,50,{mushinActive:true},10);
+ assert.equal(boosted.points,165);
+ assert.equal(boosted.mushinReady,false);
+});
+test('quiet gauge accumulates by solo accuracy grades',()=>{
+ const great=r.evaluateStop(52,50,{quiet:20},10);
+ assert.equal(great.quiet,40);
+ const excellent=r.evaluateStop(51,50,{quiet:40},10);
+ assert.equal(excellent.quiet,70);
+ const imperfect=r.evaluateStop(65,50,{quiet:70},10);
+ assert.equal(imperfect.quiet,70);
+});
