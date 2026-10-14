@@ -38,15 +38,18 @@
       }).join('')+'</section>';
   }
   function selectScreen(){
-    return nav()+'<div class="pv-wrap">'+heading('2人KO対戦','スマホ1台で交互にSTOP！')+currentPlayers(true)+
-      '<div class="pv-rules"><h2>勝ち方</h2><p>1人1回ずつ完全交代！ STOPしたその場で得点・ライフ・判定を確定し、相手に交代するよ。</p>'+
-      '<p>ライフ3。セーフ範囲を外すと−1。PERFECTはライフ＋1＆次の相手のセーフ範囲−2！</p>'+
-      '<p>GREAT以上（PERFECT以外）3連続も同じ効果。累計350点ごとにライフ＋1、満タンなら相手のセーフ範囲−1。</p>'+
-      '<p>妨害は次の相手の1回だけ・最大−3。早押し加点なし。得点は回復のために使い、勝敗はKOで決める。</p></div>'+
-      '<div class="pv-rules"><h2>むずかしさ</h2><div class="pv-diff-choice">'+
-      '<button type="button" data-diff="easy" class="'+(state.difficulty==='easy'?'selected':'')+'">かんたん</button>'+
-      '<button type="button" data-diff="normal" class="'+(state.difficulty==='normal'?'selected':'')+'">通常</button></div>'+
-      '<p class="pv-note">後半は±1、最後はピッタリのみ！ 先攻は初戦ランダム、再戦では入れ替わるよ。</p></div>'+
+    return nav()+'<div class="pv-wrap pv-select-wrap">'+heading('2人で対戦','スマホ1台で1回ずつ交代。ライフ0でKO！')+
+      currentPlayers(true)+
+      '<section class="pv-difficulty-setup"><h2>むずかしさを選ぼう</h2>'+
+      '<div class="mode-grid difficulty-grid">'+
+      '<button type="button" data-diff="easy" aria-pressed="'+(state.difficulty==='easy')+'" class="mode-card easy-mode-card pv-difficulty-card '+(state.difficulty==='easy'?'selected':'')+'">'+
+      '<div class="mode-badges"><span class="mode-badge">小学校低学年にもおすすめ</span><span class="mode-badge">1〜100固定</span></div>'+
+      '<strong>かんたん</strong><span>10ごとに数字が見える。目標の近くは隠れず、速度と合格範囲もやさしめ。</span></button>'+
+      '<button type="button" data-diff="normal" aria-pressed="'+(state.difficulty==='normal')+'" class="mode-card pv-difficulty-card '+(state.difficulty==='normal'?'selected':'')+'">'+
+      '<div class="mode-badges"><span class="mode-badge">いつものルール</span></div>'+
+      '<strong>通常</strong><span>上限変化・隠し・高速などのギミックが登場。後半は合格範囲が狭くなる。</span></button>'+
+      '</div></section>'+
+      '<a class="pv-howto" href="../?view=rules#versus-rules">あそびかた・勝ち方を見る　›</a>'+
       '<button class="btn full pv-action" type="button" data-begin>2人で対戦をはじめる</button>'+
       (state.notice?'<p class="pv-error">'+esc(state.notice)+'</p>':'')+'</div>';
   }
@@ -201,7 +204,7 @@
     const detail=state.result?.attempt;
     const playerResult=(p,i)=>'<article class="pv-final-player '+(i===winner?'is-winner':'is-loser')+'">'+
       '<div class="pv-final-player-name"><span class="pv-final-player-icon">'+esc(p.icon)+'</span>'+
-      '<div><small>'+(i+1)+'P'+(i===winner?' / WINNER':'')+'</small><strong>'+esc(p.name)+'</strong></div></div>'+
+      '<div><small>'+(i+1)+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
       '<div class="pv-final-player-life">'+heart(state.lives[i])+'</div>'+
       '<div class="pv-final-player-stats"><span>SCORE <b>'+state.scores[i]+'</b></span>'+
       '<span>PERFECT <b>'+state.perfects[i]+'回</b></span></div>'+
@@ -214,7 +217,7 @@
       '<strong>KO決着！ <span>TURN '+state.turnNo+' / '+(state.difficulty==='easy'?'かんたん':'通常')+'</span></strong></header>'+
       '<div class="pv-final-content">'+
       '<section class="pv-final-victory" aria-label="勝者">'+
-      '<span class="pv-final-win-tag">WINNER</span>'+
+      
       '<h1>WIN！</h1>'+
       '<div class="pv-final-winner-name"><span>'+esc(win.icon)+'</span><strong>'+esc(win.name)+'</strong></div>'+
       '<p>'+(winner+1)+'Pの勝利！</p></section>'+
