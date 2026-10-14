@@ -1572,6 +1572,7 @@
   loadPlayer();
   render();
   setTimeout(function(){
+    if(state.screen==='rules')return;
     if(resumeApi&&resumeApi.offer){
       resumeApi.offer({
         gameId:RESUME_ID,
