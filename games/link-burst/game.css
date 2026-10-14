@@ -2049,7 +2049,7 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
      offset keeps the board near its former physical dimensions. */
   height:min(
     max(0px,calc(100% - var(--lb-stage-board-offset))),
-    calc((100vw - 2 * var(--lb-app-padding) - var(--lb-stat-rail) - var(--lb-rail-width) - 2 * var(--lb-side-gap)) * 13 / 7)
+    calc((100vw - 2 * var(--lb-app-padding) - var(--lb-stat-rail) - var(--lb-rail-width) - 2 * var(--lb-side-gap)) * 1.857142857)
   );
   aspect-ratio:7 / 13;
 }
@@ -2110,6 +2110,7 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
   }
 }
 @media(max-height:580px){
+  .link-burst-app.screen-play{--lb-stage-board-offset:24px}
   .screen-play .controls{grid-template-rows:repeat(2,53px);gap:5px;padding:5px}
   .screen-play .board-stage .pause-btn{min-height:52px;margin-top:5px}
 }
