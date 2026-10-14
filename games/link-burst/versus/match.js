@@ -81,14 +81,14 @@
      '<div class="match-overlay" data-pause-menu hidden><div class="match-dialog" role="dialog" aria-modal="true" aria-label="一時停止">'+
         '<h2>PAUSE</h2><p>2人のゲームは停止中</p>'+
         '<div class="match-dialog-actions"><button type="button" data-resume>対戦に戻る</button>'+
-        '<button type="button" class="secondary" data-back-setup>対戦準備に戻る</button>'+
+        '<button type="button" class="secondary" data-back-setup>プレイヤー選択に戻る</button>'+
         '<button type="button" data-hg-settings-open>⚙ 共通設定</button></div></div></div>'+
-     '<div class="match-overlay" data-back-confirm hidden><div class="match-dialog" role="alertdialog" aria-modal="true" aria-label="対戦準備に戻る確認">'+
+     '<div class="match-overlay" data-back-confirm hidden><div class="match-dialog" role="alertdialog" aria-modal="true" aria-label="プレイヤー選択に戻る確認">'+
         '<h2>対戦を終了しますか？</h2>'+
         '<p>現在の対戦を終了して、対戦準備に戻ります。途中の状態は保存されません。</p>'+
         '<div class="match-dialog-actions">'+
           '<button type="button" data-cancel-back>キャンセルして一時停止に戻る</button>'+
-          '<button type="button" class="secondary" data-confirm-back>対戦準備に戻る</button>'+
+          '<button type="button" class="secondary" data-confirm-back>プレイヤー選択に戻る</button>'+
         '</div></div></div>'+
      '<div class="vs-finale" data-result hidden aria-live="polite">'+
         '<div class="vs-finale-flash" aria-hidden="true"></div>'+
@@ -574,7 +574,7 @@ function newRound(clearSave=true){
  if(match.players.length!==2){
    root.className='match-shell';
    root.innerHTML='<div class="match-overlay"><div class="match-dialog">'+
-      '<h2>プレイヤーの確認が必要</h2><p>対戦準備で異なる2人を選んでね。</p>'+
+      '<h2>プレイヤーの確認が必要</h2><p>異なる2人を選んでから対戦を始めてね。</p>'+
       '<a class="secondary" href="./">2人を選ぶ</a></div></div>';
   }else{
    const saved=resumeApi?.load?.(RESUME_ID);
