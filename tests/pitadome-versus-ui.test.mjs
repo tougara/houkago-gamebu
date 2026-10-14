@@ -169,6 +169,7 @@ test('a knockout also keeps its last hit result on-screen until acknowledged',()
     }else h.runCountdown();
     h.click('data-stop',{stop:String(h.active())});
     assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
+    h.finishImpact();
     assert.match(h.root.innerHTML,/pv-round-result/);
     if(turn<5)h.click('data-next-turn');
   }
@@ -261,6 +262,7 @@ test('remaining one life triggers a danger cut-in after the rank cut-in',()=>{
   for(let turn=1;turn<=4;turn++){
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
     assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
+    h.finishImpact();
     assert.match(h.root.innerHTML,/pv-round-result/);
     h.click('data-next-turn');
   }
@@ -296,7 +298,7 @@ test('win cut-in blocks rematch until victory introduction finishes',()=>{
   h.click('data-rematch');assert.match(h.root.innerHTML,/pv-duel/);
 });
 test('cinematic tier hierarchy and danger emphasis live above the full game',()=>{
-  assert.match(css,/\.pv-app \.pv-cutin\s*\{/);
+  assert.match(css,/\.pitadome-app \.pv-cutin\s*\{/);
   assert.match(css,/position:fixed;inset:0;z-index:80/);
   assert.match(css,/\.pv-cutin-perfect/);
   assert.match(css,/\.pv-cutin-excellent/);
