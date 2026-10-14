@@ -35,6 +35,7 @@
     mode:'endless',
     rankMode:'endless',
     rankEdit:false,
+    ruleTab:'solo',
     gameStarted:false,
     paused:false,
     resolving:false,
@@ -209,6 +210,15 @@
       '</form>';
   }
 
+  function versusRulesHtml(){
+    return '<div class="rules-wrap">'+
+      '<section class="card rule-card"><h2>勝ち方</h2><p>スマホを横向きにして、1Pと2Pが同時に操作するよ。上下左右につながった同じ色のブロックを4個以上そろえると消える。中央から次のペアを出せなくなった人の負け。2人とも同時に出せなくなれば引き分けだよ。</p></section>'+
+      '<section class="card rule-card"><h2>JAMで相手を攻撃</h2><p>連鎖やCOMBOを作ると、相手の盤面へ邪魔ブロック（JAM）を送れるよ。2 LINKで4個、3 LINKで11個、4 LINKで24個。1 LINKでも2 COMBOなら3個送れるよ。</p><p>先に相手から届いているJAMを自分の攻撃で相殺することもできる（COUNTER）。</p></section>'+
+      '<section class="card rule-card"><h2>JAMの着弾と長期戦</h2><p>1回の着弾上限は開始〜1分29秒が14個、1分30秒から21個、3分から28個、4分から30個。残ったJAMは次回以降に持ち越すよ。</p><p>3分以降は攻撃が1.25倍、4分以降は1.5倍（最大90個）。2 COMBOは＋3個、3 COMBO以上は＋6個を加えたあとで倍率をかける。</p><p>受信したJAMは、操作中のペアを置いて連鎖が終わったタイミングで着弾。自分の連鎖で相殺できるほか、落ちたJAMは色ブロックの消去に直接隣接すると壊れるよ。</p></section>'+
+      '<section class="card rule-card"><h2>2人対戦の操作</h2><div class="control-demo"><span class="demo-left">←</span><span class="demo-right">→</span><span class="demo-rotate">↻</span><span class="demo-down">↓</span></div><p>左右移動は長押し可能。↓で高速落下、↻で回転。</p><p>PCでは1P＝A（左）・S（下）・D（右）・Space（回転）。2P＝← ↓ →（移動）・Enter（回転）。</p></section>'+
+      '<section class="card rule-card"><h2>対戦記録</h2><p>対戦の勝敗は共通プレイヤー記録に保存されるよ。何度でも同じ2人で再戦できる。</p></section>'+
+      '</div>';
+  }
   function rulesScreen(){
     return topNav()+heading('あそびかた','ブロックの分離・連鎖・得点まで6つの項目で説明するよ。')+
       '<div class="rules-wrap">'+
