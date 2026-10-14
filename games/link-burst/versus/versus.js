@@ -174,17 +174,7 @@
   function readyScreen(members){
     return heading('対戦の準備','スマホを横向きにして、2人で同時にプレイしよう。')+
       currentCard(members,false)+
-      '<section class="card versus-rules-card">'+
-        '<strong>2人で対戦</strong>'+
-        '<p>同じ色を上下左右に4個以上つなげると消えるよ。中央に新しいペアを出せなくなった方が負け！</p>'+
-        '<small>2 LINKで4個、3 LINKで11個、4 LINKで24個のJAM攻撃！ 1 LINKでも2 COMBOなら3個送れるよ。連鎖で受信JAMを相殺（COUNTER）できる。勝敗は共通プレイヤー記録に保存されるよ。</small>'+
-        '<details class="versus-jam-rules"><summary>JAMの詳しいルールを見る</summary>'+
-          '<p>【着弾上限】開始〜1分29秒：1回14個 ／ 1分30秒〜：21個 ／ 3分〜：28個 ／ 4分〜：30個。残りは次回以降に持ち越し。</p>'+
-          '<p>【長期戦】3分以降は攻撃量が1.25倍、4分以降は1.5倍（最大90個）。2 COMBOなら＋3個、3 COMBO以上なら＋6個を加算してから倍率を適用。</p>'+
-          '<p>【タイミング】JAMの受信後、操作中のペアを置いて連鎖処理が終わった安全な区切りで着弾。連鎖で先に受信JAMを1個ずつ相殺できる。着弾したJAMは、色ブロックの消去に上下左右で直接接すると壊れる。</p>'+
-        '</details>'+ 
-        '<p class="versus-key-help">PC操作：1P＝A（左）・S（下）・D（右）・Space（回転） ／ 2P＝← ↓ →（移動）・Enter（回転）。左右は長押しできます。</p>'+
-      '</section>'+
+      '<div class="versus-howto-link"><a class="btn secondary" href="../?rules=versus">遊び方（2人対戦）を確認する ↗</a></div>'+
       '<div class="stack versus-actions">'+
         '<button type="button" class="btn" data-launch>2人で対戦をはじめる →</button>'+
         '<button type="button" class="btn secondary" data-change>← プレイヤーを変更</button>'+
