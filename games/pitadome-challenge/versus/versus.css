@@ -735,3 +735,72 @@ html,body{min-height:100%;background:#06111c}
 }
 /* Winner gets one English label ("WIN！"). Side panels show 1P/2P only. */
 .pv-app.screen-final .pv-final-victory{gap:clamp(7px,1.6dvh,15px)}
+
+
+/* Landscape gameplay: reserve a full line for tick labels BEFORE the STOP row. */
+.pv-app.screen-battle .pv-play-center:not(.is-result):not(.is-no-footer){
+  grid-template-rows:minmax(20px,auto) minmax(60px,25%) minmax(27px,12%)
+    minmax(68px,1fr) minmax(57px,22%) minmax(20px,auto);
+  row-gap:4px;
+}
+.pv-app.screen-battle .pv-play-center.is-no-footer:not(.is-result){
+  grid-template-rows:minmax(20px,auto) minmax(64px,27%) minmax(27px,12%)
+    minmax(68px,1fr) minmax(57px,23%);
+  row-gap:4px;
+}
+.pv-app.screen-battle .pv-meter-zone{
+  min-height:0;
+  overflow:hidden;
+  align-items:center;
+}
+.pv-app.screen-battle .pv-meter-shell{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+  height:100%;
+  padding-bottom:3px;
+  box-sizing:border-box;
+}
+.pv-app.screen-battle .pv-meter{height:40px;flex:0 0 40px}
+.pv-app.screen-battle .pv-meter-labels{
+  flex:0 0 17px;height:17px;
+  line-height:17px;
+  margin-bottom:1px;
+}
+.pv-app.screen-battle .pv-action-slot{margin-top:6px}
+.pv-app.screen-battle .pv-action-next,
+.pv-app.screen-battle .pv-action-stop{
+  background:linear-gradient(180deg,#fff99d 0%,#ffdc3c 52%,#ffb500 100%);
+  color:#251805;border-color:#ffeb9c;box-shadow:0 5px 0 #9d6414;
+  opacity:1;filter:none;
+}
+@media(max-height:430px) and (orientation:landscape){
+  .pv-app.screen-battle .pv-play-center:not(.is-result):not(.is-no-footer){
+    grid-template-rows:20px minmax(48px,24%) minmax(25px,13%)
+      minmax(60px,1fr) minmax(51px,22%) minmax(19px,auto);
+    row-gap:3px;
+  }
+  .pv-app.screen-battle .pv-play-center.is-no-footer:not(.is-result){
+    grid-template-rows:20px minmax(48px,27%) minmax(25px,13%)
+      minmax(60px,1fr) minmax(51px,23%);
+    row-gap:3px;
+  }
+  .pv-app.screen-battle .pv-meter-shell{gap:2px;padding-bottom:0}
+  .pv-app.screen-battle .pv-action-slot{margin-top:4px}
+}
+@media(max-height:340px) and (orientation:landscape){
+  .pv-app.screen-battle .pv-play-center:not(.is-result):not(.is-no-footer){
+    grid-template-rows:18px minmax(44px,23%) minmax(23px,13%)
+      minmax(51px,1fr) minmax(45px,21%) minmax(18px,auto);
+    row-gap:2px;
+  }
+  .pv-app.screen-battle .pv-play-center.is-no-footer:not(.is-result){
+    grid-template-rows:18px minmax(44px,25%) minmax(23px,13%)
+      minmax(51px,1fr) minmax(45px,24%);
+    row-gap:2px;
+  }
+  .pv-app.screen-battle .pv-meter{height:33px;flex-basis:33px}
+  .pv-app.screen-battle .pv-meter-labels{height:13px;flex-basis:13px;line-height:13px}
+  .pv-app.screen-battle .pv-action-slot{margin-top:2px}
+}
