@@ -181,7 +181,7 @@
       '<strong>TURN '+state.turnNo+' / LEVEL '+p.level+'・'+(state.difficulty==='easy'?'かんたん':'通常')+'</strong></header>'+
       '<div class="pv-duel-body">'+
       playerCard(0)+
-      '<section class="pv-play-center '+(revealResult?'is-result ':'')+(state.activePressure?'is-pressured':'')+'">'+
+      '<section class="pv-play-center '+(revealResult?'is-result ':'')+(!hint?'is-no-footer ':'')+(state.activePressure?'is-pressured':'')+'">'+
       '<div class="pv-turn-heading"><span>'+esc(player.icon)+' '+esc(player.name)+' の番</span><small>'+esc(p.gimmicks.join('・'))+'</small></div>'+
       stage+
       '<div class="pv-action-slot">'+actionHtml()+'</div>'+
@@ -375,8 +375,10 @@
     const scoreLabel='＋'+attempt.points+' POINT';
     const extra=attempt.chargeReward?'　回復ゲージMAX！':attempt.special?'　特別効果発動！':'';
     const duration={perfect:2950,excellent:2550,great:2250,good:1700,safe:1650,out:1900}[rank];
-    if(rank!=='out')setCutin('judge',labels[rank],scoreLabel+extra,rank,'JUDGEMENT',duration);
-    render();
+    if(rank!=='out'){
+      setCutin('judge',labels[rank],scoreLabel+extra,rank,'JUDGEMENT',duration);
+      render();
+    }
     const judgedTurn=state.turnNo;
     const shouldWarn=lifeBefore>1&&reward.life===1;
     // OUT is intentionally low-key: show the result immediately. Only the
