@@ -893,6 +893,29 @@ if(location.search&&/(?:^|[?&])view=rules(?:&|$)/.test(location.search)){state.s
 loadPlayer();render();
 if(state.screen==='rules'&&location.hash==='#versus-rules'){requestAnimationFrame(()=>document.getElementById('versus-rules')?.scrollIntoView({block:'start'}))}
 window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayer();render();});
+// PC: Enter / Space confirms STOP, next round, first start and replay.
+// Native focused buttons keep their ordinary keyboard behavior.
+document.addEventListener?.('keydown',function(e){
+  if(!['Enter',' ','Spacebar'].includes(e.key)||e.repeat||e.isComposing||
+    e.ctrlKey||e.altKey||e.metaKey)return;
+  const t=e.target,tag=String(t?.tagName||'').toUpperCase();
+  if(t?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(tag))return;
+  const focused=t?.closest?.('button,a,[role="button"]');
+  if(focused&&!focused.hasAttribute?.('data-stop'))return;
+  if(state.screen==='play'){
+    if(!state.running||state.needsOpeningCountdown)return;
+    e.preventDefault();stopRound();return;
+  }
+  if(focused)return;
+  if(state.screen==='roundResult'){
+    const next=document.querySelector('[data-next-round]');
+    if(next&&!next.disabled){e.preventDefault();nextRound()}
+  }else if(state.screen==='title'){
+    e.preventDefault();go('mode');
+  }else if(state.screen==='final'){
+    e.preventDefault();beginGame(state.mode,state.difficulty);
+  }
+});
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
