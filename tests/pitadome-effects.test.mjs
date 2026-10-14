@@ -50,7 +50,7 @@ function soloHarness(locationData={}){
       return null;
     },
     querySelector:element,querySelectorAll:selector=>{
-      if(selector==='[data-rules-tab]')return ['solo','versus'].map(tab=>{
+      if(selector==='[data-rules-tab]')return ['common','solo','versus'].map(tab=>{
         const node=element('[data-rules-tab="'+tab+'"]');
         if(node)node.dataset.rulesTab=tab;
         return node;
@@ -83,8 +83,8 @@ function soloHarness(locationData={}){
 
 test('shared timing & vibrate API preserves existing stronger PERFECT feedback',()=>{
   const w={};vm.runInNewContext(effectsJs,{globalThis:w});
-  assert.equal(w.PitadomeEffects.TIMING.countdown,1120);
-  assert.equal(w.PitadomeEffects.TIMING.start,1500);
+  assert.equal(w.PitadomeEffects.TIMING.countdown,650);
+  assert.equal(w.PitadomeEffects.TIMING.start,650);
   assert.equal(w.PitadomeEffects.TIMING.out,1850);
   assert.ok(w.PitadomeEffects.TIMING.perfect>w.PitadomeEffects.TIMING.excellent);
   assert.ok(w.PitadomeEffects.TIMING.excellent>w.PitadomeEffects.TIMING.great);
@@ -173,32 +173,27 @@ test('entry screen groups solo challenges under one button next to 2-player KO',
  assert.match(h.app.innerHTML,/むずかしさを選ぼう/);
  assert.match(h.app.innerHTML,/小学校低学年にもおすすめ/);
 });
-test('rules screen covers how to win in both solo and KO modes without opening a duel',()=>{
- const h=soloHarness();h.press('[data-start-title]');
- h.press('[data-rules]');
- assert.match(h.app.innerHTML,/1人で遊ぶ/);
- assert.match(h.app.innerHTML,/2人で対戦｜勝ち方/);
+test('rules screen offers common, solo and versus tabs',()=>{
+ const h=soloHarness();h.press('[data-rules]');
+ for(const tab of ['common','solo','versus'])assert.match(h.app.innerHTML,new RegExp('data-rules-tab="'+tab+'"'));
+ assert.match(h.app.innerHTML,/id="common-rules" role="tabpanel" aria-labelledby="common-rules-tab">/);
+ assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab" hidden/);
+ assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab" hidden/);
+ assert.match(h.app.innerHTML,/共通の遊び方/);
+ assert.match(h.app.innerHTML,/むずかしさ/);
  assert.match(h.app.innerHTML,/PERFECTで回復＆妨害/);
  assert.match(h.app.innerHTML,/回復ゲージ350点/);
- assert.match(h.app.innerHTML,/ライフを0にした人が勝ち/);
- assert.match(h.app.innerHTML,/むずかしさ（共通）/);
 });
-
-
-test('solo and versus rules tabs switch their visible panels without navigation',()=>{
- const h=soloHarness();h.press('[data-start-title]');h.press('[data-rules]');
- assert.match(h.app.innerHTML,/role="tablist"/);
- assert.match(h.app.innerHTML,/data-rules-tab="solo"/);
- assert.match(h.app.innerHTML,/data-rules-tab="versus"/);
- assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab">/);
- assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab" hidden/);
- h.press('[data-rules-tab="versus"]');
- assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab" hidden/);
- assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab">/);
- assert.match(h.app.innerHTML,/data-rules-tab="versus"/);
- assert.match(h.app.innerHTML,/aria-selected="true" aria-controls="versus-rules"/);
+test('common solo versus panels switch visibility and selection',()=>{
+ const h=soloHarness();h.press('[data-rules]');
  h.press('[data-rules-tab="solo"]');
  assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab">/);
+ assert.match(h.app.innerHTML,/id="common-rules" role="tabpanel" aria-labelledby="common-rules-tab" hidden/);
+ h.press('[data-rules-tab="versus"]');
+ assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab">/);
+ assert.match(h.app.innerHTML,/aria-selected="true" aria-controls="versus-rules"/);
+ h.press('[data-rules-tab="common"]');
+ assert.match(h.app.innerHTML,/id="common-rules" role="tabpanel" aria-labelledby="common-rules-tab">/);
  assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab" hidden/);
 });
 
@@ -208,4 +203,15 @@ test('versus rules deep link selects the duel tab immediately',()=>{
   assert.match(h.app.innerHTML,/aria-selected="true" aria-controls="versus-rules"/);
   assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab">/);
   assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab" hidden/);
+});
+
+test('redundant instructions are absent from setup screens',()=>{
+ const h=soloHarness();
+ assert.match(h.app.innerHTML,/data-rules/);
+ h.press('[data-start-title]');
+ assert.doesNotMatch(h.app.innerHTML,/data-rules>/);
+ h.press('[data-solo-modes]');
+ assert.doesNotMatch(h.app.innerHTML,/data-rules>/);
+ h.press('[data-mode]',{mode:'ten'});
+ assert.doesNotMatch(h.app.innerHTML,/data-rules>/);
 });
