@@ -260,5 +260,17 @@ function bind(){
   });document.getElementById('restartSame')?.addEventListener('click',()=>{state.navHistory=['title'];state.screen='roles';startGame();});document.getElementById('restartRoles')?.addEventListener('click',()=>{state.gameStarted=false;state.navHistory=['title'];state.screen='roles';render();});
 }
 setBaseRoles();ensurePlayers();render();window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;const d=window.HoukagoPlayers?.load?.();state.playerCount=Math.max(3,Math.min(10,Number(d?.activeCount)||3));state.players=[];ensurePlayers();setBaseRoles();render();});
+let guardDiscussionTimerWasRunning=false;
+window.addEventListener('houkago-back-guard-open',()=>{
+  guardDiscussionTimerWasRunning=state.screen==='discussion'&&!!state.timerId;
+  if(guardDiscussionTimerWasRunning){stopTimer();render()}
+});
+window.addEventListener('houkago-back-guard-stay',()=>{
+  if(guardDiscussionTimerWasRunning&&state.screen==='discussion'){
+    guardDiscussionTimerWasRunning=false;
+    toggleTimer();
+  }
+});
+window.addEventListener('houkago-back-guard-save',persistResume);
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.navHistory=[];render();}});
