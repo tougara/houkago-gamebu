@@ -1997,3 +1997,29 @@ html[data-hg-motion="reduced"] .match-shell[data-finished="true"] .arena[data-fi
   min-height:0;
   height:100%;
 }
+
+
+/* Keep the live JAM wave label as a single compact line at every viewport.
+   Its old line wrap visually overpowered the center scoreboard. */
+.match-center .center-mode{min-width:0;width:100%;overflow:hidden}
+.match-center .center-mode [data-pressure]{
+  display:block;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  overflow:hidden;
+  text-overflow:clip;
+  white-space:nowrap!important;
+  word-break:normal!important;
+  text-align:center;
+  font-size:clamp(7px,.9vw,11px)!important;
+  line-height:1.15!important;
+  letter-spacing:-.05em;
+  font-weight:900;
+}
+@media(max-width:780px) and (orientation:landscape){
+  .match-center .center-mode [data-pressure]{
+    font-size:clamp(6.5px,.9vw,9px)!important;
+    letter-spacing:-.07em;
+  }
+}
