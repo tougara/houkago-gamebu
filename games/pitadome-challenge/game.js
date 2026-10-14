@@ -916,6 +916,19 @@ document.addEventListener?.('keydown',function(e){
     e.preventDefault();beginGame(state.mode,state.difficulty);
   }
 });
+let backGuardWasPlaying=false;
+window.addEventListener('houkago-back-guard-open',function(){
+  backGuardWasPlaying=state.gameStarted&&state.screen==='play';
+  if(backGuardWasPlaying){stopMotion();persistResume()}
+});
+window.addEventListener('houkago-back-guard-stay',function(){
+  if(!backGuardWasPlaying)return;
+  backGuardWasPlaying=false;
+  if(state.screen!=='play'||!state.gameStarted)return;
+  if(state.needsOpeningCountdown)startCountdown();
+  else startMotion();
+});
+window.addEventListener('houkago-back-guard-save',persistResume);
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
