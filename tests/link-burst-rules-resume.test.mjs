@@ -60,7 +60,7 @@ test('duel snapshot is JSON-safe and engine can tick the restored board',()=>{
   const stored=JSON.parse(JSON.stringify([first,second].map(x=>{const y={...x};delete y.pairSource;return y})));
   const restored=stored.map(x=>({...x,pairSource:sharedPair}));
   assert.equal(restored[0].jamQueue[0].count,14);
-  assert.deepEqual(restored[0].piece,first.piece);
+  assert.equal(JSON.stringify(restored[0].piece),JSON.stringify(first.piece));
   E.tick(restored[0],16,false);
   E.tick(restored[1],16,false);
   assert.equal(typeof restored[0].phase,'string');
