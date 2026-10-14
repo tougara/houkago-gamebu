@@ -303,11 +303,14 @@
         state.timer=0;
         if(state.screen!=='battle'||state.phase!=='warning'||activeIndex()!==i||!landscape())return;
         state.lifeWarningPending[i]=false;
-        beginCountdown();
+        if(state.turnNo===1)beginCountdown();
+        else startMotion();
       },dangerDuration);
       return;
     }
-    beginCountdown();
+    // 3-2-1 is the opening ceremony, not a delay on every handoff.
+    if(state.turnNo===1)beginCountdown();
+    else startMotion();
   }
   function beginCountdown(){
     if(state.screen!=='battle'||!['ready','warning'].includes(state.phase)||!landscape())return;
@@ -350,7 +353,7 @@
     updatePosition(ts);paintCursor();state.raf=requestAnimationFrame(motionFrame);
   }
   function startMotion(){
-    if(state.screen!=='battle'||state.phase!=='countdown'||!landscape())return;
+    if(state.screen!=='battle'||!['countdown','ready','warning'].includes(state.phase)||!landscape())return;
     state.phase='moving';state.cutin=null;
     state.motion=rules.initialMotion(state.profile);
     state.value=state.motion.value;state.lastTs=performance.now();
