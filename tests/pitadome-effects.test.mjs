@@ -39,7 +39,7 @@ function soloHarness(){
     return elements.get(selector);
   }
   const document={getElementById:id=>id==='app'?app:null,
-    querySelector:element,querySelectorAll:()=>[]};
+    querySelector:element,querySelectorAll:selector=>{const node=element(selector);return node?[node]:[]}};
   const context={window:win,document,location:{href:''},localStorage:{getItem:()=>null,setItem(){}},
     Math:Object.create(Math),performance:{now:()=>100},
     setTimeout:fn=>{timers.set(++seq,fn);return seq},
