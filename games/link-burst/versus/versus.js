@@ -145,7 +145,7 @@
         '<button type="button" class="choice-card versus" data-ready '+(state.ids.length!==2?'disabled':'')+'>'+
           '<span class="mode-badge">VERSUS</span>'+
           '<strong>2人で対戦</strong>'+
-          '<span>2人で同時に勝負。対戦準備へ進む →</span>'+
+          '<span>2人で同時に勝負。タップすると対戦開始</span>'+
         '</button>'+
       '</div>'+
       (state.notice?'<p class="versus-error" role="status">'+esc(state.notice)+'</p>':'');
@@ -171,24 +171,13 @@
         (members.length>=max?'<p class="solo-hint">登録は最大'+max+'人までです。</p>':'')+
       '</div>';
   }
-  function readyScreen(members){
-    return heading('対戦の準備','スマホを横向きにして、2人で同時にプレイしよう。')+
-      currentCard(members,false)+
-      '<div class="versus-howto-link"><a class="btn secondary" href="../?rules=versus">遊び方（2人対戦）を確認する</a></div>'+
-      '<div class="stack versus-actions">'+
-        '<button type="button" class="btn" data-launch>2人で対戦をはじめる</button>'+
-        '<button type="button" class="btn secondary" data-change>プレイヤーを変更</button>'+
-      '</div>';
-  }
 
   function render(){
     const members=roster();
     synchronizeSelection(members);
-    if(state.screen==='ready'&&state.ids.length<2)state.screen='select';
     root.className='link-burst-app versus-shell';
     root.innerHTML='<div class="versus-wrap">'+controls()+
-      (state.screen==='ready'?readyScreen(members):
-       state.screen==='manage'?memberManagement(members):
+      (state.screen==='manage'?memberManagement(members):
        state.screen==='form'?memberForm(members):
        state.screen==='pick'?pickScreen(members):selectScreen(members))+'</div>';
   }
@@ -255,20 +244,8 @@
     if(e.target.closest('[data-ready]')){
       if(state.ids.length!==2||state.ids[0]===state.ids[1])return;
       saveSelectedIds();
-      state.screen='ready';
-      render();
-      return;
-    }
-    if(e.target.closest('[data-launch]')){
-      if(state.ids.length!==2||state.ids[0]===state.ids[1])return;
-      saveSelectedIds();
       location.href='play.html';
       return;
-    }
-    if(e.target.closest('[data-change]')){
-      state.screen='select';
-      state.notice='';
-      render();
     }
   });
 
