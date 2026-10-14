@@ -195,3 +195,18 @@
  .pitadome-app .pv-cutin *,
  .pitadome-app .pv-cutin::before{animation:none!important;transition:none!important}
 }
+
+
+/* Neutral judging pause for GOOD/SAFE/OUT: the grade itself is shown once,
+   on the detailed result card, after this restrained pause. */
+.pitadome-app .pv-cutin-judge.pv-cutin-good .pv-cutin-title,
+.pitadome-app .pv-cutin-judge.pv-cutin-safe .pv-cutin-title,
+.pitadome-app .pv-cutin-judge.pv-cutin-out .pv-cutin-title{
+ font-size:clamp(28px,8dvh,58px);
+ color:#e5decb;
+ text-shadow:0 3px 15px rgba(3,10,18,.75);
+ animation:pvSoftVerdict .48s ease-out both;
+}
+.pitadome-app .pv-cutin-judge.pv-cutin-out .pv-cutin-title{
+ color:#f6b6bf;
+}
