@@ -7,6 +7,7 @@ const rulesJs=readFileSync(new URL('../games/pitadome-challenge/versus/versus-ru
 const css=readFileSync(new URL('../games/pitadome-challenge/versus/versus.css',import.meta.url),'utf8');
 
 function harness(forcedError=null){
+  let error=forcedError;
   const events={},timers=new Map(),frames=new Map();
   let seq=0,landscape=true,clock=10;
   const players=[{id:'a',name:'アルファ',icon:'🐶'},{id:'b',name:'ベータ',icon:'🐱'}],records=[];
@@ -35,7 +36,7 @@ function harness(forcedError=null){
   win.PitadomeVersusRules.roundProfile=(...args)=>({...originalProfile(...args),target:50});
   if(forcedError!==null){
     const original=win.PitadomeVersusRules.evaluateStop;
-    win.PitadomeVersusRules.evaluateStop=(value,target,previous,safe)=>original(target+forcedError,target,previous,safe);
+    win.PitadomeVersusRules.evaluateStop=(value,target,previous,safe)=>original(target+error,target,previous,safe);
   }
   vm.runInNewContext(js,context);
   function click(key,data={}){
@@ -61,7 +62,7 @@ function harness(forcedError=null){
       stepTimer();
     }
   }
-  return {root,events,records,click,stepTimer,runCountdown,finishImpact,active,setLandscape:v=>{landscape=v;events.win_resize()}};
+  return {root,events,records,click,stepTimer,runCountdown,finishImpact,active,setError:v=>{error=v},setLandscape:v=>{landscape=v;events.win_resize()}};
 }
 test('before starting, the two-player registration screen is preserved',()=>{
   const h=harness();
@@ -151,14 +152,16 @@ test('result panel persists after effect timer and offers detailed solo-style st
 test('a knockout also keeps its last hit result on-screen until acknowledged',()=>{
   const h=harness();h.click('data-begin');
   for(let turn=1;turn<=5;turn++){
-    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
-    if(turn===3||turn===4){
+    if(turn===5){
+      h.click('data-start-turn');
       assert.match(h.root.innerHTML,/pv-cutin-danger/);
-      assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
-      h.finishImpact();
-    }else{
-      assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
-    }
+      assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
+      h.stepTimer(); // Danger completes, then countdown begins.
+      assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+      for(let i=0;i<4;i++)h.stepTimer();
+    }else h.runCountdown();
+    h.click('data-stop',{stop:String(h.active())});
+    assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
     assert.match(h.root.innerHTML,/pv-round-result/);
     if(turn<5)h.click('data-next-turn');
   }
@@ -248,21 +251,27 @@ test('ranked judgement cut-in appears ahead of persistent verdict and then clear
 });
 test('remaining one life triggers a danger cut-in after the rank cut-in',()=>{
   const h=harness();h.click('data-begin');
-  for(let turn=1;turn<=3;turn++){
+  for(let turn=1;turn<=4;turn++){
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
-    assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
-    if(turn===3){
-      assert.match(h.root.innerHTML,/pv-cutin-danger/);
-      assert.match(h.root.innerHTML,/残りライフ 1！/);
-      assert.match(h.root.innerHTML,/次に判定外ならKO/);
-      assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
-      h.click('data-next-turn');assert.match(h.root.innerHTML,/TURN 3/);
-      h.stepTimer();
-    }
-    if(turn<3)h.click('data-next-turn');
+    assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
+    assert.match(h.root.innerHTML,/pv-round-result/);
+    h.click('data-next-turn');
   }
-  assert.match(h.root.innerHTML,/pv-round-result/);
+  // Player 1 is now at one life. The warning must happen BEFORE round 5.
+  assert.match(h.root.innerHTML,/TURN 5/);
+  assert.match(h.root.innerHTML,/準備OK！ START/);
+  h.click('data-start-turn');
+  assert.match(h.root.innerHTML,/pv-cutin-danger/);
+  assert.match(h.root.innerHTML,/残りライフ 1！/);
+  assert.match(h.root.innerHTML,/次に判定外ならKO/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
+  h.click('data-start-turn'); // Can't skip the warning by tapping twice.
+  assert.match(h.root.innerHTML,/pv-cutin-danger/);
+  h.stepTimer();
   assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
+  assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+  for(let i=0;i<4;i++)h.stepTimer();
+  assert.match(h.root.innerHTML,/data-stop="/);
 });
 test('win cut-in blocks rematch until victory introduction finishes',()=>{
   const h=harness();h.click('data-begin');
@@ -323,7 +332,7 @@ test('slow countdown and longer cinematic durations are explicit and rank-ordere
   assert.match(h.root.innerHTML,/--cutin-duration:1120ms/);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">2</);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">1</);
-  h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:730ms/);
+  h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:1500ms/);
   h.stepTimer();h.click('data-stop',{stop:String(h.active())});
   assert.match(h.root.innerHTML,/--cutin-duration:2550ms/);
   assert.match(css,/@keyframes pvCinematicHold/);
@@ -357,4 +366,58 @@ test('target number uses the largest readable scale with a dedicated objective r
  assert.match(css,/\.pv-play-center:not\(\.is-result\) \.pv-objective>strong/);
  assert.match(css,/clamp\(60px,22dvh,132px\)/);
  assert.match(css,/\.pv-play-center\.is-no-footer/);
+});
+
+test('critical warning is shown once per life-one episode and re-arms after recovery',()=>{
+  const h=harness(45);h.click('data-begin');
+  function play(error,warn=false){
+    h.setError(error);
+    h.click('data-start-turn');
+    if(warn){
+      assert.match(h.root.innerHTML,/pv-cutin-danger/);
+      h.stepTimer();
+    }else assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
+    assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+    for(let i=0;i<4;i++)h.stepTimer();
+    h.click('data-stop',{stop:String(h.active())});
+    assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
+    h.finishImpact();
+    h.click('data-next-turn');
+  }
+  play(45); // first 1P: 3 -> 2
+  play(4);  // 2P safe
+  play(45); // first 1P: 2 -> 1, no immediate warning
+  play(4);
+  play(4,true); // first 1P: warn, but stays at 1 life
+  play(4);
+  play(0); // first 1P still at 1: no repeat, PERFECT heals to 2
+  play(4);
+  play(45); // first 1P: 2 -> 1 again
+  play(4);
+  h.setError(4);
+  h.click('data-start-turn');
+  assert.match(h.root.innerHTML,/pv-cutin-danger/); // Re-armed after healing
+  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+});
+test('orientation or background interruption preserves the pending one-life warning',()=>{
+  const h=harness(45);h.click('data-begin');
+  for(let turn=1;turn<=4;turn++){
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    h.finishImpact();h.click('data-next-turn');
+  }
+  h.click('data-start-turn');
+  assert.match(h.root.innerHTML,/pv-cutin-danger/);
+  h.setLandscape(false);
+  assert.equal(h.root.overlay.hidden,false);
+  h.setLandscape(true);
+  h.click('data-start-turn');
+  assert.match(h.root.innerHTML,/pv-cutin-danger/);
+  h.stepTimer();
+  assert.match(h.root.innerHTML,/pv-cutin-countdown/);
+});
+test('duel begin button matches the brighter yellow STOP style',()=>{
+  assert.match(css,/\.pv-app\.screen-select \.pv-action\[data-begin\]/);
+  assert.match(css,/#fff99d/);
+  assert.match(css,/#ffdc3c/);
+  assert.match(css,/#ffb500/);
 });
