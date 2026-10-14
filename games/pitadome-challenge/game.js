@@ -9,7 +9,7 @@ const SOLO_PLAYER_ID_KEY='houkago_pitadome_solo_player_id_v1';
 const RANK_KEY='houkago_pitadome_rankings_v1';
 
 const state={
-  screen:'title',history:[],gameStarted:false,mode:null,difficulty:'normal',needsOpeningCountdown:true,
+  screen:'title',history:[],rulesTab:'solo',gameStarted:false,mode:null,difficulty:'normal',needsOpeningCountdown:true,
   soloIndex:0,player:null,memberReturn:'title',registerIcon:null,
   round:1,score:0,perfects:0,
   lives:3,target:50,value:0,error:0,resultValue:0,
@@ -291,8 +291,7 @@ function playerRegisterScreen(){
     '</form>';
 }
 function rulesScreen(){
-  return topNav()+heading('あそびかた','1人用も2人対戦も、まずは数字を狙ってSTOP！')+
-    '<section class="card rules-mode-group" id="solo-rules"><h2>1人で遊ぶ</h2><p>スコアを伸ばして自己ベストを目指すモード。</p>'+
+  const solo='<section class="card rules-mode-group" id="solo-rules"><h2>1人で遊ぶ</h2><p>スコアを伸ばして自己ベストを目指すモード。</p>'+
     '<div class="rules-list">'+
       '<section class="rule-step"><b>1</b><div><strong>目標の数字を見る</strong><span>「73をねらえ！」のように目標が出る。かんたんは1〜100固定、通常は後半に上限150・200も登場。</span></div></section>'+
       '<section class="rule-step"><b>2</b><div><strong>動きを読んでSTOP</strong><span>速度変化・短いバー・隠しゾーン・反転などが登場。最初だけ3・2・1で開始し、次ラウンドからはカウントダウンなし。</span></div></section>'+
@@ -300,17 +299,26 @@ function rulesScreen(){
     '</div><div class="mode-help">'+
       '<div><strong>10ラウンドチャレンジ</strong><p>全10回の合計点で勝負。通常は後半ほどギミックが増え、FINALでは上限200の複合ギミックも登場。</p></div>'+
       '<div><strong>エンドレスチャレンジ</strong><p>ライフ3でスタート。ミスでライフが減り、なくなったら終了。10コンボで護符を獲得し、次のライフ減少を1回防げる。</p></div>'+
-      '<div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div></div></section>'+
-    '<section class="card rules-mode-group" id="versus-rules"><h2>2人で対戦｜勝ち方</h2><p>スマホを横向きにして1人1回ずつ完全交代。相手のライフを0にした人が勝ち！</p>'+
+      '<div><strong>静ゲージ</strong><p>GREAT以上で増加。満タンになると次の1回が「無心」になり得点×1.5。</p></div></div></section>';
+  const versus='<section class="card rules-mode-group" id="versus-rules"><h2>2人で対戦｜勝ち方</h2><p>スマホを横向きにして1人1回ずつ完全交代。相手のライフを0にした人が勝ち！</p>'+
       '<div class="rules-list">'+
       '<section class="rule-step"><b>1</b><div><strong>3ライフでスタート</strong><span>その番の合格範囲を外すとライフ−1。STOPしたら判定を確認して相手へ交代。先攻は初戦ランダム、再戦では交代。</span></div></section>'+
       '<section class="rule-step"><b>2</b><div><strong>PERFECTで回復＆妨害</strong><span>誤差0ならライフ＋1（最大3）と、相手の次の合格範囲−2。PERFECT以外のGREAT以上を3回連続させても同じ効果。</span></div></section>'+
       '<section class="rule-step"><b>3</b><div><strong>回復ゲージ350点でボーナス</strong><span>350点たまるごとにライフ＋1。ライフ満タンなら代わりに相手の次の合格範囲−1。妨害は次の1回だけ、最大−3。</span></div></section>'+
       '<section class="rule-step"><b>4</b><div><strong>後半は一発勝負</strong><span>進むほど合格範囲が狭くなり、通常は後半±1、最後はピッタリのみ。かんたんも段階的に狭くなる。早押しによる加点はなし。</span></div></section>'+
-      '</div></section>'+
-    '<section class="card rules-mode-group"><h2>むずかしさ（共通）</h2>'+
+      '</div></section>';
+  const common='<section class="card rules-mode-group"><h2>むずかしさ（共通）</h2>'+
       '<div class="mode-help"><div><strong>かんたん</strong><p>1〜100固定。10ごとに数字を表示し、目標の近くは隠れない。速度や合格範囲もやさしめ。</p></div>'+
-      '<div><strong>通常</strong><p>上限変化・隠し・高速・反転など、多彩なギミックが登場。後半ほど難しくなる。</p></div></div></section>'+
+      '<div><strong>通常</strong><p>上限変化・隠し・高速・反転など、多彩なギミックが登場。後半ほど難しくなる。</p></div></div></section>';
+  const soloActive=state.rulesTab!=='versus';
+  const tabs='<div class="rules-tabs" role="tablist" aria-label="1人用と2人対戦の説明を切り替える">'+
+    '<button type="button" class="rules-tab '+(soloActive?'selected':'')+'" id="solo-rules-tab" role="tab" aria-selected="'+soloActive+'" aria-controls="solo-rules" data-rules-tab="solo">1人で遊ぶ</button>'+
+    '<button type="button" class="rules-tab '+(!soloActive?'selected':'')+'" id="versus-rules-tab" role="tab" aria-selected="'+(!soloActive)+'" aria-controls="versus-rules" data-rules-tab="versus">2人で対戦</button></div>';
+  return topNav()+heading('あそびかた','どちらの説明を見る？')+
+    tabs+
+    solo.replace('id="solo-rules"','id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab"'+(soloActive?'':' hidden'))+
+    versus.replace('id="versus-rules"','id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab"'+(soloActive?' hidden':''))+
+    common+
     '<button class="btn secondary full rules-bottom-back" data-rules-back>← もどる</button>';
 }
 function randomRef(maxValue=100){
@@ -802,6 +810,10 @@ function bind(){
   document.querySelector('[data-start-title]')?.addEventListener('click',()=>go('mode'));
   document.querySelector('[data-rules]')?.addEventListener('click',()=>go('rules'));
   document.querySelector('[data-rules-back]')?.addEventListener('click',doBackOne);
+  document.querySelectorAll('[data-rules-tab]').forEach(b=>b.addEventListener('click',()=>{
+    const tab=b.dataset.rulesTab;if(!['solo','versus'].includes(tab)||state.rulesTab===tab)return;
+    state.rulesTab=tab;render();
+  }));
   document.querySelectorAll('[data-ranking]').forEach(b=>b.addEventListener('click',()=>openRanking()));
   document.querySelector('[data-player-select]')?.addEventListener('click',()=>{state.memberReturn='title';go('playerSelect')});
   document.querySelector('[data-change-player]')?.addEventListener('click',()=>{state.memberReturn='soloModes';go('playerSelect')});
@@ -870,7 +882,7 @@ function bind(){
   document.querySelector('[data-rank-clear]')?.addEventListener('click',()=>{if(confirm('このランキングをすべて削除しますか？')){clearRankings(state.rankMode,state.rankDifficulty);state.rankEdit=false;render()}});
   document.querySelector('[data-rank-back]')?.addEventListener('click',doBackOne);
 }
-if(location.search&&/(?:^|[?&])view=rules(?:&|$)/.test(location.search)){state.screen='rules';state.history=['title'];}
+if(location.search&&/(?:^|[?&])view=rules(?:&|$)/.test(location.search)){state.screen='rules';state.history=['title'];state.rulesTab=location.hash==='#versus-rules'?'versus':'solo';}
 loadPlayer();render();
 if(state.screen==='rules'&&location.hash==='#versus-rules'){requestAnimationFrame(()=>document.getElementById('versus-rules')?.scrollIntoView({block:'start'}))}
 window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayer();render();});
