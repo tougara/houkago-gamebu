@@ -670,3 +670,68 @@ html,body{min-height:100%;background:#06111c}
 .pv-app .pv-cutin-start .pv-cutin-title{
   animation:pvSlowStart 1.1s cubic-bezier(.16,1.3,.22,1) both;
 }
+
+
+/* 2P setup shares the solo "かんたん / 通常" card language. */
+.pv-select-wrap{padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.pv-difficulty-setup{margin:14px 0 0}
+.pv-difficulty-setup>h2{font-size:clamp(19px,5vw,25px);margin:0 0 11px;color:#fff}
+.pv-app.screen-select .pv-difficulty-setup .difficulty-grid{display:grid;gap:12px}
+.pv-app.screen-select .pv-difficulty-card{
+ width:100%;min-height:135px;
+ display:block;position:relative;padding:17px 16px;
+ text-align:left;border-radius:22px;
+ border:1px solid rgba(236,215,165,.38);
+ background:rgba(4,16,27,.88);color:#fff;
+ box-shadow:0 18px 42px rgba(0,0,0,.28);
+}
+.pv-app.screen-select .pv-difficulty-card.easy-mode-card{
+ border-color:rgba(255,226,116,.62);
+ background:linear-gradient(180deg,rgba(64,51,18,.88),rgba(8,22,34,.90));
+}
+.pv-app.screen-select .pv-difficulty-card>strong{
+ display:block;margin-bottom:7px;font-size:clamp(22px,5.8vw,28px);font-weight:1000
+}
+.pv-app.screen-select .pv-difficulty-card.easy-mode-card>strong{color:#fff0a9}
+.pv-app.screen-select .pv-difficulty-card>span{
+ display:block;max-width:94%;font-size:clamp(13px,3.4vw,16px);
+ color:#d6dde6;font-weight:800;line-height:1.5;
+}
+.pv-app.screen-select .pv-difficulty-card .mode-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.pv-app.screen-select .pv-difficulty-card .mode-badge{
+ display:inline-block;padding:5px 9px;border-radius:999px;
+ background:rgba(224,194,124,.16);border:1px solid rgba(224,194,124,.36);
+ color:#f3da98;font-size:clamp(10px,2.6vw,12px);font-weight:1000;
+}
+.pv-app.screen-select .pv-difficulty-card.easy-mode-card .mode-badge{
+ background:rgba(255,222,105,.18);border-color:rgba(255,226,116,.48);color:#fff0b1
+}
+.pv-app.screen-select .pv-difficulty-card::after{content:none}
+.pv-app.screen-select .pv-difficulty-card.selected{
+ border:3px solid #ffe37f;
+ box-shadow:inset 0 0 0 1px rgba(255,239,177,.4),0 0 20px rgba(249,202,81,.18);
+ padding:15px 14px;
+}
+.pv-app.screen-select .pv-difficulty-card.selected::after{
+ content:"選択中";position:absolute;top:13px;right:13px;
+ transform:none;display:block;
+ padding:5px 9px;border-radius:999px;background:#fff3aa;
+ color:#342709;font-size:11px;font-weight:1000;
+}
+.pv-app.screen-select .pv-howto{
+ display:block;text-align:center;margin-top:12px;padding:13px 12px;
+ border:1px solid rgba(235,215,153,.42);border-radius:14px;
+ background:rgba(6,19,31,.82);color:#ffe5aa;
+ font-size:15px;font-weight:1000;text-decoration:none;
+}
+.pv-app.screen-select .pv-howto:focus-visible,
+.pv-app.screen-select .pv-difficulty-card:focus-visible{outline:3px solid #ffe48d;outline-offset:3px}
+.pv-app.screen-select .pv-action[data-begin]{margin-top:12px}
+@media(max-width:460px){
+ .pv-app.screen-select .pv-difficulty-card{min-height:125px;padding:14px 13px}
+ .pv-app.screen-select .pv-difficulty-card.selected{padding:12px 11px}
+ .pv-app.screen-select .pv-difficulty-card>span{font-size:13px}
+ .pv-app.screen-select .pv-difficulty-card.selected::after{top:9px;right:9px}
+}
+/* Winner gets one English label ("WIN！"). Side panels show 1P/2P only. */
+.pv-app.screen-final .pv-final-victory{gap:clamp(7px,1.6dvh,15px)}
