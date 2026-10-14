@@ -220,7 +220,13 @@
       '</div>';
   }
   function rulesScreen(){
-    return topNav()+heading('あそびかた','ブロックの分離・連鎖・得点まで6つの項目で説明するよ。')+
+    const versus=state.ruleTab==='versus';
+    return topNav()+heading('あそびかた',versus?'JAM・勝敗・操作のルールを確認しよう。':'ブロックの分離・連鎖・得点まで6つの項目で説明するよ。')+
+      '<div class="rules-tabs" role="tablist" aria-label="遊び方のモード">'+
+        '<button type="button" class="rules-tab '+(!versus?'selected':'')+'" data-rule-tab="solo" role="tab" aria-selected="'+String(!versus)+'">1人で遊ぶ</button>'+
+        '<button type="button" class="rules-tab '+(versus?'selected':'')+'" data-rule-tab="versus" role="tab" aria-selected="'+String(versus)+'">2人で対戦</button>'+
+      '</div>'+
+      (versus?versusRulesHtml():
       '<div class="rules-wrap">'+
         '<section class="card rule-card"><h2>1. 最初は縦2個セットで落ちてくる</h2><div class="rule-visual"><div class="rule-pair"><i class="pair-a">○</i><i class="pair-b">△</i></div></div><p>2個の色は4色（青・赤・黄・緑）から選ばれます。同じ色のペアが来ることもあります。NEXTとNEXT 2で先の色まで確認できます。</p></section>'+
         '<section class="card rule-card"><h2>2. 着地したら2個に分かれる</h2><p>2個セットで着地したあと、それぞれ別々のブロックになります。支えのない方だけ真下へ落下するので、段差を利用して連鎖を作ろう。</p></section>'+
@@ -228,7 +234,7 @@
         '<section class="card rule-card"><h2>4. 操作</h2><div class="control-demo"><span class="demo-left">←</span><span class="demo-right">→</span><span class="demo-rotate">↻</span><span class="demo-down">↓</span></div><p>←→は長押し移動、↓は高速落下、↻は90°右回転。<br>PCでは A＝左、S＝下、D＝右、Space／Enter＝回転。矢印キーでも操作できます。</p></section>'+ 
         '<section class="card rule-card"><h2>5. 得点とLINK・COMBO</h2><p>同じ色4個で400点。4個ずつ2 LINKなら合計1,450点。8個を2グループ同時消去する2 COMBOは1,400点。LINKが重なるほど得点が伸びます。</p><p>計算式：消去数×100×LINK ＋（COMBO−1）×400 ＋（消去数−4）×50 ＋（LINK−1）×250（マイナスになる項目は0）。</p></section>'+ 
         '<section class="card rule-card"><h2>6. モードと終了条件</h2><p>ENDLESS：中央から新しいペアを出せなくなるまで挑戦。2 MINUTES：操作可能な時間は合計120秒。連鎖演出中は時計が停止し、連鎖が終わってから再開します。</p><p>BEST表示は自分の自己ベスト。ランキングはこの端末のTOP10です。</p></section>'+
-      '</div>'+
+      '</div>')+
       '<div class="stack" style="margin-top:10px"><button class="btn secondary" data-rules-back>← もどる</button></div>';
   }
 
