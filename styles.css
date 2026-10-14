@@ -1067,3 +1067,16 @@ body.registry-open{overflow:hidden}
   .home-page .hero-logo-wrap{top:22%}
   .home-page .site-logo{max-height:29dvh}
 }
+
+
+/* 2026-10-14: balance the home action trio closer to the large brand logo. */
+@media(min-height:741px){
+  .home-page .hero-action-wrap:not(.hg-has-resume){
+    bottom:clamp(58px,8dvh,110px);
+  }
+}
+@media(min-height:741px) and (max-width:520px){
+  .home-page .hero-action-wrap:not(.hg-has-resume){
+    bottom:clamp(64px,9dvh,116px);
+  }
+}
