@@ -820,3 +820,21 @@ html,body{min-height:100%;background:#06111c}
  }
  .pv-play-center:not(.is-result) .pv-objective>strong{font-size:clamp(50px,17dvh,66px)}
 }
+
+
+/* Start of KO duel uses the same bright yellow as STOP / next-turn actions. */
+.pv-app.screen-select .pv-action[data-begin]{
+  background:linear-gradient(180deg,#fff99d 0%,#ffdc3c 52%,#ffb500 100%);
+  color:#251805;
+  border:2px solid #ffeb9c;
+  box-shadow:0 6px 0 #9d6414;
+  font-weight:1000;
+  opacity:1;
+}
+.pv-app.screen-select .pv-action[data-begin]:active{
+  transform:translateY(3px);
+  box-shadow:0 3px 0 #9d6414;
+}
+.pv-app .pv-cutin-start .pv-cutin-title{
+  animation:pvSlowStart 1.1s cubic-bezier(.16,1.3,.22,1) both;
+}
