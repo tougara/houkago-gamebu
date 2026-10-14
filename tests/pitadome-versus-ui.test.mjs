@@ -152,7 +152,7 @@ test('a knockout also keeps its last hit result on-screen until acknowledged',()
   const h=harness();h.click('data-begin');
   for(let turn=1;turn<=5;turn++){
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
-    if(turn===3){
+    if(turn===3||turn===4){
       assert.match(h.root.innerHTML,/pv-cutin-danger/);
       assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
       h.finishImpact();
