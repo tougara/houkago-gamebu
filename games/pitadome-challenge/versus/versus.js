@@ -160,14 +160,14 @@
     if(revealResult){
       const leftover=a.safe-a.error,losing=a.error>a.safe;
       const notes=[];
-      if(a.special)notes.push((a.perfect?'PERFECT':'3連続GREAT')+'：回復＋1／相手に妨害−2');
+      if(a.special)notes.push((a.perfect?'ぴったり成功':'3連続ボーナス')+'：回復＋1／相手に妨害−2');
       if(a.chargeReward)notes.push('350点達成：回復または妨害');
       if(state.result.reward.damage)notes.push('ライフ−1');
       if(a.mushinActive)notes.push('無心 ×1.5');
       if(a.mushinReady)notes.push('次回「無心」');
       stage='<div class="pv-round-result '+(losing?'is-out':'tier-'+a.tier)+'" role="status" aria-label="今回の判定結果">'+
         resultEffects(a)+
-        '<div class="pv-result-mainline"><strong>'+verdictText(a)+'</strong><b>＋'+a.points+'<small> POINT</small></b></div>'+
+        '<div class="pv-result-mainline"><strong>'+(['perfect','excellent','great'].includes(a.tier)&&!losing?'判定結果':verdictText(a))+'</strong><b>＋'+a.points+'<small> POINT</small></b></div>'+
         '<div class="pv-result-stats"><span>目標 <b>'+p.target+'</b></span><span>STOP <b>'+a.value+'</b></span>'+
         '<span>誤差 <b>'+a.error+'</b></span><span>'+(leftover>=0?'残り猶予':'超過')+' <b>'+Math.abs(leftover)+'</b></span></div>'+
         '<div class="pv-result-note">'+esc(notes.join('　・　')||'得点を獲得！')+'</div></div>';
@@ -388,8 +388,10 @@
     const scoreLabel='＋'+attempt.points+' POINT';
     const extra=attempt.chargeReward?'　回復ゲージMAX！':attempt.special?'　特別効果発動！':'';
     const duration=effects.TIMING[rank];
-    // Even OUT gets a readable, restrained pause, but no high-rank fireworks.
-    setCutin('judge',effects.LABEL[rank],scoreLabel+extra,rank,rank==='out'?'':'JUDGEMENT',duration);
+    // A tier name is shown exactly once: high grades in the cinematic cut-in,
+    // lower grades on the persistent result card. Preserve OUT's 1.85s pause.
+    const highlight=['perfect','excellent','great'].includes(rank);
+    setCutin('judge',highlight?effects.LABEL[rank]:'判定中…',highlight?scoreLabel+extra:'',rank,highlight?'JUDGEMENT':'',duration);
     render();
     const judgedTurn=state.turnNo;
     state.timer=setTimeout(()=>{
