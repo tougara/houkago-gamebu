@@ -95,3 +95,22 @@
 .versus-rules-card .versus-jam-rules p:last-child{
   padding-bottom:11px;
 }
+
+
+/* Compact rules navigation on the duel ready page; full explanation lives
+   under あそびかた > 2人で対戦. */
+.versus-howto-link{margin:12px 0 13px}
+.versus-howto-link a{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:49px;
+  width:100%;
+  text-decoration:none;
+  text-align:center;
+  font-weight:1000;
+}
+.versus-howto-link a:focus-visible{
+  outline:3px solid #9ce9ff;
+  outline-offset:3px;
+}
