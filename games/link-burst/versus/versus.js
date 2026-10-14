@@ -174,10 +174,10 @@
   function readyScreen(members){
     return heading('対戦の準備','スマホを横向きにして、2人で同時にプレイしよう。')+
       currentCard(members,false)+
-      '<div class="versus-howto-link"><a class="btn secondary" href="../?rules=versus">遊び方（2人対戦）を確認する ↗</a></div>'+
+      '<div class="versus-howto-link"><a class="btn secondary" href="../?rules=versus">遊び方（2人対戦）を確認する</a></div>'+
       '<div class="stack versus-actions">'+
-        '<button type="button" class="btn" data-launch>2人で対戦をはじめる →</button>'+
-        '<button type="button" class="btn secondary" data-change>← プレイヤーを変更</button>'+
+        '<button type="button" class="btn" data-launch>2人で対戦をはじめる</button>'+
+        '<button type="button" class="btn secondary" data-change>プレイヤーを変更</button>'+
       '</div>';
   }
 
