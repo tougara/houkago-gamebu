@@ -336,12 +336,12 @@ test('350-point recovery is visibly converted to MAX and reverts to progress lat
   assert.doesNotMatch(h.root.innerHTML,/MAX！効果発動/);
 });
 
-test('slow countdown and longer cinematic durations are explicit and rank-ordered',()=>{
+test('brisk 3-2-1-START pacing keeps grade animation order',()=>{
   const h=harness(1);h.click('data-begin');h.click('data-start-turn');
-  assert.match(h.root.innerHTML,/--cutin-duration:1120ms/);
+  assert.match(h.root.innerHTML,/--cutin-duration:650ms/);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">2</);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">1</);
-  h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:1500ms/);
+  h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:650ms/);
   h.stepTimer();h.click('data-stop',{stop:String(h.active())});
   assert.match(h.root.innerHTML,/--cutin-duration:2550ms/);
   assert.match(css,/@keyframes pvCinematicHold/);
@@ -436,7 +436,7 @@ test('duel begin button matches the brighter yellow STOP style',()=>{
   assert.match(css,/#ffb500/);
 });
 
-test('duel setup matches solo easy/normal cards and links to unified instructions',()=>{
+test('duel setup matches solo difficulty cards without redundant rules link',()=>{
   const h=harness();
   assert.match(h.root.innerHTML,/2人で対戦/);
   assert.match(h.root.innerHTML,/data-diff="easy"/);
@@ -444,7 +444,7 @@ test('duel setup matches solo easy/normal cards and links to unified instruction
   assert.match(h.root.innerHTML,/class="mode-card easy-mode-card pv-difficulty-card/);
   assert.match(h.root.innerHTML,/小学校低学年にもおすすめ/);
   assert.match(h.root.innerHTML,/いつものルール/);
-  assert.match(h.root.innerHTML,/href="\.\.\/\?view=rules#versus-rules"/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-howto|あそびかた・勝ち方を見る/);
   assert.doesNotMatch(h.root.innerHTML,/<h2>勝ち方<\/h2>/);
   h.click('data-diff',{diff:'easy'});
   assert.match(h.root.innerHTML,/data-diff="easy" aria-pressed="true"/);
@@ -467,21 +467,23 @@ test('landscape victory displays WIN only once without repeated WINNER labels',(
   assert.match(h.root.innerHTML,/決着：TURN/);
 });
 
-test('GOOD / SAFE / OUT have one visible tier label, after a neutral judging pause',()=>{
- for(const [error,label] of [[5,'GOOD！'],[10,'SAFE！'],[45,'OUT！']]){
+test('GOOD SAFE OUT show English cut-in before a numeric result',()=>{
+ for(const [error,label,rank] of [[5,'GOOD！','good'],[10,'SAFE！','safe'],[45,'OUT！','out']]){
    const h=harness(error);h.click('data-begin');h.runCountdown();
    h.click('data-stop',{stop:String(h.active())});
-   assert.match(h.root.innerHTML,/pv-cutin-judge/);
-   assert.match(h.root.innerHTML,/判定中…/);
-   assert.doesNotMatch(h.root.innerHTML,new RegExp(label));
+   assert.match(h.root.innerHTML,new RegExp('pv-cutin-judge pv-cutin-'+rank));
+   assert.match(h.root.innerHTML,new RegExp(label));
+   assert.doesNotMatch(h.root.innerHTML,/判定中…/);
    assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
    h.finishImpact();
-   assert.doesNotMatch(h.root.innerHTML,/判定中…/);
-   assert.match(h.root.innerHTML,new RegExp(label));
-   assert.equal(h.root.innerHTML.split(label).length-1,1);
+   assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
+   assert.doesNotMatch(h.root.innerHTML,new RegExp(label));
+   assert.match(h.root.innerHTML,/判定結果/);
    assert.match(h.root.innerHTML,/pv-result-stats/);
+   assert.match(h.root.innerHTML,/目標 <b>/);
  }
 });
+
 test('high tiers use grade on cut-in and neutral heading on detailed results',()=>{
  for(const [error,label] of [[0,'PERFECT！'],[1,'EXCELLENT！'],[2,'GREAT！']]){
    const h=harness(error);h.click('data-begin');h.runCountdown();
