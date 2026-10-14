@@ -92,15 +92,18 @@ test('rules: solo and versus guide tabs preserve the complete original solo rule
   assert.match(soloJs,/new URLSearchParams\(location\.search\)\.get\('rules'\)==='versus'/);
   assert.match(soloJs,/data-rule-tab/);
 });
-test('duel ready: removes full JAM explanation and links to the rules versus tab',()=>{
+test('duel selection: selected two players go straight to play without ready screen',()=>{
   const setup=readFileSync(new URL('../games/link-burst/versus/versus.js',import.meta.url),'utf8');
-  const setupCss=readFileSync(new URL('../games/link-burst/versus/versus.css',import.meta.url),'utf8');
-  assert.doesNotMatch(setup,/'<section class="card versus-rules-card">'\+/);
-  assert.match(setup,/href="\.\.\/\?rules=versus"/);
-  assert.match(setup,/data-launch/);
-  assert.match(setupCss,/\.versus-howto-link a\{/);
-  assert.match(versusHtml,/play\.css\?v=20261015-resume1/);
+  const setupHtml=readFileSync(new URL('../games/link-burst/versus/index.html',import.meta.url),'utf8');
+  assert.match(setup,/if\(e\.target\.closest\('\[data-ready\]'\)\)\{[\s\S]*?saveSelectedIds\(\);\s*location\.href='play\.html';/);
+  assert.match(setup,/state\.ids\.length!==2\|\|state\.ids\[0\]===state\.ids\[1\]/);
+  assert.match(setup,/data-slot=/);
+  for(const obsolete of ['function readyScreen(',"state.screen==='ready'",'data-launch','data-change','対戦準備へ進む','対戦の準備']){
+    assert.ok(!setup.includes(obsolete),'Obsolete ready screen: '+obsolete);
+  }
+  assert.match(setupHtml,/versus\.js\?v=20261015-direct1/);
 });
+
 test('solo 7x13 board is preserved while all controller buttons fit inside their frame',()=>{
   const style=soloCss.slice(soloCss.indexOf('/* Solo controls: keep all buttons INSIDE'));
   assert.match(soloCss,/--lb-stat-rail:clamp\(42px,12vw,56px\)/);
@@ -124,14 +127,15 @@ test('duel controls: DOWN uses original one-row height, arrows and ROTATE split 
 });
 
 
-test('versus ready buttons have no decorative arrow characters',()=>{
+test('duel match: pause exits to player selection, not to a deleted ready screen',()=>{
   const setup=readFileSync(new URL('../games/link-burst/versus/versus.js',import.meta.url),'utf8');
-  for(const label of ['遊び方（2人対戦）を確認する','2人で対戦をはじめる','プレイヤーを変更']){
-    assert.match(setup,new RegExp(label));
-  }
-  for(const arrowLabel of ['遊び方（2人対戦）を確認する ↗','2人で対戦をはじめる →','← プレイヤーを変更']){
-    assert.ok(!setup.includes(arrowLabel),'Unexpected arrow: '+arrowLabel);
-  }
-  const setupHtml=readFileSync(new URL('../games/link-burst/versus/index.html',import.meta.url),'utf8');
-  assert.match(setupHtml,/versus\.js\?v=20261014-ui4/);
+  const match=readFileSync(new URL('../games/link-burst/versus/match.js',import.meta.url),'utf8');
+  const matchHtml=readFileSync(new URL('../games/link-burst/versus/play.html',import.meta.url),'utf8');
+  assert.match(setup,/2人で同時に勝負。タップすると対戦開始/);
+  assert.match(match,/プレイヤー選択に戻る/);
+  assert.doesNotMatch(match,/対戦準備に戻る|対戦準備で異なる2人/);
+  assert.match(match,/data-confirm-back/);
+  assert.match(match,/location\.href='\.\/';/);
+  assert.match(matchHtml,/match\.js\?v=20261015-direct1/);
 });
+
