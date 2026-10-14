@@ -2122,3 +2122,65 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
   .screen-play .controls{grid-template-rows:repeat(2,53px);gap:5px;padding:5px}
   .screen-play .board-stage .pause-btn{min-height:52px;margin-top:5px}
 }
+
+
+/* Link Burst rule guide: tabs share the single official rules screen. */
+.rules-tabs{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:0 0 12px;
+}
+.rules-tab{
+  min-width:0;
+  min-height:54px;
+  padding:10px 7px;
+  border:2px solid rgba(171,197,242,.45);
+  border-radius:15px;
+  color:#e2eafa;
+  background:rgba(13,25,52,.86);
+  font-size:clamp(14px,4vw,19px);
+  font-weight:1000;
+  box-shadow:0 3px 0 rgba(0,0,0,.35);
+}
+.rules-tab.selected{
+  color:#0a2341;
+  border-color:#f5faff;
+  background:linear-gradient(180deg,#fff59e,#ffc542);
+  box-shadow:0 4px 0 #aa782c;
+}
+.rules-tab:focus-visible{outline:3px solid #b4edff;outline-offset:2px}
+.rule-card p+p{margin-top:9px}
+
+/* Solo control enlargement: grow the LEFT/RIGHT row upward into the
+   clear gap below the 7x13 board; preserve DROP height and the board itself.
+   ROTATE spans both rows and its upper edge follows the new arrow height. */
+.link-burst-app.screen-play{
+  --lb-arrow-raise:clamp(20px,5dvh,40px);
+  --lb-key-row:67px;
+}
+.screen-play .controls{
+  grid-template-rows:calc(var(--lb-key-row) + var(--lb-arrow-raise)) var(--lb-key-row);
+  margin:calc(-1 * var(--lb-arrow-raise)) auto 0;
+  position:relative;
+  z-index:4;
+}
+.screen-play .controls .control-btn[data-control="left"],
+.screen-play .controls .control-btn[data-control="right"]{
+  height:100%;
+  min-height:0;
+}
+.screen-play .controls .control-btn[data-control="rotate"]{
+  grid-row:1/3;
+  height:100%;
+  min-height:0;
+}
+@media(max-width:390px){
+  .link-burst-app.screen-play{--lb-key-row:65px;--lb-arrow-raise:clamp(13px,4dvh,29px)}
+}
+@media(max-height:700px){
+  .link-burst-app.screen-play{--lb-key-row:65px;--lb-arrow-raise:clamp(13px,4dvh,29px)}
+}
+@media(max-height:580px){
+  .link-burst-app.screen-play{--lb-key-row:53px;--lb-arrow-raise:clamp(8px,3dvh,18px)}
+}
