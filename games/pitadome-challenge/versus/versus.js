@@ -122,7 +122,7 @@
     if(state.phase==='ready')return '<button class="pv-game-action pv-action-start" type="button" data-start-turn>'+
       '<span class="pv-action-player">'+(i+1)+'P '+esc(who.icon)+' '+esc(who.name)+' の準備</span>'+
       '<strong>準備OK！ START</strong></button>';
-    if(state.phase==='countdown')return '<div class="pv-action-countdown" aria-hidden="true">バーが動いたらSTOP！</div>';
+    if(state.phase==='countdown')return '<div class="pv-action-countdown" aria-hidden="true"></div>';
     if(state.phase==='moving')return '<button class="pv-game-action pv-action-stop" type="button" data-stop="'+i+'">STOP！</button>';
     if(state.phase==='judged'&&state.cutin)return '<div class="pv-action-hold" aria-hidden="true">判定演出中…</div>';
     if(state.phase==='judged')return '<button class="pv-game-action pv-action-next" type="button" data-next-turn'+
@@ -149,8 +149,7 @@
     const range=p.maxValue-p.minValue,pct=((state.phase==='moving'?state.value:(a?a.value:p.minValue))-p.minValue)/range*100;
     const showCursor=state.phase==='moving'||(isResult&&!revealResult);
     const blind=p.blind?'<div class="pv-meter-blind" style="left:'+p.blindStart+'%;width:'+(p.blindEnd-p.blindStart)+'%"></div>':'';
-    const hint=state.phase==='ready'?'準備ができたらスタート':
-      state.phase==='countdown'?'バーが動いたらSTOP！':
+    const hint=(state.phase==='ready'||state.phase==='countdown')?'':
       state.phase==='moving'?'目標の数字に合わせてSTOP！':
       revealResult?'結果を確認してから次へ':'判定演出中…';
     let stage;
@@ -186,7 +185,7 @@
       '<div class="pv-turn-heading"><span>'+esc(player.icon)+' '+esc(player.name)+' の番</span><small>'+esc(p.gimmicks.join('・'))+'</small></div>'+
       stage+
       '<div class="pv-action-slot">'+actionHtml()+'</div>'+
-      '<div class="pv-result-strip '+(revealResult?'is-result-footer':'is-hint')+'"><span>'+esc(hint)+'</span></div>'+
+      (hint?'<div class="pv-result-strip '+(revealResult?'is-result-footer':'is-hint')+'"><span>'+esc(hint)+'</span></div>':'')+
       '</section>'+
       playerCard(1)+
       '</div>'+
@@ -306,17 +305,17 @@
     if(state.screen!=='battle'||state.phase!=='ready'||!landscape())return;
     stopTimers();state.phase='countdown';state.countdown=3;
     const countMs=1120,startMs=730;
-    setCutin('countdown','3',state.players[activeIndex()].name+' のチャレンジ','','',countMs);
+    setCutin('countdown','3','','','',countMs);
     render();
     function step(){
       if(state.phase!=='countdown'||state.screen!=='battle'||!landscape())return;
       if(state.countdown>1){
         state.countdown--;
-        setCutin('countdown',String(state.countdown),state.players[activeIndex()].name+' のチャレンジ','','',countMs);
+        setCutin('countdown',String(state.countdown),'','','',countMs);
         render();state.timer=setTimeout(step,countMs);
       }else if(state.countdown===1){
         state.countdown=0;
-        setCutin('start','START！','STOPの準備！','','',startMs);
+        setCutin('start','START！','','','',startMs);
         render();state.timer=setTimeout(step,startMs);
       }else startMotion();
     }
@@ -376,10 +375,27 @@
     const scoreLabel='＋'+attempt.points+' POINT';
     const extra=attempt.chargeReward?'　回復ゲージMAX！':attempt.special?'　特別効果発動！':'';
     const duration={perfect:2950,excellent:2550,great:2250,good:1700,safe:1650,out:1900}[rank];
-    setCutin('judge',labels[rank],scoreLabel+extra,rank,'JUDGEMENT',duration);
+    if(rank!=='out')setCutin('judge',labels[rank],scoreLabel+extra,rank,'JUDGEMENT',duration);
     render();
     const judgedTurn=state.turnNo;
     const shouldWarn=lifeBefore>1&&reward.life===1;
+    // OUT is intentionally low-key: show the result immediately. Only the
+    // existing critical last-life warning warrants a fullscreen alert.
+    if(rank==='out'){
+      if(shouldWarn){
+        const dangerDuration=2050;
+        setCutin('danger','残りライフ 1！','次に判定外ならKO！','','DANGER',dangerDuration);
+        render();
+        state.timer=setTimeout(()=>{
+          state.timer=0;
+          if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
+          state.cutin=null;state.resultReady=true;render();
+        },dangerDuration);
+      }else{
+        state.cutin=null;state.resultReady=true;render();
+      }
+      return;
+    }
     function unlockResult(){
       if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
       state.cutin=null;state.resultReady=true;
