@@ -65,7 +65,55 @@ test('versus: empty row removed; larger rotation, arrows and drop occupy three r
   }
 });
 test('the new CSS and solo markup are cache-busted for mobile browser refreshes',()=>{
-  assert.match(soloHtml,/href="game\.css\?v=20261014-ui2"/);
-  assert.match(soloHtml,/src="game\.js\?v=20261014-ui2"/);
-  assert.match(versusHtml,/href="play\.css\?v=20261014-ui2"/);
+  assert.match(soloHtml,/href="game\.css\?v=20261014-ui3"/);
+  assert.match(soloHtml,/src="game\.js\?v=20261014-ui3"/);
+  assert.match(versusHtml,/href="play\.css\?v=20261014-ui3"/);
+});
+
+
+test('rules: solo and versus guide tabs preserve the complete original solo rules',()=>{
+  const a=soloJs.indexOf('  function versusRulesHtml(){');
+  const b=soloJs.indexOf('  function miniPieceHtml(',a);
+  assert.ok(a>=0&&b>a);
+  const rulesCode=soloJs.slice(a,b);
+  const guide=tab=>new Function('state','topNav','heading',rulesCode+'return rulesScreen();')(
+    {ruleTab:tab},()=>'',(title,desc)=>'<h1>'+title+'</h1><p>'+desc+'</p>'
+  );
+  const one=guide('solo'),two=guide('versus');
+  assert.match(one,/data-rule-tab="solo"/);
+  assert.match(one,/data-rule-tab="versus"/);
+  assert.match(one,/6\. モードと終了条件/);
+  assert.doesNotMatch(one,/JAMの着弾と長期戦/);
+  assert.match(two,/JAMの着弾と長期戦/);
+  assert.match(two,/JAMで相手を攻撃/);
+  assert.match(two,/2人対戦の操作/);
+  assert.match(two,/着弾上限/);
+  assert.doesNotMatch(two,/6\. モードと終了条件/);
+  assert.match(soloJs,/new URLSearchParams\(location\.search\)\.get\('rules'\)==='versus'/);
+  assert.match(soloJs,/data-rule-tab/);
+});
+test('duel ready: removes full JAM explanation and links to the rules versus tab',()=>{
+  const setup=readFileSync(new URL('../games/link-burst/versus/versus.js',import.meta.url),'utf8');
+  const setupCss=readFileSync(new URL('../games/link-burst/versus/versus.css',import.meta.url),'utf8');
+  assert.doesNotMatch(setup,/'<section class="card versus-rules-card">'\+/);
+  assert.match(setup,/href="\.\.\/\?rules=versus"/);
+  assert.match(setup,/data-launch/);
+  assert.match(setupCss,/\.versus-howto-link a\{/);
+  assert.match(versusHtml,/play\.css\?v=20261014-ui3/);
+});
+test('solo controls extend upward while preserving the DROP base row and 7x13 board',()=>{
+  assert.match(soloCss,/--lb-arrow-raise:clamp\(20px,5dvh,40px\)/);
+  assert.match(soloCss,/grid-template-rows:calc\(var\(--lb-key-row\) \+ var\(--lb-arrow-raise\)\) var\(--lb-key-row\)/);
+  assert.match(soloCss,/margin:calc\(-1 \* var\(--lb-arrow-raise\)\) auto 0/);
+  assert.match(soloCss,/\.screen-play \.controls \.control-btn\[data-control="rotate"\]\{[\s\S]*?grid-row:1\/3/);
+  assert.match(soloCss,/\.screen-play \.board-stage > \.board-frame\{[\s\S]*?aspect-ratio:7 \/ 13/);
+});
+test('duel controls: DOWN uses original one-row height, arrows and ROTATE split the rest',()=>{
+  const a=versusCss.lastIndexOf('/* Link Burst 2P touch area revision:');
+  assert.ok(a>=0);
+  const c=versusCss.slice(a);
+  assert.match(c,/grid-template-rows:minmax\(0,1fr\) minmax\(0,1fr\) var\(--v7-btn\)/);
+  assert.match(c,/\.v-control-arrows\{[\s\S]*?grid-row:2/);
+  assert.match(c,/\.v-control-down\{[\s\S]*?grid-row:3/);
+  assert.doesNotMatch(c,/\.arena-field\{|\.arena-board-stack\{/);
 });
