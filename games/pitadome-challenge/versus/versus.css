@@ -783,3 +783,40 @@ html,body{min-height:100%;background:#06111c}
  .pv-app .pv-cutin,.pv-app .pv-cutin-countdown .pv-cutin-title,
  .pv-app .pv-cutin-start .pv-cutin-title{animation:none!important}
 }
+
+
+/* V7: put the target number first, not supporting text. */
+.pv-play-center:not(.is-result){
+ grid-template-rows:minmax(22px,auto) minmax(72px,28%) minmax(29px,12%)
+                    minmax(40px,1fr) minmax(57px,21%) minmax(24px,auto);
+}
+.pv-play-center.is-no-footer{
+ grid-template-rows:minmax(22px,auto) minmax(72px,30%) minmax(29px,12%)
+                    minmax(40px,1fr) minmax(57px,23%);
+}
+.pv-play-center:not(.is-result) .pv-objective>span{
+ font-size:clamp(13px,3.2dvh,19px);font-weight:850;
+}
+.pv-play-center:not(.is-result) .pv-objective>strong{
+ font-size:clamp(60px,22dvh,132px);line-height:.95;letter-spacing:.015em;
+ color:#fff9e9;text-shadow:0 4px 16px rgba(0,0,0,.78),0 0 15px rgba(255,224,153,.23);
+ font-variant-numeric:tabular-nums;
+}
+@media(max-height:430px) and (orientation:landscape){
+ .pv-play-center:not(.is-result){
+  grid-template-rows:20px minmax(51px,26%) minmax(26px,13%) minmax(36px,1fr) minmax(56px,23%) minmax(21px,auto);
+ }
+ .pv-play-center.is-no-footer{
+  grid-template-rows:20px minmax(53px,30%) minmax(26px,13%) minmax(36px,1fr) minmax(56px,25%);
+ }
+ .pv-play-center:not(.is-result) .pv-objective>strong{font-size:clamp(57px,17dvh,87px)}
+}
+@media(max-height:340px) and (orientation:landscape){
+ .pv-play-center:not(.is-result){
+  grid-template-rows:18px minmax(48px,27%) minmax(25px,13%) minmax(29px,1fr) minmax(49px,22%) minmax(18px,auto);
+ }
+ .pv-play-center.is-no-footer{
+  grid-template-rows:18px minmax(52px,31%) minmax(25px,13%) minmax(29px,1fr) minmax(49px,23%);
+ }
+ .pv-play-center:not(.is-result) .pv-objective>strong{font-size:clamp(50px,17dvh,66px)}
+}
