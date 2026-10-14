@@ -61,7 +61,7 @@
      '<div class="jam-flight-layer" data-jam-flight aria-hidden="true"></div>'+
      arena(0)+
      '<aside class="match-center" aria-label="対戦情報と一時停止">'+
-       '<div class="center-mode"><strong>2人で対戦</strong><small data-pressure>JAM着弾 最大14</small></div>'+
+       '<div class="center-mode"><strong>2人で対戦</strong><small data-pressure>JAM14個/回</small><small data-pressure-rate hidden></small></div>'+
        '<div class="center-score p1"><small>1P SCORE</small><strong data-score="0">0</strong></div>'+
        '<div class="center-score p2"><small>2P SCORE</small><strong data-score="1">0</strong></div>'+
        '<button class="match-pause" data-pause type="button" aria-label="2人の対戦を一時停止">Ⅱ<span>PAUSE</span></button>'+
@@ -238,7 +238,9 @@
    if(pressure&&match.games.length===2){
      const wave=engine.jamWaveSize(match.games[0]);
      const boost=engine.jamPressure(match.games[0]);
-     pressure.textContent='JAM '+wave+'個/回'+(boost>1?' · 攻撃×'+boost:'');
+     pressure.textContent='JAM'+wave+'個/回';
+      const rate=root.querySelector('[data-pressure-rate]');
+      if(rate){rate.hidden=boost<=1;rate.textContent=boost>1?'攻撃×'+boost:''}
      const center=pressure.closest('.center-mode');
      if(center)center.dataset.pressure=boost>1?'overtime':wave>14?'rising':'normal';
    }
