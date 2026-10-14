@@ -2152,35 +2152,40 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
 .rules-tab:focus-visible{outline:3px solid #b4edff;outline-offset:2px}
 .rule-card p+p{margin-top:9px}
 
-/* Solo control enlargement: grow the LEFT/RIGHT row upward into the
-   clear gap below the 7x13 board; preserve DROP height and the board itself.
-   ROTATE spans both rows and its upper edge follows the new arrow height. */
+/* Solo controls: preserve the PREVIOUS board size.
+   The grid occupies exactly two base-height rows again. Only the arrows and
+   rotation BUTTONS extend upward by 50% of one row into the clear gap.
+   Expanding a grid row previously took ~30-40px away from the playfield. */
 .link-burst-app.screen-play{
-  --lb-arrow-raise:clamp(20px,5dvh,40px);
   --lb-key-row:67px;
+  --lb-arrow-grow:calc(var(--lb-key-row) * .5);
 }
 .screen-play .controls{
-  grid-template-rows:calc(var(--lb-key-row) + var(--lb-arrow-raise)) var(--lb-key-row);
-  margin:calc(-1 * var(--lb-arrow-raise)) auto 0;
+  grid-template-rows:repeat(2,var(--lb-key-row));
+  margin:0 auto;
   position:relative;
   z-index:4;
 }
 .screen-play .controls .control-btn[data-control="left"],
 .screen-play .controls .control-btn[data-control="right"]{
-  height:100%;
+  position:relative;
+  top:calc(-1 * var(--lb-arrow-grow));
+  height:calc(100% + var(--lb-arrow-grow));
   min-height:0;
 }
 .screen-play .controls .control-btn[data-control="rotate"]{
-  grid-row:1/3;
-  height:100%;
+  grid-row:1 / 3;
+  position:relative;
+  top:calc(-1 * var(--lb-arrow-grow));
+  height:calc(100% + var(--lb-arrow-grow));
   min-height:0;
 }
 @media(max-width:390px){
-  .link-burst-app.screen-play{--lb-key-row:65px;--lb-arrow-raise:clamp(13px,4dvh,29px)}
+  .link-burst-app.screen-play{--lb-key-row:65px}
 }
 @media(max-height:700px){
-  .link-burst-app.screen-play{--lb-key-row:65px;--lb-arrow-raise:clamp(13px,4dvh,29px)}
+  .link-burst-app.screen-play{--lb-key-row:65px}
 }
 @media(max-height:580px){
-  .link-burst-app.screen-play{--lb-key-row:53px;--lb-arrow-raise:clamp(8px,3dvh,18px)}
+  .link-burst-app.screen-play{--lb-key-row:53px}
 }
