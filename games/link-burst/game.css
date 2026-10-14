@@ -2032,6 +2032,12 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
   text-align:center;
   max-width:100%;
 }
+.screen-play .board-stage .score-box strong{
+  font-size:clamp(14px,4vw,21px);
+  letter-spacing:-.035em;
+  line-height:1.1;
+  overflow-wrap:anywhere;
+}
 .screen-play .board-stage .score-box em{
   font-size:clamp(8px,1.95vw,10px);
   line-height:1.2;
@@ -2111,6 +2117,8 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
 }
 @media(max-height:580px){
   .link-burst-app.screen-play{--lb-stage-board-offset:24px}
+  .screen-play .board-stage .score-panel{grid-auto-rows:minmax(46px,auto);gap:4px}
+  .screen-play .board-stage .hud-box{min-height:46px;padding:4px 2px}
   .screen-play .controls{grid-template-rows:repeat(2,53px);gap:5px;padding:5px}
   .screen-play .board-stage .pause-btn{min-height:52px;margin-top:5px}
 }
