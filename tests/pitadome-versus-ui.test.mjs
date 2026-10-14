@@ -4,7 +4,9 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const js=readFileSync(new URL('../games/pitadome-challenge/versus/versus.js',import.meta.url),'utf8');
 const rulesJs=readFileSync(new URL('../games/pitadome-challenge/versus/versus-rules.js',import.meta.url),'utf8');
-const css=readFileSync(new URL('../games/pitadome-challenge/versus/versus.css',import.meta.url),'utf8');
+const effectsJs=readFileSync(new URL('../games/pitadome-challenge/effects.js',import.meta.url),'utf8');
+const css=readFileSync(new URL('../games/pitadome-challenge/versus/versus.css',import.meta.url),'utf8')+
+  readFileSync(new URL('../games/pitadome-challenge/effects.css',import.meta.url),'utf8');
 
 function harness(forcedError=null){
   let error=forcedError;
@@ -31,6 +33,7 @@ function harness(forcedError=null){
     Math:Object.create(Math)};
   context.Math.random=()=>0.1;
   vm.runInNewContext(rulesJs,{globalThis:win});
+  vm.runInNewContext(effectsJs,{globalThis:win});
   // Fix the practice target to 50 so immediate-stop KO tests are deterministic.
   const originalProfile=win.PitadomeVersusRules.roundProfile;
   win.PitadomeVersusRules.roundProfile=(...args)=>({...originalProfile(...args),target:50});
@@ -358,14 +361,19 @@ test('ready and countdown do not duplicate instructions or player names under th
  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-start/);
  assert.doesNotMatch(h.root.innerHTML,/STOPの準備/);
 });
-test('OUT stays subtle without a fullscreen cut-in, while life-one warning remains',()=>{
+test('OUT has a restrained 1.85s cut-in, then shows the persistent verdict',()=>{
  const h=harness();h.click('data-begin');h.runCountdown();
  h.click('data-stop',{stop:String(h.active())});
- assert.doesNotMatch(h.root.innerHTML,/pv-cutin-out/);
- assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
+ assert.match(h.root.innerHTML,/pv-cutin-judge pv-cutin-out/);
+ assert.match(h.root.innerHTML,/--cutin-duration:1850ms/);
+ assert.doesNotMatch(h.root.innerHTML,/pv-cutin-spark/);
+ assert.doesNotMatch(h.root.innerHTML,/pv-round-result is-out/);
+ assert.doesNotMatch(h.root.innerHTML,/data-next-turn/);
+ h.finishImpact();
  assert.match(h.root.innerHTML,/pv-round-result is-out/);
  assert.match(h.root.innerHTML,/data-next-turn/);
 });
+
 test('target number uses the largest readable scale with a dedicated objective row',()=>{
  assert.match(css,/\.pv-play-center:not\(\.is-result\) \.pv-objective>strong/);
  assert.match(css,/clamp\(60px,22dvh,132px\)/);
