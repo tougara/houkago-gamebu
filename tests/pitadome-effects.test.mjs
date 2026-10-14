@@ -49,7 +49,14 @@ function soloHarness(){
       }:null;
       return null;
     },
-    querySelector:element,querySelectorAll:selector=>{const node=element(selector);return node?[node]:[]}};
+    querySelector:element,querySelectorAll:selector=>{
+      if(selector==='[data-rules-tab]')return ['solo','versus'].map(tab=>{
+        const node=element('[data-rules-tab="'+tab+'"]');
+        if(node)node.dataset.rulesTab=tab;
+        return node;
+      }).filter(Boolean);
+      const node=element(selector);return node?[node]:[];
+    }};
   const context={window:win,document,location:{href:''},localStorage:{getItem:()=>null,setItem(){}},
     Math:Object.create(Math),performance:{now:()=>100},
     setTimeout:fn=>{timers.set(++seq,fn);return seq},
@@ -175,4 +182,22 @@ test('rules screen covers how to win in both solo and KO modes without opening a
  assert.match(h.app.innerHTML,/回復ゲージ350点/);
  assert.match(h.app.innerHTML,/ライフを0にした人が勝ち/);
  assert.match(h.app.innerHTML,/むずかしさ（共通）/);
+});
+
+
+test('solo and versus rules tabs switch their visible panels without navigation',()=>{
+ const h=soloHarness();h.press('[data-start-title]');h.press('[data-rules]');
+ assert.match(h.app.innerHTML,/role="tablist"/);
+ assert.match(h.app.innerHTML,/data-rules-tab="solo"/);
+ assert.match(h.app.innerHTML,/data-rules-tab="versus"/);
+ assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab">/);
+ assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab" hidden/);
+ h.press('[data-rules-tab="versus"]');
+ assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab" hidden/);
+ assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab">/);
+ assert.match(h.app.innerHTML,/data-rules-tab="versus"/);
+ assert.match(h.app.innerHTML,/aria-selected="true" aria-controls="versus-rules"/);
+ h.press('[data-rules-tab="solo"]');
+ assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab">/);
+ assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab" hidden/);
 });
