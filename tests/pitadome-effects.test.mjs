@@ -9,7 +9,7 @@ const effectsCss=readFileSync(new URL('../games/pitadome-challenge/effects.css',
 const soloHtml=readFileSync(new URL('../games/pitadome-challenge/index.html',import.meta.url),'utf8');
 const versusHtml=readFileSync(new URL('../games/pitadome-challenge/versus/index.html',import.meta.url),'utf8');
 
-function soloHarness(){
+function soloHarness(locationData={}){
   const timers=new Map(),frames=new Map(),elements=new Map(),resumes=[],events={};
   let seq=0,currentOverlay='',countNumber=null;
   const app={
@@ -57,7 +57,7 @@ function soloHarness(){
       }).filter(Boolean);
       const node=element(selector);return node?[node]:[];
     }};
-  const context={window:win,document,location:{href:''},localStorage:{getItem:()=>null,setItem(){}},
+  const context={window:win,document,location:{href:'',...locationData},localStorage:{getItem:()=>null,setItem(){}},
     Math:Object.create(Math),performance:{now:()=>100},
     setTimeout:fn=>{timers.set(++seq,fn);return seq},
     clearTimeout:id=>timers.delete(id),
@@ -200,4 +200,12 @@ test('solo and versus rules tabs switch their visible panels without navigation'
  h.press('[data-rules-tab="solo"]');
  assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab">/);
  assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab" hidden/);
+});
+
+test('versus rules deep link selects the duel tab immediately',()=>{
+  const h=soloHarness({search:'?view=rules',hash:'#versus-rules'});
+  assert.match(h.app.className,/screen-rules/);
+  assert.match(h.app.innerHTML,/aria-selected="true" aria-controls="versus-rules"/);
+  assert.match(h.app.innerHTML,/id="versus-rules" role="tabpanel" aria-labelledby="versus-rules-tab">/);
+  assert.match(h.app.innerHTML,/id="solo-rules" role="tabpanel" aria-labelledby="solo-rules-tab" hidden/);
 });
