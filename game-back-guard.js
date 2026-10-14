@@ -31,6 +31,7 @@
     if(modal){modal.remove();modal=null}
     document.body.classList.remove('hg-back-open');
     // The protective history entry was already restored in popstate.
+    if(continuePlaying)dispatch('houkago-back-guard-stay');
     dispatch('houkago-back-guard-close');
   }
   function showModal(){
