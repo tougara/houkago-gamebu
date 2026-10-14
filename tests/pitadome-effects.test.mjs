@@ -11,11 +11,11 @@ const versusHtml=readFileSync(new URL('../games/pitadome-challenge/versus/index.
 
 function soloHarness(){
   const timers=new Map(),frames=new Map(),elements=new Map(),resumes=[],events={};
-  let seq=0,currentOverlay='';
+  let seq=0,currentOverlay='',countNumber=null;
   const app={
     className:'',_html:'',
     get innerHTML(){return this._html},
-    set innerHTML(value){this._html=value;elements.clear();currentOverlay=value.includes('pv-cutin')?value:''}
+    set innerHTML(value){this._html=value;elements.clear();currentOverlay=value.includes('countdown-overlay')?value:'';countNumber=currentOverlay?'3':null}
   };
   const player={id:'one',name:'テスト',icon:'🐶'};
   const registry={load:()=>({roster:[player],players:[player]}),resolveId:p=>p.id,ICONS:['🐶'],ROSTER_MAX:15};
@@ -38,7 +38,17 @@ function soloHarness(){
     });
     return elements.get(selector);
   }
-  const document={getElementById:id=>id==='app'?app:null,
+  const document={
+    getElementById(id){
+      if(id==='app')return app;
+      if(id==='countdownOverlay')return currentOverlay?{remove(){currentOverlay=''}}:null;
+      if(id==='countdownNumber')return currentOverlay?{
+        get textContent(){return countNumber},
+        set textContent(v){countNumber=String(v)},
+        classList:{add(){}}
+      }:null;
+      return null;
+    },
     querySelector:element,querySelectorAll:selector=>{const node=element(selector);return node?[node]:[]}};
   const context={window:win,document,location:{href:''},localStorage:{getItem:()=>null,setItem(){}},
     Math:Object.create(Math),performance:{now:()=>100},
@@ -61,7 +71,7 @@ function soloHarness(){
     timers.delete(entry[0]);entry[1]();
   }
   return {app,win,press,stepTimer,timers,frames,resumes,
-    get overlay(){return currentOverlay}};
+    get overlay(){return currentOverlay},get countNumber(){return countNumber}};
 }
 
 test('shared timing & vibrate API preserves existing stronger PERFECT feedback',()=>{
@@ -78,27 +88,30 @@ test('shared timing & vibrate API preserves existing stronger PERFECT feedback',
   assert.equal(fired[2],24);
 });
 test('both modes load the same effects module and style sheet',()=>{
-  assert.match(soloHtml,/src="effects\.js"/);
-  assert.match(soloHtml,/href="effects\.css"/);
+  assert.doesNotMatch(soloHtml,/src="effects\.js"/);
+  assert.doesNotMatch(soloHtml,/href="effects\.css"/);
   assert.match(versusHtml,/src="\.\.\/effects\.js"/);
   assert.match(versusHtml,/href="\.\.\/effects\.css"/);
   assert.match(effectsCss,/\.pitadome-app \.pv-cutin/);
+  assert.doesNotMatch(game,/resultCutin|effects\.cutinHtml|window\.PitadomeEffects/);
 });
+
 test('solo first-round intro shares the 3-2-1-START durations with VS',()=>{
   const h=soloHarness();h.press('[data-start-title]');
   h.press('[data-mode]',{mode:'ten'});
   h.press('[data-difficulty]',{difficulty:'normal'});
-  assert.match(h.app.innerHTML,/screen-play|pv-cutin-countdown/);
-  assert.match(h.overlay,/pv-cutin-title">3</);
-  assert.match(h.overlay,/--cutin-duration:1120ms/);
-  h.stepTimer();assert.match(h.overlay,/pv-cutin-title">2</);
-  h.stepTimer();assert.match(h.overlay,/pv-cutin-title">1</);
-  h.stepTimer();assert.match(h.overlay,/pv-cutin-start/);
-  assert.match(h.overlay,/--cutin-duration:1500ms/);
+  assert.match(h.app.className,/screen-play/);
+  assert.match(h.app.innerHTML,/countdown-overlay/);
+  assert.equal(h.countNumber,'3');
+  h.stepTimer();assert.equal(h.countNumber,'2');
+  h.stepTimer();assert.equal(h.countNumber,'1');
+  h.stepTimer();assert.equal(h.countNumber,'START!');
   h.stepTimer();
-  assert.doesNotMatch(h.overlay,/pv-cutin/);
+  assert.equal(h.overlay,'');
   assert.ok(h.app.innerHTML.includes('data-stop'));
+  assert.doesNotMatch(h.app.innerHTML,/pv-cutin/);
 });
+
 test('solo keeps its scoring and combo cards but reveals them AFTER a full-screen hit',()=>{
   const h=soloHarness();h.press('[data-start-title]');
   h.press('[data-mode]',{mode:'ten'});
@@ -106,30 +119,32 @@ test('solo keeps its scoring and combo cards but reveals them AFTER a full-scree
   for(let i=0;i<4;i++)h.stepTimer();
   h.press('[data-stop]');
   assert.match(h.app.className,/screen-roundResult/);
-  assert.match(h.app.innerHTML,/solo-result-pending/);
-  assert.match(h.app.innerHTML,/pv-cutin-judge/);
-  assert.doesNotMatch(h.app.innerHTML,/result-stats/);
-  h.stepTimer();
-  assert.doesNotMatch(h.app.innerHTML,/solo-result-pending/);
+  assert.doesNotMatch(h.app.innerHTML,/solo-result-pending|pv-cutin/);
   assert.match(h.app.innerHTML,/result-stats/);
   assert.match(h.app.innerHTML,/score-slam/);
   assert.match(h.app.innerHTML,/data-next-round/);
-  assert.ok(h.resumes.some(x=>x[2]?.score>=10),'scoring still accumulates');
-  h.stepTimer(); // 700ms enabling the Next Round button.
+  assert.ok(h.resumes.some(x=>x[2]?.score>=10),'original scoring still accumulates');
+  h.stepTimer(); // original 700ms next-round gate
   h.press('[data-next-round]');
   assert.match(h.app.className,/screen-play/);
-  assert.doesNotMatch(h.app.innerHTML,/pv-cutin-countdown/);
+  assert.doesNotMatch(h.app.innerHTML,/pv-cutin/);
 });
+
 test('misjudgement in solo has restrained 1.85s pause and never changes game mode',()=>{
   const h=soloHarness();h.press('[data-start-title]');
   h.press('[data-mode]',{mode:'endless'});
   h.press('[data-difficulty]',{difficulty:'normal'});
   for(let i=0;i<4;i++)h.stepTimer();
   h.press('[data-stop]');
-  assert.match(h.app.innerHTML,/pv-cutin-miss/);
-  assert.match(h.app.innerHTML,/--cutin-duration:1850ms/);
-  assert.doesNotMatch(h.app.innerHTML,/result-stats/);
-  h.stepTimer();
+  assert.match(h.app.className,/screen-roundResult/);
+  assert.doesNotMatch(h.app.innerHTML,/pv-cutin|solo-result-pending/);
   assert.match(h.app.innerHTML,/result-stats/);
   assert.match(h.app.innerHTML,/エンドレス/);
+  assert.match(h.app.innerHTML,/ミス|MISS|OUT/);
+});
+
+test('solo original judgement visuals remain sourced from the existing game.css',()=>{
+ const soloCss=readFileSync(new URL('../games/pitadome-challenge/game.css',import.meta.url),'utf8');
+ assert.match(soloCss,/\.hit-fx|\.impact-rays|\.result-card/);
+ assert.doesNotMatch(game,/resultFxTimer|setCutin\(/);
 });
