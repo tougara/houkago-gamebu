@@ -86,6 +86,7 @@ function renderCustom(g){
 function draw(){
  if(!room)return;
  if(room.phase!=='secret'){goLobby();return}
+ window.HoukagoBackGuard?.setActive?.(true);
  const g=room.secret||{},myHost=host(),stage=g.stage||'setup';
  $('game-shell').hidden=false;
  $('member-panel').hidden=false;
