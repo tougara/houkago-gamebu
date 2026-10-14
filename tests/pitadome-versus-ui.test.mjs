@@ -69,7 +69,12 @@ function harness(forcedError=null){
       stepTimer();
     }
   }
-  return {root,events,records,click,stepTimer,runCountdown,finishImpact,active,setError:v=>{error=v},setLandscape:v=>{landscape=v;events.win_resize()}};
+  function key(key='Enter',target={tagName:'BODY'}){
+    let prevented=false;
+    events.doc_keydown({key,target,repeat:false,preventDefault(){prevented=true}});
+    return prevented;
+  }
+  return {root,events,records,click,key,stepTimer,runCountdown,finishImpact,active,setError:v=>{error=v},setLandscape:v=>{landscape=v;events.win_resize()}};
 }
 test('before starting, the two-player registration screen is preserved',()=>{
   const h=harness();
@@ -442,22 +447,24 @@ test('duel begin button matches the brighter yellow STOP style',()=>{
   assert.match(css,/#ffb500/);
 });
 
-test('duel setup matches solo difficulty cards without redundant rules link',()=>{
+test('each duel player independently selects easy or normal, including mixed matchups',()=>{
   const h=harness();
-  assert.match(h.root.innerHTML,/2人で対戦/);
-  assert.match(h.root.innerHTML,/data-diff="easy"/);
-  assert.match(h.root.innerHTML,/data-diff="normal"/);
-  assert.match(h.root.innerHTML,/class="mode-card easy-mode-card pv-difficulty-card/);
-  assert.match(h.root.innerHTML,/小学校低学年にもおすすめ/);
-  assert.match(h.root.innerHTML,/いつものルール/);
-  assert.doesNotMatch(h.root.innerHTML,/pv-howto|あそびかた・勝ち方を見る/);
-  assert.doesNotMatch(h.root.innerHTML,/<h2>勝ち方<\/h2>/);
-  h.click('data-diff',{diff:'easy'});
-  assert.match(h.root.innerHTML,/data-diff="easy" aria-pressed="true"/);
-  assert.match(h.root.innerHTML,/data-diff="normal" aria-pressed="false"/);
-  h.click('data-diff',{diff:'normal'});
-  assert.match(h.root.innerHTML,/data-diff="normal" aria-pressed="true"/);
-  assert.match(css,/\.pv-app\.screen-select \.pv-difficulty-card\.selected/);
+  assert.match(h.root.innerHTML,/data-player-difficulty="0"/);
+  assert.match(h.root.innerHTML,/data-player-difficulty="1"/);
+  assert.equal((h.root.innerHTML.match(/data-diff="easy"/g)||[]).length,2);
+  assert.equal((h.root.innerHTML.match(/data-diff="normal"/g)||[]).length,2);
+  assert.match(h.root.innerHTML,/組み合わせ自由/);
+  h.click('data-diff',{diff:'easy',side:'0'});
+  assert.match(h.root.innerHTML,/data-diff="easy" data-side="0" aria-pressed="true"/);
+  assert.match(h.root.innerHTML,/data-diff="normal" data-side="1" aria-pressed="true"/);
+  h.click('data-begin');
+  assert.match(h.root.innerHTML,/TURN 1 \/ LEVEL 1・かんたん/);
+  assert.match(h.root.innerHTML,/pv-meter-easy/);
+  h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+  h.finishImpact();h.click('data-next-turn');
+  assert.match(h.root.innerHTML,/TURN 2 \/ LEVEL 1・通常/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-meter-easy/);
+  assert.match(css,/\.pv-app\.screen-select \.pv-difficulty-choice\.selected/);
 });
 test('landscape victory displays WIN only once without repeated WINNER labels',()=>{
   const h=harness();h.click('data-begin');
@@ -525,4 +532,39 @@ test('STOP and next-player actions share the same bright yellow and numbered met
  assert.match(css,/\.pv-app\.screen-battle \.pv-meter-labels/);
  assert.match(css,/minmax\(68px,1fr\)/);
  assert.match(css,/\.pv-app\.screen-battle \.pv-action-slot\{margin-top:6px\}/);
+});
+
+test('random target draw excludes previous number and retains normal and easy ranges',()=>{
+ const w={};vm.runInNewContext(rulesJs,{globalThis:w});
+ const R=w.PitadomeVersusRules;
+ for(let i=1;i<22;i++){
+   const first=R.roundProfile(i,'easy',()=>.25);
+   const next=R.roundProfile(i,'easy',()=>.25,first.target);
+   assert.ok(first.target!==next.target,'easy target repeated');
+   assert.ok(next.target>=1&&next.target<=100);
+   const normal=R.roundProfile(i,'normal',()=>.25);
+   const normal2=R.roundProfile(i,'normal',()=>.25,normal.target);
+   assert.ok(normal.target!==normal2.target,'normal target repeated');
+   assert.ok(normal2.target>=normal2.minValue&&normal2.target<=normal2.maxValue);
+   assert.equal(R.levelForTurn(i),Math.ceil(i/2));
+ }
+});
+test('keyboard Enter and Space start/STOP/advance without duplicate or input interference',()=>{
+ const h=harness(1);h.click('data-begin');
+ assert.equal(h.key('Enter'),true);
+ assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+ for(let i=0;i<4;i++)h.stepTimer();
+ assert.equal(h.key(' '),true);
+ assert.match(h.root.innerHTML,/pv-cutin-judge/);
+ assert.equal(h.key('Enter'),false); // No skip while cut-in runs.
+ h.finishImpact();
+ assert.equal(h.key('Enter'),true);
+ assert.match(h.root.innerHTML,/TURN 2/);
+ assert.equal(h.key(' ',{tagName:'INPUT'}),false);
+ assert.match(h.root.innerHTML,/準備OK！ START/);
+ assert.equal(h.key(' '),true);
+ assert.match(h.root.innerHTML,/data-stop="/);
+ assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
+ assert.equal(h.key('Enter'),true);
+ assert.match(h.root.innerHTML,/pv-cutin-judge/);
 });
