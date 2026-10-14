@@ -43,7 +43,11 @@ function harness(forcedError=null){
     const button={dataset:data,hasAttribute:field=>field===key,closest:selector=>selector==='button'?button:null};
     events.click({target:button});
   }
-  function runCountdown(){click('data-start-turn');for(let i=0;i<4;i++){
+  function runCountdown(){
+    click('data-start-turn');
+    // An armed one-life warning plays before the countdown on the player's next turn.
+    if(root.innerHTML.includes('pv-cutin-danger'))stepTimer();
+    for(let i=0;i<4;i++){
     const first=timers.entries().next().value;
     assert.ok(first,'expected countdown timer');timers.delete(first[0]);first[1]();
   }}
