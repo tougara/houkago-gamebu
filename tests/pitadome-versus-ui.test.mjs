@@ -466,3 +466,32 @@ test('landscape victory displays WIN only once without repeated WINNER labels',(
   assert.equal((h.root.innerHTML.match(/class="pv-final-player /g)||[]).length,2);
   assert.match(h.root.innerHTML,/決着：TURN/);
 });
+
+test('GOOD / SAFE / OUT have one visible tier label, after a neutral judging pause',()=>{
+ for(const [error,label] of [[5,'GOOD！'],[10,'SAFE！'],[45,'OUT！']]){
+   const h=harness(error);h.click('data-begin');h.runCountdown();
+   h.click('data-stop',{stop:String(h.active())});
+   assert.match(h.root.innerHTML,/pv-cutin-judge/);
+   assert.match(h.root.innerHTML,/判定中…/);
+   assert.doesNotMatch(h.root.innerHTML,new RegExp(label));
+   assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
+   h.finishImpact();
+   assert.doesNotMatch(h.root.innerHTML,/判定中…/);
+   assert.match(h.root.innerHTML,new RegExp(label));
+   assert.equal(h.root.innerHTML.split(label).length-1,1);
+   assert.match(h.root.innerHTML,/pv-result-stats/);
+ }
+});
+test('high tiers use grade on cut-in and neutral heading on detailed results',()=>{
+ for(const [error,label] of [[0,'PERFECT！'],[1,'EXCELLENT！'],[2,'GREAT！']]){
+   const h=harness(error);h.click('data-begin');h.runCountdown();
+   h.click('data-stop',{stop:String(h.active())});
+   assert.match(h.root.innerHTML,new RegExp(label));
+   assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
+   h.finishImpact();
+   assert.match(h.root.innerHTML,/pv-result-mainline/);
+   assert.match(h.root.innerHTML,/判定結果/);
+   assert.doesNotMatch(h.root.innerHTML,new RegExp(label));
+   assert.match(h.root.innerHTML,/data-next-turn/);
+ }
+});
