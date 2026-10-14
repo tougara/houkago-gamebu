@@ -4,6 +4,7 @@
   const registry=window.HoukagoPlayers;
   const rules=window.PitadomeVersusRules;
   const settingsApi=window.HoukagoSettings;
+  const effects=window.PitadomeEffects;
   if(!root||!registry||!rules)return;
   const KEY='houkago_pitadome_versus_players_v1';
   const state={
@@ -114,8 +115,8 @@
       '</aside>';
   }
   function verdictText(attempt){
-    if(attempt.error>attempt.safe)return 'OUT！';
-    return ({perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'SAFE！',miss:'OUT！'})[attempt.tier]||'';
+    if(attempt.error>attempt.safe)return effects.LABEL.out;
+    return effects.LABEL[attempt.tier]||'';
   }
   function actionHtml(){
     const i=activeIndex(),who=state.players[i];
@@ -234,22 +235,7 @@
   // Full-screen cut-ins sit above both the bar and the target. Every scene is
   // transient and controlled by the same turn timer; no queued animation can
   // leak into the next turn, rematch, or results screen.
-  function cutinHtml(){
-    const fx=state.cutin;if(!fx)return '';
-    const kind=fx.kind,rank=fx.rank||'';
-    const isJudge=kind==='judge',isWin=kind==='win';
-    const particles=(isJudge&&['perfect','excellent','great'].includes(rank)||isWin)?
-      Array.from({length:kind==='win'||rank==='perfect'?26:rank==='excellent'?16:9},(_,i)=>
-        '<i style="--n:'+i+';--step:'+((360/(kind==='win'||rank==='perfect'?26:rank==='excellent'?16:9)))+'deg"></i>').join(''):'';
-    return '<div class="pv-cutin pv-cutin-'+kind+' '+(rank?'pv-cutin-'+rank:'')+'" style="--cutin-duration:'+(fx.duration||2500)+'ms" aria-live="assertive" role="status">'+
-      '<div class="pv-cutin-dimmer"></div><div class="pv-cutin-beam"></div>'+
-      '<div class="pv-cutin-burst" aria-hidden="true">'+particles+'</div>'+
-      '<div class="pv-cutin-content">'+(fx.kicker?'<span class="pv-cutin-kicker">'+esc(fx.kicker)+'</span>':'')+
-      '<strong class="pv-cutin-title">'+esc(fx.title)+'</strong>'+
-      (fx.subtitle?'<span class="pv-cutin-subtitle">'+esc(fx.subtitle)+'</span>':'')+
-      (isWin?'<span class="pv-cutin-crown" aria-hidden="true">★ WINNER ★</span>':'')+
-      '</div></div>';
-  }
+  function cutinHtml(){return effects.cutinHtml(state.cutin)}
   function setCutin(kind,title,subtitle='',rank='',kicker='',duration=2500){
     state.cutin={kind,title,subtitle,rank,kicker,duration};
   }
@@ -311,7 +297,7 @@
     // or app backgrounding must not silently consume the one-time alert.
     if(state.lives[i]===1&&state.lifeWarningPending[i]){
       state.phase='warning';
-      const dangerDuration=2050;
+      const dangerDuration=effects.TIMING.danger;
       setCutin('danger','残りライフ 1！','次に判定外ならKO！','','DANGER',dangerDuration);
       render();
       state.timer=setTimeout(()=>{
@@ -327,7 +313,7 @@
   function beginCountdown(){
     if(state.screen!=='battle'||!['ready','warning'].includes(state.phase)||!landscape())return;
     state.phase='countdown';state.countdown=3;
-    const countMs=1120,startMs=1500;
+    const countMs=effects.TIMING.countdown,startMs=effects.TIMING.start;
     setCutin('countdown','3','','','',countMs);
     render();
     function step(){
@@ -379,9 +365,7 @@
       combo:state.combos[i],greatStreak:state.greatStreaks[i],charge:state.charges[i],score:state.scores[i],
       quiet:state.quiet[i],mushinActive:state.mushin[i]
     },state.activeSafe);
-    if(attempt.tier==='perfect')settingsApi?.vibrate?.([28,22,70]);
-    else if(attempt.tier==='excellent')settingsApi?.vibrate?.([24,18,45]);
-    else if(attempt.tier==='great')settingsApi?.vibrate?.(24);
+    effects.vibrate(attempt.tier,settingsApi);
     state.attempts[i]=attempt;state.combos[i]=attempt.combo;state.greatStreaks[i]=attempt.greatStreak;
     state.charges[i]=attempt.charge;state.scores[i]=attempt.total;
     state.quiet[i]=attempt.quiet;state.mushinReady[i]=attempt.mushinReady;
@@ -398,21 +382,13 @@
     state.result={attempt,reward,winner:reward.life<=0?other:null};
     state.phase='judged';state.resultReady=false;
     const rank=attempt.error>attempt.safe?'out':attempt.tier;
-    const labels={perfect:'PERFECT！',excellent:'EXCELLENT！',great:'GREAT！',good:'GOOD！',safe:'SAFE！',out:'OUT！'};
     const scoreLabel='＋'+attempt.points+' POINT';
     const extra=attempt.chargeReward?'　回復ゲージMAX！':attempt.special?'　特別効果発動！':'';
-    const duration={perfect:2950,excellent:2550,great:2250,good:1700,safe:1650,out:1900}[rank];
-    if(rank!=='out'){
-      setCutin('judge',labels[rank],scoreLabel+extra,rank,'JUDGEMENT',duration);
-      render();
-    }
+    const duration=effects.TIMING[rank];
+    // Even OUT gets a readable, restrained pause, but no high-rank fireworks.
+    setCutin('judge',effects.LABEL[rank],scoreLabel+extra,rank,rank==='out'?'':'JUDGEMENT',duration);
+    render();
     const judgedTurn=state.turnNo;
-    // The danger warning happens BEFORE the player's next countdown, never
-    // over the verdict of the hit that caused the life loss.
-    if(rank==='out'){
-      state.cutin=null;state.resultReady=true;render();
-      return;
-    }
     state.timer=setTimeout(()=>{
       state.timer=0;
       if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
@@ -434,7 +410,7 @@
     stopTimers();
     state.screen='final';
     const champion=state.players[winner];
-    const winDuration=2850;
+    const winDuration=effects.TIMING.win;
     setCutin('win','WIN！',champion.icon+' '+champion.name+'！','',((winner+1)+'P CHAMPION'),winDuration);
     state.timer=setTimeout(()=>{
       state.timer=0;
