@@ -93,7 +93,13 @@
    if(round===10){p.speed=42;p.movement='change';gimmick(p,'blind',rng);p.gimmicks.unshift('FINAL')}
    return p;
  }
- function roundProfile(turn,difficulty,rng=Math.random){
+ function targetExcluding(rng,lo,hi,previous){
+   // Uniform across valid targets except the previous turn's number.
+   const avoid=Number.isInteger(previous)&&previous>=lo&&previous<=hi&&hi>lo;
+   const draw=randomInt(rng,lo,avoid?hi-1:hi);
+   return avoid&&draw>=previous?draw+1:draw;
+ }
+ function roundProfile(turn,difficulty,rng=Math.random,avoidTarget=null){
    const level=levelForTurn(turn),easy=difficulty==='easy';
    const p=easy?easyTenProfile(Math.min(10,level),rng):tenProfile(Math.min(10,level),rng);
    if(level>10){
@@ -107,7 +113,7 @@
    if(!easy&&p.gimmicks.includes('基準変化'))p.refPoint=randomRef(p.maxValue,rng);
    else if(p.refPoint===50&&p.maxValue!==100)p.refPoint=Math.round(p.maxValue/2);
    const margin=Math.max(10,Math.round(p.maxValue*.08));
-   const target=easy?randomInt(rng,1,100):randomInt(rng,margin,p.maxValue-margin);
+   const target=easy?targetExcluding(rng,1,100,avoidTarget):targetExcluding(rng,margin,p.maxValue-margin,avoidTarget);
    // SOLO easy: the blind zone must never cover the target neighborhood.
    if(easy&&p.blind){
      const targetPct=((target-p.minValue)/(p.maxValue-p.minValue))*100,width=p.blindEnd-p.blindStart;
