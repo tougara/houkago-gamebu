@@ -4,10 +4,12 @@
  const engine=window.LinkBurstVersusEngine;
  const playersApi=window.HoukagoPlayers;
  const SELECT_KEY='houkago_link_burst_versus_players_v1';
+ const resumeApi=window.HoukagoResume;
+ const RESUME_ID='link-burst-versus';
  const MATCHUP_KEY='houkago_link_burst_versus_matchups_v1';
  if(!root||!engine)return;
  const match={players:[],games:[],raf:0,last:0,paused:false,ended:false,
-   countdown:3500,held:new Map(),keys:new Set(),keyHeld:new Map(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[],finishTimer:0};
+   countdown:3500,held:new Map(),keys:new Set(),keyHeld:new Map(),boardSignatures:['',''],result:'',confirmBack:false,pairSequence:[],finishTimer:0,saveAccum:0};
  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
  function landscape(){return window.matchMedia?window.matchMedia('(orientation: landscape)').matches:window.innerWidth>window.innerHeight}
  function selectPlayers(){
@@ -277,7 +279,7 @@
    const p1=match.games[0].over,p2=match.games[1].over;
    if(!p1&&!p2)return;
    // Preserve the simultaneous-KO draw rule and both final boards.
-   match.ended=true;stop();releaseAll();
+   match.ended=true;stop();releaseAll();resumeApi?.clear?.(RESUME_ID);
    const winningSide=p1&&p2?-1:(p1?1:0);
    const message=winningSide<0?'DRAW!':(winningSide+1)+'P WIN!';
    const winner=winningSide<0?null:match.players[winningSide];
@@ -410,6 +412,7 @@
      }
      resolveAttacks();
      draw(false);finish();
+     if(!match.ended){match.saveAccum+=dt;if(match.saveAccum>=1500)persistMatch();}
    }
    updateOverlays();
    if(!match.ended&&!match.paused)match.raf=requestAnimationFrame(frame);
@@ -421,13 +424,38 @@
  }
  function pause(auto){
    if(match.paused||match.ended)return;
-   match.confirmBack=false;match.paused=true;stop();releaseAll();updateOverlays();
+   match.confirmBack=false;match.paused=true;stop();releaseAll();updateOverlays();persistMatch();
  }
  function resume(){
    if(match.ended)return;
    match.confirmBack=false;match.paused=false;updateOverlays();continueLoop();
  }
- function newRound(){
+  function persistMatch(){
+   if(!resumeApi?.save||match.ended||match.games.length!==2)return;
+   const games=match.games.map(function(st){const copy=Object.assign({},st);delete copy.pairSource;return copy});
+   resumeApi.save(RESUME_ID,{
+     title:'リンクバースト！2人対戦',path:'/games/link-burst/versus/play.html',
+     summary:match.players.map(p=>p.name).join(' VS ')+' ／ 対戦の続き'
+   },{version:1,players:match.players,games,pairSequence:match.pairSequence,countdown:match.countdown});
+   match.saveAccum=0;
+ }
+ function restoreMatch(saved){
+   if(!saved||!Array.isArray(saved.games)||saved.games.length!==2||
+      !Array.isArray(saved.players)||saved.players.length!==2)return false;
+   stop();releaseAll();
+   match.players=saved.players;
+   match.pairSequence=Array.isArray(saved.pairSequence)?saved.pairSequence:[];
+   match.games=saved.games.map(function(st){
+     st.pairSource=sharedPair;st.pairIndex=Math.max(0,Number(st.pairIndex)||0);return st;
+   });
+   match.countdown=Math.max(0,Number(saved.countdown)||0);
+   match.ended=false;match.paused=true;match.confirmBack=false;match.result='';
+   match.last=0;match.saveAccum=0;match.boardSignatures=['',''];
+   shell();draw(true);updateOverlays();
+   return true;
+ }
+function newRound(clearSave=true){
+   if(clearSave)resumeApi?.clear?.(RESUME_ID);
    if(match.finishTimer){clearTimeout(match.finishTimer);match.finishTimer=0}
    stop();releaseAll();
    match.pairSequence=[];
@@ -480,6 +508,7 @@
    }
    if(e.target.closest('[data-confirm-back]')){
      if(!match.paused||!match.confirmBack||match.ended)return;
+     resumeApi?.clear?.(RESUME_ID);
      location.href='./';
      return;
    }
@@ -524,6 +553,9 @@
    match.keys.delete(binding[0]);
    match.keyHeld.delete(binding[0]);
  });
+ window.addEventListener('houkago-back-guard-open',function(){pause(true)});
+ window.addEventListener('houkago-back-guard-save',persistMatch);
+ window.addEventListener('pagehide',persistMatch);
  window.addEventListener('blur',function(){releaseAll();pause(true)});
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')pause(true)});
  window.addEventListener('resize',function(){
@@ -542,7 +574,14 @@
    root.innerHTML='<div class="match-overlay"><div class="match-dialog">'+
       '<h2>プレイヤーの確認が必要</h2><p>対戦準備で異なる2人を選んでね。</p>'+
       '<a class="secondary" href="./">2人を選ぶ</a></div></div>';
- }else{
-   newRound();
+  }else{
+   const saved=resumeApi?.load?.(RESUME_ID);
+   newRound(false);
+   if(saved?.state){
+     pause(true);
+     setTimeout(function(){
+       resumeApi.offer({gameId:RESUME_ID,onResume:restoreMatch,onNew:function(){newRound(true)}});
+     },60);
+   }
  }
 })();
