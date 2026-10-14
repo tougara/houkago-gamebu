@@ -2,7 +2,6 @@
   const api=window.HoukagoPlayers;if(!api)return;
   const resumeApi=window.HoukagoResume;
   const openBtn=document.getElementById('openPlayerRegistry');
-  const recordBtn=document.getElementById('openPlayerRecords');
   const overlay=document.getElementById('playerRegistryOverlay');
   const closeBtn=document.getElementById('closePlayerRegistry');
   const host=document.getElementById('sharedPlayerEditorHost');
@@ -27,7 +26,6 @@
   function close(){overlay.hidden=true;document.body.classList.remove('registry-open')}
 
   openBtn?.addEventListener('click',()=>open('members'));
-  recordBtn?.addEventListener('click',()=>open('records'));
   closeBtn?.addEventListener('click',close);
 
   overlay?.addEventListener('click',e=>{

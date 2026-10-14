@@ -49,7 +49,6 @@
       '<div class="mode-badges"><span class="mode-badge">いつものルール</span></div>'+
       '<strong>通常</strong><span>上限変化・隠し・高速などのギミックが登場。後半は合格範囲が狭くなる。</span></button>'+
       '</div></section>'+
-      '<a class="pv-howto" href="../?view=rules#versus-rules">あそびかた・勝ち方を見る　›</a>'+
       '<button class="btn full pv-action" type="button" data-begin>2人で対戦をはじめる</button>'+
       (state.notice?'<p class="pv-error">'+esc(state.notice)+'</p>':'')+'</div>';
   }
@@ -117,10 +116,7 @@
       '<div class="pv-vs-quiet"><span>静 '+state.quiet[i]+'%</span><i><b style="width:'+state.quiet[i]+'%"></b></i></div>'+
       '</aside>';
   }
-  function verdictText(attempt){
-    if(attempt.error>attempt.safe)return effects.LABEL.out;
-    return effects.LABEL[attempt.tier]||'';
-  }
+
   function actionHtml(){
     const i=activeIndex(),who=state.players[i];
     if(state.phase==='ready')return '<button class="pv-game-action pv-action-start" type="button" data-start-turn>'+
@@ -167,7 +163,7 @@
       if(a.mushinReady)notes.push('次回「無心」');
       stage='<div class="pv-round-result '+(losing?'is-out':'tier-'+a.tier)+'" role="status" aria-label="今回の判定結果">'+
         resultEffects(a)+
-        '<div class="pv-result-mainline"><strong>'+(['perfect','excellent','great'].includes(a.tier)&&!losing?'判定結果':verdictText(a))+'</strong><b>＋'+a.points+'<small> POINT</small></b></div>'+
+        '<div class="pv-result-mainline"><strong>'+'判定結果'+'</strong><b>＋'+a.points+'<small> POINT</small></b></div>'+
         '<div class="pv-result-stats"><span>目標 <b>'+p.target+'</b></span><span>STOP <b>'+a.value+'</b></span>'+
         '<span>誤差 <b>'+a.error+'</b></span><span>'+(leftover>=0?'残り猶予':'超過')+' <b>'+Math.abs(leftover)+'</b></span></div>'+
         '<div class="pv-result-note">'+esc(notes.join('　・　')||'得点を獲得！')+'</div></div>';
@@ -388,10 +384,8 @@
     const scoreLabel='＋'+attempt.points+' POINT';
     const extra=attempt.chargeReward?'　回復ゲージMAX！':attempt.special?'　特別効果発動！':'';
     const duration=effects.TIMING[rank];
-    // A tier name is shown exactly once: high grades in the cinematic cut-in,
-    // lower grades on the persistent result card. Preserve OUT's 1.85s pause.
-    const highlight=['perfect','excellent','great'].includes(rank);
-    setCutin('judge',highlight?effects.LABEL[rank]:'判定中…',highlight?scoreLabel+extra:'',rank,highlight?'JUDGEMENT':'',duration);
+    // Every tier shows its English grade first, then the detailed numeric result.
+    setCutin('judge',effects.LABEL[rank],scoreLabel+extra,rank,'JUDGEMENT',duration);
     render();
     const judgedTurn=state.turnNo;
     state.timer=setTimeout(()=>{

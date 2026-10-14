@@ -2,7 +2,7 @@
 (function(global){
   'use strict';
   const TIMING=Object.freeze({
-    countdown:1120,start:1500,
+    countdown:650,start:650,
     perfect:2950,excellent:2550,great:2250,good:1700,safe:1650,
     out:1850,miss:1850,win:2850,danger:2050
   });
