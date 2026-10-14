@@ -2152,6 +2152,24 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
 .rules-tab:focus-visible{outline:3px solid #b4edff;outline-offset:2px}
 .rule-card p+p{margin-top:9px}
 
+/* Recover playfield width lost when the upper HUD was moved into a LEFT rail.
+   Fit the SAME 7:13 board between narrower but independent HUD / NEXT rails. */
+.link-burst-app.screen-play{
+  --lb-stat-rail:clamp(42px,12vw,56px);
+  --lb-rail-width:clamp(42px,11.5vw,53px);
+  --lb-side-gap:3px;
+  --lb-app-padding:5px;
+  padding-left:var(--lb-app-padding);
+  padding-right:var(--lb-app-padding);
+}
+.screen-play .board-stage .hud-box small{font-size:clamp(8px,1.9vw,10px)}
+.screen-play .board-stage .score-box em{font-size:clamp(8px,1.8vw,10px)}
+.screen-play .board-stage > .board-frame{
+  /* Height continues to follow the fixed ratio. No scaling or cropping. */
+  max-width:100%;
+  aspect-ratio:7 / 13;
+}
+
 /* Solo controls: preserve the PREVIOUS board size.
    The grid occupies exactly two base-height rows again. Only the arrows and
    rotation BUTTONS extend upward by 50% of one row into the clear gap.
