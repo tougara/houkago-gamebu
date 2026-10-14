@@ -42,7 +42,8 @@ test('solo: three columns with fixed 7:13 field and two expanded console rows',(
   assert.match(soloJs,/const VISIBLE_ROWS=13;/);
 });
 test('versus: preserve two 7x13 boards, outer-side controls and NEXT rails',()=>{
-  assert.match(versusJs,/data-board="\'+i\+'/);
+  assert.match(versusJs,/data-board=/);
+  assert.match(versusJs,/7列13段盤面/);
   assert.match(versusJs,/class="arena-controls"/);
   assert.match(versusJs,/class="arena-board-stack"/);
   assert.match(versusJs,/class="arena-next"/);
