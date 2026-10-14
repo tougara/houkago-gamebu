@@ -525,6 +525,15 @@
     document.querySelector('[data-start]')&&document.querySelector('[data-start]').addEventListener('click',function(){go('playType')});
     document.querySelector('[data-rules]')&&document.querySelector('[data-rules]').addEventListener('click',function(){go('rules')});
     document.querySelector('[data-rules-back]')&&document.querySelector('[data-rules-back]').addEventListener('click',doBack);
+    document.querySelectorAll('[data-rule-tab]').forEach(function(button){
+      button.addEventListener('click',function(){
+        const tab=button.dataset.ruleTab;
+        if(tab!=='solo'&&tab!=='versus')return;
+        if(state.ruleTab===tab)return;
+        state.ruleTab=tab;
+        render();
+      });
+    });
     document.querySelector('[data-change-player]')&&document.querySelector('[data-change-player]').addEventListener('click',function(){go('playerList')});
     document.querySelectorAll('[data-solo-player-id]').forEach(function(b){
       b.addEventListener('click',function(){
@@ -1554,6 +1563,12 @@
     else if(key==='arrowup'||key===' '||key==='enter'){e.preventDefault();rotatePiece()}
   });
 
+  try{
+    if(new URLSearchParams(location.search).get('rules')==='versus'){
+      state.screen='rules';
+      state.ruleTab='versus';
+    }
+  }catch(e){}
   loadPlayer();
   render();
   setTimeout(function(){
