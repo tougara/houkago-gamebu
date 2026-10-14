@@ -163,9 +163,9 @@ test('a knockout also keeps its last hit result on-screen until acknowledged',()
       h.click('data-start-turn');
       assert.match(h.root.innerHTML,/pv-cutin-danger/);
       assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
-      h.stepTimer(); // Danger completes, then countdown begins.
-      assert.match(h.root.innerHTML,/pv-cutin-title">3</);
-      for(let i=0;i<4;i++)h.stepTimer();
+      h.stepTimer(); // Danger ends, and the later player starts moving immediately.
+      assert.match(h.root.innerHTML,/data-stop="/);
+      assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
     }else h.runCountdown();
     h.click('data-stop',{stop:String(h.active())});
     assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
@@ -278,8 +278,7 @@ test('remaining one life triggers a danger cut-in after the rank cut-in',()=>{
   assert.match(h.root.innerHTML,/pv-cutin-danger/);
   h.stepTimer();
   assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
-  assert.match(h.root.innerHTML,/pv-cutin-title">3</);
-  for(let i=0;i<4;i++)h.stepTimer();
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
   assert.match(h.root.innerHTML,/data-stop="/);
 });
 test('win cut-in blocks rematch until victory introduction finishes',()=>{
@@ -386,13 +385,19 @@ test('critical warning is shown once per life-one episode and re-arms after reco
   const h=harness(45);h.click('data-begin');
   function play(error,warn=false){
     h.setError(error);
+    const first=/TURN 1 \/ LEVEL/.test(h.root.innerHTML);
     h.click('data-start-turn');
     if(warn){
       assert.match(h.root.innerHTML,/pv-cutin-danger/);
       h.stepTimer();
     }else assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
-    assert.match(h.root.innerHTML,/pv-cutin-title">3</);
-    for(let i=0;i<4;i++)h.stepTimer();
+    if(first){
+      assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+      for(let i=0;i<4;i++)h.stepTimer();
+    }else{
+      assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
+      assert.match(h.root.innerHTML,/data-stop="/);
+    }
     h.click('data-stop',{stop:String(h.active())});
     assert.doesNotMatch(h.root.innerHTML,/pv-cutin-danger/);
     h.finishImpact();
@@ -411,7 +416,7 @@ test('critical warning is shown once per life-one episode and re-arms after reco
   h.setError(4);
   h.click('data-start-turn');
   assert.match(h.root.innerHTML,/pv-cutin-danger/); // Re-armed after healing
-  h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+  h.stepTimer();assert.match(h.root.innerHTML,/data-stop="/);
 });
 test('orientation or background interruption preserves the pending one-life warning',()=>{
   const h=harness(45);h.click('data-begin');
@@ -427,7 +432,8 @@ test('orientation or background interruption preserves the pending one-life warn
   h.click('data-start-turn');
   assert.match(h.root.innerHTML,/pv-cutin-danger/);
   h.stepTimer();
-  assert.match(h.root.innerHTML,/pv-cutin-countdown/);
+  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
+  assert.match(h.root.innerHTML,/data-stop="/);
 });
 test('duel begin button matches the brighter yellow STOP style',()=>{
   assert.match(css,/\.pv-app\.screen-select \.pv-action\[data-begin\]/);
@@ -496,4 +502,27 @@ test('high tiers use grade on cut-in and neutral heading on detailed results',()
    assert.doesNotMatch(h.root.innerHTML,new RegExp(label));
    assert.match(h.root.innerHTML,/data-next-turn/);
  }
+});
+
+test('3-2-1 shows once for the whole match, later turns play immediately',()=>{
+ const h=harness(1);h.click('data-begin');
+ h.click('data-start-turn');
+ assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+ for(let n=0;n<4;n++)h.stepTimer();
+ assert.match(h.root.innerHTML,/data-stop="/);
+ h.click('data-stop',{stop:String(h.active())});h.finishImpact();h.click('data-next-turn');
+ assert.match(h.root.innerHTML,/TURN 2/);
+ h.click('data-start-turn');
+ assert.match(h.root.innerHTML,/data-stop="/);
+ assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown|pv-cutin-start/);
+ assert.match(h.root.innerHTML,/目標/);
+});
+test('STOP and next-player actions share the same bright yellow and numbered meter labels have reserved space',()=>{
+ assert.match(css,/\.pv-app\.screen-battle \.pv-action-next,\s*\.pv-app\.screen-battle \.pv-action-stop/);
+ assert.match(css,/#fff99d/);
+ assert.match(css,/#ffdc3c/);
+ assert.match(css,/\.pv-app\.screen-battle \.pv-meter-shell/);
+ assert.match(css,/\.pv-app\.screen-battle \.pv-meter-labels/);
+ assert.match(css,/minmax\(68px,1fr\)/);
+ assert.match(css,/\.pv-app\.screen-battle \.pv-action-slot\{margin-top:6px\}/);
 });
