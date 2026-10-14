@@ -9,7 +9,7 @@
   const KEY='houkago_pitadome_versus_players_v1';
   const state={
     screen:'select',ids:[],targetSlot:0,editId:null,formIcon:'',
-    difficulty:'normal',round:1,profile:null,players:[],
+    difficulties:['normal','normal'],round:1,profile:null,players:[],lastTarget:null,
     lives:[3,3],perfects:[0,0],attempts:[null,null],scores:[0,0],combos:[0,0],greatStreaks:[0,0],charges:[0,0],quiet:[0,0],mushin:[false,false],mushinReady:[false,false],pendingPressure:[0,0],activePressure:0,activeSafe:12,
     currentSide:0,turnNo:1,starter:0,lastStarter:null,phase:'ready',countdown:3,
     motion:null,value:0,dir:1,elapsed:0,lastTs:0,raf:0,timer:0,
@@ -37,18 +37,28 @@
           (change?'<button type="button" data-change="'+i+'">変更</button>':'')+'</div>';
       }).join('')+'</section>';
   }
+  const difficultyName=i=>state.difficulties[i]==='easy'?'かんたん':'通常';
+  const matchupLabel=()=>state.difficulties[0]===state.difficulties[1]
+    ?'両者 '+difficultyName(0)
+    :'1P '+difficultyName(0)+' / 2P '+difficultyName(1);
   function selectScreen(){
+    const choices=[0,1].map(i=>{
+      const p=selected(i),diff=state.difficulties[i];
+      const choice=(mode,text,summary)=>
+        '<button type="button" data-diff="'+mode+'" data-side="'+i+'" aria-pressed="'+(diff===mode)+'" '+
+        'class="pv-difficulty-choice '+(mode==='easy'?'is-easy ':'')+(diff===mode?'selected':'')+'">'+
+        '<strong>'+text+'</strong><span>'+summary+'</span></button>';
+      return '<section class="pv-difficulty-player" data-player-difficulty="'+i+'">'+
+        '<h3><span>'+esc(p?.icon||'？')+'</span>'+(i+1)+'P '+esc(p?.name||'未選択')+' のむずかしさ</h3>'+
+        '<div class="pv-difficulty-options">'+
+        choice('easy','かんたん','1〜100・やさしめ')+
+        choice('normal','通常','ギミック・上限変化')+
+        '</div></section>';
+    }).join('');
     return nav()+'<div class="pv-wrap pv-select-wrap">'+heading('2人で対戦','スマホ1台で1回ずつ交代。ライフ0でKO！')+
       currentPlayers(true)+
-      '<section class="pv-difficulty-setup"><h2>むずかしさを選ぼう</h2>'+
-      '<div class="mode-grid difficulty-grid">'+
-      '<button type="button" data-diff="easy" aria-pressed="'+(state.difficulty==='easy')+'" class="mode-card easy-mode-card pv-difficulty-card '+(state.difficulty==='easy'?'selected':'')+'">'+
-      '<div class="mode-badges"><span class="mode-badge">小学校低学年にもおすすめ</span><span class="mode-badge">1〜100固定</span></div>'+
-      '<strong>かんたん</strong><span>10ごとに数字が見える。目標の近くは隠れず、速度と合格範囲もやさしめ。</span></button>'+
-      '<button type="button" data-diff="normal" aria-pressed="'+(state.difficulty==='normal')+'" class="mode-card pv-difficulty-card '+(state.difficulty==='normal'?'selected':'')+'">'+
-      '<div class="mode-badges"><span class="mode-badge">いつものルール</span></div>'+
-      '<strong>通常</strong><span>上限変化・隠し・高速などのギミックが登場。後半は合格範囲が狭くなる。</span></button>'+
-      '</div></section>'+
+      '<section class="pv-difficulty-setup"><h2>それぞれのむずかしさを選ぼう</h2>'+
+      choices+'<p class="pv-mixed-note">1Pと2Pは別々に選べるよ。組み合わせ自由！</p></section>'+
       '<button class="btn full pv-action" type="button" data-begin>2人で対戦をはじめる</button>'+
       (state.notice?'<p class="pv-error">'+esc(state.notice)+'</p>':'')+'</div>';
   }
@@ -90,7 +100,7 @@
   }
   function meterLabels(){
     const p=state.profile;if(!p)return '';
-    if(state.difficulty==='easy')return '<div class="pv-meter-labels pv-meter-easy">'+Array.from({length:10},(_,i)=>{
+    if(state.difficulties[activeIndex()]==='easy')return '<div class="pv-meter-labels pv-meter-easy">'+Array.from({length:10},(_,i)=>{
       const v=(i+1)*10,at=((v-1)/99)*100;return '<span style="left:'+at+'%">'+v+'</span>';
     }).join('')+'</div>';
     const at=((p.refPoint-p.minValue)/(p.maxValue-p.minValue))*100;
@@ -104,7 +114,7 @@
     const maxFlash=active&&state.phase==='judged'&&Boolean(state.result?.attempt?.chargeReward);
     const gaugeValue=maxFlash?rules.CHARGE_LIMIT:state.charges[i];
     return '<aside class="pv-vs-player '+(active?'is-active':'is-waiting')+'" data-side="'+i+'">'+
-      '<div class="pv-vs-head"><span class="pv-vs-avatar">'+esc(p.icon)+'</span><div class="pv-vs-identity"><small>'+(i+1)+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
+      '<div class="pv-vs-head"><span class="pv-vs-avatar">'+esc(p.icon)+'</span><div class="pv-vs-identity"><small>'+(i+1)+'P・'+difficultyName(i)+'</small><strong>'+esc(p.name)+'</strong></div></div>'+
       '<div class="pv-vs-heart" aria-label="ライフ'+state.lives[i]+'">'+heart(state.lives[i])+'</div>'+
       '<div class="pv-vs-recovery '+(maxFlash?'is-max':'')+'" aria-label="回復ゲージ '+gaugeValue+' / '+rules.CHARGE_LIMIT+'">'+
       '<div class="pv-vs-recovery-title"><strong>回復ゲージ</strong><span>'+(maxFlash?'MAX！効果発動':gaugeValue+' / '+rules.CHARGE_LIMIT)+'</span></div>'+
@@ -178,7 +188,7 @@
     }
     return '<div class="pv-duel">'+
       '<header class="pv-duel-head"><button class="pv-duel-quit" type="button" data-leave>← 対戦をやめる</button>'+
-      '<strong>TURN '+state.turnNo+' / LEVEL '+p.level+'・'+(state.difficulty==='easy'?'かんたん':'通常')+'</strong></header>'+
+      '<strong>TURN '+state.turnNo+' / LEVEL '+p.level+'・'+difficultyName(i)+'</strong></header>'+
       '<div class="pv-duel-body">'+
       playerCard(0)+
       '<section class="pv-play-center '+(revealResult?'is-result ':'')+(!hint?'is-no-footer ':'')+(state.activePressure?'is-pressured':'')+'">'+
@@ -200,7 +210,7 @@
     const detail=state.result?.attempt;
     const playerResult=(p,i)=>'<article class="pv-final-player '+(i===winner?'is-winner':'is-loser')+'">'+
       '<div class="pv-final-player-name"><span class="pv-final-player-icon">'+esc(p.icon)+'</span>'+
-      '<div><small>'+(i+1)+'P</small><strong>'+esc(p.name)+'</strong></div></div>'+
+      '<div><small>'+(i+1)+'P・'+difficultyName(i)+'</small><strong>'+esc(p.name)+'</strong></div></div>'+
       '<div class="pv-final-player-life">'+heart(state.lives[i])+'</div>'+
       '<div class="pv-final-player-stats"><span>SCORE <b>'+state.scores[i]+'</b></span>'+
       '<span>PERFECT <b>'+state.perfects[i]+'回</b></span></div>'+
@@ -210,7 +220,7 @@
     if(state.cutin?.kind==='win')return '<div class="pv-final-intro" aria-hidden="true"></div>';
     return '<div class="pv-final-landscape">'+
       '<header class="pv-final-header"><button type="button" class="pv-final-back" data-back>← モード選択へ</button>'+
-      '<strong>KO決着！ <span>TURN '+state.turnNo+' / '+(state.difficulty==='easy'?'かんたん':'通常')+'</span></strong></header>'+
+      '<strong>KO決着！ <span>TURN '+state.turnNo+' / '+matchupLabel()+'</span></strong></header>'+
       '<div class="pv-final-content">'+
       '<section class="pv-final-victory" aria-label="勝者">'+
       
@@ -260,8 +270,11 @@
   }
   function beginTurn(){
     state.currentSide=state.starter===0?(state.turnNo-1)%2:1-(state.turnNo-1)%2;
-    // Each pair gets the same target, moving profile and baseline safe range.
-    if(state.turnNo%2===1||!state.profile)state.profile=rules.roundProfile(state.turnNo,state.difficulty);
+    // Keep a shared LEVEL progression but randomize the target and gimmicks
+    // per player. Never reuse the immediately preceding target number.
+    const stageTurn=state.turnNo%2===1?state.turnNo:state.turnNo-1;
+    state.profile=rules.roundProfile(stageTurn,state.difficulties[state.currentSide],Math.random,state.lastTarget);
+    state.lastTarget=state.profile.target;
     state.mushin[state.currentSide]=state.mushinReady[state.currentSide];
     state.mushinReady[state.currentSide]=false;
     state.activePressure=state.pendingPressure[state.currentSide];
@@ -283,7 +296,7 @@
     state.lives=[3,3];state.perfects=[0,0];state.scores=[0,0];state.combos=[0,0];
     state.greatStreaks=[0,0];state.charges=[0,0];state.pendingPressure=[0,0];
     state.quiet=[0,0];state.mushin=[false,false];state.mushinReady=[false,false];
-    state.attempts=[null,null];state.turnNo=1;state.profile=null;state.recorded=false;state.resultReady=false;
+    state.attempts=[null,null];state.turnNo=1;state.profile=null;state.lastTarget=null;state.recorded=false;state.resultReady=false;
     state.lifeWarningPending=[false,false];
     beginTurn();
   }
@@ -447,7 +460,7 @@
     if(b.hasAttribute('data-manage-done')){switchScreen('pick');return}
     if(b.hasAttribute('data-edit')){showForm(b.dataset.edit);return}
     if(b.hasAttribute('data-icon')){state.formIcon=b.dataset.icon;root.querySelectorAll('[data-icon]').forEach(x=>x.classList.toggle('selected',x===b));return}
-    if(b.hasAttribute('data-diff')){state.difficulty=b.dataset.diff;render();return}
+    if(b.hasAttribute('data-diff')){const i=Number(b.dataset.side),mode=b.dataset.diff;if((i===0||i===1)&&['easy','normal'].includes(mode)){state.difficulties[i]=mode;render()}return}
     if(b.hasAttribute('data-begin')){beginMatch();return}
     if(b.hasAttribute('data-leave')){quit();return}
     if(b.hasAttribute('data-start-turn')){countdown();return}
