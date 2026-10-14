@@ -7,6 +7,8 @@
   const effects=window.PitadomeEffects;
   if(!root||!registry||!rules)return;
   const KEY='houkago_pitadome_versus_players_v1';
+  const resumeApi=window.HoukagoResume;
+  const RESUME_ID='pitadome-versus';
   const state={
     screen:'select',ids:[],targetSlot:0,editId:null,formIcon:'',
     difficulties:['normal','normal'],round:1,profile:null,players:[],lastTarget:null,
@@ -249,18 +251,50 @@
     state.cutin={kind,title,subtitle,rank,kicker,duration};
   }
 
+  function persistVersus(){
+    if(state.screen!=='battle'||!resumeApi?.save)return;
+    // An active bar/cut-in is restored to a safe action boundary.
+    const playing=['moving','countdown','warning'].includes(state.phase);
+    const snapshot=Object.assign({},state,{
+      phase:playing?'ready':state.phase,
+      motion:null,raf:0,timer:0,cutin:null,
+      resultReady:state.phase==='judged'?true:state.resultReady
+    });
+    resumeApi.save(RESUME_ID,{
+      title:'ピタ止めチャレンジ 2人KO',
+      path:'/games/pitadome-challenge/versus/',
+      summary:'TURN '+state.turnNo+' ／ 1P♥'+state.lives[0]+'・2P♥'+state.lives[1]
+    },snapshot);
+  }
+  function restoreVersus(saved){
+    if(!saved||!Array.isArray(saved.lives)||saved.lives.length!==2||
+      !Array.isArray(saved.players)||saved.players.length!==2)return false;
+    stopTimers();
+    Object.assign(state,saved,{
+      screen:'battle',
+      phase:['ready','judged'].includes(saved.phase)?saved.phase:'ready',
+      resultReady:saved.phase==='judged'?true:!!saved.resultReady,
+      cutin:null,motion:null,raf:0,timer:0,lastTs:0
+    });
+    render();
+    return true;
+  }
   function render(){
     if(['select','pick','manage','form'].includes(state.screen))syncIds();
     root.className='pitadome-app pv-app screen-'+state.screen;
     root.innerHTML=({select:selectScreen,pick:pickScreen,manage:manageScreen,form:formScreen,battle:battleScreen,final:finalScreen}[state.screen]||selectScreen)()+cutinHtml();
     syncRotate();
+    if(state.screen==='battle')persistVersus();
   }
   function stopTimers(){
     if(state.raf)cancelAnimationFrame(state.raf);
     if(state.timer)clearTimeout(state.timer);
     state.raf=0;state.timer=0;state.cutin=null;
   }
-  function switchScreen(screen){stopTimers();state.screen=screen;render();window.scrollTo(0,0)}
+  function switchScreen(screen){
+    if(state.screen==='battle'&&screen!=='battle')resumeApi?.clear?.(RESUME_ID);
+    stopTimers();state.screen=screen;render();window.scrollTo(0,0)
+  }
   function showForm(id){
     state.editId=id||null;
     const members=roster(),edit=members.find(p=>p.id===id)||null;
@@ -286,6 +320,7 @@
     switchScreen('battle');
   }
   function beginMatch(){
+    resumeApi?.clear?.(RESUME_ID);
     syncIds();
     if(state.ids.length!==2||state.ids[0]===state.ids[1]){state.notice='2人のプレイヤーを選んでね。';render();return}
     state.players=state.ids.map(id=>roster().find(p=>p.id===id));
@@ -418,6 +453,7 @@
   function finishMatch(){
     if(state.recorded)return;
     state.recorded=true;
+    resumeApi?.clear?.(RESUME_ID);
     const ids=state.players.map(p=>registry.resolveId(p)),winner=state.result.winner;
     const metrics={};const scores={};
     ids.forEach((id,i)=>{if(id){metrics[id]={totalPerfects:state.perfects[i]};scores[id]=state.scores[i]}});
@@ -448,7 +484,7 @@
     const b=e.target.closest('button');if(!b)return;
     if(b.hasAttribute('data-stop')){stopPlayer(Number(b.dataset.stop));return}
     if(state.screen==='final'&&state.cutin)return;
-    if(b.hasAttribute('data-home')){if(state.screen==='battle'&&!window.confirm('対戦をやめてゲーム一覧へ戻る？'))return;stopTimers();location.href='../../';return}
+    if(b.hasAttribute('data-home')){if(state.screen==='battle'&&!window.confirm('対戦をやめてゲーム一覧へ戻る？'))return;stopTimers();resumeApi?.clear?.(RESUME_ID);location.href='../../';return}
     if(b.hasAttribute('data-back')){if(state.screen==='select'||state.screen==='final'){location.href='../';return}
       if(state.screen==='form')switchScreen(state.editId?'manage':'pick');
       else if(state.screen==='manage')switchScreen('pick');
@@ -527,6 +563,20 @@
   });
   window.addEventListener('resize',()=>{if(state.screen==='battle'&&['moving','countdown','warning'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
   window.addEventListener('orientationchange',()=>{if(state.screen==='battle'&&['moving','countdown','warning'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
-  window.addEventListener('pagehide',stopTimers);
+  window.addEventListener('houkago-back-guard-open',function(){
+    if(state.screen!=='battle')return;
+    if(['moving','countdown','warning'].includes(state.phase)){
+      stopTimers();state.phase='ready';state.motion=null;render();
+    }else if(state.phase==='judged'&&!state.resultReady){
+      stopTimers();state.resultReady=true;render();
+    }
+  });
+  window.addEventListener('houkago-back-guard-save',persistVersus);
+  window.addEventListener('pagehide',function(){persistVersus();stopTimers()});
   state.ids=readIds();syncIds();render();
+  if(resumeApi?.load?.(RESUME_ID)?.state){
+    setTimeout(function(){
+      resumeApi.offer({gameId:RESUME_ID,onResume:restoreVersus,onNew:function(){switchScreen('select')}});
+    },70);
+  }
 })();
