@@ -11,7 +11,7 @@
   const gameId=after[0]==='games'?after[1]:null;
   const defaultExit=path.startsWith('/online/')?'/online/':ROOT;
   const guardFlag='__houkagoBackGuard';
-  let manualActive=null,modal=null,leaving=false,lastBack=false;
+  let manualActive=null,modal=null,leaving=false;
   const dispatch=(name)=>{try{window.dispatchEvent(new CustomEvent(name))}catch(e){}};
   const isActive=()=>{
     if(manualActive!==null)return manualActive;
@@ -24,15 +24,13 @@
   function exitPage(){
     leaving=true;
     dispatch('houkago-back-guard-save');
-    if(history.length>1)history.back();
+    if(history.length>2)history.go(-2);
     else location.assign(defaultExit);
   }
   function closeModal(continuePlaying=true){
     if(modal){modal.remove();modal=null}
     document.body.classList.remove('hg-back-open');
-    if(continuePlaying&&!leaving){
-      try{history.pushState(Object.assign({},history.state||{},{[guardFlag]:true}),'',location.href)}catch(e){}
-    }
+    // The protective history entry was already restored in popstate.
     dispatch('houkago-back-guard-close');
   }
   function showModal(){
@@ -65,7 +63,12 @@
   }catch(e){return}
   window.addEventListener('popstate',function(){
     if(leaving)return;
-    if(!isActive()){exitPage();return}
+    if(!isActive()){
+      leaving=true;
+      if(history.length>1)history.back();else location.assign(defaultExit);
+      return;
+    }
+    try{history.pushState(Object.assign({},history.state||{},{[guardFlag]:true}),'',location.href)}catch(e){}
     showModal();
   });
   window.addEventListener('pagehide',()=>dispatch('houkago-back-guard-save'));
