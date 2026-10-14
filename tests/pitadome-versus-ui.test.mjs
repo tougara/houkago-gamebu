@@ -47,13 +47,13 @@ function harness(forcedError=null){
     events.click({target:button});
   }
   function runCountdown(){
+    const firstTurn=/TURN 1 \/ LEVEL/.test(root.innerHTML);
     click('data-start-turn');
-    // An armed one-life warning plays before the countdown on the player's next turn.
+    // A one-life warning can precede the next player's instant start.
     if(root.innerHTML.includes('pv-cutin-danger'))stepTimer();
-    for(let i=0;i<4;i++){
-    const first=timers.entries().next().value;
-    assert.ok(first,'expected countdown timer');timers.delete(first[0]);first[1]();
-  }}
+    if(firstTurn)for(let i=0;i<4;i++)stepTimer();
+    assert.match(root.innerHTML,/data-stop="/);
+  }
   function active(){const match=root.innerHTML.match(/class="pv-vs-player is-active" data-side="([01])"/);
     assert.ok(match,'one active player must be shown');return Number(match[1]);
   }
@@ -336,12 +336,12 @@ test('350-point recovery is visibly converted to MAX and reverts to progress lat
   assert.doesNotMatch(h.root.innerHTML,/MAX！効果発動/);
 });
 
-test('brisk 3-2-1-START pacing keeps grade animation order',()=>{
+test('original slow first-only 3-2-1-START pacing keeps grade animation order',()=>{
   const h=harness(1);h.click('data-begin');h.click('data-start-turn');
-  assert.match(h.root.innerHTML,/--cutin-duration:650ms/);
+  assert.match(h.root.innerHTML,/--cutin-duration:1120ms/);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">2</);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">1</);
-  h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:650ms/);
+  h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:1500ms/);
   h.stepTimer();h.click('data-stop',{stop:String(h.active())});
   assert.match(h.root.innerHTML,/--cutin-duration:2550ms/);
   assert.match(css,/@keyframes pvCinematicHold/);
