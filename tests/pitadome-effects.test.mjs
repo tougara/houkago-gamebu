@@ -83,8 +83,8 @@ function soloHarness(locationData={}){
 
 test('shared timing & vibrate API preserves existing stronger PERFECT feedback',()=>{
   const w={};vm.runInNewContext(effectsJs,{globalThis:w});
-  assert.equal(w.PitadomeEffects.TIMING.countdown,650);
-  assert.equal(w.PitadomeEffects.TIMING.start,650);
+  assert.equal(w.PitadomeEffects.TIMING.countdown,1120);
+  assert.equal(w.PitadomeEffects.TIMING.start,1500);
   assert.equal(w.PitadomeEffects.TIMING.out,1850);
   assert.ok(w.PitadomeEffects.TIMING.perfect>w.PitadomeEffects.TIMING.excellent);
   assert.ok(w.PitadomeEffects.TIMING.excellent>w.PitadomeEffects.TIMING.great);
