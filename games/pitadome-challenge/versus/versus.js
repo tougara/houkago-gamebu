@@ -497,6 +497,29 @@
       state.ids[state.targetSlot]=created.id;saveIds();switchScreen('select');
     }
   });
+  // PC keyboard: Enter/Space confirms the main action (ready, STOP, next).
+  // Focused buttons keep their normal keyboard behavior; editable fields are ignored.
+  document.addEventListener('keydown',function(e){
+    if(!['Enter',' ','Spacebar'].includes(e.key)||e.repeat||e.isComposing||
+      e.ctrlKey||e.altKey||e.metaKey)return;
+    const t=e.target,tag=String(t?.tagName||'').toUpperCase();
+    if(t?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(tag))return;
+    const focused=t?.closest?.('button,a,[role="button"]');
+    if(focused&&!focused.hasAttribute?.('data-stop'))return;
+    if(state.screen==='battle'){
+      if(!landscape()||state.cutin)return;
+      if(!['ready','moving','judged'].includes(state.phase))return;
+      if(state.phase==='judged'&&!state.resultReady)return;
+      e.preventDefault();
+      if(state.phase==='ready')countdown();
+      else if(state.phase==='moving')stopPlayer(activeIndex());
+      else nextTurn();
+    }else if(!focused&&state.screen==='select'){
+      e.preventDefault();beginMatch();
+    }else if(!focused&&state.screen==='final'&&!state.cutin){
+      e.preventDefault();beginMatch();
+    }
+  });
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden'&&state.screen==='battle'&&['moving','countdown','warning'].includes(state.phase)){
       stopTimers();state.phase='ready';state.motion=null;state.value=state.profile.minValue;render();
