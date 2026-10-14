@@ -8,7 +8,7 @@ const effectsJs=readFileSync(new URL('../games/pitadome-challenge/effects.js',im
 const css=readFileSync(new URL('../games/pitadome-challenge/versus/versus.css',import.meta.url),'utf8')+
   readFileSync(new URL('../games/pitadome-challenge/effects.css',import.meta.url),'utf8');
 
-function harness(forcedError=null){
+function harness(forcedError=null,options={}){
   let error=forcedError;
   const events={},timers=new Map(),frames=new Map();
   let seq=0,landscape=true,clock=10;
@@ -36,7 +36,7 @@ function harness(forcedError=null){
   vm.runInNewContext(effectsJs,{globalThis:win});
   // Fix the practice target to 50 so immediate-stop KO tests are deterministic.
   const originalProfile=win.PitadomeVersusRules.roundProfile;
-  win.PitadomeVersusRules.roundProfile=(...args)=>({...originalProfile(...args),target:50});
+  if(options.fixedTarget!==false)win.PitadomeVersusRules.roundProfile=(...args)=>({...originalProfile(...args),target:50});
   if(forcedError!==null){
     const original=win.PitadomeVersusRules.evaluateStop;
     win.PitadomeVersusRules.evaluateStop=(value,target,previous,safe)=>original(target+error,target,previous,safe);
@@ -567,4 +567,18 @@ test('keyboard Enter and Space start/STOP/advance without duplicate or input int
  assert.doesNotMatch(h.root.innerHTML,/pv-cutin-countdown/);
  assert.equal(h.key('Enter'),true);
  assert.match(h.root.innerHTML,/pv-cutin-judge/);
+});
+
+test('consecutive opponents get different numbers while their level stays the same',()=>{
+ const h=harness(null,{fixedTarget:false});
+ h.click('data-begin');
+ const first=Number(h.root.innerHTML.match(/class="pv-objective"><span>目標<\/span><strong>(\d+)/)?.[1]);
+ assert.ok(Number.isInteger(first));
+ assert.match(h.root.innerHTML,/TURN 1 \/ LEVEL 1/);
+ h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+ h.finishImpact();h.click('data-next-turn');
+ const second=Number(h.root.innerHTML.match(/class="pv-objective"><span>目標<\/span><strong>(\d+)/)?.[1]);
+ assert.ok(Number.isInteger(second));
+ assert.ok(second!==first,'the same target must not be reused across the handoff');
+ assert.match(h.root.innerHTML,/TURN 2 \/ LEVEL 1/);
 });
