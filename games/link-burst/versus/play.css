@@ -1974,3 +1974,26 @@ html[data-hg-motion="reduced"] .match-shell[data-finished="true"] .arena[data-fi
   }
   .arena-core .arena-controls .v-control{font-size:21px}
 }
+
+
+/* Link Burst 2P touch area revision:
+   Keep DROP at its original one-row height (var(--v7-btn)), and allocate
+   all remaining vertical control room to the rotate and LEFT/RIGHT keys.
+   The 7x13 boards and all column dimensions remain untouched. */
+.arena-core .arena-controls{
+  grid-template-rows:minmax(0,1fr) minmax(0,1fr) var(--v7-btn);
+}
+.arena-core .arena-controls .v-control-rotate{
+  grid-row:1;
+}
+.arena-core .arena-controls .v-control-arrows{
+  grid-row:2;
+  align-self:stretch;
+  height:100%;
+  min-height:0;
+}
+.arena-core .arena-controls .v-control-down{
+  grid-row:3;
+  min-height:0;
+  height:100%;
+}
