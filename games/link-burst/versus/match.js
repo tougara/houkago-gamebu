@@ -422,9 +422,9 @@
    if(match.raf||match.paused||match.ended||!landscape()||document.visibilityState==='hidden')return;
    match.last=0;match.raf=requestAnimationFrame(frame);
  }
- function pause(auto){
+ function pause(auto,saveNow=true){
    if(match.paused||match.ended)return;
-   match.confirmBack=false;match.paused=true;stop();releaseAll();updateOverlays();persistMatch();
+   match.confirmBack=false;match.paused=true;stop();releaseAll();updateOverlays();if(saveNow)persistMatch();
  }
  function resume(){
    if(match.ended)return;
@@ -578,7 +578,7 @@ function newRound(clearSave=true){
    const saved=resumeApi?.load?.(RESUME_ID);
    newRound(false);
    if(saved?.state){
-     pause(true);
+     pause(true,false);
      setTimeout(function(){
        resumeApi.offer({gameId:RESUME_ID,onResume:restoreMatch,onNew:function(){newRound(true)}});
      },60);
