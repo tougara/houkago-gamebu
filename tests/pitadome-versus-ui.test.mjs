@@ -80,7 +80,7 @@ test('landscape play renders one and only one objective, bar, action and result 
   assert.match(h.root.innerHTML,/±15/);
 });
 test('STOP appears once during the move, then becomes the NEXT button and switches players',()=>{
-  const h=harness();h.click('data-begin');const first=h.active();
+  const h=harness(1);h.click('data-begin');const first=h.active();
   h.runCountdown();
   assert.equal((h.root.innerHTML.match(/data-stop="/g)||[]).length,1);
   h.click('data-stop',{stop:String(first)});
@@ -135,7 +135,7 @@ test('START button clearly identifies whose turn it is, also after swapping play
   assert.match(h.root.innerHTML,new RegExp((second+1)+'P.*'+(second===0?'アルファ':'ベータ')+' の準備'));
 });
 test('result panel persists after effect timer and offers detailed solo-style stats',()=>{
-  const h=harness();h.click('data-begin');h.runCountdown();
+  const h=harness(1);h.click('data-begin');h.runCountdown();
   h.click('data-stop',{stop:String(h.active())});
   assert.match(h.root.innerHTML,/pv-cutin-judge/);
   assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
@@ -152,9 +152,13 @@ test('a knockout also keeps its last hit result on-screen until acknowledged',()
   const h=harness();h.click('data-begin');
   for(let turn=1;turn<=5;turn++){
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
-    assert.match(h.root.innerHTML,/pv-cutin-judge/);
-    assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
-    h.finishImpact();
+    if(turn===3){
+      assert.match(h.root.innerHTML,/pv-cutin-danger/);
+      assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
+      h.finishImpact();
+    }else{
+      assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
+    }
     assert.match(h.root.innerHTML,/pv-round-result/);
     if(turn<5)h.click('data-next-turn');
   }
@@ -232,7 +236,7 @@ test('heal gauge is the primary status and the score is secondary',()=>{
   assert.match(h.root.innerHTML,/pv-vs-score-secondary/);
 });
 test('ranked judgement cut-in appears ahead of persistent verdict and then clears',()=>{
-  const h=harness();h.click('data-begin');h.runCountdown();
+  const h=harness(1);h.click('data-begin');h.runCountdown();
   h.click('data-stop',{stop:String(h.active())});
   assert.match(h.root.innerHTML,/pv-cutin-judge/);
   assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
@@ -246,12 +250,11 @@ test('remaining one life triggers a danger cut-in after the rank cut-in',()=>{
   const h=harness();h.click('data-begin');
   for(let turn=1;turn<=3;turn++){
     h.runCountdown();h.click('data-stop',{stop:String(h.active())});
-    assert.match(h.root.innerHTML,/pv-cutin-judge/);
-    assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
-    h.stepTimer();
+    assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
     if(turn===3){
       assert.match(h.root.innerHTML,/pv-cutin-danger/);
       assert.match(h.root.innerHTML,/残りライフ 1！/);
+      assert.match(h.root.innerHTML,/次に判定外ならKO/);
       assert.doesNotMatch(h.root.innerHTML,/pv-round-result/);
       h.click('data-next-turn');assert.match(h.root.innerHTML,/TURN 3/);
       h.stepTimer();
@@ -316,14 +319,42 @@ test('350-point recovery is visibly converted to MAX and reverts to progress lat
 });
 
 test('slow countdown and longer cinematic durations are explicit and rank-ordered',()=>{
-  const h=harness();h.click('data-begin');h.click('data-start-turn');
+  const h=harness(1);h.click('data-begin');h.click('data-start-turn');
   assert.match(h.root.innerHTML,/--cutin-duration:1120ms/);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">2</);
   h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-title">1</);
   h.stepTimer();assert.match(h.root.innerHTML,/--cutin-duration:730ms/);
   h.stepTimer();h.click('data-stop',{stop:String(h.active())});
-  assert.match(h.root.innerHTML,/--cutin-duration:1900ms/);
+  assert.match(h.root.innerHTML,/--cutin-duration:2550ms/);
   assert.match(css,/@keyframes pvCinematicHold/);
   assert.doesNotMatch(h.root.innerHTML,/pv-result-mainline/);
   h.finishImpact();assert.match(h.root.innerHTML,/pv-result-mainline/);
+});
+
+test('ready and countdown do not duplicate instructions or player names under the number',()=>{
+ const h=harness();h.click('data-begin');
+ assert.match(h.root.innerHTML,/準備OK！ START/);
+ assert.doesNotMatch(h.root.innerHTML,/準備ができたらスタート/);
+ h.click('data-start-turn');
+ assert.match(h.root.innerHTML,/pv-cutin-title">3</);
+ assert.doesNotMatch(h.root.innerHTML,/チャレンジ/);
+ assert.doesNotMatch(h.root.innerHTML,/バーが動いたらSTOP/);
+ assert.doesNotMatch(h.root.innerHTML,/pv-result-strip/);
+ h.stepTimer();assert.doesNotMatch(h.root.innerHTML,/チャレンジ/);
+ h.stepTimer();assert.doesNotMatch(h.root.innerHTML,/チャレンジ/);
+ h.stepTimer();assert.match(h.root.innerHTML,/pv-cutin-start/);
+ assert.doesNotMatch(h.root.innerHTML,/STOPの準備/);
+});
+test('OUT stays subtle without a fullscreen cut-in, while life-one warning remains',()=>{
+ const h=harness();h.click('data-begin');h.runCountdown();
+ h.click('data-stop',{stop:String(h.active())});
+ assert.doesNotMatch(h.root.innerHTML,/pv-cutin-out/);
+ assert.doesNotMatch(h.root.innerHTML,/pv-cutin-judge/);
+ assert.match(h.root.innerHTML,/pv-round-result is-out/);
+ assert.match(h.root.innerHTML,/data-next-turn/);
+});
+test('target number uses the largest readable scale with a dedicated objective row',()=>{
+ assert.match(css,/\.pv-play-center:not\(\.is-result\) \.pv-objective>strong/);
+ assert.match(css,/clamp\(60px,22dvh,132px\)/);
+ assert.match(css,/\.pv-play-center\.is-no-footer/);
 });
