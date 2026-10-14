@@ -1910,3 +1910,67 @@ html[data-hg-motion="reduced"] .arena-board-stack .v-battle-cue.show{animation:n
 html[data-hg-motion="reduced"] .match-shell[data-finished="true"] .arena[data-finish] .arena-board-stack::after{
   animation:none;
 }
+
+
+/* Link Burst 2P: enlarge OUTER touch controls, keeping the 7x13 fields,
+   NEXT previews, center JAM / SCORE, and arena columns completely unchanged.
+   Formerly 4 rows with an empty second row; now 3 large, usable button rows. */
+.arena-core .arena-controls{
+  align-self:end;
+  height:min(100%,clamp(188px,77dvh,324px));
+  max-height:100%;
+  min-height:0;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:4px;
+  padding:0 0 2px;
+}
+.arena-core .v-control-spacer{display:none}
+.arena-core .arena-controls .v-control-rotate{
+  grid-column:1;
+  grid-row:1;
+}
+.arena-core .arena-controls .v-control-arrows{
+  grid-column:1;
+  grid-row:2;
+  height:100%;
+  min-height:0;
+  align-self:stretch;
+  gap:4px;
+}
+.arena-core .arena-controls .v-control-arrows .v-control{
+  width:100%;
+  height:100%;
+  min-height:0;
+}
+.arena-core .arena-controls .v-control-down{
+  grid-column:1;
+  grid-row:3;
+}
+.arena-core .arena-controls .v-control{
+  height:100%;
+  min-height:0;
+  font-size:clamp(25px,3.1vw,35px);
+}
+.arena-core .arena-controls .v-control-rotate{
+  font-size:clamp(30px,3.8vw,40px);
+}
+@media(max-width:780px) and (orientation:landscape){
+  .arena-core .arena-controls{
+    height:min(100%,clamp(171px,77dvh,296px));
+    gap:3px;
+  }
+  .arena-core .arena-controls .v-control{
+    font-size:clamp(22px,3.3vw,29px);
+  }
+  .arena-core .arena-controls .v-control-rotate{
+    font-size:clamp(27px,3.8vw,34px);
+  }
+}
+@media(max-height:300px) and (orientation:landscape){
+  .arena-core .arena-controls{
+    height:min(100%,clamp(132px,75dvh,218px));
+    gap:2px;
+  }
+  .arena-core .arena-controls .v-control{font-size:21px}
+}
