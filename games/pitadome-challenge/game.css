@@ -2075,3 +2075,19 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:4px solid #f5d7
 @media(max-width:390px){
   .screen-ranking .ranking-head>strong{min-width:0;font-size:clamp(15px,4vw,18px)}
 }
+
+
+/* Solo & KO entry navigation: first choose number of players, then solo mode. */
+.mode-type-grid .mode-card{min-height:165px}
+.rules-mode-group{margin-bottom:15px}
+.rules-mode-group h2{font-size:clamp(21px,5.5vw,27px);color:#ffe5a5;margin:0 0 9px}
+.rules-mode-group>p{margin:0 0 13px}
+.rules-mode-group .rule-step{background:rgba(255,255,255,.055)}
+.rules-mode-group .mode-help{margin-top:10px}
+.rules-mode-group .mode-help>div{border:1px solid rgba(236,215,165,.1)}
+#solo-rules,#versus-rules{scroll-margin-top:15px}
+@media(max-width:480px){
+ .mode-type-grid .mode-card{min-height:151px}
+ .rules-mode-group{padding:13px}
+ .rules-mode-group .rule-step{padding:10px}
+}
