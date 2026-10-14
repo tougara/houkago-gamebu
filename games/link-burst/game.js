@@ -1547,6 +1547,10 @@
     loadPlayer();
     render();
   });
+  window.addEventListener('houkago-back-guard-open',function(){
+    if(state.gameStarted&&state.screen==='play'&&!state.paused)pauseGame(true);
+  });
+  window.addEventListener('houkago-back-guard-save',persistResume);
   window.addEventListener('pagehide',persistResume);
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='hidden'){
