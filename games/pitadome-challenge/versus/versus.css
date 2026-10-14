@@ -804,3 +804,56 @@ html,body{min-height:100%;background:#06111c}
   .pv-app.screen-battle .pv-meter-labels{height:13px;flex-basis:13px;line-height:13px}
   .pv-app.screen-battle .pv-action-slot{margin-top:2px}
 }
+
+
+/* Independently choose easy / normal for each side, in compact matching cards. */
+.pv-app.screen-select .pv-difficulty-player{
+ margin:10px 0;padding:13px;border-radius:18px;
+ border:1px solid rgba(236,215,165,.38);
+ background:rgba(4,16,27,.84);
+}
+.pv-app.screen-select .pv-difficulty-player h3{
+ margin:0 0 10px;display:flex;align-items:center;gap:7px;
+ color:#fff;font-size:clamp(15px,3.9vw,19px);font-weight:950;
+}
+.pv-app.screen-select .pv-difficulty-player h3 span{font-size:24px}
+.pv-app.screen-select .pv-difficulty-options{
+ display:grid;grid-template-columns:1fr 1fr;gap:9px;
+}
+.pv-app.screen-select .pv-difficulty-choice{
+ min-height:87px;position:relative;padding:12px;
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+ gap:5px;min-width:0;border-radius:15px;
+ background:rgba(21,40,55,.91);color:#eaf2f7;
+ border:2px solid rgba(235,215,165,.34);
+ text-align:left;
+}
+.pv-app.screen-select .pv-difficulty-choice.is-easy{
+ background:linear-gradient(155deg,rgba(105,81,27,.85),rgba(26,38,45,.93));
+}
+.pv-app.screen-select .pv-difficulty-choice>strong{
+ font-weight:1000;font-size:clamp(17px,4.4vw,22px);line-height:1.15;
+}
+.pv-app.screen-select .pv-difficulty-choice>span{
+ font-weight:800;font-size:clamp(11px,2.9vw,14px);line-height:1.35;opacity:.95;
+}
+.pv-app.screen-select .pv-difficulty-choice.selected{
+ color:#241908;background:linear-gradient(180deg,#fff49c,#ffd557);
+ border-color:#fff1a9;box-shadow:0 3px 0 #986e21;
+}
+.pv-app.screen-select .pv-difficulty-choice.selected:after{
+ content:"✓";position:absolute;top:6px;right:8px;
+ font-weight:1000;font-size:17px;color:#403016;
+}
+.pv-app.screen-select .pv-difficulty-choice:focus-visible{
+ outline:3px solid #ffec9c;outline-offset:3px;
+}
+.pv-app.screen-select .pv-mixed-note{
+ margin:7px 3px 10px;color:#e5e1cf;font-size:clamp(12px,3.1vw,14px);
+ font-weight:750;text-align:center;
+}
+@media(max-width:360px){
+ .pv-app.screen-select .pv-difficulty-player{padding:10px}
+ .pv-app.screen-select .pv-difficulty-options{gap:6px}
+ .pv-app.screen-select .pv-difficulty-choice{min-height:82px;padding:10px}
+}
