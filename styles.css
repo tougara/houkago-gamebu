@@ -1084,7 +1084,7 @@ body.registry-open{overflow:hidden}
 }
 @media (min-height:620px) and (max-width:520px){
   .home-page .hero-action-wrap:not(.hg-has-resume){
-    bottom:clamp(112px,21dvh,265px);
+    bottom:clamp(155px,32dvh,365px);
   }
 }
 /* A restored game adds its own resume button. Prioritize fitting every action. */
