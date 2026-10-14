@@ -1944,3 +1944,172 @@ html[data-hg-motion="reduced"] .lb-finale-sparks{display:none}
 }
 .screen-ranking .rank-score small{white-space:normal;line-height:1.25}
 
+
+
+/* Link Burst solo controller accessibility layout (2026-10-14).
+   Three narrow HUD cards use the unused LEFT rail, the original 7x13 board
+   remains a fixed-aspect box in the CENTER, NEXT/PAUSE stay in the RIGHT rail.
+   Only UI placement is changed: data hooks and game mechanics are unchanged. */
+.link-burst-app.screen-play{
+  --lb-stat-rail:clamp(47px,14vw,67px);
+  --lb-rail-width:clamp(43px,12.5vw,57px);
+  --lb-side-gap:4px;
+  --lb-stage-board-offset:8px;
+  grid-template-rows:minmax(0,1fr) auto;
+  gap:4px;
+}
+.screen-play .board-stage{
+  width:min(100%,640px);
+  margin-inline:auto;
+  display:grid;
+  grid-template-columns:var(--lb-stat-rail) minmax(0,1fr) var(--lb-rail-width);
+  grid-template-rows:minmax(0,1fr);
+  gap:var(--lb-side-gap);
+  align-items:start;
+  min-width:0;
+  min-height:0;
+}
+.screen-play .board-stage > .play-hud{
+  position:relative;
+  grid-column:1;
+  grid-row:1;
+  align-self:start;
+  justify-self:stretch;
+  z-index:4;
+  display:block;
+  width:100%;
+  min-width:0;
+  margin:0;
+}
+.screen-play .board-stage .score-panel{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-auto-rows:minmax(61px,auto);
+  gap:8px;
+  width:100%;
+  min-width:0;
+}
+.screen-play .board-stage .hud-box{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  min-width:0;
+  min-height:61px;
+  height:auto;
+  gap:5px;
+  padding:7px 2px;
+  border-radius:12px;
+  text-align:center;
+}
+.screen-play .board-stage .hud-box small{
+  max-width:100%;
+  white-space:normal;
+  font-size:clamp(8px,2vw,10px);
+  line-height:1.16;
+}
+.screen-play .board-stage .hud-box strong{
+  display:block;
+  margin:0;
+  font-size:clamp(19px,5vw,26px);
+  line-height:1.05;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  font-variant-numeric:tabular-nums;
+}
+.screen-play .board-stage .score-box{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:8px 2px;
+}
+.screen-play .board-stage .score-box small,
+.screen-play .board-stage .score-box strong,
+.screen-play .board-stage .score-box em{
+  display:block;
+  margin:0;
+  text-align:center;
+  max-width:100%;
+}
+.screen-play .board-stage .score-box em{
+  font-size:clamp(8px,1.95vw,10px);
+  line-height:1.2;
+  font-style:normal;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.screen-play .board-stage > .board-frame{
+  grid-column:2;
+  grid-row:1;
+  align-self:start;
+  justify-self:center;
+  max-width:100%;
+  /* The taller control console reuses the freed 48px HUD row. The small
+     offset keeps the board near its former physical dimensions. */
+  height:min(
+    max(0px,calc(100% - var(--lb-stage-board-offset))),
+    calc((100vw - 2 * var(--lb-app-padding) - var(--lb-stat-rail) - var(--lb-rail-width) - 2 * var(--lb-side-gap)) * 13 / 7)
+  );
+  aspect-ratio:7 / 13;
+}
+.screen-play .board-stage > .next-panel{
+  grid-column:3;
+  grid-row:1;
+  align-self:start;
+  justify-self:stretch;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  margin:0;
+  top:auto;
+  right:auto;
+  left:auto;
+  gap:8px!important;
+}
+.screen-play .board-stage .pause-btn{
+  min-height:clamp(65px,10dvh,90px);
+  width:100%;
+  margin-top:clamp(12px,4dvh,34px);
+  padding:8px 2px;
+}
+.screen-play .board-stage .pause-btn strong{font-size:clamp(28px,6vw,37px)}
+.screen-play .board-stage .pause-btn small{font-size:clamp(8px,2vw,11px)}
+/* Keep combat captions and score effects centered over the shifted FIELD,
+   not between the three new columns. */
+.screen-play .board-stage :is(.chain-banner,.combo-fx,.link-fx,.score-pop,.play-tip){
+  left:calc(50% + (var(--lb-stat-rail) - var(--lb-rail-width))/2);
+}
+.screen-play .controls{
+  grid-template-rows:repeat(2,67px);
+  width:min(430px,100%);
+  margin:0 auto;
+  flex:none;
+}
+.screen-play .controls .control-btn{
+  height:100%;
+  min-height:0;
+}
+@media(max-width:390px){
+  .link-burst-app.screen-play{
+    --lb-stage-board-offset:5px;
+  }
+  .screen-play .controls{grid-template-rows:repeat(2,65px)}
+  .screen-play .board-stage .score-panel{gap:6px;grid-auto-rows:minmax(56px,auto)}
+  .screen-play .board-stage .hud-box{min-height:56px;padding:5px 2px}
+  .screen-play .board-stage .next-panel{gap:6px!important}
+}
+@media(max-height:700px){
+  .link-burst-app.screen-play{--lb-stage-board-offset:0px}
+  .screen-play .controls{grid-template-rows:repeat(2,65px)}
+  .screen-play .board-stage .score-panel{gap:5px;grid-auto-rows:minmax(52px,auto)}
+  .screen-play .board-stage .hud-box{min-height:52px;padding:5px 2px}
+  .screen-play .board-stage .pause-btn{
+    min-height:60px;
+    margin-top:12px;
+  }
+}
+@media(max-height:580px){
+  .screen-play .controls{grid-template-rows:repeat(2,53px);gap:5px;padding:5px}
+  .screen-play .board-stage .pause-btn{min-height:52px;margin-top:5px}
+}
