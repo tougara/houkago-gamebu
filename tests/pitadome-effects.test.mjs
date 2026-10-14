@@ -39,6 +39,7 @@ function soloHarness(locationData={}){
     return elements.get(selector);
   }
   const document={
+    addEventListener(n,cb){events['doc_'+n]=cb},
     getElementById(id){
       if(id==='app')return app;
       if(id==='countdownOverlay')return currentOverlay?{remove(){currentOverlay=''}}:null;
@@ -77,7 +78,12 @@ function soloHarness(locationData={}){
     const entry=timers.entries().next().value;assert.ok(entry,'expected timer');
     timers.delete(entry[0]);entry[1]();
   }
-  return {app,win,press,stepTimer,timers,frames,resumes,
+  function key(key='Enter',target={tagName:'BODY'},repeat=false){
+    let prevented=false;
+    events.doc_keydown?.({key,target,repeat,preventDefault(){prevented=true}});
+    return prevented;
+  }
+  return {app,win,press,key,stepTimer,timers,frames,resumes,
     get overlay(){return currentOverlay},get countNumber(){return countNumber}};
 }
 
@@ -214,4 +220,23 @@ test('redundant instructions are absent from setup screens',()=>{
  assert.doesNotMatch(h.app.innerHTML,/data-rules>/);
  h.press('[data-mode]',{mode:'ten'});
  assert.doesNotMatch(h.app.innerHTML,/data-rules>/);
+});
+
+test('PC Enter/Space controls the original solo STOP and next round without touching score rules',()=>{
+ const h=soloHarness();
+ assert.equal(h.key('Enter'),true);
+ assert.match(h.app.className,/screen-mode/);
+ h.press('[data-solo-modes]');
+ h.press('[data-mode]',{mode:'ten'});
+ h.press('[data-difficulty]',{difficulty:'normal'});
+ assert.match(h.app.innerHTML,/countdown-overlay/);
+ assert.equal(h.key(' '),false); // Cannot stop during countdown.
+ for(let i=0;i<4;i++)h.stepTimer();
+ assert.equal(h.key(' ',{tagName:'INPUT'}),false);
+ assert.equal(h.key(' ',{tagName:'BODY'},true),false); // Held key ignored.
+ assert.equal(h.key(' '),true);
+ assert.match(h.app.className,/screen-roundResult/);
+ assert.match(h.app.innerHTML,/result-stats/);
+ assert.equal(h.key('Enter'),true);
+ assert.match(h.app.className,/screen-play/);
 });
