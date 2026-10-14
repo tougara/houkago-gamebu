@@ -484,6 +484,22 @@ function bind(){
 }
 loadPlayers();render();
 window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;loadPlayers();render();});
+let guardClockWasRunning=false,guardCountdownWasRunning=false;
+window.addEventListener('houkago-back-guard-open',()=>{
+  guardClockWasRunning=state.screen==='play'&&state.playing;
+  guardCountdownWasRunning=state.screen==='play'&&!!(state.countdownId||state.startDelayId);
+  if(guardClockWasRunning||guardCountdownWasRunning){
+    stopTimers();
+    state.playing=false;
+    persistResume();
+  }
+});
+window.addEventListener('houkago-back-guard-stay',()=>{
+  if(!state.gameStarted||state.screen!=='play')return;
+  if(guardClockWasRunning){guardClockWasRunning=false;startClock()}
+  else if(guardCountdownWasRunning){guardCountdownWasRunning=false;startTurn()}
+});
+window.addEventListener('houkago-back-guard-save',persistResume);
 window.addEventListener('pagehide',persistResume);
 resumeApi?.offer?.({gameId:RESUME_ID,onResume:restoreResume,onNew:()=>{state.gameStarted=false;state.screen='title';state.history=[];render();}});
 })();
