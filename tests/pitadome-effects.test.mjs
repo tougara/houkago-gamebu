@@ -98,6 +98,7 @@ test('both modes load the same effects module and style sheet',()=>{
 
 test('solo first-round intro shares the 3-2-1-START durations with VS',()=>{
   const h=soloHarness();h.press('[data-start-title]');
+  h.press('[data-solo-modes]');
   h.press('[data-mode]',{mode:'ten'});
   h.press('[data-difficulty]',{difficulty:'normal'});
   assert.match(h.app.className,/screen-play/);
@@ -114,6 +115,7 @@ test('solo first-round intro shares the 3-2-1-START durations with VS',()=>{
 
 test('solo keeps its scoring and combo cards but reveals them AFTER a full-screen hit',()=>{
   const h=soloHarness();h.press('[data-start-title]');
+  h.press('[data-solo-modes]');
   h.press('[data-mode]',{mode:'ten'});
   h.press('[data-difficulty]',{difficulty:'normal'});
   for(let i=0;i<4;i++)h.stepTimer();
@@ -132,6 +134,7 @@ test('solo keeps its scoring and combo cards but reveals them AFTER a full-scree
 
 test('misjudgement in solo has restrained 1.85s pause and never changes game mode',()=>{
   const h=soloHarness();h.press('[data-start-title]');
+  h.press('[data-solo-modes]');
   h.press('[data-mode]',{mode:'endless'});
   h.press('[data-difficulty]',{difficulty:'normal'});
   for(let i=0;i<4;i++)h.stepTimer();
@@ -147,4 +150,29 @@ test('solo original judgement visuals remain sourced from the existing game.css'
  const soloCss=readFileSync(new URL('../games/pitadome-challenge/game.css',import.meta.url),'utf8');
  assert.match(soloCss,/\.hit-fx|\.impact-rays|\.result-card/);
  assert.doesNotMatch(game,/resultFxTimer|setCutin\(/);
+});
+
+test('entry screen groups solo challenges under one button next to 2-player KO',()=>{
+ const h=soloHarness();h.press('[data-start-title]');
+ assert.match(h.app.innerHTML,/data-solo-modes/);
+ assert.match(h.app.innerHTML,/data-versus-mode/);
+ assert.doesNotMatch(h.app.innerHTML,/data-mode="ten"/);
+ assert.doesNotMatch(h.app.innerHTML,/data-mode="endless"/);
+ h.press('[data-solo-modes]');
+ assert.match(h.app.innerHTML,/10ラウンドチャレンジ/);
+ assert.match(h.app.innerHTML,/エンドレスチャレンジ/);
+ assert.match(h.app.innerHTML,/data-change-player/);
+ h.press('[data-mode]',{mode:'ten'});
+ assert.match(h.app.innerHTML,/むずかしさを選ぼう/);
+ assert.match(h.app.innerHTML,/小学校低学年にもおすすめ/);
+});
+test('rules screen covers how to win in both solo and KO modes without opening a duel',()=>{
+ const h=soloHarness();h.press('[data-start-title]');
+ h.press('[data-rules]');
+ assert.match(h.app.innerHTML,/1人で遊ぶ/);
+ assert.match(h.app.innerHTML,/2人で対戦｜勝ち方/);
+ assert.match(h.app.innerHTML,/PERFECTで回復＆妨害/);
+ assert.match(h.app.innerHTML,/回復ゲージ350点/);
+ assert.match(h.app.innerHTML,/ライフを0にした人が勝ち/);
+ assert.match(h.app.innerHTML,/むずかしさ（共通）/);
 });
