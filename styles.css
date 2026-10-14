@@ -1069,14 +1069,27 @@ body.registry-open{overflow:hidden}
 }
 
 
-/* 2026-10-14: balance the home action trio closer to the large brand logo. */
-@media(min-height:741px){
+/* Keep the logo and all three primary actions visually connected on phones.
+   Most Android portrait viewports are <741 CSS px, so include them too.
+   Very short windows keep the original bottom-anchored compact layout. */
+@media (min-height:620px){
   .home-page .hero-action-wrap:not(.hg-has-resume){
-    bottom:clamp(58px,8dvh,110px);
+    bottom:clamp(78px,15dvh,215px);
   }
 }
-@media(min-height:741px) and (max-width:520px){
+@media (min-height:850px){
   .home-page .hero-action-wrap:not(.hg-has-resume){
-    bottom:clamp(64px,9dvh,116px);
+    bottom:clamp(130px,17dvh,255px);
+  }
+}
+@media (min-height:620px) and (max-width:520px){
+  .home-page .hero-action-wrap:not(.hg-has-resume){
+    bottom:clamp(85px,16dvh,235px);
+  }
+}
+/* A restored game adds its own resume button. Prioritize fitting every action. */
+@media (min-height:620px) and (max-width:520px){
+  .home-page .hero-action-wrap.hg-has-resume{
+    bottom:max(8px,env(safe-area-inset-bottom));
   }
 }
