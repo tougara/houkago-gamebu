@@ -12,7 +12,7 @@
     lives:[3,3],perfects:[0,0],attempts:[null,null],scores:[0,0],combos:[0,0],greatStreaks:[0,0],charges:[0,0],quiet:[0,0],mushin:[false,false],mushinReady:[false,false],pendingPressure:[0,0],activePressure:0,activeSafe:12,
     currentSide:0,turnNo:1,starter:0,lastStarter:null,phase:'ready',countdown:3,
     motion:null,value:0,dir:1,elapsed:0,lastTs:0,raf:0,timer:0,
-    result:null,resultReady:false,recorded:false,notice:'',cutin:null
+    result:null,resultReady:false,recorded:false,notice:'',cutin:null,lifeWarningPending:[false,false]
   };
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
@@ -149,7 +149,7 @@
     const range=p.maxValue-p.minValue,pct=((state.phase==='moving'?state.value:(a?a.value:p.minValue))-p.minValue)/range*100;
     const showCursor=state.phase==='moving'||(isResult&&!revealResult);
     const blind=p.blind?'<div class="pv-meter-blind" style="left:'+p.blindStart+'%;width:'+(p.blindEnd-p.blindStart)+'%"></div>':'';
-    const hint=(state.phase==='ready'||state.phase==='countdown')?'':
+    const hint=(state.phase==='ready'||state.phase==='countdown'||state.phase==='warning')?'':
       state.phase==='moving'?'目標の数字に合わせてSTOP！':
       revealResult?'結果を確認してから次へ':'判定演出中…';
     let stage;
@@ -299,12 +299,35 @@
     state.greatStreaks=[0,0];state.charges=[0,0];state.pendingPressure=[0,0];
     state.quiet=[0,0];state.mushin=[false,false];state.mushinReady=[false,false];
     state.attempts=[null,null];state.turnNo=1;state.profile=null;state.recorded=false;state.resultReady=false;
+    state.lifeWarningPending=[false,false];
     beginTurn();
   }
   function countdown(){
     if(state.screen!=='battle'||state.phase!=='ready'||!landscape())return;
-    stopTimers();state.phase='countdown';state.countdown=3;
-    const countMs=1120,startMs=730;
+    stopTimers();
+    const i=activeIndex();
+    // Warn only on the NEXT time this player starts, not when the hit lands.
+    // Keep the pending flag until the warning finishes: interrupted rotation
+    // or app backgrounding must not silently consume the one-time alert.
+    if(state.lives[i]===1&&state.lifeWarningPending[i]){
+      state.phase='warning';
+      const dangerDuration=2050;
+      setCutin('danger','残りライフ 1！','次に判定外ならKO！','','DANGER',dangerDuration);
+      render();
+      state.timer=setTimeout(()=>{
+        state.timer=0;
+        if(state.screen!=='battle'||state.phase!=='warning'||activeIndex()!==i||!landscape())return;
+        state.lifeWarningPending[i]=false;
+        beginCountdown();
+      },dangerDuration);
+      return;
+    }
+    beginCountdown();
+  }
+  function beginCountdown(){
+    if(state.screen!=='battle'||!['ready','warning'].includes(state.phase)||!landscape())return;
+    state.phase='countdown';state.countdown=3;
+    const countMs=1120,startMs=1500;
     setCutin('countdown','3','','','',countMs);
     render();
     function step(){
@@ -366,6 +389,10 @@
     const lifeBefore=state.lives[i];
     const reward=rules.applyRewards(state.lives[i],attempt);
     state.lives[i]=reward.life;
+    // Re-arm only for a fresh drop from 2/3 lives to 1 life.
+    // Remaining at 1 never repeats; healing above 1 clears the old warning.
+    if(lifeBefore>1&&reward.life===1)state.lifeWarningPending[i]=true;
+    else if(reward.life!==1)state.lifeWarningPending[i]=false;
     const other=1-i;
     state.pendingPressure[other]=Math.min(rules.MAX_PRESSURE,state.pendingPressure[other]+reward.pressure);
     state.result={attempt,reward,winner:reward.life<=0?other:null};
@@ -380,40 +407,17 @@
       render();
     }
     const judgedTurn=state.turnNo;
-    const shouldWarn=lifeBefore>1&&reward.life===1;
-    // OUT is intentionally low-key: show the result immediately. Only the
-    // existing critical last-life warning warrants a fullscreen alert.
+    // The danger warning happens BEFORE the player's next countdown, never
+    // over the verdict of the hit that caused the life loss.
     if(rank==='out'){
-      if(shouldWarn){
-        const dangerDuration=2050;
-        setCutin('danger','残りライフ 1！','次に判定外ならKO！','','DANGER',dangerDuration);
-        render();
-        state.timer=setTimeout(()=>{
-          state.timer=0;
-          if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
-          state.cutin=null;state.resultReady=true;render();
-        },dangerDuration);
-      }else{
-        state.cutin=null;state.resultReady=true;render();
-      }
+      state.cutin=null;state.resultReady=true;render();
       return;
-    }
-    function unlockResult(){
-      if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
-      state.cutin=null;state.resultReady=true;
-      render();
     }
     state.timer=setTimeout(()=>{
       state.timer=0;
       if(state.screen!=='battle'||state.phase!=='judged'||state.turnNo!==judgedTurn)return;
-      if(shouldWarn){
-        const dangerDuration=2050;
-        setCutin('danger','残りライフ 1！','次に判定外ならKO！','','DANGER',dangerDuration);
-        render();
-        state.timer=setTimeout(()=>{state.timer=0;unlockResult()},dangerDuration);
-      }else unlockResult();
+      state.cutin=null;state.resultReady=true;render();
     },duration);
-
   }
   function nextTurn(){
     if(state.phase!=='judged'||!state.resultReady)return;
@@ -503,12 +507,12 @@
     }
   });
   document.addEventListener('visibilitychange',function(){
-    if(document.visibilityState==='hidden'&&state.screen==='battle'&&['moving','countdown'].includes(state.phase)){
+    if(document.visibilityState==='hidden'&&state.screen==='battle'&&['moving','countdown','warning'].includes(state.phase)){
       stopTimers();state.phase='ready';state.motion=null;state.value=state.profile.minValue;render();
     }
   });
-  window.addEventListener('resize',()=>{if(state.screen==='battle'&&['moving','countdown'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
-  window.addEventListener('orientationchange',()=>{if(state.screen==='battle'&&['moving','countdown'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
+  window.addEventListener('resize',()=>{if(state.screen==='battle'&&['moving','countdown','warning'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
+  window.addEventListener('orientationchange',()=>{if(state.screen==='battle'&&['moving','countdown','warning'].includes(state.phase)&&!landscape()){stopTimers();state.phase='ready';state.motion=null;render()}else syncRotate()});
   window.addEventListener('pagehide',stopTimers);
   state.ids=readIds();syncIds();render();
 })();
