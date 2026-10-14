@@ -65,9 +65,9 @@ test('versus: empty row removed; larger rotation, arrows and drop occupy three r
   }
 });
 test('the new CSS and solo markup are cache-busted for mobile browser refreshes',()=>{
-  assert.match(soloHtml,/href="game\.css\?v=20261014-ui5"/);
+  assert.match(soloHtml,/href="game\.css\?v=20261015-resume1"/);
   assert.match(soloHtml,/src="game\.js\?v=20261014-ui5"/);
-  assert.match(versusHtml,/href="play\.css\?v=20261014-ui5"/);
+  assert.match(versusHtml,/href="play\.css\?v=20261015-resume1"/);
 });
 
 
@@ -99,7 +99,7 @@ test('duel ready: removes full JAM explanation and links to the rules versus tab
   assert.match(setup,/href="\.\.\/\?rules=versus"/);
   assert.match(setup,/data-launch/);
   assert.match(setupCss,/\.versus-howto-link a\{/);
-  assert.match(versusHtml,/play\.css\?v=20261014-ui5/);
+  assert.match(versusHtml,/play\.css\?v=20261015-resume1/);
 });
 test('solo 7x13 board is preserved while all controller buttons fit inside their frame',()=>{
   const style=soloCss.slice(soloCss.indexOf('/* Solo controls: keep all buttons INSIDE'));
@@ -133,5 +133,5 @@ test('versus ready buttons have no decorative arrow characters',()=>{
     assert.ok(!setup.includes(arrowLabel),'Unexpected arrow: '+arrowLabel);
   }
   const setupHtml=readFileSync(new URL('../games/link-burst/versus/index.html',import.meta.url),'utf8');
-  assert.match(setupHtml,/versus\.js\?v=20261014-ui5/);
+  assert.match(setupHtml,/versus\.js\?v=20261014-ui4/);
 });
