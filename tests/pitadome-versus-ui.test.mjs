@@ -435,3 +435,34 @@ test('duel begin button matches the brighter yellow STOP style',()=>{
   assert.match(css,/#ffdc3c/);
   assert.match(css,/#ffb500/);
 });
+
+test('duel setup matches solo easy/normal cards and links to unified instructions',()=>{
+  const h=harness();
+  assert.match(h.root.innerHTML,/2人で対戦/);
+  assert.match(h.root.innerHTML,/data-diff="easy"/);
+  assert.match(h.root.innerHTML,/data-diff="normal"/);
+  assert.match(h.root.innerHTML,/class="mode-card easy-mode-card pv-difficulty-card/);
+  assert.match(h.root.innerHTML,/小学校低学年にもおすすめ/);
+  assert.match(h.root.innerHTML,/いつものルール/);
+  assert.match(h.root.innerHTML,/href="\.\.\/\?view=rules#versus-rules"/);
+  assert.doesNotMatch(h.root.innerHTML,/<h2>勝ち方<\/h2>/);
+  h.click('data-diff',{diff:'easy'});
+  assert.match(h.root.innerHTML,/data-diff="easy" aria-pressed="true"/);
+  assert.match(h.root.innerHTML,/data-diff="normal" aria-pressed="false"/);
+  h.click('data-diff',{diff:'normal'});
+  assert.match(h.root.innerHTML,/data-diff="normal" aria-pressed="true"/);
+  assert.match(css,/\.pv-app\.screen-select \.pv-difficulty-card\.selected/);
+});
+test('landscape victory displays WIN only once without repeated WINNER labels',()=>{
+  const h=harness();h.click('data-begin');
+  for(let turn=1;turn<=5;turn++){
+    h.runCountdown();h.click('data-stop',{stop:String(h.active())});
+    h.finishImpact();h.click('data-next-turn');
+  }
+  h.stepTimer();
+  assert.match(h.root.innerHTML,/<h1>WIN！<\/h1>/);
+  assert.doesNotMatch(h.root.innerHTML,/WINNER/);
+  assert.equal((h.root.innerHTML.match(/<h1>WIN！<\/h1>/g)||[]).length,1);
+  assert.equal((h.root.innerHTML.match(/class="pv-final-player /g)||[]).length,2);
+  assert.match(h.root.innerHTML,/決着：TURN/);
+});
