@@ -228,14 +228,14 @@
   }
 
   function playScreen(){
-    return '<section class="play-hud">'+
+    return '<section class="board-stage">'+
+      '<section class="play-hud">'+
         '<div class="score-panel">'+
           '<div class="hud-box score-box"><small>SCORE</small><strong data-score>0</strong><em data-best-score>MY BEST 0</em></div>'+
           '<div class="hud-box link" aria-label="最大連鎖数"><small>MAX LINK</small><strong data-max-link>0</strong></div>'+
           '<div class="hud-box"><small data-third-label>'+(state.mode==='timed'?'TIME':'BLOCKS')+'</small><strong data-third-value>0</strong></div>'+
         '</div>'+
       '</section>'+
-      '<section class="board-stage">'+
         '<div class="board-frame" data-board-frame>'+
           '<span class="danger-label">DANGER</span>'+
           '<div class="game-board" data-board></div>'+
