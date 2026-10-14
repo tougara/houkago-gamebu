@@ -2,6 +2,7 @@
 const app=document.getElementById('app');
 const playersApi=window.HoukagoPlayers;
 const settingsApi=window.HoukagoSettings;
+const effects=window.PitadomeEffects;
 const resumeApi=window.HoukagoResume;
 const RESUME_ID='pitadome-challenge';
 const SOLO_KEY='houkago_pitadome_solo_player_v1';
@@ -22,7 +23,7 @@ const state={
   quietGauge:0,mushinReady:false,mushinActive:false,
   charm:0,charmEarnedThisRound:false,lifeProtected:false,
   rankMode:'ten',rankDifficulty:'normal',rankEdit:false,
-  finalRank:null
+  finalRank:null,resultCutin:null,resultFxTimer:null
 };
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -169,6 +170,8 @@ function stopMotion(){
   state.running=false;
   if(state.countdownId){clearTimeout(state.countdownId);state.countdownId=null}
   if(state.rafId){cancelAnimationFrame(state.rafId);state.rafId=null}
+  if(state.resultFxTimer){clearTimeout(state.resultFxTimer);state.resultFxTimer=null}
+  state.resultCutin=null;
 }
 function go(screen,{push=true}={}){
   stopMotion();
@@ -499,7 +502,7 @@ function playScreen(){
     '<div class="target-wrap"><div class="target-label">この数字をねらえ</div><div class="target-number">'+state.target+'<small>をねらえ！</small></div><div class="gimmick-row">'+(state.difficulty==='easy'?'<span class="easy-badge">かんたん</span>':'')+state.gimmicks.map(g=>'<span>'+esc(g)+'</span>').join('')+'</div></div>'+
     '<div class="meter-zone"><div class="meter-shell" style="width:'+Math.round(state.barScale*100)+'%"><div class="meter-track"><div class="meter-line"></div>'+blind+'<div class="meter-cursor" id="meterCursor"></div></div>'+meterLabelsHtml()+'</div></div>'+
     '<button class="stop-btn" data-stop '+(state.needsOpeningCountdown?'disabled':'')+'>STOP！</button>'+
-    (state.needsOpeningCountdown?'<div class="countdown-overlay" id="countdownOverlay"><div class="countdown-number" id="countdownNumber">3</div></div>':'')+
+    (state.needsOpeningCountdown?effects.cutinHtml({kind:'countdown',title:'3',duration:effects.TIMING.countdown}):'')+
   '</section></div>';
 }
 function scoreForError(e){
@@ -544,9 +547,7 @@ function stopRound(){
   state.resultValue=Math.round(state.value);
   state.error=Math.abs(state.resultValue-state.target);
   state.tier=tierForError(state.error);state.comment=commentForTier(state.tier);
-  if(state.tier==='perfect')settingsApi?.vibrate?.([28,22,70]);
-  else if(state.tier==='excellent')settingsApi?.vibrate?.([24,18,45]);
-  else if(state.tier==='great')settingsApi?.vibrate?.(24);
+  effects.vibrate(state.tier,settingsApi);
   state.baseScore=scoreForError(state.error);
   const prevCombo=state.combo;
   if(state.error<=3)state.combo+=state.error===0?2:1;
@@ -574,7 +575,20 @@ function stopRound(){
       else state.lives--;
     }
   }
-  go('roundResult',{push:false});
+  // The scoring has already finished; only the visual reveal is delayed.
+  // A standalone cut-in prevents the detailed card from appearing twice.
+  const tier=state.tier,duration=effects.TIMING[tier]||effects.TIMING.miss;
+  state.screen='roundResult';
+  state.resultCutin={kind:'judge',rank:tier,title:effects.LABEL[tier],
+    subtitle:'＋'+state.roundScore+' POINT',
+    kicker:['perfect','excellent','great'].includes(tier)?'JUDGEMENT':'',
+    duration};
+  render();
+  state.resultFxTimer=setTimeout(()=>{
+    state.resultFxTimer=null;
+    if(state.screen!=='roundResult'||state.tier!==tier)return;
+    state.resultCutin=null;render();
+  },duration);
 }
 function sparkHtml(){
   if(!['perfect','excellent','great'].includes(state.tier))return'';
@@ -584,6 +598,7 @@ function sparkHtml(){
   return '<div class="hit-fx" aria-hidden="true"><div class="impact-rays">'+rays+'</div><div class="hit-ring ring-a"></div><div class="hit-ring ring-b"></div><div class="spark-burst">'+sparks+'</div><div class="petal-burst">'+petals+'</div></div>';
 }
 function roundResultScreen(){
+  if(state.resultCutin)return '<div class="solo-result-pending" aria-hidden="true"></div>';
   const diffLabel=state.difficulty==='easy'?'かんたん':'通常';
   const lifeLost=state.mode==='endless'&&state.error>state.safeLimit&&!state.lifeProtected;
   const bonus=state.roundScore-state.baseScore;
@@ -675,7 +690,7 @@ function screenHtml(){
   return({title:titleScreen,mode:modeScreen,difficulty:difficultyScreen,playerSelect:playerSelectScreen,playerList:playerListScreen,playerRegister:playerRegisterScreen,rules:rulesScreen,play:playScreen,roundResult:roundResultScreen,final:finalScreen,ranking:rankingScreen}[state.screen]||titleScreen)();
 }
 function resumeSnapshot(){
-  const s={...state,running:false,countdownId:null,rafId:null,lastTs:0};
+  const s={...state,running:false,countdownId:null,rafId:null,resultFxTimer:null,resultCutin:null,lastTs:0};
   return s;
 }
 function persistResume(){
@@ -683,11 +698,11 @@ function persistResume(){
   else if(state.screen==='final')resumeApi?.clear?.(RESUME_ID);
 }
 function restoreResume(saved){
-  stopMotion();Object.assign(state,saved);state.running=false;state.countdownId=null;state.rafId=null;state.lastTs=0;state.gameStarted=true;render();
+  stopMotion();Object.assign(state,saved);state.running=false;state.countdownId=null;state.rafId=null;state.resultFxTimer=null;state.resultCutin=null;state.lastTs=0;state.gameStarted=true;render();
 }
 function render(){
-  app.className='pitadome-app screen-'+state.screen+(state.screen==='roundResult'?' tier-screen-'+state.tier:'')+(state.screen==='final'&&state.newRecord?' final-new-record':'');
-  app.innerHTML=screenHtml();bind();window.scrollTo({top:0,behavior:'auto'});
+  app.className='pitadome-app screen-'+state.screen+(state.screen==='roundResult'&&!state.resultCutin?' tier-screen-'+state.tier:'')+(state.screen==='final'&&state.newRecord?' final-new-record':'');
+  app.innerHTML=screenHtml()+effects.cutinHtml(state.resultCutin);bind();window.scrollTo({top:0,behavior:'auto'});
   if(state.screen==='play'){
     if(state.needsOpeningCountdown)startCountdown();
     else requestAnimationFrame(()=>startMotion());
@@ -695,21 +710,37 @@ function render(){
   persistResume();
 }
 function beginGame(mode=state.mode,difficulty=state.difficulty){
-  loadPlayer();state.mode=mode;state.difficulty=difficulty;state.history=[];state.gameStarted=true;state.round=1;state.score=0;state.perfects=0;state.needsOpeningCountdown=true;
+  stopMotion();loadPlayer();state.mode=mode;state.difficulty=difficulty;state.history=[];state.gameStarted=true;state.round=1;state.score=0;state.perfects=0;state.needsOpeningCountdown=true;
   state.lives=3;state.roundErrors=[];state.newRecord=false;state.finalRank=null;state.combo=0;state.maxCombo=0;state.quietGauge=0;state.mushinReady=false;state.mushinActive=false;state.charm=0;
   prepareRound();state.screen='play';render();
 }
 function startCountdown(){
   stopMotion();
-  const overlay=document.getElementById('countdownOverlay'),num=document.getElementById('countdownNumber'),stopBtn=document.querySelector('[data-stop]');
-  let n=3;if(num)num.textContent=n;
+  let overlay=document.querySelector('.pv-cutin');
+  const stopBtn=document.querySelector('[data-stop]');
+  const countMs=effects.TIMING.countdown,startMs=effects.TIMING.start;
+  let n=3;
+  function replaceScene(kind,title,duration){
+    if(!overlay)return;
+    overlay.outerHTML=effects.cutinHtml({kind,title,duration});
+    overlay=document.querySelector('.pv-cutin');
+  }
   const tick=()=>{
-    if(n>1){n--;if(num)num.textContent=n;state.countdownId=setTimeout(tick,650);return}
-    if(num){num.textContent='START!';num.classList.add('start-text')}
-    state.countdownId=setTimeout(()=>{state.needsOpeningCountdown=false;overlay?.remove();if(stopBtn)stopBtn.disabled=false;startMotion()},420);
+    if(state.screen!=='play'||!state.needsOpeningCountdown)return;
+    if(n>1){
+      n--;replaceScene('countdown',String(n),countMs);
+      state.countdownId=setTimeout(tick,countMs);return;
+    }
+    if(n===1){
+      n=0;replaceScene('start','START！',startMs);
+      state.countdownId=setTimeout(tick,startMs);return;
+    }
+    state.countdownId=null;state.needsOpeningCountdown=false;
+    overlay?.remove();if(stopBtn)stopBtn.disabled=false;startMotion();
   };
-  state.countdownId=setTimeout(tick,650);
+  state.countdownId=setTimeout(tick,countMs);
 }
+
 function startMotion(){
   state.running=true;state.lastTs=0;
   const step=(ts)=>{
