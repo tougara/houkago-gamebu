@@ -52,7 +52,7 @@ function wordScreen(){
 }
 function discussionScreen(){
  return nav()+heading('みんなで話し合おう','お題そのものは言わずに会話しよう')+
- '<section class="card talk-card"><div class="label">のこり時間</div><div class="timer" data-clock>'+clock(state.seconds)+'</div><p data-clock-note>'+(state.paused?'一時停止中':'話し合い中')+'</p><div class="timer-controls">'+button(state.paused?'再開':'一時停止','data-pause','secondary')+button('＋30秒','data-plus','secondary')+button('−30秒','data-minus','secondary')+'</div></section><div class="card"><h2>参加メンバー</h2><div class="chips">'+state.players.map(p=>'<span class="chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div><p class="hint">時間が0になっても、自動的には次へ進まないよ。</p></div>'+button('話し合いを終えて投票へ','data-go-vote','gold');
+ '<section class="card talk-card"><div class="label">のこり時間</div><div class="timer" data-clock>'+clock(state.seconds)+'</div><p data-clock-note>'+(state.paused?'一時停止中':'話し合い中')+'</p><div class="timer-controls">'+button(state.paused?'再開':'一時停止','data-pause','secondary')+button('＋30秒','data-plus','secondary') +button('−30秒','data-minus','secondary')+button('リセット','data-reset','secondary')+button('＋10秒','data-plus10','secondary')+button('−10秒','data-minus10','secondary')+'</div></section><div class="card"><h2>参加メンバー</h2><div class="chips">'+state.players.map(p=>'<span class="chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div><p class="hint">時間が0になっても、自動的には次へ進まないよ。</p></div>'+button('話し合いを終えて投票へ','data-go-vote','gold');
 }
 function voteScreen(){
  const voter=state.voter;
@@ -191,6 +191,12 @@ function adjustClock(amount){
  if(!state.paused)state.deadline=Date.now()+state.seconds*1000;
  refreshClock();persistResume();
 }
+function resetClock(){
+ if(state.screen!=='discussion')return;
+ state.seconds=state.minutes*60;
+ if(!state.paused)state.deadline=Date.now()+state.seconds*1000;
+ refreshClock();persistResume();
+}
 function startVoting(){
  pauseClock();stopTicker();state.voteStage=1;state.voter=0;state.votes=[];go('votePass',false);
 }
@@ -290,6 +296,9 @@ app.addEventListener('click',event=>{
  if(b.matches('[data-pause]')){togglePause();return}
  if(b.matches('[data-plus]')){adjustClock(30);return}
  if(b.matches('[data-minus]')){adjustClock(-30);return}
+ if(b.matches('[data-plus10]')){adjustClock(10);return}
+ if(b.matches('[data-minus10]')){adjustClock(-10);return}
+ if(b.matches('[data-reset]')){resetClock();return}
  if(b.matches('[data-go-vote]')){startVoting();return}
  if(b.matches('[data-open-vote]')){go('vote',false);return}
  if(b.matches('[data-vote]')){confirmVote(Number(b.dataset.vote));return}
