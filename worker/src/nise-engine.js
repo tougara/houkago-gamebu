@@ -15,7 +15,8 @@ const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=random(i+
 export const defaultNiseCounts=n=>({classmate:n-2,fake:2,president:1,swapper:1,dayDuty:0,observer:0,collaborator:0,trickster:0});
 export const validNiseCounts=(counts,n)=>{
  if(!counts||!Number.isInteger(n)||n<3||n>10)return false;
- if(Object.keys(counts).some(k=>!NISE_ROLES[k]))return false;
+ if(Object.keys(counts).length!==Object.keys(NISE_ROLES).length||
+    Object.keys(counts).some(k=>!Object.hasOwn(NISE_ROLES,k)))return false;
  const fakeMax=n>=6?3:2;
  if(!Number.isInteger(counts.fake)||counts.fake<2||counts.fake>fakeMax)return false;
  return Object.keys(NISE_ROLES).every(k=>Number.isInteger(counts[k])&&counts[k]>=0&&counts[k]<=Math.min(NISE_ROLES[k].max,k==='fake'?fakeMax:10))&&
