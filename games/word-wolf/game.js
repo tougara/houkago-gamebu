@@ -158,16 +158,39 @@ function choosePair(){
  try{localStorage.setItem(HISTORY_KEY,JSON.stringify([...old.filter(id=>id!==p.id),p.id].slice(-50)))}catch(e){}
  return p;
 }
-function begin(){
- loadPlayers();
- if(state.players.length<3||state.players.length>10||!state.categories.length)return;
- const pair=choosePair();if(!pair)return;
- stopTicker();Object.assign(state,{gameStarted:true,pair:pair,majority:random(2)?pair.a:pair.b,
+function startRound(pair,isCustom){
+ stopTicker();Object.assign(state,{gameStarted:true,pair:pair,majority:isCustom?pair.a:(random(2)?pair.a:pair.b),
  wolf:random(state.players.length),handoff:0,seen:false,seconds:state.minutes*60,
  paused:true,deadline:0,voteStage:1,voter:0,votes:[],firstVotes:[],runoffVotes:[],
  candidates:[],votedOut:-1,answer:'',verdict:'',resultRecorded:false,history:[]});
- state.minority=state.majority===pair.a?pair.b:pair.a;
+ state.minority=isCustom?pair.b:(state.majority===pair.a?pair.b:pair.a);
  go('pass',false);
+}
+function begin(){
+ loadPlayers();
+ if(state.topicSource==='custom'){
+  if(state.players.length<4||state.players.length>10)return;
+  state.host=state.players.find(p=>p.id===state.hostId)||null;
+  if(!state.host)return;
+  state.players=state.players.filter(p=>p.id!==state.hostId);
+  go('customTopics',false);
+  return;
+ }
+ state.host=null;
+ if(state.players.length<3||state.players.length>10||!state.categories.length)return;
+ const pair=choosePair();if(!pair)return;
+ startRound(pair,false);
+}
+function submitCustomTopics(form){
+ if(state.screen!=='customTopics'||!state.host||!form)return;
+ const a=String(form.elements.majority?.value||'').trim().slice(0,30);
+ const b=String(form.elements.minority?.value||'').trim().slice(0,30);
+ const error=app.querySelector('[data-topic-error]');
+ if(!a||!b||!normalized(a)||!normalized(b)||normalized(a)===normalized(b)){
+  if(error)error.textContent='2つの違うお題を入力してね。';
+  return;
+ }
+ startRound({id:'custom',a,b,category:'custom'},true);
 }
 function revealWord(show){
  const field=app.querySelector('[data-word-value]'),btn=app.querySelector('[data-hold-word]');
@@ -300,6 +323,8 @@ app.addEventListener('click',event=>{
  if(b.matches('[data-member-count]')){const n=Number(b.dataset.memberCount);playersApi.setActiveCount(n);loadPlayers();render();return}
  if(b.matches('[data-member-icon]')){const i=Number(b.dataset.memberIcon);playersApi.setPlayer(i,{icon:b.dataset.icon});loadPlayers();render();return}
  if(b.matches('[data-edit-members]')){go('members');return}
+ if(b.matches('[data-topic-source]')){state.topicSource=b.dataset.topicSource==='custom'?'custom':'auto';render();return}
+ if(b.matches('[data-host-id]')){state.hostId=b.dataset.hostId;render();return}
  if(b.matches('[data-mode]')){state.mode=b.dataset.mode;render();return}
  if(b.matches('[data-minutes]')){state.minutes=Number(b.dataset.minutes);render();return}
  if(b.matches('[data-category]')){const c=b.dataset.category;state.categories=state.categories.includes(c)?state.categories.filter(x=>x!==c):[...state.categories,c];render();return}
@@ -329,6 +354,7 @@ app.addEventListener('change',event=>{
  }
 });
 app.addEventListener('submit',event=>{
+ if(event.target.matches('[data-custom-topic-form]')){event.preventDefault();submitCustomTopics(event.target);return}
  if(!event.target.matches('[data-answer-form]'))return;
  event.preventDefault();submitAnswer(event.target.elements.answer?.value||'');
 });
