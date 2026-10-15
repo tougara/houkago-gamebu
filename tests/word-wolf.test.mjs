@@ -50,7 +50,7 @@ test('word-wolf scripts compile, and scripts are loaded after the common player 
     assert.ok(next>previous,filename+' is out of order or missing');previous=next;
   }
 });
-function createHarness(){
+function createHarness(activeCount=4){
   const keys=new Map(),events={},records=[],players=Array.from({length:4},(_,i)=>({id:'p'+i,name:'人'+i,icon:'🐱'}));
   const word={classList:{toggle(){}},replaceChildren(){},appendChild(node){this.text=node.textContent}};
   const hold={classList:{toggle(){}},setPointerCapture(){}};
@@ -58,11 +58,12 @@ function createHarness(){
   const clockNote={textContent:''};
   const clockDisplay={textContent:''};
   const pauseButton={textContent:''};
+  const topicError={textContent:''};
   let modal=null;
   const app={
     className:'',_html:'',set innerHTML(s){this._html=s;done.disabled=true},get innerHTML(){return this._html},
     addEventListener(type,cb){events[type]=cb},contains(){return true},
-    querySelector(sel){return sel==='[data-word-value]'?word:sel==='[data-hold-word]'?hold:sel==='[data-word-done]'?done:sel==='[data-clock-note]'?clockNote:sel==='[data-clock]'?clockDisplay:sel==='[data-pause]'?pauseButton:null}
+    querySelector(sel){return sel==='[data-word-value]'?word:sel==='[data-hold-word]'?hold:sel==='[data-word-done]'?done:sel==='[data-clock-note]'?clockNote:sel==='[data-clock]'?clockDisplay:sel==='[data-pause]'?pauseButton:sel==='[data-topic-error]'?topicError:null}
   };
   const document={
     getElementById:()=>app,addEventListener(){},visibilityState:'visible',
@@ -71,7 +72,7 @@ function createHarness(){
   };
   const window={
     HoukagoWordWolfData:data,
-    HoukagoPlayers:{load:()=>({activeCount:4,players}),renderEditor:()=>'<div>メンバー</div>',recordGame:v=>records.push(v)},
+    HoukagoPlayers:{load:()=>({activeCount,players}),renderEditor:()=>'<div>メンバー</div>',recordGame:v=>records.push(v)},
     HoukagoResume:{save(id,meta,state){keys.set(id,JSON.parse(JSON.stringify(state)))},clear(id){keys.delete(id)},offer(){}},
     scrollTo(){},addEventListener(){},crypto:null
   };
@@ -97,7 +98,7 @@ function createHarness(){
     assert.ok(modal?.handlers['[data-yes]']);
     modal.handlers['[data-yes]']();
   };
-  return {app,keys,records,events,act,reveal,vote,clockNote,clockDisplay};
+  return {app,keys,records,events,act,reveal,vote,clockNote,clockDisplay,topicError};
 }
 function playToVote(h){
   h.act('data-start');h.act('data-members-done');h.act('data-begin');
@@ -193,4 +194,57 @@ test('the word-wolf logo stays large and centered on both screens without clippi
   assert.match(styles,/\.compact-game-art\.word-wolf-card-art img\{width:128%;max-width:none;max-height:150px/);
   assert.match(html,/game\.css\?v=20261015-logo3/);
   assert.match(list,/styles\.css\?v=20261015-wordwolf-logo2/);
+});
+
+test('4 people can choose a nonplaying topic author; only the other 3 vote and earn records',()=>{
+  const h=createHarness(4);
+  h.act('data-start');h.act('data-members-done');
+  h.act('data-topic-source',{topicSource:'custom'});
+  assert.match(h.app.innerHTML,/お題を決める人は？/);
+  h.act('data-host-id',{hostId:'p2'});
+  assert.match(h.app.innerHTML,/4人中 3人でプレイ/);
+  h.act('data-mode',{mode:'simple'});
+  h.act('data-begin');
+  assert.match(h.app.className,/screen-customTopics$/);
+  assert.match(h.app.innerHTML,/人でプレイ/);
+  const submit=(a,b)=>h.events.submit({target:{
+    matches:s=>s==='[data-custom-topic-form]',
+    elements:{majority:{value:a},minority:{value:b}}
+  },preventDefault(){}});
+  submit('カレー','ｶﾚｰ');
+  assert.match(h.app.className,/screen-customTopics$/);
+  assert.match(h.topicError.textContent,/違うお題/);
+  submit('カレー','シチュー');
+  assert.match(h.app.className,/screen-pass$/);
+  const saved=h.keys.get('word-wolf');
+  assert.deepEqual(saved.players.map(p=>p.id),['p0','p1','p3']);
+  assert.equal(saved.host.id,'p2');
+  assert.equal(saved.majority,'カレー');
+  assert.equal(saved.minority,'シチュー');
+  for(let i=0;i<3;i++){h.act('data-open-word');h.reveal();h.act('data-word-done')}
+  assert.match(h.app.className,/screen-discussion$/);
+  assert.match(h.app.innerHTML,/出題者/);
+  h.act('data-go-vote');
+  [1,0,0].forEach(h.vote);
+  assert.match(h.app.className,/screen-result$/);
+  assert.equal(h.records.length,1);
+  assert.deepEqual(h.records[0].participants,['p0','p1','p3']);
+  assert.deepEqual(h.records[0].winners,['p1','p3']);
+  h.act('data-again');
+  assert.match(h.app.className,/screen-customTopics$/);
+  assert.match(h.app.innerHTML,/3人でプレイ/);
+});
+test('custom topic author cannot start a 3-member roster, while automatic topics still can',()=>{
+  const h=createHarness(3);
+  h.act('data-start');h.act('data-members-done');h.act('data-topic-source',{topicSource:'custom'});
+  h.act('data-host-id',{hostId:'p1'});
+  assert.match(h.app.innerHTML,/4人以上必要/);
+  assert.match(h.app.innerHTML,/data-begin disabled/);
+  h.act('data-begin');
+  assert.match(h.app.className,/screen-setup$/);
+  h.act('data-topic-source',{topicSource:'auto'});
+  h.act('data-begin');
+  assert.match(h.app.className,/screen-pass$/);
+  assert.equal(h.keys.get('word-wolf').players.length,3);
+  assert.equal(h.keys.get('word-wolf').host,null);
 });
