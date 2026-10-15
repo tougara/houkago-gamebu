@@ -116,3 +116,16 @@ test('対戦ルームの秘密配布・ロビー再接続導線がHTMLとWorker�
  assert.match(lobby,/nise-transfer-student/);
  assert.match(offline,/id="startOnline"/);
 });
+
+test('online-only chat never reveals secret role data and can be sent only during discussion',()=>{
+ const r=make(4),g=r.nise;dealNise(g);
+ assert.equal(act(r,'p0',{type:'nise-chat',text:'始めよう'}),false);
+ g.stage='discussion';
+ assert.equal(act(r,'p0',{type:'nise-chat',text:'だれが怪しい？'}),true);
+ assert.equal(niseView(r,'p1').chat[0].text,'だれが怪しい？');
+ assert.equal(niseView(r,'p2').chat.length,1);
+ assert.equal(act(r,'p0',{type:'nise-chat',text:'すぐ連続投稿'}),false);
+ g.stage='voting';
+ assert.equal(niseView(r,'p1').chat.length,0);
+ assert.equal(act(r,'p1',{type:'nise-chat',text:'投票中です'}),false);
+});
