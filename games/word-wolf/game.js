@@ -1,4 +1,4 @@
-/* ワードウルフ / オフライン8作目 / 3〜10人 */
+/* ことばのオオカミ / オフライン8作目 / 3〜10人 */
 (function(){
 'use strict';
 const app=document.getElementById('app');
@@ -26,7 +26,7 @@ function loadPlayers(){const d=playersApi.load();state.players=d.players.slice(0
 function nav(){return '<nav class="top-nav"><button type="button" class="nav-pill" data-back>← もどる</button><button type="button" class="nav-pill" data-home>ゲームをえらぶ</button></nav>'}
 function heading(title,desc=''){return '<header class="heading"><h1>'+esc(title)+'</h1>'+(desc?'<p>'+esc(desc)+'</p>':'')+'</header>'}
 function button(label,attr,cls='primary'){return '<button type="button" class="btn '+cls+'" '+attr+'>'+esc(label)+'</button>'}
-function titleScreen(){return nav()+'<section class="welcome"><div class="wolf-moon">☾</div><p class="kicker">8TH GAME · TALK & DEDUCTION</p><h1>ワード<span>ウルフ</span></h1><p>同じ話をしているはずなのに、<br>誰かひとり、何かが違う。</p><div class="welcomebadges"><span>3〜10人</span><span>スマホ1台</span><span>オフライン</span></div></section><div class="stack">'+button('ゲームをはじめる','data-start','gold')+button('あそびかた','data-open-rules','secondary')+'</div>'}
+function titleScreen(){return nav()+'<section class="welcome"><div class="wolf-moon">☾</div><p class="kicker">8TH GAME · TALK & DEDUCTION</p><h1>ことばの<span>オオカミ</span></h1><p>同じ話をしているはずなのに、<br>誰かひとり、何かが違う。</p><div class="welcomebadges"><span>3〜10人</span><span>スマホ1台</span><span>オフライン</span></div></section><div class="stack">'+button('ゲームをはじめる','data-start','gold')+button('あそびかた','data-open-rules','secondary')+'</div>'}
 function membersScreen(){return nav()+playersApi.renderEditor({min:3,max:10,count:Math.max(3,state.players.length),title:'参加メンバー',subtitle:'いつものメンバーから3〜10人を選ぼう',doneLabel:'このメンバーで決定'})}
 function setupScreen(){
  const selected=state.categories;
@@ -66,7 +66,7 @@ function tallyScreen(){
  '<section class="card"><div class="vote-summary">'+state.players.map((p,i)=>'<div class="vote-summary-row"><span>'+esc(p.icon)+' '+esc(p.name)+'</span><b>'+counts[i]+'票</b></div>').join('')+'</div><p class="hint">最多 '+highest+'票の人が複数いるため、もう1回だけ投票。次も同票ならウルフの勝利。</p><div class="chips">'+candidates.map(i=>'<span class="chip candidate">'+esc(avatar(i))+' '+esc(label(i))+'</span>').join('')+'</div></section>'+button('決選投票へ進む','data-start-runoff','gold');
 }
 function wolfPassScreen(){return nav()+heading('逆転チャンス！','ウルフに最後のチャンス')+
- '<section class="card pass-card"><div class="person-icon">'+esc(avatar(state.wolf))+'</div><h2>'+esc(label(state.wolf))+' さん</h2><p>あなたがワードウルフだった！<br>ここからは本人だけが画面を見てね。</p>'+button('市民のお題を答える','data-open-answer','gold')+'</section>'}
+ '<section class="card pass-card"><div class="person-icon">'+esc(avatar(state.wolf))+'</div><h2>'+esc(label(state.wolf))+' さん</h2><p>あなたがオオカミだった！<br>ここからは本人だけが画面を見てね。</p>'+button('市民のお題を答える','data-open-answer','gold')+'</section>'}
 function answerScreen(){return nav()+heading('市民のお題は何だった？','回答は1回だけ。自分のお題とは違う言葉を推理しよう')+
  '<form class="card answer-card" data-answer-form><label for="answer">市民のお題を入力</label><input id="answer" name="answer" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="お題を入力" required><p class="hint">ひらがな・カタカナ、全角・半角の違いは自動で調整するよ。</p><button class="btn gold" type="submit">これで回答する</button></form>'}
 function appealScreen(){return nav()+heading('回答を確認しよう','入力した答えと正解を比較してね')+
@@ -77,7 +77,7 @@ function resultScreen(){
  const votes=state.voteStage===2?state.runoffVotes:state.firstVotes;
  const resultInfo=state.votedOut<0?'同票のまま決着！':state.votedOut===state.wolf?'ウルフを見つけた！':'別の人を選んでしまった！';
  return nav()+'<section class="results"><div class="winner-symbol">'+(wolfWins?'☾':'★')+'</div><p class="kicker">GAME RESULT</p><h1 class="'+(wolfWins?'wolf-wins':'human-wins')+'">'+(wolfWins?'ウルフの勝利！':'市民チームの勝利！')+'</h1><p>'+resultInfo+'</p></section>'+
- '<section class="card"><div class="result-words"><div><small>市民のお題</small><strong>'+esc(state.majority)+'</strong></div><div class="minority"><small>ウルフのお題</small><strong>'+esc(state.minority)+'</strong></div></div><h2>ワードウルフは…</h2><div class="wolf-reveal">'+esc(avatar(state.wolf))+' '+esc(label(state.wolf))+'</div>'+(state.answer?'<p class="answer-detail">逆転回答：'+esc(state.answer)+(state.verdict==='wolf'&&state.votedOut===state.wolf?'（正解）':'（不正解）')+'</p>':'')+'</section>'+
+ '<section class="card"><div class="result-words"><div><small>市民のお題</small><strong>'+esc(state.majority)+'</strong></div><div class="minority"><small>ウルフのお題</small><strong>'+esc(state.minority)+'</strong></div></div><h2>オオカミの正体は…</h2><div class="wolf-reveal">'+esc(avatar(state.wolf))+' '+esc(label(state.wolf))+'</div>'+(state.answer?'<p class="answer-detail">逆転回答：'+esc(state.answer)+(state.verdict==='wolf'&&state.votedOut===state.wolf?'（正解）':'（不正解）')+'</p>':'')+'</section>'+
  '<section class="card"><h2>投票結果</h2><div class="vote-summary">'+state.players.map((p,i)=>'<div class="vote-summary-row"><span>'+esc(p.icon)+' '+esc(p.name)+'</span><b>'+counts[i]+'票</b></div>').join('')+'</div>'+(state.voteStage===2?'<p class="hint">決選投票：'+votes.map((target,i)=>esc(label(i))+' → '+esc(label(target))).join(' ／ ')+'</p>':'')+'</section>'+
  '<div class="stack">'+button('同じメンバーでもう一戦','data-again','gold')+button('ゲーム設定へ','data-to-setup','secondary')+button('ゲームをえらぶ','data-result-home','secondary')+'</div>';
 }
@@ -258,7 +258,7 @@ function saveSnapshot(){
 }
 function persistResume(){
  if(!state.gameStarted)return;
- resumeApi?.save?.(SAVE_ID,{title:'ワードウルフ',path:'/games/word-wolf/',summary:state.screen==='discussion'?'話し合い中':'ゲーム進行中'},saveSnapshot());
+ resumeApi?.save?.(SAVE_ID,{title:'ことばのオオカミ',path:'/games/word-wolf/',summary:state.screen==='discussion'?'話し合い中':'ゲーム進行中'},saveSnapshot());
 }
 function restore(saved){
  if(!saved||!Array.isArray(saved.players)||saved.players.length<3||saved.players.length>10||!saved.pair)return;
