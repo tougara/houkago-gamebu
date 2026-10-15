@@ -115,7 +115,7 @@ function showLeave(to){
  const dialog=document.createElement('div');dialog.className='modal-backdrop';dialog.innerHTML='<section class="modal" role="alertdialog" aria-modal="true"><h2>ゲームを中断する？</h2><p>途中の状態は保存されているよ。秘密のお題は伏せた状態で再開できるよ。</p><div class="stack"><button type="button" class="btn secondary" data-cancel>ゲームを続ける</button><button type="button" class="btn gold" data-exit>中断して戻る</button></div></section>';
  document.body.appendChild(dialog);
  dialog.querySelector('[data-cancel]').addEventListener('click',()=>dialog.remove());
- dialog.querySelector('[data-exit]').addEventListener('click',()=>{dialog.remove();if(state.screen==='discussion')pauseClock();persistResume();location.href=to==='home'?'../':'./'});
+ dialog.querySelector('[data-exit]').addEventListener('click',()=>{dialog.remove();if(state.screen==='discussion')pauseClock();persistResume();location.href='../'});
 }
 function safeBack(){
  if(state.gameStarted&&state.screen!=='result'){showLeave('setup');return}
