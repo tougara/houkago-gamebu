@@ -261,6 +261,12 @@ export class OnlineRoom{
       for(const m of this.room.members)m.ready=false;
       await this.ctx.storage.put('room',this.room);this.broadcast();return;
     }
+    if(data.type==='nise-stop'){
+      if(!this.room.nise||id!==this.room.hostId)return;
+      this.room.nise=null;
+      for(const member of this.room.members)member.ready=false;
+      await this.saveAndBroadcast();return;
+    }
     if(data.type==='nise-start'){
       if(this.room.nise||this.room.secret||this.room.hostId!==id||this.room.gameId!=='nise-transfer-student'||
          this.room.members.length<3||!this.snapshot().allReady)return;
