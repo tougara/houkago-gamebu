@@ -180,8 +180,8 @@ test('uploaded night background and transparent PNG logo are referenced by the t
   assert.match(css,/welcome-logo/);
   assert.match(list,/src="\.\.\/kotoba_no_ookami_logo_transparent\.png\?v=20261015-art1"/);
   assert.match(styles,/url\("kotoba_no_ookami_night_background\.png"\)/);
-  assert.match(html,/game\.css\?v=20261015-logo3/);
-  assert.match(html,/game\.js\?v=20261015-art1/);
+  assert.match(html,/game\.css\?v=20261015-topics1/);
+  assert.match(html,/game\.js\?v=20261015-topics1/);
 });
 
 test('the word-wolf logo stays large and centered on both screens without clipping, with the duplicate moon cropped away',()=>{
@@ -192,7 +192,7 @@ test('the word-wolf logo stays large and centered on both screens without clippi
   assert.match(css,/\.welcome \.welcome-title\{[^}]*margin:clamp\(32px,5dvh,52px\) auto auto;[^}]*width:min\(100%,610px\);max-width:610px/);
   assert.match(css,/\.welcome \.welcome-logo\{[^}]*max-height:none;[^}]*margin:0 auto/);
   assert.match(styles,/\.compact-game-art\.word-wolf-card-art img\{width:128%;max-width:none;max-height:150px/);
-  assert.match(html,/game\.css\?v=20261015-logo3/);
+  assert.match(html,/game\.css\?v=20261015-topics1/);
   assert.match(list,/styles\.css\?v=20261015-wordwolf-logo2/);
 });
 
@@ -247,4 +247,19 @@ test('custom topic author cannot start a 3-member roster, while automatic topics
   assert.match(h.app.className,/screen-pass$/);
   assert.equal(h.keys.get('word-wolf').players.length,3);
   assert.equal(h.keys.get('word-wolf').host,null);
+});
+
+test('public updates are short, grouped by date and game, and omit discontinued prototypes',()=>{
+ const raw=readFileSync(new URL('../changelog.js',import.meta.url),'utf8');
+ const state={};
+ runInNewContext(raw,{globalThis:state});
+ const entries=state.HOUKAGO_CHANGELOG;
+ assert.ok(entries.length<=35);
+ assert.equal(new Set(entries.map(x=>x.date+'/'+x.category)).size,entries.length);
+ for(const e of entries){
+   assert.ok(e.changes.length<=2);
+   assert.ok(e.changes.every(x=>x.length<=110));
+ }
+ assert.ok(!raw.includes('放課後タイプ診断16'));
+ assert.match(raw,/出題者が自由にお題を作る/);
 });
