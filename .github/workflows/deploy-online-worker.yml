@@ -2,9 +2,21 @@ name: Deploy Online Worker
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'worker/**'
+      - 'tests/online-worker.test.mjs'
+      - 'tests/online-nise.test.mjs'
+      - '.github/workflows/deploy-online-worker.yml'
 
 permissions:
   contents: read
+
+concurrency:
+  group: online-worker-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
