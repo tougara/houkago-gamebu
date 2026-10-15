@@ -15,6 +15,8 @@ const configured=/^https:\/\/[A-Za-z0-9.-]+$/.test(base)||/^http:\/\/localhost:\
 let icon=icons[0],session=null,room=null,ws=null,retry=0,timer=null,leaving=false;
 const supplied=(new URLSearchParams(location.search).get('room')||'').toUpperCase();
 if(/^[A-Z2-9]{8}$/.test(supplied))$('code').value=supplied;
+const preferred=new URLSearchParams(location.search).get('game');
+if(names[preferred])$('game').value=preferred;
 function notice(text,good=false){
  const el=$('notice');el.hidden=!text;el.classList.toggle('ok',good);el.textContent=text||'';
 }
@@ -80,9 +82,10 @@ $('join').addEventListener('click',async()=>{
 const send=command=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(command))};
 function draw(){
  if(!room)return;
- if(room.phase==='secret'&&session?.code){
+ if((room.phase==='secret'||room.phase==='nise')&&session?.code){
    stopSocket();
-   location.replace('./minna-wa-docchi/?room='+encodeURIComponent(session.code));
+   const page=room.phase==='nise'?'nise-transfer-student':'minna-wa-docchi';
+   location.replace('./'+page+'/?room='+encodeURIComponent(session.code));
    return;
  }
  $('room-code').textContent=room.code;
@@ -95,11 +98,14 @@ function draw(){
  $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
  $('ready').disabled=ws?.readyState!==WebSocket.OPEN;
  const hostStart=$('start-secret');
- hostStart.hidden=!host||room.gameId!=='minna-wa-docchi';
- hostStart.disabled=!room.allReady||ws?.readyState!==WebSocket.OPEN;
- $('waiting').textContent=room.allReady?(room.gameId==='minna-wa-docchi'?
-  '全員準備OK！ ホストがゲーム画面へ進むと、全員同時に移動するよ。':
-  'このゲームのオンライン版は準備中だよ。'):
+ const supported=['minna-wa-docchi','nise-transfer-student'].includes(room.gameId);
+ const minimum=room.gameId==='nise-transfer-student'?3:2;
+ hostStart.hidden=!host||!supported;
+ hostStart.textContent=(names[room.gameId]||room.gameId)+' の画面へ進む';
+ hostStart.disabled=!room.allReady||room.members.length<minimum||ws?.readyState!==WebSocket.OPEN;
+ $('waiting').textContent=room.members.length<minimum&&supported?
+   'このゲームは'+minimum+'人以上で遊べるよ。友達を招待してね。':
+   room.allReady?(supported?'全員準備OK！ ホストが進むと全員同時に移動するよ。':'このゲームのオンライン版は準備中だよ。'):
    '全員が準備OKになったらホストがゲーム画面に進めるよ。';
  $('members').replaceChildren();
  room.members.forEach(m=>{
@@ -142,8 +148,9 @@ function connect(){
  current.onerror=()=>{};
 }
 $('start-secret').addEventListener('click',()=>{
- if(room?.gameId!=='minna-wa-docchi'||room?.phase!=='lobby'||!room.allReady)return;
- send({type:'secret-start'});
+ if(room?.phase!=='lobby'||!room.allReady)return;
+ if(room.gameId==='nise-transfer-student'&&room.members.length>=3)send({type:'nise-start'});
+ else if(room.gameId==='minna-wa-docchi')send({type:'secret-start'});
 });
 $('ready').addEventListener('click',()=>{
  const me=room?.members.find(m=>m.id===session?.id);
