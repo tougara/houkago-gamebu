@@ -137,7 +137,7 @@ export function niseAction(room,id,data){
  }
  if(data.type==='nise-chat'){
   if(stage!=='discussion'||typeof data.text!=='string')return false;
-  const text=data.text.replace(/[\\u0000-\\u001f\\u007f]/g,' ').trim().slice(0,120);
+  const text=data.text.replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,120);
   if(!text||Date.now()-(g.lastChatAt?.[id]||0)<700)return false;
   g.chat??=[];g.lastChatAt??={};g.lastChatAt[id]=Date.now();
   g.chat.push({id,text,at:Date.now()});g.chat=g.chat.slice(-40);
