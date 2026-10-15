@@ -181,7 +181,7 @@ test('uploaded night background and transparent PNG logo are referenced by the t
   assert.match(list,/src="\.\.\/kotoba_no_ookami_logo_transparent\.png\?v=20261015-art1"/);
   assert.match(styles,/url\("kotoba_no_ookami_night_background\.png"\)/);
   assert.match(html,/game\.css\?v=20261015-topics1/);
-  assert.match(html,/game\.js\?v=20261015-topics1/);
+  assert.match(html,/game\.js\?v=20261015-host2/);
 });
 
 test('the word-wolf logo stays large and centered on both screens without clipping, with the duplicate moon cropped away',()=>{
@@ -262,4 +262,52 @@ test('public updates are short, grouped by date and game, and omit discontinued 
  }
  assert.ok(!raw.includes('放課後タイプ診断16'));
  assert.match(raw,/出題者が自由にお題を作る/);
+});
+
+
+test('custom game result can change only the author, preserving the group and records',()=>{
+ const h=createHarness(4);
+ h.act('data-start');h.act('data-members-done');
+ h.act('data-topic-source',{topicSource:'custom'});
+ h.act('data-host-id',{hostId:'p2'});h.act('data-mode',{mode:'simple'});h.act('data-begin');
+ const submit=(a,b)=>h.events.submit({target:{matches:s=>s==='[data-custom-topic-form]',elements:{majority:{value:a},minority:{value:b}}},preventDefault(){}});
+ submit('カレー','シチュー');
+ for(let i=0;i<3;i++){h.act('data-open-word');h.reveal();h.act('data-word-done')}
+ h.act('data-go-vote');[1,0,0].forEach(h.vote);
+ assert.match(h.app.className,/screen-result$/);
+ assert.equal(h.records.length,1);
+ const result=h.app.innerHTML;
+ assert.ok(result.indexOf('data-again')<result.indexOf('data-change-host'));
+ assert.ok(result.indexOf('data-change-host')<result.indexOf('data-to-setup'));
+ h.act('data-change-host');
+ assert.match(h.app.className,/screen-hostChange$/);
+ assert.match(h.app.innerHTML,/前回の出題者/);
+ assert.match(h.app.innerHTML,/data-confirm-host disabled/);
+ h.act('data-confirm-host');
+ assert.match(h.app.className,/screen-hostChange$/);
+ h.act('data-host-id',{hostId:'p1'});
+ h.act('data-cancel-host');
+ assert.match(h.app.className,/screen-result$/);
+ assert.equal(h.app.innerHTML,result);
+ h.act('data-change-host');h.act('data-host-id',{hostId:'p1'});h.act('data-confirm-host');
+ assert.match(h.app.className,/screen-customTopics$/);
+ assert.equal(h.records.length,1);
+ submit('ピザ','パスタ');
+ const next=h.keys.get('word-wolf');
+ assert.equal(next.host.id,'p1');
+ assert.deepEqual(next.players.map(p=>p.id),['p0','p3','p2']);
+ for(let i=0;i<3;i++){h.act('data-open-word');h.reveal();h.act('data-word-done')}
+ h.act('data-go-vote');[1,0,0].forEach(h.vote);
+ assert.equal(h.records.length,2);
+ assert.deepEqual(h.records[1].participants,['p0','p3','p2']);
+});
+test('automatic topics have no change-author action',()=>{
+ const h=createHarness(4);
+ h.act('data-start');h.act('data-members-done');h.act('data-begin');
+ for(let i=0;i<4;i++){h.act('data-open-word');h.reveal();h.act('data-word-done')}
+ h.act('data-go-vote');[1,0,0,0].forEach(h.vote);
+ h.act('data-open-answer');
+ h.events.submit({target:{matches:s=>s==='[data-answer-form]',elements:{answer:{value:h.keys.get('word-wolf').majority}}},preventDefault(){}});
+ assert.match(h.app.className,/screen-result$/);
+ assert.doesNotMatch(h.app.innerHTML,/data-change-host/);
 });
