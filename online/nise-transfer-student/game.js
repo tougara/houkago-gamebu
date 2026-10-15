@@ -152,13 +152,22 @@ function privateCardResult(role){
  if(!roleDefs[role])return '';
  return '<div class="online-research"><img class="role-card-large" src="'+roleImg(role)+'" alt="'+esc(roleDefs[role].name)+'"><strong>'+esc(roleDefs[role].name)+'</strong></div>';
 }
+function chatScreen(){
+ const msgs=(g()?.chat||[]).map(m=>
+  '<div class="online-chat-line'+(m.id===myId()?' own':'')+'"><strong>'+nameOf(m.id)+'</strong><span>'+esc(m.text)+'</span></div>'
+ ).join('');
+ return '<section class="card online-chat"><h2>オンラインチャット</h2><p class="online-note">話し合い中だけ使えるよ。個人情報は書かず、言葉で楽しく推理しよう。</p>'+
+ '<div class="online-chat-list" id="chat-log" role="log" aria-label="話し合いの会話">'+(msgs||'<p class="online-note">まずはあいさつしてみよう！</p>')+'</div>'+
+ '<form class="online-chat-form" data-chat-form><input id="chat-input" name="chat" type="text" maxlength="120" autocomplete="off" placeholder="メッセージを入力" aria-label="チャットメッセージ" required>'+
+ '<button class="btn" type="submit">送信</button></form></section>';
+}
 function discussionScreen(){
  const game=g(),running=!!game.deadline;
  const main=heading('話し合い','ニセ転校生は誰？')+tags()+board()+
  '<div class="card"><div class="timer-main-row"><div class="timer timer-large" data-timer>'+timeText(timerLeft())+'</div>'+
  button(running?'一時停止':'スタート','data-timer-action="toggle" '+(!isHost()?'disabled':''),'timer-main-toggle')+'</div>'+
  '<div class="timer-adjust-grid">'+[[-60,'−1分'],[60,'＋1分'],[-10,'−10秒'],[10,'＋10秒']].map(([n,title])=>button(title,'data-timer-adjust="'+n+'" '+(!isHost()?'disabled':''),'secondary')).join('')+'</div>'+
- '<p class="online-note">音声通話などで話し合おう。時間が0でも自動で投票には進まないよ。</p></div>'+
+ '<p class="online-note">音声通話などで話し合おう。時間が0でも自動で投票には進まないよ。</p></div>'+chatScreen()+
  (isHost()?button('投票へ','data-start-vote','danger full'):'<p class="online-progress-bar">ホストが投票画面へ進めるよ。</p>')+
  '<div class="card"><h2>自分の役職を確認</h2><p class="online-note">必要なときだけ、長押しで表示してね。</p>'+
  '<div class="online-role-private '+(hold?'revealed':'')+'">'+privateCard(game.myRole)+
@@ -199,8 +208,16 @@ function render(){
  setup:setupScreen,reveal:revealScreen,night:nightScreen,
  discussion:discussionScreen,voting:votingScreen,result:resultScreen
  }[game.stage];
+ const draftBefore=$('chat-input');
+ const draft=draftBefore?.value||'';
+ const hadFocus=document.activeElement===draftBefore&&!!draftBefore;
  $('game-root').innerHTML=html?html():'<div class="card online-wait">画面を準備しています…</div>';
- if(game.stage==='discussion')updateTimer();
+ if(game.stage==='discussion'){
+  updateTimer();
+  const input=$('chat-input');
+  if(input){input.value=draft;if(hadFocus)input.focus({preventScroll:true})}
+  const log=$('chat-log');if(log)log.scrollTop=log.scrollHeight;
+ }
 }
 function updateTimer(){
  const t=document.querySelector('[data-timer]');
@@ -294,6 +311,14 @@ function action(event){
  if(b.hasAttribute('data-stop')&&isHost())send({type:'nise-stop'});
 }
 $('game-root').addEventListener('click',action);
+$('game-root').addEventListener('submit',event=>{
+ if(!event.target.matches('[data-chat-form]'))return;
+ event.preventDefault();
+ const input=event.target.elements.chat;
+ const text=String(input?.value||'').trim().slice(0,120);
+ if(text&&send({type:'nise-chat',text}))input.value='';
+});
+
 function holdStart(e){
  const button=e.target.closest('[data-hold-secret]');
  if(!button)return;
