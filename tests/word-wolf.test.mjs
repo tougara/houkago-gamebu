@@ -1,0 +1,110 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext,Script} from 'node:vm';
+
+const questionsJs=readFileSync(new URL('../games/word-wolf/questions.js',import.meta.url),'utf8');
+const gameJs=readFileSync(new URL('../games/word-wolf/game.js',import.meta.url),'utf8');
+const html=readFileSync(new URL('../games/word-wolf/index.html',import.meta.url),'utf8');
+const browser={};
+runInNewContext(questionsJs,{window:browser});
+const data=browser.HoukagoWordWolfData;
+
+test('150 unique word pairs are distributed across the six categories',()=>{
+  assert.equal(data.pairs.length,150);
+  const expected=[30,25,20,25,25,25];
+  assert.deepEqual(data.categories.map(category=>data.pairs.filter(p=>p.category===category).length),expected);
+  assert.equal(new Set(data.pairs.map(p=>[p.a,p.b].sort().join('|'))).size,150);
+  for(const p of data.pairs)assert.ok(p.a&&p.b&&p.a!==p.b);
+  assert.ok(!data.pairs.some(p=>p.a==='犬'&&p.b==='オオカミ'));
+  assert.ok(!data.pairs.some(p=>p.a==='友情'&&p.b==='信頼'));
+});
+test('word-wolf scripts compile, and scripts are loaded after the common player and save APIs',()=>{
+  new Script(gameJs,{filename:'word-wolf/game.js'});
+  const scripts=['player-registry.js','settings.js','resume.js','game-back-guard.js','questions.js','game.js'];
+  let previous=-1;
+  for(const filename of scripts){
+    const next=html.indexOf('src="'+(filename==='questions.js'||filename==='game.js'?filename:'../../'+filename));
+    assert.ok(next>previous,filename+' is out of order or missing');previous=next;
+  }
+});
+function createHarness(){
+  const keys=new Map(),events={},records=[],players=Array.from({length:4},(_,i)=>({id:'p'+i,name:'人'+i,icon:'🐱'}));
+  const word={classList:{toggle(){}},replaceChildren(){},appendChild(node){this.text=node.textContent}};
+  const hold={classList:{toggle(){}},setPointerCapture(){}};
+  const done={disabled:true};
+  let modal=null;
+  const app={
+    className:'',_html:'',set innerHTML(s){this._html=s;done.disabled=true},get innerHTML(){return this._html},
+    addEventListener(type,cb){events[type]=cb},contains(){return true},
+    querySelector(sel){return sel==='[data-word-value]'?word:sel==='[data-hold-word]'?hold:sel==='[data-word-done]'?done:null}
+  };
+  const document={
+    getElementById:()=>app,addEventListener(){},visibilityState:'visible',
+    createElement(){return {innerHTML:'',textContent:'',handlers:{},querySelector(sel){return {addEventListener:(type,cb)=>this.handlers[sel]=cb}},remove(){}}},
+    body:{appendChild(value){modal=value}}
+  };
+  const window={
+    HoukagoWordWolfData:data,
+    HoukagoPlayers:{load:()=>({activeCount:4,players}),renderEditor:()=>'<div>メンバー</div>',recordGame:v=>records.push(v)},
+    HoukagoResume:{save(id,meta,state){keys.set(id,JSON.parse(JSON.stringify(state)))},clear(id){keys.delete(id)},offer(){}},
+    scrollTo(){},addEventListener(){},crypto:null
+  };
+  const localStorage={getItem:k=>keys.get('local:'+k)||null,setItem:(k,v)=>keys.set('local:'+k,v)};
+  const fakeMath={random:()=>0,floor:Math.floor,ceil:Math.ceil,max:Math.max};
+  const boot=new Function('window','document','localStorage','setInterval','clearInterval','Math',gameJs);
+  boot(window,document,localStorage,()=>1,()=>{},fakeMath);
+  const act=(name,dataset={})=>{
+    const button={dataset,disabled:false,matches:selector=>selector==='['+name+']'};
+    events.click({target:{closest:selector=>selector==='button'?button:null}});
+    return app.className;
+  };
+  const reveal=()=>{
+    const target={closest:selector=>selector==='[data-hold-word]'?hold:null,setPointerCapture(){}};
+    events.pointerdown({target,preventDefault(){},pointerId:1});
+    events.pointerup({target});
+    assert.equal(done.disabled,false);
+  };
+  const vote=i=>{
+    act('data-open-vote');
+    assert.equal(keys.get('word-wolf').screen,'votePass');
+    act('data-vote',{vote:String(i)});
+    assert.ok(modal?.handlers['[data-yes]']);
+    modal.handlers['[data-yes]']();
+  };
+  return {app,keys,records,events,act,reveal,vote};
+}
+function playToVote(h){
+  h.act('data-start');h.act('data-members-done');h.act('data-begin');
+  for(let i=0;i<4;i++){
+    h.act('data-open-word');
+    assert.equal(h.keys.get('word-wolf').screen,'pass','secret word must be masked in saved snapshot');
+    h.reveal();h.act('data-word-done');
+  }
+  assert.match(h.app.className,/screen-discussion$/);
+  h.act('data-go-vote');
+}
+test('the complete game flow: wolf is found, guesses correctly, and earns one record',()=>{
+  const h=createHarness();playToVote(h);
+  [1,0,0,0].forEach(h.vote);
+  assert.match(h.app.className,/screen-wolfPass$/);
+  h.act('data-open-answer');
+  assert.equal(h.keys.get('word-wolf').screen,'wolfPass','free text screen must be masked in saved snapshot');
+  h.events.submit({target:{matches:s=>s==='[data-answer-form]',elements:{answer:{value:'しちゅー'}}},preventDefault(){}});
+  assert.match(h.app.className,/screen-result$/);
+  assert.equal(h.records.length,1);
+  assert.deepEqual(h.records[0].winners,['p0']);
+});
+test('tied election starts exactly one runoff; bad free answer goes through the appeal screen',()=>{
+  const h=createHarness();playToVote(h);
+  [1,0,1,0].forEach(h.vote);
+  assert.match(h.app.className,/screen-tally$/);
+  h.act('data-start-runoff');[1,0,0,0].forEach(h.vote);
+  assert.match(h.app.className,/screen-wolfPass$/);
+  h.act('data-open-answer');
+  h.events.submit({target:{matches:s=>s==='[data-answer-form]',elements:{answer:{value:'ラーメン'}}},preventDefault(){}});
+  assert.match(h.app.className,/screen-appeal$/);
+  h.act('data-reject-appeal');
+  assert.match(h.app.className,/screen-result$/);
+  assert.deepEqual(h.records[0].winners,['p1','p2','p3']);
+});
