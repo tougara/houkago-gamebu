@@ -9,7 +9,8 @@
     'kyokasho-tower': '教科書の置き方を考えて勝負しよう',
     'gesture-battle': 'ジェスチャーでお題を伝えて盛り上がろう',
     'pitadome-challenge': 'タイミングを見極めてピタッと止めよう',
-    'link-burst': '同じ色をつなげて爽快な連鎖を決めよう'
+    'link-burst': '同じ色をつなげて爽快な連鎖を決めよう',
+    'word-wolf': '同じ話をしているはずなのに、誰かのお題だけ違う！'
   };
 
   const cardById = new Map();
