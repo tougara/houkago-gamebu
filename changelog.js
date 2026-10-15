@@ -5,7 +5,7 @@ globalThis.HOUKAGO_CHANGELOG=[
     "date": "2026-10-15",
     "datetime": "2026-10-15T11:25:59+09:00",
     "category": "wolf",
-    "major": false,
+    "major": true,
     "title": "新作8本目「ことばのオオカミ」を追加",
     "changes": [
       "3〜10人で楽しめる会話・推理ゲーム。お題の自動選択に加え、出題者が自由にお題を作る遊び方にも対応。",
