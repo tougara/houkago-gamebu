@@ -27,14 +27,14 @@ export function createNise(room){
  if(n<3||n>10)throw Error('3〜10人で遊んでね');
  return {stage:'setup',counts:defaultNiseCounts(n),memberIds:room.members.map(m=>m.id),duration:180,
  initial:{},final:{},rest:[],revealed:[],nightOrder:[],nightCursor:0,intel:{},votes:{},
- timerRemaining:180,deadline:0,result:null};
+ timerRemaining:180,deadline:0,result:null,chat:[],lastChatAt:{}};
 }
 export function dealNise(g){
  if(!validNiseCounts(g.counts,g.memberIds.length))return false;
  const deck=shuffle(Object.entries(g.counts).flatMap(([k,n])=>Array(n).fill(k)));
  g.initial=Object.fromEntries(g.memberIds.map((id,i)=>[id,deck[i]]));
  g.final={...g.initial};g.rest=deck.slice(g.memberIds.length);
- g.revealed=[];g.votes={};g.intel={};g.result=null;g.deadline=0;g.timerRemaining=g.duration;
+ g.revealed=[];g.votes={};g.intel={};g.result=null;g.chat=[];g.lastChatAt={};g.deadline=0;g.timerRemaining=g.duration;
  g.nightOrder=shuffle(g.memberIds).sort((a,b)=>{
   const rank={fake:0,president:1,observer:2,dayDuty:2,swapper:3};
   return (rank[g.initial[a]]??4)-(rank[g.initial[b]]??4);
@@ -63,6 +63,7 @@ export function niseView(room,id){
   nightWaiting:waitingNight,
   myIntel:g.stage==='night'&&current===id?g.intel[id]||null:null,
   myVoted:voted,
+  chat:g.stage==='discussion'?g.chat||[]:[],
   myRevealed:g.revealed.includes(id),
   isHost:id===room.hostId
  };
@@ -132,6 +133,14 @@ export function niseAction(room,id,data){
   if(['president','dayDuty','observer','swapper'].includes(r)&&!g.intel[id])return false;
   g.nightCursor++;
   if(g.nightCursor>=g.nightOrder.length){g.stage='discussion';g.timerRemaining=g.duration;g.deadline=0}
+  return true;
+ }
+ if(data.type==='nise-chat'){
+  if(stage!=='discussion'||typeof data.text!=='string')return false;
+  const text=data.text.replace(/[\\u0000-\\u001f\\u007f]/g,' ').trim().slice(0,120);
+  if(!text||Date.now()-(g.lastChatAt?.[id]||0)<700)return false;
+  g.chat??=[];g.lastChatAt??={};g.lastChatAt[id]=Date.now();
+  g.chat.push({id,text,at:Date.now()});g.chat=g.chat.slice(-40);
   return true;
  }
  if(data.type==='nise-timer'){
