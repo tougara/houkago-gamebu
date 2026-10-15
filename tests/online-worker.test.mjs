@@ -456,3 +456,70 @@ test('online phases render question and answers with offline layout and no blank
  assert.equal(els['battle-ranking'].children.length,2);
  assert.deepEqual(navigation,[],'game stage updates should not leave game URL');
 });
+
+
+test('ニセ転校生オンライン: 役職秘匿・3人以上の開始・休み時間・投票・ロビー復帰',async()=>{
+ const st=new Stub();
+ const hostRes=await st.fetch(req('/create',{code:'ABCD2345',name:'ホスト',gameId:'nise-transfer-student',icon:'🐯'}));
+ assert.equal(hostRes.status,201);
+ const hostInfo=await hostRes.json();
+ const members=[hostInfo];
+ for(let i=1;i<4;i++){
+  const res=await st.fetch(req('/join',{name:'人'+i,icon:'🐼'}));
+  assert.equal(res.status,201);
+  members.push(await res.json());
+ }
+ const sockets=members.map(m=>sock(m.id));
+ st.sockets.push(...sockets);
+ const send=(i,data)=>st.obj.webSocketMessage(sockets[i],JSON.stringify(data));
+ for(let i=0;i<4;i++)await send(i,{type:'ready',ready:true});
+ await send(1,{type:'nise-start'});
+ assert.equal(st.obj.room.nise,undefined,'only host can start');
+ await send(0,{type:'nise-start'});
+ assert.equal(st.obj.snapshot().phase,'nise');
+ assert.equal(st.obj.room.nise.stage,'setup');
+ await send(1,{type:'nise-begin'});
+ assert.equal(st.obj.room.nise.stage,'setup','only host can deal');
+ await send(0,{type:'nise-begin'});
+ const raw=st.obj.room.nise;
+ assert.equal(raw.stage,'reveal');
+ assert.equal(raw.rest.length,2);
+ for(let i=0;i<4;i++){
+  const seen=sockets[i].events.at(-1).room.nise;
+  assert.equal(seen.myRole,raw.initial[members[i].id]);
+  assert.equal(seen.result,null);
+  assert.ok(!Object.hasOwn(seen,'initial'));
+  assert.ok(!Object.hasOwn(seen,'final'));
+  assert.ok(!Object.hasOwn(seen,'votes'));
+ }
+ for(let i=0;i<4;i++)await send(i,{type:'nise-reveal-done'});
+ assert.equal(raw.stage,'night');
+ let turns=0;
+ while(raw.stage==='night'&&turns++<12){
+  const id=raw.nightOrder[raw.nightCursor];
+  const i=members.findIndex(m=>m.id===id);
+  const role=raw.initial[id];
+  if(role==='president')await send(i,{type:'nise-night-action',kind:'rest'});
+  else if(role==='dayDuty')await send(i,{type:'nise-night-action',kind:'rest',index:0});
+  else if(role==='observer')await send(i,{type:'nise-night-action',kind:'compare',
+    targets:raw.memberIds.filter(x=>x!==id).slice(0,2)});
+  else if(role==='swapper')await send(i,{type:'nise-night-action',kind:'skip'});
+  await send(i,{type:'nise-night-done'});
+ }
+ assert.equal(raw.stage,'discussion');
+ await send(1,{type:'nise-start-vote'});
+ assert.equal(raw.stage,'discussion');
+ await send(0,{type:'nise-start-vote'});
+ assert.equal(raw.stage,'voting');
+ for(let i=0;i<3;i++)await send(i,{type:'nise-vote',target:members[(i+1)%4].id});
+ assert.equal(raw.stage,'voting');
+ assert.equal(sockets[3].events.at(-1).room.nise.result,null);
+ await send(3,{type:'nise-vote',target:members[0].id});
+ assert.equal(raw.stage,'result');
+ assert.ok(raw.result&&raw.result.final);
+ await send(1,{type:'nise-stop'});
+ assert.equal(st.obj.snapshot().phase,'nise','guest cannot end host game');
+ await send(0,{type:'nise-stop'});
+ assert.equal(st.obj.snapshot().phase,'lobby');
+ assert.equal(st.obj.room.nise,null);
+});
