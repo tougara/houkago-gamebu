@@ -62,6 +62,7 @@ export function niseView(room,id){
   nightWaiting:waitingNight,
   myIntel:g.stage==='night'&&current===id?g.intel[id]||null:null,
   myVoted:voted,
+  myRevealed:g.revealed.includes(id),
   isHost:id===room.hostId
  };
  if(g.stage==='night'&&current===id&&r==='fake'){
