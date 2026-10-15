@@ -64,7 +64,7 @@ function wordScreen(){
 }
 function discussionScreen(){
  return nav()+heading('みんなで話し合おう','お題そのものは言わずに会話しよう')+
- '<section class="card talk-card"><div class="label">のこり時間</div><div class="timer" data-clock>'+clock(state.seconds)+'</div><p data-clock-note>'+(state.paused?'一時停止中':'話し合い中')+'</p><div class="timer-controls">'+button(state.paused?'再開':'一時停止','data-pause','secondary')+button('＋30秒','data-plus','secondary') +button('−30秒','data-minus','secondary')+button('リセット','data-reset','secondary')+button('＋10秒','data-plus10','secondary')+button('−10秒','data-minus10','secondary')+'</div></section><div class="card"><h2>参加メンバー</h2><div class="chips">'+state.players.map(p=>'<span class="chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div><p class="hint">時間が0になっても、自動的には次へ進まないよ。</p></div>'+button('話し合いを終えて投票へ','data-go-vote','gold');
+ '<section class="card talk-card"><div class="label">のこり時間</div><div class="timer" data-clock>'+clock(state.seconds)+'</div><p data-clock-note>'+(state.paused?'一時停止中':'話し合い中')+'</p><div class="timer-controls">'+button(state.paused?'再開':'一時停止','data-pause','secondary')+button('＋30秒','data-plus','secondary') +button('−30秒','data-minus','secondary')+button('リセット','data-reset','secondary')+button('＋10秒','data-plus10','secondary')+button('−10秒','data-minus10','secondary')+'</div></section><div class="card"><h2>参加メンバー</h2><div class="chips">'+state.players.map(p=>'<span class="chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div>'+(state.host?'<p class="hint">出題者：'+esc(state.host.icon)+' '+esc(state.host.name)+' さん（投票には参加しません）</p>':'')+'<p class="hint">時間が0になっても、自動的には次へ進まないよ。</p></div>'+button('話し合いを終えて投票へ','data-go-vote','gold');
 }
 function voteScreen(){
  const voter=state.voter;
@@ -90,6 +90,7 @@ function resultScreen(){
  const resultInfo=state.votedOut<0?'同票のまま決着！':state.votedOut===state.wolf?'ウルフを見つけた！':'別の人を選んでしまった！';
  return nav()+'<section class="results"><div class="winner-symbol">'+(wolfWins?'☾':'★')+'</div><p class="kicker">GAME RESULT</p><h1 class="'+(wolfWins?'wolf-wins':'human-wins')+'">'+(wolfWins?'ウルフの勝利！':'市民チームの勝利！')+'</h1><p>'+resultInfo+'</p></section>'+
  '<section class="card"><div class="result-words"><div><small>市民のお題</small><strong>'+esc(state.majority)+'</strong></div><div class="minority"><small>ウルフのお題</small><strong>'+esc(state.minority)+'</strong></div></div><h2>オオカミの正体は…</h2><div class="wolf-reveal">'+esc(avatar(state.wolf))+' '+esc(label(state.wolf))+'</div>'+(state.answer?'<p class="answer-detail">逆転回答：'+esc(state.answer)+(state.verdict==='wolf'&&state.votedOut===state.wolf?'（正解）':'（不正解）')+'</p>':'')+'</section>'+
+ (state.host?'<section class="card"><p class="hint">今回の出題者：'+esc(state.host.icon)+' '+esc(state.host.name)+' さん（投票・戦績には不参加）</p></section>':'')+
  '<section class="card"><h2>投票結果</h2><div class="vote-summary">'+state.players.map((p,i)=>'<div class="vote-summary-row"><span>'+esc(p.icon)+' '+esc(p.name)+'</span><b>'+counts[i]+'票</b></div>').join('')+'</div>'+(state.voteStage===2?'<p class="hint">決選投票：'+votes.map((target,i)=>esc(label(i))+' → '+esc(label(target))).join(' ／ ')+'</p>':'')+'</section>'+
  '<div class="stack">'+button('同じメンバーでもう一戦','data-again','gold')+button('ゲーム設定へ','data-to-setup','secondary')+button('ゲームをえらぶ','data-result-home','secondary')+'</div>';
 }
@@ -370,7 +371,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 window.addEventListener('pagehide',()=>{if(state.screen==='word')revealWord(false);pauseClock();persistResume()});
 window.addEventListener('houkago-back-guard-open',()=>{if(state.screen==='word')revealWord(false);pauseClock();persistResume()});
 window.addEventListener('houkago-back-guard-save',persistResume);
-window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;const y=window.scrollY;loadPlayers();render();window.scrollTo(0,y)});
+window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted||state.screen==='customTopics')return;const y=window.scrollY;loadPlayers();render();window.scrollTo(0,y)});
 loadPlayers();render();
 resumeApi?.offer?.({gameId:SAVE_ID,onResume:restore,onNew:startFresh});
 })();
