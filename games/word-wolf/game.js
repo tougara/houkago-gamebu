@@ -26,7 +26,7 @@ function loadPlayers(){const d=playersApi.load();state.players=d.players.slice(0
 function nav(){return '<nav class="top-nav"><button type="button" class="nav-pill" data-back>← もどる</button><button type="button" class="nav-pill" data-home>ゲームをえらぶ</button></nav>'}
 function heading(title,desc=''){return '<header class="heading"><h1>'+esc(title)+'</h1>'+(desc?'<p>'+esc(desc)+'</p>':'')+'</header>'}
 function button(label,attr,cls='primary'){return '<button type="button" class="btn '+cls+'" '+attr+'>'+esc(label)+'</button>'}
-function titleScreen(){return nav()+'<section class="welcome"><div class="wolf-moon">☾</div><p class="kicker">8TH GAME · TALK & DEDUCTION</p><h1>ことばの<span>オオカミ</span></h1><p>同じ話をしているはずなのに、<br>誰かひとり、何かが違う。</p><div class="welcomebadges"><span>3〜10人</span><span>スマホ1台</span><span>オフライン</span></div></section><div class="stack">'+button('ゲームをはじめる','data-start','gold')+button('あそびかた','data-open-rules','secondary')+'</div>'}
+function titleScreen(){return nav()+'<section class="welcome"><p class="kicker">8TH GAME · TALK & DEDUCTION</p><h1 class="welcome-title"><img class="welcome-logo" src="../../kotoba_no_ookami_logo_transparent.png?v=20261015-art1" alt="ことばのオオカミ"></h1><p class="welcome-description">同じ話をしているはずなのに、<br>誰かひとり、何かが違う。</p><div class="welcomebadges"><span>3〜10人</span><span>スマホ1台</span><span>オフライン</span></div></section><div class="stack">'+button('ゲームをはじめる','data-start','gold')+button('あそびかた','data-open-rules','secondary')+'</div>'}
 function membersScreen(){return nav()+playersApi.renderEditor({min:3,max:10,count:Math.max(3,state.players.length),title:'参加メンバー',subtitle:'いつものメンバーから3〜10人を選ぼう',doneLabel:'このメンバーで決定'})}
 function setupScreen(){
  const selected=state.categories;
