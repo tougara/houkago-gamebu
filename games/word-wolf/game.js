@@ -12,6 +12,7 @@ const CATEGORIES=questionData?.categories||[];
 if(!app||!playersApi||!questionData?.pairs?.length)return;
 const state={
  screen:'title',history:[],gameStarted:false,players:[],mode:'reverse',minutes:3,
+ topicSource:'auto',hostId:'',host:null,
  categories:CATEGORIES.slice(),pair:null,majority:'',minority:'',wolf:-1,
  handoff:0,seen:false,seconds:180,paused:true,deadline:0,
  voteStage:1,voter:0,votes:[],firstVotes:[],runoffVotes:[],candidates:[],
@@ -30,12 +31,23 @@ function titleScreen(){return nav()+'<section class="welcome"><p class="kicker">
 function membersScreen(){return nav()+playersApi.renderEditor({min:3,max:10,count:Math.max(3,state.players.length),title:'参加メンバー',subtitle:'いつものメンバーから3〜10人を選ぼう',doneLabel:'このメンバーで決定'})}
 function setupScreen(){
  const selected=state.categories;
+ const custom=state.topicSource==='custom';
+ const chosen=state.players.find(p=>p.id===state.hostId);
+ const valid=custom?(state.players.length>=4&&!!chosen):selected.length>0;
  return nav()+heading('ゲーム設定','ルールと話し合い時間を決めよう')+
+ '<section class="card"><h2>お題の決め方</h2><div class="select-grid"><button type="button" class="select-option '+(!custom?'selected':'')+'" data-topic-source="auto" aria-pressed="'+(!custom)+'"><strong>おまかせ</strong><small>150ペアから自動で決定</small></button><button type="button" class="select-option '+(custom?'selected':'')+'" data-topic-source="custom" aria-pressed="'+custom+'"><strong>自分たちで決める</strong><small>出題者1人が自由入力</small></button></div></section>'+
+ (custom?
+ '<section class="card"><h2>お題を決める人は？</h2><p class="intro">出題者はお題を知っているので、ゲームには参加しないよ。</p><div class="host-grid">'+state.players.map(p=>'<button type="button" class="host-choice '+(state.hostId===p.id?'selected':'')+'" data-host-id="'+esc(p.id)+'" aria-pressed="'+(state.hostId===p.id)+'"><span class="host-icon">'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong><small>'+(state.hostId===p.id?'出題者':'この人にする')+'</small></button>').join('')+'</div><p class="hint">'+(state.players.length>=4?state.players.length+'人中 '+(state.players.length-1)+'人でプレイ ＋ 出題者1人':'出題者ありは4人以上必要です')+'</p>'+(!chosen?'<p class="topic-warning">出題者をひとり選んでね。</p>':'')+'</section>':
+ '<section class="card"><h2>お題ジャンル <span class="count">'+selected.length+' / '+CATEGORIES.length+'</span></h2><div class="genre-grid">'+CATEGORIES.map(c=>'<button type="button" class="choice '+(selected.includes(c)?'selected':'')+'" data-category="'+esc(c)+'" aria-pressed="'+selected.includes(c)+'">'+esc(c)+'</button>').join('')+'</div><p class="hint">1ジャンル以上を選んでね。お題は全150ペア。</p></section>')+
  '<section class="card"><h2>勝敗ルール</h2><div class="select-grid"><button type="button" class="select-option '+(state.mode==='simple'?'selected':'')+'" data-mode="simple"><strong>シンプル</strong><small>ウルフを当てたら市民の勝ち</small></button><button type="button" class="select-option '+(state.mode==='reverse'?'selected':'')+'" data-mode="reverse"><strong>逆転チャンスあり</strong><small>見つかったウルフはお題を自由回答</small></button></div></section>'+
- '<section class="card"><h2>話し合い時間</h2><div class="small-grid">'+[2,3,5,7].map(n=>'<button type="button" class="choice '+(state.minutes===n?'selected':'')+'" data-minutes="'+n+'">'+n+'分</button>').join('')+'</div><p class="hint">ゲーム中に30秒ずつ増減できるよ。</p></section>'+
- '<section class="card"><h2>お題ジャンル <span class="count">'+selected.length+' / '+CATEGORIES.length+'</span></h2><div class="genre-grid">'+CATEGORIES.map(c=>'<button type="button" class="choice '+(selected.includes(c)?'selected':'')+'" data-category="'+esc(c)+'" aria-pressed="'+selected.includes(c)+'">'+esc(c)+'</button>').join('')+'</div><p class="hint">1ジャンル以上を選んでね。お題は全150ペア。</p></section>'+
+ '<section class="card"><h2>話し合い時間</h2><div class="small-grid">'+[2,3,5,7].map(n=>'<button type="button" class="choice '+(state.minutes===n?'selected':'')+'" data-minutes="'+n+'">'+n+'分</button>').join('')+'</div><p class="hint">ゲーム中に10秒・30秒ずつ増減できるよ。</p></section>'+
  '<section class="card compact"><h2>今回のメンバー <span class="count">'+state.players.length+'人</span></h2><div class="chips">'+state.players.map(p=>'<span class="chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div>'+button('メンバーを変更','data-edit-members','secondary')+'</section>'+
- '<div class="stack">'+button('この設定でゲーム開始','data-begin '+(!selected.length?'disabled':''),'gold')+'</div>';
+ '<div class="stack">'+button(custom?'出題者にスマホを渡す':'この設定でゲーム開始','data-begin '+(!valid?'disabled':''),'gold')+'</div>';
+}
+function customTopicsScreen(){
+ return nav()+heading('出題者がお題を決めよう','ほかの人には画面を見せないでね')+
+ '<section class="card host-header"><div class="person-icon">'+esc(state.host?.icon||'？')+'</div><h2>'+esc(state.host?.name||'出題者')+' さんの番</h2><p>今回のゲームには参加せず、お題を考える係だよ。</p><p class="hint">'+state.players.length+'人でプレイ。似ているけど同じではない言葉が盛り上がるよ。</p></section>'+
+ '<form class="card topic-form" data-custom-topic-form><label for="common-topic">みんなのお題</label><input id="common-topic" name="majority" maxlength="30" autocomplete="off" placeholder="例：カレー" required><p class="hint">多数派に配るお題</p><label for="wolf-topic">オオカミのお題</label><input id="wolf-topic" name="minority" maxlength="30" autocomplete="off" placeholder="例：シチュー" required><p class="hint">1人だけに配る似たお題</p><p class="topic-warning" data-topic-error role="alert" aria-live="polite"></p><button class="btn gold" type="submit">お題を決定してスマホを渡す</button><p class="hint">決定後はお題を隠して、1人目に渡す画面に切り替わるよ。</p></form>';
 }
 function rulesScreen(){return nav()+heading('あそびかた','たった4つのポイント')+'<section class="card rules"><div><b>1</b><p><strong>お題をひみつで確認</strong><span>ひとりだけ似ている別のお題。誰が少数派かは本人にも分からないよ。</span></p></div><div><b>2</b><p><strong>みんなで会話</strong><span>お題を直接言わずに話そう。最初から答えをズバリ聞くのは控えると盛り上がるよ。</span></p></div><div><b>3</b><p><strong>怪しい人に投票</strong><span>自分以外の1人に秘密投票。同票なら1回だけ決選投票だよ。</span></p></div><div><b>4</b><p><strong>逆転チャンス</strong><span>逆転ありルールでは、見つかったウルフが市民のお題を自由入力。当てれば逆転勝利！</span></p></div></section>'+button('もどる','data-rules-back','secondary')}
 function passScreen(type){
@@ -82,7 +94,7 @@ function resultScreen(){
  '<div class="stack">'+button('同じメンバーでもう一戦','data-again','gold')+button('ゲーム設定へ','data-to-setup','secondary')+button('ゲームをえらぶ','data-result-home','secondary')+'</div>';
 }
 function screenHtml(){
- const screens={title:titleScreen,members:membersScreen,setup:setupScreen,rules:rulesScreen,
+ const screens={title:titleScreen,members:membersScreen,setup:setupScreen,customTopics:customTopicsScreen,rules:rulesScreen,
  pass:()=>passScreen('word'),word:wordScreen,discussion:discussionScreen,
  votePass:()=>passScreen('vote'),vote:voteScreen,tally:tallyScreen,wolfPass:wolfPassScreen,
  answer:answerScreen,appeal:appealScreen,result:resultScreen};
@@ -123,6 +135,7 @@ function safeBack(){
  if(state.screen==='rules'){go('title',false);return}
  if(state.screen==='members'){go('setup',false);return}
  if(state.screen==='setup'){go('title',false);return}
+ if(state.screen==='customTopics'){loadPlayers();go('setup',false);return}
  if(state.screen==='result'){go('setup',false);return}
  go('setup',false);
 }
