@@ -30,7 +30,8 @@ test('public title is ことばのオオカミ while internal IDs and save paths
   assert.match(logo,/aria-label="ことばのオオカミ"/);
   assert.match(logo,/ことばの<\/text>/);
   assert.match(logo,/オオカミ<\/text>/);
-  assert.match(gameJs,/ことばの<span>オオカミ<\/span>/);
+  assert.match(gameJs,/class="welcome-title"/);
+  assert.match(gameJs,/alt="ことばのオオカミ"/);
   assert.match(gameJs,/title:'ことばのオオカミ',path:'\/games\/word-wolf\/'/);
   assert.match(registry,/'word-wolf':'ことばのオオカミ'/);
   assert.match(history,/wolf:'ことばのオオカミ'/);
@@ -161,4 +162,23 @@ test('discussion timer has reset and +/-10-second controls; reset preserves runn
   assert.ok(h.keys.get('word-wolf').seconds>=179&&h.keys.get('word-wolf').seconds<=180);
   assert.equal(h.clockNote.textContent,'話し合い中');
   assert.equal(h.keys.get('word-wolf').paused,true,'save snapshot is always paused so resumed games never skip the timer');
+});
+
+test('uploaded night background and transparent PNG logo are referenced by the title and game selection card',()=>{
+  const list=readFileSync(new URL('../games/index.html',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../games/word-wolf/game.css',import.meta.url),'utf8');
+  const styles=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
+  const pngSignature='89504e470d0a1a0a';
+  const logoPng=readFileSync(new URL('../kotoba_no_ookami_logo_transparent.png',import.meta.url));
+  const backgroundPng=readFileSync(new URL('../kotoba_no_ookami_night_background.png',import.meta.url));
+  assert.equal(logoPng.subarray(0,8).toString('hex'),pngSignature);
+  assert.equal(backgroundPng.subarray(0,8).toString('hex'),pngSignature);
+  assert.ok([4,6].includes(logoPng[25]),'the title image must have a PNG alpha channel');
+  assert.match(gameJs,/src="\.\.\/\.\.\/kotoba_no_ookami_logo_transparent\.png\?v=20261015-art1"/);
+  assert.match(css,/kotoba_no_ookami_night_background\.png/);
+  assert.match(css,/welcome-logo/);
+  assert.match(list,/src="\.\.\/kotoba_no_ookami_logo_transparent\.png\?v=20261015-art1"/);
+  assert.match(styles,/url\("kotoba_no_ookami_night_background\.png"\)/);
+  assert.match(html,/game\.css\?v=20261015-art1/);
+  assert.match(html,/game\.js\?v=20261015-art1/);
 });
