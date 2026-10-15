@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 240" role="img" aria-label="ワードウルフ">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 240" role="img" aria-label="ことばのオオカミ">
  <defs>
   <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff1b6"/><stop offset="1" stop-color="#ffc55d"/></linearGradient>
   <linearGradient id="ice" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#c5e8ff"/></linearGradient>
@@ -7,6 +7,6 @@
  <path d="M554 12A56 56 0 1 0 624 83 62 62 0 0 1 554 12Z" fill="url(#gold)" opacity=".9"/>
  <path d="M91 54 125 4 149 53 202 30 189 102 151 129 113 104 79 103 78 30Z" fill="#17284b" stroke="#b9d8fc" stroke-width="5"/>
  <path d="m116 75 13 5 11-5m21 0 13 5 11-5" stroke="#f3c566" stroke-width="6" fill="none" stroke-linecap="round"/>
- <text x="328" y="141" text-anchor="middle" font-size="98" font-family="system-ui,'Yu Gothic',sans-serif" font-weight="1000" letter-spacing="-4" fill="url(#ice)" stroke="#223e67" stroke-width="10" paint-order="stroke" filter="url(#shadow)">ワード</text>
- <text x="349" y="216" text-anchor="middle" font-size="104" font-family="system-ui,'Yu Gothic',sans-serif" font-weight="1000" letter-spacing="-4" fill="url(#gold)" stroke="#223e67" stroke-width="10" paint-order="stroke" filter="url(#shadow)">ウルフ</text>
+ <text x="350" y="141" text-anchor="middle" font-size="78" font-family="system-ui,'Yu Gothic',sans-serif" font-weight="1000" letter-spacing="-4" fill="url(#ice)" stroke="#223e67" stroke-width="10" paint-order="stroke" filter="url(#shadow)">ことばの</text>
+ <text x="350" y="216" text-anchor="middle" font-size="95" font-family="system-ui,'Yu Gothic',sans-serif" font-weight="1000" letter-spacing="-4" fill="url(#gold)" stroke="#223e67" stroke-width="10" paint-order="stroke" filter="url(#shadow)">オオカミ</text>
 </svg>
