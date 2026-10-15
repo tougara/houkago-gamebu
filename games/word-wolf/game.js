@@ -92,10 +92,19 @@ function resultScreen(){
  '<section class="card"><div class="result-words"><div><small>市民のお題</small><strong>'+esc(state.majority)+'</strong></div><div class="minority"><small>ウルフのお題</small><strong>'+esc(state.minority)+'</strong></div></div><h2>オオカミの正体は…</h2><div class="wolf-reveal">'+esc(avatar(state.wolf))+' '+esc(label(state.wolf))+'</div>'+(state.answer?'<p class="answer-detail">逆転回答：'+esc(state.answer)+(state.verdict==='wolf'&&state.votedOut===state.wolf?'（正解）':'（不正解）')+'</p>':'')+'</section>'+
  (state.host?'<section class="card"><p class="hint">今回の出題者：'+esc(state.host.icon)+' '+esc(state.host.name)+' さん（投票・戦績には不参加）</p></section>':'')+
  '<section class="card"><h2>投票結果</h2><div class="vote-summary">'+state.players.map((p,i)=>'<div class="vote-summary-row"><span>'+esc(p.icon)+' '+esc(p.name)+'</span><b>'+counts[i]+'票</b></div>').join('')+'</div>'+(state.voteStage===2?'<p class="hint">決選投票：'+votes.map((target,i)=>esc(label(i))+' → '+esc(label(target))).join(' ／ ')+'</p>':'')+'</section>'+
- '<div class="stack">'+button('同じメンバーでもう一戦','data-again','gold')+button('ゲーム設定へ','data-to-setup','secondary')+button('ゲームをえらぶ','data-result-home','secondary')+'</div>';
+ '<div class="stack">'+button('同じメンバーでもう一戦','data-again','gold')+(state.topicSource==='custom'&&state.host?button('出題者を変える','data-change-host','secondary'):'')+button('ゲーム設定へ','data-to-setup','secondary')+button('ゲームをえらぶ','data-result-home','secondary')+'</div>';
+}
+function changeHostScreen(){
+ const members=state.host?[...state.players,state.host]:state.players;
+ const previous=state.host?.id||'';
+ const selected=members.some(p=>p.id===state.hostId&&p.id!==previous);
+ return nav()+heading('次の出題者を選ぼう','メンバーはそのまま、出題者だけ交代')+
+ '<section class="card"><h2>だれがお題を決める？</h2><p class="intro">選んだ人はお題を作る係。次のゲームでは、ほかの'+Math.max(0,members.length-1)+'人がプレイするよ。</p>'+
+ '<div class="host-grid">'+members.map(p=>'<button type="button" class="host-choice '+(state.hostId===p.id&&p.id!==previous?'selected':'')+'" data-host-id="'+esc(p.id)+'" aria-pressed="'+(state.hostId===p.id&&p.id!==previous)+'" '+(p.id===previous?'disabled':'')+'><span class="host-icon">'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong><small>'+(p.id===previous?'前回の出題者':state.hostId===p.id?'次の出題者に決定':'この人にする')+'</small></button>').join('')+'</div></section>'+
+ '<div class="stack">'+button('この人にお題を決めてもらう','data-confirm-host '+(!selected?'disabled':''),'gold')+button('結果画面にもどる','data-cancel-host','secondary')+'</div>';
 }
 function screenHtml(){
- const screens={title:titleScreen,members:membersScreen,setup:setupScreen,customTopics:customTopicsScreen,rules:rulesScreen,
+ const screens={title:titleScreen,members:membersScreen,setup:setupScreen,customTopics:customTopicsScreen,hostChange:changeHostScreen,rules:rulesScreen,
  pass:()=>passScreen('word'),word:wordScreen,discussion:discussionScreen,
  votePass:()=>passScreen('vote'),vote:voteScreen,tally:tallyScreen,wolfPass:wolfPassScreen,
  answer:answerScreen,appeal:appealScreen,result:resultScreen};
@@ -138,6 +147,7 @@ function safeBack(){
  if(state.screen==='setup'){go('title',false);return}
  if(state.screen==='customTopics'){loadPlayers();go('setup',false);return}
  if(state.screen==='result'){go('setup',false);return}
+ if(state.screen==='hostChange'){state.hostId=state.host?.id||'';go('result',false);return}
  go('setup',false);
 }
 function normalized(word){
@@ -167,8 +177,9 @@ function startRound(pair,isCustom){
  state.minority=isCustom?pair.b:(state.majority===pair.a?pair.b:pair.a);
  go('pass',false);
 }
-function begin(){
- loadPlayers();
+function begin(roster){
+ if(Array.isArray(roster))state.players=roster.map(p=>({...p}));
+ else loadPlayers();
  if(state.topicSource==='custom'){
   if(state.players.length<4||state.players.length>10)return;
   state.host=state.players.find(p=>p.id===state.hostId)||null;
@@ -325,7 +336,7 @@ app.addEventListener('click',event=>{
  if(b.matches('[data-member-icon]')){const i=Number(b.dataset.memberIcon);playersApi.setPlayer(i,{icon:b.dataset.icon});loadPlayers();render();return}
  if(b.matches('[data-edit-members]')){go('members');return}
  if(b.matches('[data-topic-source]')){state.topicSource=b.dataset.topicSource==='custom'?'custom':'auto';render();return}
- if(b.matches('[data-host-id]')){state.hostId=b.dataset.hostId;render();return}
+ if(b.matches('[data-host-id]')){if(state.screen==='hostChange'&&b.dataset.hostId===state.host?.id)return;state.hostId=b.dataset.hostId;render();return}
  if(b.matches('[data-mode]')){state.mode=b.dataset.mode;render();return}
  if(b.matches('[data-minutes]')){state.minutes=Number(b.dataset.minutes);render();return}
  if(b.matches('[data-category]')){const c=b.dataset.category;state.categories=state.categories.includes(c)?state.categories.filter(x=>x!==c):[...state.categories,c];render();return}
@@ -346,6 +357,9 @@ app.addEventListener('click',event=>{
  if(b.matches('[data-accept-appeal]')){conclude('wolf');return}
  if(b.matches('[data-reject-appeal]')){conclude('human');return}
  if(b.matches('[data-again]')){begin();return}
+ if(b.matches('[data-change-host]')){if(state.screen!=='result'||state.topicSource!=='custom'||!state.host)return;state.hostId='';go('hostChange',false);return}
+ if(b.matches('[data-cancel-host]')){state.hostId=state.host?.id||'';go('result',false);return}
+ if(b.matches('[data-confirm-host]')){if(state.screen!=='hostChange'||!state.host||state.hostId===state.host.id)return;const roster=[...state.players,state.host];if(!roster.some(p=>p.id===state.hostId))return;begin(roster);return}
  if(b.matches('[data-to-setup]')){loadPlayers();go('setup',false);return}
  if(b.matches('[data-result-home]')){location.href='../';return}
 });
