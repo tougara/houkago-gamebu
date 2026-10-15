@@ -147,10 +147,16 @@ function connect(){
  };
  current.onerror=()=>{};
 }
-$('start-secret').addEventListener('click',()=>{
+$('start-secret').addEventListener('click',async()=>{
  if(room?.phase!=='lobby'||!room.allReady)return;
- if(room.gameId==='nise-transfer-student'&&room.members.length>=3)send({type:'nise-start'});
- else if(room.gameId==='minna-wa-docchi')send({type:'secret-start'});
+ if(room.gameId==='nise-transfer-student'&&room.members.length>=3){
+  // Pagesの更新が先行しても、旧Workerで開始不能な部屋に閉じ込めない。
+  try{
+   const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
+   if(!health.ok||health.version<4){notice('通信サーバーの更新待ちだよ。更新後にもう一度押してね。');return}
+  }catch{notice('通信サーバーを確認できないよ。接続を確認してね。');return}
+  send({type:'nise-start'});
+ }else if(room.gameId==='minna-wa-docchi')send({type:'secret-start'});
 });
 $('ready').addEventListener('click',()=>{
  const me=room?.members.find(m=>m.id===session?.id);
