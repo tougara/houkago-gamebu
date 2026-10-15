@@ -1174,3 +1174,8 @@ body.registry-open{overflow:hidden}
     margin-top:clamp(17px,8dvh,50px)!important;
   }
 }
+
+/* ワードウルフ：8作目のゲームカード */
+.compact-game-art.word-wolf-card-art{background:radial-gradient(circle at 75% 5%,#5e74a5 0,#26365f 42%,#121c3a 100%)}
+.compact-game-art.word-wolf-card-art:before{background:radial-gradient(circle at 80% 18%,rgba(255,240,182,.22),transparent 40%)}
+.compact-game-art.word-wolf-card-art img{width:100%;max-height:118px;object-fit:contain;filter:drop-shadow(0 7px 6px rgba(0,0,0,.33))}
