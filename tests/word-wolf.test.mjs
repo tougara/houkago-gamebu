@@ -129,3 +129,32 @@ test('tied election starts exactly one runoff; bad free answer goes through the 
   assert.match(h.app.className,/screen-result$/);
   assert.deepEqual(h.records[0].winners,['p1','p2','p3']);
 });
+
+test('discussion timer has reset and +/-10-second controls; reset preserves running or paused state',()=>{
+  const h=createHarness();
+  h.act('data-start');h.act('data-members-done');h.act('data-begin');
+  for(let i=0;i<4;i++){h.act('data-open-word');h.reveal();h.act('data-word-done')}
+  assert.match(h.app.className,/screen-discussion$/);
+  for(const action of ['data-pause','data-reset','data-plus','data-minus','data-plus10','data-minus10']){
+    assert.match(h.app.innerHTML,new RegExp(action));
+  }
+  assert.equal(h.keys.get('word-wolf').minutes,3);
+  h.act('data-pause');
+  assert.equal(h.keys.get('word-wolf').paused,true);
+  h.act('data-minus10');
+  assert.equal(h.keys.get('word-wolf').seconds,170);
+  h.act('data-plus10');
+  assert.equal(h.keys.get('word-wolf').seconds,180);
+  h.act('data-plus');
+  assert.equal(h.keys.get('word-wolf').seconds,210);
+  h.act('data-reset');
+  assert.equal(h.keys.get('word-wolf').seconds,180);
+  assert.equal(h.keys.get('word-wolf').paused,true);
+  h.act('data-pause');
+  assert.equal(h.keys.get('word-wolf').paused,false);
+  h.act('data-minus');
+  assert.ok(h.keys.get('word-wolf').seconds>=149&&h.keys.get('word-wolf').seconds<=150);
+  h.act('data-reset');
+  assert.ok(h.keys.get('word-wolf').seconds>=179&&h.keys.get('word-wolf').seconds<=180);
+  assert.equal(h.keys.get('word-wolf').paused,false);
+});
