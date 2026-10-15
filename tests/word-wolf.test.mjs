@@ -13,7 +13,7 @@ const data=browser.HoukagoWordWolfData;
 test('150 unique word pairs are distributed across the six categories',()=>{
   assert.equal(data.pairs.length,150);
   const expected=[30,25,20,25,25,25];
-  assert.deepEqual(data.categories.map(category=>data.pairs.filter(p=>p.category===category).length),expected);
+  assert.deepEqual(Array.from(data.categories,category=>data.pairs.filter(p=>p.category===category).length),expected);
   assert.equal(new Set(data.pairs.map(p=>[p.a,p.b].sort().join('|'))).size,150);
   for(const p of data.pairs)assert.ok(p.a&&p.b&&p.a!==p.b);
   assert.ok(!data.pairs.some(p=>p.a==='犬'&&p.b==='オオカミ'));
