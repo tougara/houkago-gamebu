@@ -20,7 +20,7 @@ const roleOrder=['classmate','fake','president','swapper','observer','dayDuty','
 const baseRoles=['classmate','fake','president','swapper'];
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const roleImg=key=>'../../'+roleDefs[key].image;
-let session=null,room=null,ws=null,retry=0,retryHandle=null,stopped=false,stageKey='';
+let session=null,room=null,ws=null,retry=0,retryHandle=null,stopped=false,stageKey='',exitToList=false;
 let peeked=false,hold=false,selected=[],votePick='',lastStage='',countdownHandle=null;
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
 if(!session||!/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/.test(session.code)||
@@ -224,7 +224,7 @@ function connect(){
    room=packet.room;
    if(room.phase!=='nise'){moveLobby();return}
    render();
-  }else if(packet.type==='left'){sessionStorage.removeItem(STORE);stopped=true;location.replace('../');}
+  }else if(packet.type==='left'){sessionStorage.removeItem(STORE);stopped=true;location.replace(exitToList?'../../games/':'../');}
   else if(packet.type==='error')notice(packet.error||'操作に失敗しました');
  };
  current.onclose=e=>{
@@ -314,6 +314,14 @@ $('game-root').addEventListener('keydown',e=>{if(e.target.closest('[data-hold-se
 $('game-root').addEventListener('keyup',e=>{if(['Enter',' '].includes(e.key))holdEnd()});
 window.addEventListener('blur',holdEnd);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)holdEnd()});
+$('game-list-link').addEventListener('click',e=>{
+ if(room?.phase==='nise'){
+  e.preventDefault();
+  if(!window.confirm('ゲームを抜けて、ゲーム一覧へ移動する？\nプレイ中なら部屋の試合は終了するよ。'))return;
+  exitToList=true;
+  if(!send({type:'leave'}))location.href='../../games/';
+ }
+});
 $('return-lobby').addEventListener('click',e=>{
  if(room?.phase==='nise'){
   e.preventDefault();
