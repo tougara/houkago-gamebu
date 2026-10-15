@@ -54,11 +54,14 @@ function createHarness(){
   const word={classList:{toggle(){}},replaceChildren(){},appendChild(node){this.text=node.textContent}};
   const hold={classList:{toggle(){}},setPointerCapture(){}};
   const done={disabled:true};
+  const clockNote={textContent:''};
+  const clockDisplay={textContent:''};
+  const pauseButton={textContent:''};
   let modal=null;
   const app={
     className:'',_html:'',set innerHTML(s){this._html=s;done.disabled=true},get innerHTML(){return this._html},
     addEventListener(type,cb){events[type]=cb},contains(){return true},
-    querySelector(sel){return sel==='[data-word-value]'?word:sel==='[data-hold-word]'?hold:sel==='[data-word-done]'?done:null}
+    querySelector(sel){return sel==='[data-word-value]'?word:sel==='[data-hold-word]'?hold:sel==='[data-word-done]'?done:sel==='[data-clock-note]'?clockNote:sel==='[data-clock]'?clockDisplay:sel==='[data-pause]'?pauseButton:null}
   };
   const document={
     getElementById:()=>app,addEventListener(){},visibilityState:'visible',
@@ -93,7 +96,7 @@ function createHarness(){
     assert.ok(modal?.handlers['[data-yes]']);
     modal.handlers['[data-yes]']();
   };
-  return {app,keys,records,events,act,reveal,vote};
+  return {app,keys,records,events,act,reveal,vote,clockNote,clockDisplay};
 }
 function playToVote(h){
   h.act('data-start');h.act('data-members-done');h.act('data-begin');
@@ -151,10 +154,11 @@ test('discussion timer has reset and +/-10-second controls; reset preserves runn
   assert.equal(h.keys.get('word-wolf').seconds,180);
   assert.equal(h.keys.get('word-wolf').paused,true);
   h.act('data-pause');
-  assert.equal(h.keys.get('word-wolf').paused,false);
+  assert.equal(h.clockNote.textContent,'話し合い中');
   h.act('data-minus');
   assert.ok(h.keys.get('word-wolf').seconds>=149&&h.keys.get('word-wolf').seconds<=150);
   h.act('data-reset');
   assert.ok(h.keys.get('word-wolf').seconds>=179&&h.keys.get('word-wolf').seconds<=180);
-  assert.equal(h.keys.get('word-wolf').paused,false);
+  assert.equal(h.clockNote.textContent,'話し合い中');
+  assert.equal(h.keys.get('word-wolf').paused,true,'save snapshot is always paused so resumed games never skip the timer');
 });
