@@ -179,7 +179,7 @@ test('uploaded night background and transparent PNG logo are referenced by the t
   assert.match(css,/welcome-logo/);
   assert.match(list,/src="\.\.\/kotoba_no_ookami_logo_transparent\.png\?v=20261015-art1"/);
   assert.match(styles,/url\("kotoba_no_ookami_night_background\.png"\)/);
-  assert.match(html,/game\.css\?v=20261015-art1/);
+  assert.match(html,/game\.css\?v=20261015-logo2/);
   assert.match(html,/game\.js\?v=20261015-art1/);
 });
 
