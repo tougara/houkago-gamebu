@@ -1,7 +1,7 @@
 :root{--ink:#19253d;--muted:#657188;--line:#dce3ec;--gold:#f8bd54;--blue:#2b8de0;--shadow:0 13px 34px rgba(25,32,53,.12)}
 *{box-sizing:border-box}html{background:#101c32}body{margin:0;background:#101c32;color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
 button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.42;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #ee9b1c;outline-offset:2px}
-.word-wolf-app{width:min(720px,100%);min-height:100vh;min-height:100dvh;margin:auto;padding:12px 13px 40px;background:radial-gradient(ellipse at 85% 10%,#e3eafd 0,#f4f7ff 48%,#fffaf0 100%);overflow-x:hidden}
+.word-wolf-app{width:min(720px,100%);min-height:100vh;min-height:100dvh;margin:auto;padding:12px 13px 40px;background:linear-gradient(180deg,rgba(231,238,251,.81),rgba(243,247,254,.82) 56%,rgba(249,249,247,.88)),url("../../kotoba_no_ookami_night_background.png") center center/cover fixed no-repeat;overflow-x:hidden}
 .top-nav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
 .nav-pill{border:1px solid var(--line);border-radius:50px;background:#fff;color:var(--ink);padding:10px 14px;font-size:13px;font-weight:900;box-shadow:0 4px 11px rgba(15,28,49,.08)}
 .heading{text-align:center;margin:8px auto 15px}.heading h1{font-size:clamp(24px,6vw,33px);margin:0 0 6px;font-weight:1000;line-height:1.26}.heading p{font-weight:700;color:var(--muted);font-size:13px;margin:0;line-height:1.6}
@@ -11,11 +11,12 @@ button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}button
 .btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 #0d5d9b}.btn.gold{background:linear-gradient(#ffda7b,#ffbb39);color:#382710;box-shadow:0 5px 0 #cc8529}
 .btn.gold:active:not(:disabled){box-shadow:0 2px 0 #cc8529}.btn.secondary{background:#edf2fa;color:#233d60;box-shadow:0 4px 0 #cbd7e5}.btn.secondary:active:not(:disabled){box-shadow:0 1px 0 #cbd7e5}
 .stack{display:grid;gap:12px}.stack .btn{width:100%}
-.welcome{position:relative;overflow:hidden;padding:38px 15px 35px;text-align:center;border-radius:25px;margin-bottom:18px;min-height:350px;background:radial-gradient(circle at 52% 12%,#55699b 0,#29385f 24%,#121b35 65%,#0c1429 100%);color:white;box-shadow:0 15px 36px rgba(17,28,54,.25)}
-.welcome:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#ffffff99 .8px,transparent 1px);background-size:38px 38px;opacity:.45}.welcome>*{position:relative}
-.wolf-moon{font-size:100px;line-height:1;color:#f7dd9b;text-shadow:0 0 26px rgba(244,213,149,.6);margin:-12px 0 3px}.kicker{font-size:11px;letter-spacing:.2em;font-weight:900;color:#c7d4f0}
-.welcome h1{font-size:clamp(36px,10vw,62px);line-height:1.12;margin:8px 0 18px;text-shadow:0 5px 0 #142343;font-weight:1000;letter-spacing:.03em}
-.welcome h1 span{display:block;color:#ffca68}.welcome>p:not(.kicker){font-size:14px;line-height:1.8;font-weight:800;color:#e4ebff}
+.welcome{position:relative;overflow:hidden;padding:23px 15px 26px;text-align:center;border-radius:25px;margin-bottom:18px;min-height:min(62dvh,530px);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(180deg,rgba(11,23,50,.09),rgba(12,27,60,.20) 55%,rgba(7,19,43,.43)),url("../../kotoba_no_ookami_night_background.png") center 53%/cover no-repeat;color:white;box-shadow:0 15px 36px rgba(17,28,54,.25)}
+.welcome:before{display:none}.welcome>*{position:relative}
+.kicker{font-size:11px;letter-spacing:.19em;font-weight:900;color:#ecf1ff;text-shadow:0 2px 8px rgba(9,19,38,.85);margin:0}
+.welcome .welcome-title{display:block;margin:5px auto auto;width:100%;max-width:515px;line-height:1;min-height:0;text-shadow:none;letter-spacing:normal}
+.welcome .welcome-logo{display:block;width:100%;height:auto;max-height:230px;object-fit:contain;filter:drop-shadow(0 5px 9px rgba(11,22,48,.52))}
+.welcome .welcome-description{font-size:14px;line-height:1.8;font-weight:900;color:#fff;margin:0;text-shadow:0 2px 9px rgba(2,13,33,.95)}
 .welcomebadges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:19px auto 0}.welcomebadges span{background:#ffffff22;border:1px solid #ffffff4d;padding:7px 10px;border-radius:100px;font-size:12px;font-weight:900}
 .select-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .select-option{padding:15px 8px;min-height:98px;text-align:center;background:#f3f6fc;border:2px solid #e1e7f2;border-radius:15px;color:var(--ink)}.select-option strong{display:block;font-size:14px}.select-option small{display:block;font-size:11px;line-height:1.5;margin-top:7px;color:var(--muted)}.select-option.selected,.choice.selected{border-color:#1685e8;background:#e4f4ff;box-shadow:inset 0 0 0 1px #1685e8;color:#0b4e8a}
