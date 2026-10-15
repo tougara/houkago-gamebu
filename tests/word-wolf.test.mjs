@@ -19,6 +19,27 @@ test('150 unique word pairs are distributed across the six categories',()=>{
   assert.ok(!data.pairs.some(p=>p.a==='犬'&&p.b==='オオカミ'));
   assert.ok(!data.pairs.some(p=>p.a==='友情'&&p.b==='信頼'));
 });
+test('public title is ことばのオオカミ while internal IDs and save paths remain compatible',()=>{
+  const list=readFileSync(new URL('../games/index.html',import.meta.url),'utf8');
+  const logo=readFileSync(new URL('../games/word-wolf/logo.svg',import.meta.url),'utf8');
+  const registry=readFileSync(new URL('../player-registry.js',import.meta.url),'utf8');
+  const history=readFileSync(new URL('../update-history.js',import.meta.url),'utf8');
+  const changelog=readFileSync(new URL('../changelog.js',import.meta.url),'utf8');
+  assert.match(html,/ことばのオオカミ｜放課後ゲーム部/);
+  assert.match(list,/ことばのオオカミ/);
+  assert.match(logo,/aria-label="ことばのオオカミ"/);
+  assert.match(logo,/ことばの<\/text>/);
+  assert.match(logo,/オオカミ<\/text>/);
+  assert.match(gameJs,/ことばの<span>オオカミ<\/span>/);
+  assert.match(gameJs,/title:'ことばのオオカミ',path:'\/games\/word-wolf\/'/);
+  assert.match(registry,/'word-wolf':'ことばのオオカミ'/);
+  assert.match(history,/wolf:'ことばのオオカミ'/);
+  assert.match(changelog,/新作8本目「ことばのオオカミ」/);
+  assert.doesNotMatch(gameJs,/ワードウルフ/);
+  assert.doesNotMatch(list,/>ワードウルフ</);
+  assert.doesNotMatch(html,/<title>ワードウルフ/);
+});
+
 test('word-wolf scripts compile, and scripts are loaded after the common player and save APIs',()=>{
   new Script(gameJs,{filename:'word-wolf/game.js'});
   const scripts=['player-registry.js','settings.js','resume.js','game-back-guard.js','questions.js','game.js'];
