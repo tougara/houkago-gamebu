@@ -179,18 +179,18 @@ test('uploaded night background and transparent PNG logo are referenced by the t
   assert.match(css,/welcome-logo/);
   assert.match(list,/src="\.\.\/kotoba_no_ookami_logo_transparent\.png\?v=20261015-art1"/);
   assert.match(styles,/url\("kotoba_no_ookami_night_background\.png"\)/);
-  assert.match(html,/game\.css\?v=20261015-logo2/);
+  assert.match(html,/game\.css\?v=20261015-logo3/);
   assert.match(html,/game\.js\?v=20261015-art1/);
 });
 
-test('the new word-wolf logo is enlarged on both screens, moved lower on the title, and background moon is cropped away',()=>{
+test('the word-wolf logo stays large and centered on both screens without clipping, with the duplicate moon cropped away',()=>{
   const css=readFileSync(new URL('../games/word-wolf/game.css',import.meta.url),'utf8');
   const styles=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
   const list=readFileSync(new URL('../games/index.html',import.meta.url),'utf8');
   assert.match(css,/\.welcome\{[^}]*url\("\.\.\/\.\.\/kotoba_no_ookami_night_background\.png"\) center 78%\/120% auto no-repeat/);
-  assert.match(css,/\.welcome \.welcome-title\{[^}]*margin:clamp\(32px,5dvh,52px\) auto auto;[^}]*width:124%/);
-  assert.match(css,/\.welcome \.welcome-logo\{[^}]*max-height:none/);
+  assert.match(css,/\.welcome \.welcome-title\{[^}]*margin:clamp\(32px,5dvh,52px\) auto auto;[^}]*width:min\(100%,610px\);max-width:610px/);
+  assert.match(css,/\.welcome \.welcome-logo\{[^}]*max-height:none;[^}]*margin:0 auto/);
   assert.match(styles,/\.compact-game-art\.word-wolf-card-art img\{width:128%;max-width:none;max-height:150px/);
-  assert.match(html,/game\.css\?v=20261015-logo2/);
+  assert.match(html,/game\.css\?v=20261015-logo3/);
   assert.match(list,/styles\.css\?v=20261015-wordwolf-logo2/);
 });
