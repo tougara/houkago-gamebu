@@ -44,16 +44,44 @@ test('役職確認は本人だけ、他人の役職・おやすみ・投票先�
  assert.equal(guest.myIntel,null);
  const outsider=r.members[0].id;
  assert.equal(act(r,outsider,{type:'nise-reveal-done'}),true);
+ assert.equal(r.nise.stage,'night','the FIRST person should start night without waiting');
+ assert.equal(niseView(r,outsider).stage,'night');
+ for(const m of r.members.slice(1)){
+  assert.equal(niseView(r,m.id).stage,'reveal','the others are still viewing their own roles');
+  assert.equal(niseView(r,m.id).nightIsMyTurn,false);
+  assert.equal(act(r,m.id,{type:'nise-night-done'}),false,'no action before own confirmation');
+ }
  assert.equal(act(r,outsider,{type:'nise-reveal-done'}),false);
- for(const m of r.members.slice(1))assert.equal(act(r,m.id,{type:'nise-reveal-done'}),true);
+ for(const m of r.members.slice(1)){
+  assert.equal(act(r,m.id,{type:'nise-reveal-done'}),true);
+  assert.equal(niseView(r,m.id).stage,'night');
+ }
  assert.equal(r.nise.stage,'night');
 });
 
+test('本人だけが確認した直後、他の人の確認が終わらなくても調査できる',()=>{
+ const r=make(4),g=r.nise;dealNise(g);
+ g.initial={p0:'president',p1:'swapper',p2:'fake',p3:'classmate'};
+ g.final={...g.initial};g.rest=['fake','classmate'];
+ assert.equal(act(r,'p0',{type:'nise-reveal-done'}),true);
+ assert.equal(niseView(r,'p0').stage,'night');
+ assert.equal(niseView(r,'p1').stage,'reveal');
+ assert.equal(act(r,'p0',{type:'nise-night-action',kind:'player',target:'p2'}),true);
+ assert.equal(niseView(r,'p0').myIntel.role,'fake');
+ assert.equal(act(r,'p0',{type:'nise-night-done'}),true);
+ assert.equal(g.stage,'night','other players still need their own actions');
+ assert.equal(niseView(r,'p1').stage,'reveal','late confirmer is not skipped');
+ assert.equal(act(r,'p1',{type:'nise-night-action',kind:'skip'}),false,'not confirmed yet');
+ for(const id of ['p1','p2','p3'])assert.equal(act(r,id,{type:'nise-reveal-done'}),true);
+ assert.equal(act(r,'p1',{type:'nise-night-action',kind:'skip'}),true);
+ for(const id of ['p1','p2','p3'])assert.equal(act(r,id,{type:'nise-night-done'}),true);
+ assert.equal(g.stage,'discussion');
+});
 test('全員の夜行動は順番を待たずに同時処理し、調査は最初の役職を参照',()=>{
  const r=make(4),g=r.nise;dealNise(g);
  g.initial={p0:'fake',p1:'president',p2:'swapper',p3:'classmate'};
  g.final={...g.initial};g.rest=['fake','classmate'];
- g.stage='night';g.nightDone=[];
+ g.stage='night';g.nightDone=[];g.revealed=[...g.memberIds];
  assert.equal(niseView(r,'p1').nightIsMyTurn,true);
  assert.equal(niseView(r,'p2').nightIsMyTurn,true);
  assert.equal(act(r,'p2',{type:'nise-night-action',kind:'swap',target:'p0'}),true);
@@ -81,7 +109,7 @@ test('全員の夜行動は順番を待たずに同時処理し、調査は最�
 test('複数人の同時調査も初期スナップショットを参照する',()=>{
  const r=make(5),g=r.nise;dealNise(g);
  g.initial={p0:'swapper',p1:'observer',p2:'dayDuty',p3:'fake',p4:'president'};
- g.final={...g.initial};g.rest=['fake','classmate'];g.stage='night';g.nightDone=[];
+ g.final={...g.initial};g.rest=['fake','classmate'];g.stage='night';g.nightDone=[];g.revealed=[...g.memberIds];
  assert.equal(act(r,'p0',{type:'nise-night-action',kind:'swap',target:'p3'}),true);
  assert.equal(act(r,'p1',{type:'nise-night-action',kind:'compare',targets:['p3','p4']}),true);
  assert.equal(niseView(r,'p1').myIntel.same,false);
