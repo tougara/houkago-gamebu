@@ -45,6 +45,10 @@ async function visit(size,isMobile){
   page.on('pageerror',error=>failures.push(String(error)));
   await page.goto(base+'/games/nise-transfer-student/',{waitUntil:'load'});
   await page.locator('#startSetup').click();
+  // 実際に報告された10人構成で、役職設定に戻った状態を検証する。
+  await page.locator('#editPlayersFromRoles').click();
+  await page.locator('[data-member-count="10"]').click();
+  await page.locator('[data-members-done]').click();
   await page.locator('.nise-role-list-scroll').waitFor({state:'visible'});
   return {page,context,failures};
 }
@@ -76,6 +80,7 @@ function footerIsVisible(page,selector){
   });
 }
 for(const [label,size,isMobile] of [
+  ['small phone',{width:360,height:620},true],
   ['phone portrait',{width:390,height:700},true],
   ['desktop',{width:1280,height:800},false],
 ]){
