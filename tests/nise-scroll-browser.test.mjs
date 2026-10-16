@@ -79,6 +79,33 @@ function footerIsVisible(page,selector){
     return box.top>=0&&box.bottom<=innerHeight+1&&box.height>20;
   });
 }
+async function verifyTenMembers(page){
+ const names=page.locator('.nise-role-members .member-chip');
+ assert.equal(await names.count(),10,'all ten members must be rendered at once');
+ const layout=await page.locator('.nise-role-members').evaluate(area=>{
+  const parent=area.getBoundingClientRect();
+  const elements=[...area.querySelectorAll('.member-chip')].map(chip=>{
+   const bounds=chip.getBoundingClientRect();
+   const name=chip.querySelector('.member-chip-name');
+   return {text:name.textContent.trim(),top:bounds.top,bottom:bounds.bottom,
+      left:bounds.left,right:bounds.right,clientWidth:chip.clientWidth,
+      scrollWidth:chip.scrollWidth,nameClientHeight:name.clientHeight,
+      nameScrollHeight:name.scrollHeight};
+  });
+  return {area:{top:parent.top,bottom:parent.bottom,left:parent.left,right:parent.right},elements};
+ });
+ assert.equal(new Set(layout.elements.map(x=>x.text)).size,10,'all ten participant names must be distinct');
+ for(const chip of layout.elements){
+  assert.ok(chip.top>=layout.area.top-1&&chip.bottom<=layout.area.bottom+1,
+    'name clipped vertically '+chip.text+' '+JSON.stringify(layout));
+  assert.ok(chip.left>=layout.area.left-1&&chip.right<=layout.area.right+1,
+    'name clipped horizontally '+chip.text+' '+JSON.stringify(layout));
+  assert.ok(chip.scrollWidth<=chip.clientWidth+2,'participant text hidden: '+chip.text);
+  assert.ok(chip.nameScrollHeight<=chip.nameClientHeight+2,'participant name cut off: '+chip.text);
+ }
+ const columns=await names.evaluateAll(nodes=>new Set(nodes.map(x=>Math.round(x.getBoundingClientRect().left))).size);
+ assert.ok(columns>=2,'names must use multiple visible columns, not horizontal swipe');
+}
 async function verifyFourRoles(page,expected){
  const roles=page.locator('.role-reg-group .role-row');
  assert.equal(await roles.count(),4,'each tab must show exactly four roles');
@@ -116,6 +143,7 @@ for(const [label,size,isMobile] of [
  test('four basic and four advanced roles all visible; member editor scrolls: '+label,async()=>{
   const {page,context,failures}=await visit(size,isMobile);
   try{
+   await verifyTenMembers(page);
    await verifyFourRoles(page,['クラスメイト','ニセ転校生','学級委員','席替え係']);
    await page.locator('[data-role-tab="advanced"]').click();
    await verifyFourRoles(page,['観察係','日直','秘密の協力者','いたずらっ子']);
