@@ -150,14 +150,7 @@ function nightScreen(){
  }
  if(intel){
   if(intel.kind==='player'){face[intel.target]=intel.role;info='<p>'+nameOf(intel.target)+'の役職は…</p>'+privateCardResult(intel.role)}
-  else if(intel.kind==='rest'){for(let i=0;i<(intel.roles||[]).length;i++){if(intel.index!==undefined)continue;restTargets.length=0}
-   const rest= intel.roles?.length===2?intel.roles:intel.index!==undefined?
-    [null,null].map((v,i)=>i===intel.index?intel.roles[0]:null):[];
-   if(rest.length)for(const [i,r] of rest.entries())if(r){} 
-   info='<p>おやすみカードの調査結果</p>'+intel.roles.map(privateCardResult).join('');
-   // One day-duty card and both president cards remain visible in their own slots.
-   if(intel.roles.length===2){ /* result passed to board below */ }
-  }
+  else if(intel.kind==='rest')info='<p>おやすみカードの調査結果</p>'+intel.roles.map(privateCardResult).join('');
   else if(intel.kind==='compare')info='<p>'+intel.targets.map(nameOf).join(' と ')+' は <strong>'+(intel.same?'同じ陣営':'違う陣営')+'</strong></p>';
   else if(intel.kind==='swap'){
    // Only the swapper sees BOTH exchanged roles in their new board positions.
@@ -249,7 +242,7 @@ function fitBoardCards(){
  const rows=Math.ceil(n/cols);
  const byWidth=Math.floor((width-22-(cols-1)*4)/cols);
  const byHeight=Math.floor((height-50)/(rows===1?2.9:4.55));
- const size=Math.max(28,Math.min(90,byWidth,byHeight));
+ const size=Math.max(28,Math.min(g()?.stage==='result'?66:90,byWidth,byHeight));
  boardEl.style.setProperty('--card-size',size+'px');
 }
 function onlineLayout(stage){
