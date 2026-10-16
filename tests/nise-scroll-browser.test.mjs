@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve,sep,extname} from 'node:path';
 import {chromium} from 'playwright';
 
-const root=fileURLToPath(new URL('../',import.meta.url));
+const root=resolve(fileURLToPath(new URL('../',import.meta.url)));
 let server,browser;
 let base;
 
