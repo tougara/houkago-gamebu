@@ -322,3 +322,47 @@ test('old Worker still gives a safe sequential waiting screen during deployment 
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('final result frames stay inside their cards and clear of names at phone/tablet/desktop sizes',async()=>{
+ for(const [width,height,n] of [[360,620,3],[390,740,4],[820,1180,10],[1280,800,10]]){
+  const {page,context,errors,push}=await open(width,height);
+  try{
+   await push(room('result',n));
+   const result=await page.locator('.online-final-board .table-player-row').evaluate(row=>{
+    const cards=[...row.querySelectorAll('.online-person-cell')];
+    return cards.map(cell=>{
+     const card=cell.querySelector('.table-card');
+     const name=cell.querySelector('.table-card-name');
+     const cardRect=card.getBoundingClientRect();
+     const nameRect=name.getBoundingClientRect();
+     const style=getComputedStyle(card);
+     return {cardBottom:cardRect.bottom,nameTop:nameRect.top,
+      outlineWidth:parseFloat(style.outlineWidth),
+      outlineOffset:parseFloat(style.outlineOffset),
+      cardRight:cardRect.right,cardLeft:cardRect.left};
+    });
+   });
+   assert.equal(result.length,n);
+   for(const [i,item] of result.entries()){
+    assert.ok(item.nameTop-item.cardBottom>=3,
+      'name must clear colored card border: '+width+'x'+height+' player '+i+' '+JSON.stringify(item));
+    assert.ok(item.outlineOffset<=-2,
+      'the colored frame must be drawn inward: '+JSON.stringify(item));
+   }
+   for(let i=0;i<result.length;i++){
+    for(let j=i+1;j<result.length;j++){
+     // Cards in separate rows may overlap horizontally; only check matching row positions
+     const boxes=await page.locator('.online-final-board .table-player-row .online-person-cell')
+      .nth(i).boundingBox();
+     const other=await page.locator('.online-final-board .table-player-row .online-person-cell')
+      .nth(j).boundingBox();
+     if(Math.abs(boxes.y-other.y)<2){
+      const gap=Math.abs(boxes.x-other.x)-boxes.width;
+      assert.ok(gap>=4,'side-by-side card outlines must not touch: '+gap);
+     }
+    }
+   }
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
