@@ -12,9 +12,9 @@ const sourceBetween=(begin,end)=>{
 test('offline game remains valid and loads single-screen overrides after legacy CSS',()=>{
  assert.doesNotThrow(()=>new Function(js));
  assert.match(html,/href="game\.css"/);
- assert.match(html,/href="one-screen\.css\?v=20261016-v1"/);
+ assert.match(html,/href="one-screen\.css\?v=20261016-v2"/);
  assert.ok(html.indexOf('href="one-screen.css')>html.indexOf('href="../../resume.css'));
- assert.match(html,/game\.js\?v=20261016-one-screen1/);
+ assert.match(html,/game\.js\?v=20261016-one-screen2/);
  assert.match(css,/\.nise-one-screen \.nise-play-shell/);
  assert.match(css,/@media \(min-width:760px\) and \(min-height:560px\)/);
  assert.match(css,/height:100dvh/);
@@ -80,4 +80,34 @@ test('changing the board after president investigation, seat swap or rest reveal
  assert.match(css,/\.nise-one-screen \.nise-play-actions \.swap-result-cards/);
  assert.match(css,/\.nise-one-screen \.nise-play-board \.table-card-wrap/);
  assert.match(css,/\.nise-one-screen \.nise-result-details\[open\]/);
+});
+
+test('role setup switches between four basic and four advanced roles without losing the role counts',()=>{
+ const rolesScreenSource=sourceBetween('function rolesScreen(){','function revealPassScreen(){');
+ assert.match(rolesScreenSource,/data-role-tab="basic"/);
+ assert.match(rolesScreenSource,/data-role-tab="advanced"/);
+ assert.match(rolesScreenSource,/state\.roleTab==='advanced'\?ADVANCED_ROLE_KEYS:BASIC_ROLE_KEYS/);
+ assert.match(js,/state\.roleTab=b\.dataset\.roleTab==='advanced'\?'advanced':'basic'/);
+ assert.match(js,/state\.screen==='roles'\?' nise-role-setup'/);
+ assert.match(css,/\.game-app\.nise-role-setup/);
+ assert.match(css,/\.nise-role-setup \.role-select-card/);
+ const state={
+  playerCount:4,roleTab:'basic',
+  players:Array.from({length:4},(_,i)=>({id:'p'+i,name:'P'+i,icon:'🐼'})),
+  roleCounts:{classmate:2,fake:2,president:1,swapper:1,dayDuty:0,observer:0,collaborator:0,trickster:0}
+ };
+ const basicKeys=['classmate','fake','president','swapper'],advancedKeys=['observer','dayDuty','collaborator','trickster'];
+ const ROLE_DEFS=Object.fromEntries([...basicKeys,...advancedKeys].map(k=>[k,{name:k,side:'real',image:k+'.png',max:k==='classmate'?10:2}]));
+ const fn=new Function('state','ROLE_DEFS','BASIC_ROLE_KEYS','ADVANCED_ROLE_KEYS','roleMax','roleMin','needCards','totalCards','topNav','heading','sideLabel','esc','window',
+   rolesScreenSource+'return rolesScreen;');
+ const build=fn(state,ROLE_DEFS,basicKeys,advancedKeys,()=>2,()=>0,()=>6,()=>6,()=>'<nav/>',t=>t,()=>'',String,{});
+ const a=build();
+ assert.match(a,/classmate/);assert.match(a,/swapper/);
+ assert.doesNotMatch(a,/class="role-title">observer/);
+ state.roleTab='advanced';
+ const b=build();
+ assert.match(b,/class="role-title">observer/);
+ assert.match(b,/class="role-title">trickster/);
+ assert.doesNotMatch(b,/class="role-title">classmate/);
+ assert.equal(state.roleCounts.fake,2);
 });
