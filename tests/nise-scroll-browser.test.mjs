@@ -158,3 +158,59 @@ for(const [label,size,isMobile] of [
   }finally{await context.close()}
  });
 }
+
+for(const [label,size,mobile,desktopSplit] of [
+ ['small phone portrait',{width:360,height:700},true,false],
+ ['phone portrait',{width:390,height:780},true,false],
+ ['tablet portrait',{width:820,height:1180},true,false],
+ ['compact PC',{width:1024,height:768},false,true],
+ ['notebook PC',{width:1366,height:650},false,true],
+ ['desktop PC',{width:1920,height:1080},false,true],
+]){
+ test('title logo and actions stay centered, visible and usable: '+label,async()=>{
+  const context=await browser.newContext({viewport:size,isMobile:mobile,hasTouch:mobile,deviceScaleFactor:1});
+  const page=await context.newPage(),errors=[];
+  page.on('pageerror',e=>errors.push(String(e)));
+  try{
+   await page.goto(base+'/games/nise-transfer-student/',{waitUntil:'load'});
+   await page.locator('#startSetup').waitFor({state:'visible'});
+   const dims=await page.evaluate(()=>{
+    const rect=selector=>{
+     const el=document.querySelector(selector),r=el.getBoundingClientRect();
+     return {x:r.x,y:r.y,left:r.left,right:r.right,top:r.top,bottom:r.bottom,
+       width:r.width,height:r.height,font:getComputedStyle(el).fontSize,display:getComputedStyle(el).display};
+    };
+    return {hero:rect('.nise-title-screen>.game-title-card'),
+      logo:rect('.game-title-card .game-brand'),group:rect('.nise-title-actions'),
+      subtitle:rect('.game-title-card .subtitle'),actions:rect('.game-title-card .stack'),
+      buttons:['#startSetup','[data-open="rules"]','[data-open="roles"]','#startOnline'].map(rect),
+      width:innerWidth,height:innerHeight,docWidth:document.documentElement.scrollWidth};
+   });
+   assert.ok(dims.docWidth<=size.width+2,'horizontal overflow '+JSON.stringify(dims));
+   assert.ok(dims.hero.top>=0&&dims.hero.bottom<=dims.height+2,'whole hero must fit screen: '+JSON.stringify(dims));
+   assert.ok(dims.logo.width>160&&dims.logo.height>65,'logo must remain prominent: '+JSON.stringify(dims));
+   assert.ok(dims.logo.left>=dims.hero.left-2&&dims.logo.right<=dims.hero.right+2,'logo horizontal clip');
+   assert.ok(dims.subtitle.left>=dims.hero.left-2&&dims.subtitle.right<=dims.hero.right+2,'subtitle horizontal clip');
+   assert.ok(dims.subtitle.top>=dims.hero.top-2&&dims.subtitle.bottom<=dims.hero.bottom+2,'subtitle vertical clip');
+   for(const [i,b] of dims.buttons.entries()){
+    assert.ok(b.height>=37&&b.width>75,'action too small: '+i+' '+JSON.stringify(dims));
+    assert.ok(b.top>=dims.hero.top-2&&b.bottom<=dims.hero.bottom+2,'action outside hero: '+i+' '+JSON.stringify(dims));
+   }
+   if(desktopSplit){
+    assert.equal(dims.group.display,'flex','desktop info/action must be one grouped column');
+    assert.ok(dims.logo.right<=dims.group.left+3,'logo and buttons must not overlap');
+    const heroCenter=(dims.hero.top+dims.hero.bottom)/2;
+    const groupCenter=(dims.group.top+dims.group.bottom)/2;
+    assert.ok(Math.abs(groupCenter-heroCenter)<dims.hero.height*.16,
+      'info and buttons must be vertically centered, not pushed to bottom: '+JSON.stringify(dims));
+    assert.ok(dims.logo.width>=Math.min(320,dims.hero.width*.29),'desktop logo should be large');
+    assert.ok(dims.buttons[0].height>=56,'desktop main action should be prominent');
+    assert.ok(parseFloat(dims.subtitle.font)>=17,'desktop description must be legible');
+   }else{
+    assert.ok(dims.logo.bottom<=dims.subtitle.top+6,'portrait logo should be above description');
+    assert.ok(dims.subtitle.bottom<=dims.buttons[0].top+6,'description above actions');
+   }
+   assert.deepEqual(errors,[],'page JS errors');
+  }finally{await context.close()}
+ });
+}
