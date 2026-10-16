@@ -166,6 +166,7 @@ test('your own role is visible without long press, simultaneous night actions an
    .some(x=>x.type==='nise-reveal-done'));
   await push(room('night',4,{myRole:'swapper',nightIsMyTurn:true,myIntel:null}));
   assert.equal(await page.locator('[data-target]').count(),3);
+  page.once('dialog',dialog=>dialog.accept());
   await page.locator('[data-target="p1"]').click();
   assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent))
    .some(x=>x.type==='nise-night-action'&&x.kind==='swap'&&x.target==='p1'));
