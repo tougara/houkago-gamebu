@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../styles.css?v=20261015-wordwolf-logo2" />
   <link rel="stylesheet" href="../settings.css" />
   <link rel="stylesheet" href="../resume.css" />
+  <link rel="stylesheet" href="browser.css?v=20261016-browser1" />
 </head>
 <body class="games-page">
   <main class="site-shell games-shell game-browser">
@@ -23,9 +24,43 @@
       <div class="section-heading compact-heading">
         <span class="eyebrow">GAME SELECT</span>
         <h1>ゲームをえらぶ</h1>
-        <p>人数や遊び方から、今やりたいゲームを選ぼう。</p>
+        <p>人数・ジャンルから、ぴったりのゲームを見つけよう。</p>
       </div>
     </header>
+
+    <section class="games-discovery-tools" aria-label="ゲームを探す">
+      <div class="games-search-row">
+        <label class="games-search-label" for="gameSearch">ゲーム名・遊び方で検索</label>
+        <div class="games-search-control">
+          <span class="games-search-icon" aria-hidden="true">⌕</span>
+          <input id="gameSearch" type="search" placeholder="例：推理・教科書・パズル" autocomplete="off" aria-label="ゲーム名やジャンルで検索" />
+          <button id="gameSearchClear" class="games-search-clear" type="button" hidden>クリア</button>
+        </div>
+      </div>
+      <div class="games-player-row">
+        <span class="games-filter-label">遊ぶ人数</span>
+        <div class="games-player-filters" role="group" aria-label="参加人数で絞り込む">
+          <button type="button" class="games-player-filter selected" data-player-filter="all" aria-pressed="true">すべて</button>
+          <button type="button" class="games-player-filter" data-player-filter="1" aria-pressed="false">1人</button>
+          <button type="button" class="games-player-filter" data-player-filter="2" aria-pressed="false">2人</button>
+          <button type="button" class="games-player-filter" data-player-filter="3" aria-pressed="false">3人以上</button>
+        </div>
+      </div>
+      <div class="games-category-row">
+        <span class="games-filter-label">ジャンル</span>
+        <nav class="game-filters" aria-label="ゲームカテゴリー">
+      <button class="game-filter selected" type="button" data-game-filter="all">全ジャンル</button>
+      <button class="game-filter" type="button" data-game-filter="推理">推理</button>
+      <button class="game-filter" type="button" data-game-filter="会話">会話</button>
+      <button class="game-filter" type="button" data-game-filter="協力">協力</button>
+      <button class="game-filter" type="button" data-game-filter="戦略">戦略</button>
+      <button class="game-filter" type="button" data-game-filter="パーティー">パーティー</button>
+      <button class="game-filter" type="button" data-game-filter="1人">1人</button>
+      <button class="game-filter" type="button" data-game-filter="2人対戦">2人対戦</button>
+    </nav>
+      </div>
+      <button type="button" class="games-favorites-filter" id="favoriteOnly" aria-pressed="false">☆ お気に入りだけ表示</button>
+    </section>
 
     <section class="featured-game" aria-label="おすすめゲーム">
       <div class="featured-label">おすすめゲーム</div>
@@ -45,20 +80,9 @@
       </a>
     </section>
 
-    <nav class="game-filters" aria-label="ゲームカテゴリー">
-      <button class="game-filter selected" type="button" data-game-filter="all">すべて</button>
-      <button class="game-filter" type="button" data-game-filter="favorites">☆ お気に入り</button>
-      <button class="game-filter" type="button" data-game-filter="推理">推理</button>
-      <button class="game-filter" type="button" data-game-filter="会話">会話</button>
-      <button class="game-filter" type="button" data-game-filter="協力">協力</button>
-      <button class="game-filter" type="button" data-game-filter="戦略">戦略</button>
-      <button class="game-filter" type="button" data-game-filter="パーティー">パーティー</button>
-      <button class="game-filter" type="button" data-game-filter="1人">1人</button>
-      <button class="game-filter" type="button" data-game-filter="2人対戦">2人対戦</button>
-    </nav>
-
+    <div class="games-list-heading"><h2>遊べるゲーム</h2><p id="gameCountStatus" role="status" aria-live="polite"><span id="gameCount">8</span>本</p></div>
     <section class="compact-game-grid" aria-label="ゲーム一覧">
-      <a class="compact-game-card" href="nise-transfer-student/" data-categories="推理 正体隠匿" data-game-card>
+      <a class="compact-game-card" href="nise-transfer-student/" data-player-min="3" data-player-max="10" data-categories="推理 正体隠匿" data-game-card>
         <div class="compact-game-art game-card-art-nise">
           <img src="../nise_transfer_student_logo.png" alt="" />
           <span class="game-feel">盛り上がる</span>
@@ -69,7 +93,7 @@
         </div>
       </a>
 
-      <a class="compact-game-card" href="minna-wa-docchi/" data-categories="会話 2択" data-game-card>
+      <a class="compact-game-card" href="minna-wa-docchi/" data-player-min="3" data-player-max="10" data-categories="会話 2択" data-game-card>
         <div class="compact-game-art game-card-art-docchi">
           <img src="../minna_wa_docchi_logo.png" alt="" />
           <span class="game-feel">みんなでワイワイ</span>
@@ -80,7 +104,7 @@
         </div>
       </a>
 
-      <a class="compact-game-card" href="kankaku-meter/" data-categories="協力 会話" data-game-card>
+      <a class="compact-game-card" href="kankaku-meter/" data-player-min="2" data-player-max="10" data-categories="協力 会話" data-game-card>
         <div class="compact-game-art game-card-art-meter">
           <img class="meter-card-logo-img" src="../kankaku_meter_logo.png" alt="" />
           <span class="game-feel">協力</span>
@@ -91,7 +115,7 @@
         </div>
       </a>
 
-      <a class="compact-game-card" href="kyokasho-tower/" data-categories="戦略 カード" data-game-card>
+      <a class="compact-game-card" href="kyokasho-tower/" data-player-min="2" data-player-max="6" data-categories="戦略 カード" data-game-card>
         <div class="compact-game-art game-card-art-tower">
           <img class="tower-card-logo-img" src="../kyokasho_tower_logo.png" alt="" />
           <span class="game-feel">じっくり</span>
@@ -102,7 +126,7 @@
         </div>
       </a>
 
-      <a class="compact-game-card" href="gesture-battle/" data-categories="パーティー 会話" data-game-card>
+      <a class="compact-game-card" href="gesture-battle/" data-player-min="2" data-player-max="10" data-categories="パーティー 会話" data-game-card>
         <div class="compact-game-art gesture-card-art">
           <img src="../gesture_battle_logo.png" alt="" />
           <span class="game-feel">盛り上がる</span>
@@ -113,7 +137,7 @@
         </div>
       </a>
 
-      <a class="compact-game-card" href="pitadome-challenge/" data-categories="1人 2人 2人対戦 反射 スコアアタック" data-game-card>
+      <a class="compact-game-card" href="pitadome-challenge/" data-player-min="1" data-player-max="2" data-categories="1人 2人 2人対戦 反射 スコアアタック" data-game-card>
         <div class="compact-game-art pitadome-card-art">
           <img src="../pitadome_challenge_logo.png" alt="" />
           <span class="game-feel">集中</span>
@@ -124,7 +148,7 @@
         </div>
       </a>
 
-      <a class="compact-game-card" href="link-burst/" data-categories="1人 2人 2人対戦 パズル スコアアタック" data-game-card>
+      <a class="compact-game-card" href="link-burst/" data-player-min="1" data-player-max="2" data-categories="1人 2人 2人対戦 パズル スコアアタック" data-game-card>
         <div class="compact-game-art link-burst-card-art">
           <img src="../link_burst_logo.png" alt="" />
           <span class="game-feel">連鎖爽快</span>
@@ -135,7 +159,7 @@
         </div>
       </a>
 
-      <a class="compact-game-card" href="word-wolf/" data-categories="推理 会話 正体隠匿 パーティー" data-game-card>
+      <a class="compact-game-card" href="word-wolf/" data-player-min="3" data-player-max="10" data-categories="推理 会話 正体隠匿 パーティー" data-game-card>
         <div class="compact-game-art word-wolf-card-art">
           <img src="../kotoba_no_ookami_logo_transparent.png?v=20261015-art1" alt="" />
           <span class="game-feel">会話で推理</span>
@@ -146,25 +170,18 @@
         </div>
       </a>
 
-      <div class="compact-game-card coming-card" data-categories="2人対戦" data-game-card aria-label="2人対戦ゲーム 準備中">
-        <div class="compact-game-art coming-art">
-          <span class="coming-badge">準備中</span>
-          <div class="coming-controller">🎮</div>
-          <strong>2人対戦ゲーム</strong>
-        </div>
-        <div class="compact-game-body">
-          <h2>新しいゲーム</h2>
-          <div class="compact-tags"><span>2人</span><span>2人対戦</span></div>
-        </div>
-      </div>
-      <p class="favorites-empty" id="favoritesEmpty" hidden>お気に入りはまだありません。<br>ゲーム画像の右上にある☆を押して登録しよう！</p>
+      <p class="favorites-empty" id="favoritesEmpty" hidden>お気に入りはまだないよ。<br>ゲームの右上にある☆で登録できるよ。</p>
     </section>
 
-    <p class="game-count-note"><span id="gameCount">0</span>件を表示中</p>
+    <p class="games-no-results" id="gamesNoResults" hidden>条件に合うゲームが見つからなかったよ。検索や絞り込みを変えてみてね。</p>
+    <section class="games-coming-section" aria-label="今後のゲーム">
+      <div class="games-coming-head"><h2>これから追加予定</h2><span>準備中</span></div>
+      <div class="games-coming-mini"><span aria-hidden="true">🎮</span><div><strong>2人対戦ゲーム</strong><p>新しいゲームを制作中！</p></div></div>
+    </section>
   </main>
 
   <script src="../settings.js"></script>
   <script src="../resume.js"></script>
-  <script src="favorites.js"></script>
+  <script src="favorites.js?v=20261016-browser1"></script>
 </body>
 </html>
