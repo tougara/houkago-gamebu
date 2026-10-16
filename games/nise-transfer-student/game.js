@@ -152,7 +152,7 @@ function activateOneScreenLayout(){
 }
 function render(){
  const compact=ONE_SCREEN_STAGES.has(state.screen);
- app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'')+(compact?' nise-one-screen':'')+(state.screen==='roles'?' nise-role-setup':'');
+ app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'')+(compact?' nise-one-screen':'')+(state.screen==='roles'?' nise-role-setup':'')+(state.screen==='title'?' nise-title-screen':'')+(state.screen==='players'?' nise-members-screen':'');
  app.innerHTML=screenHtml();
  activateOneScreenLayout();
  bind();
