@@ -114,7 +114,53 @@ function persistResume(){
 function restoreResume(saved){
   stopTimer();Object.assign(state,saved);state.timerId=null;state.modal=null;state.gameStarted=true;render();
 }
-function render(){app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'');app.innerHTML=screenHtml();bind();if(state.modal)renderModal();persistResume();}
+/* プレイ中だけ共通の3領域へ再配置。DOM要素とイベントIDは保持する。 */
+const ONE_SCREEN_STAGES=new Set(['revealPass','revealRole','nightIntro','nightPass','nightAction','discussion','votePass','vote','result','cover','voteComplete']);
+const BOARD_STAGES=new Set(['revealPass','revealRole','nightIntro','nightPass','nightAction','discussion','votePass','vote','result']);
+function fitOneScreenCards(){
+ const board=app.querySelector('.nise-play-board .table-board');
+ if(!board)return;
+ const cols=Number(board.style.getPropertyValue('--player-cols'))||state.playerCount||4;
+ const w=window.innerWidth||400,h=window.innerHeight||720;
+ const wide=w>=760&&h>=560;
+ const availableWidth=wide?Math.min(w,1080)*.58-25:Math.min(w,1080)-42;
+ const widthCap=Math.floor((availableWidth-22-Math.max(0,cols-1)*4)/cols);
+ const rows=state.playerCount>cols?2:1;
+ const heightCap=Math.floor((h-(wide?260:305))/(rows===2?4.6:3.05));
+ const cardSize=Math.max(28,Math.min(wide?94:82,widthCap,heightCap));
+ board.style.setProperty('--card-size',cardSize+'px');
+}
+function activateOneScreenLayout(){
+ if(!BOARD_STAGES.has(state.screen))return;
+ const children=Array.from(app.children);
+ const nav=children.find(el=>el.classList.contains('top-nav'));
+ if(!nav)return;
+ const shell=document.createElement('div');shell.className='nise-play-shell';
+ const head=document.createElement('header');head.className='nise-play-head';
+ const boardArea=document.createElement('section');boardArea.className='nise-play-board';boardArea.setAttribute('aria-label','おやすみと参加者のカード');
+ const actions=document.createElement('section');actions.className='nise-play-actions';actions.setAttribute('aria-label','この画面の操作');
+ const board=children.find(el=>el.classList.contains('table-board'));
+ for(const el of children){
+  if(el===nav)continue;
+  if(el===board)boardArea.appendChild(el);
+  else if(['topbar','title','subtitle','result-hero'].some(k=>el.classList.contains(k)))head.appendChild(el);
+  else actions.appendChild(el);
+ }
+ shell.append(head,boardArea,actions);
+ app.appendChild(shell);
+ fitOneScreenCards();
+}
+function render(){
+ const compact=ONE_SCREEN_STAGES.has(state.screen);
+ app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'')+(compact?' nise-one-screen':'');
+ app.innerHTML=screenHtml();
+ activateOneScreenLayout();
+ bind();
+ if(state.modal)renderModal();
+ persistResume();
+}
+window.addEventListener('resize',fitOneScreenCards);
+window.visualViewport?.addEventListener('resize',fitOneScreenCards);
 function screenHtml(){return ({title:titleScreen,count:countScreen,players:playersScreen,roles:rolesScreen,revealPass:revealPassScreen,revealRole:revealRoleScreen,cover:coverScreen,nightIntro:nightIntroScreen,nightPass:nightPassScreen,nightAction:nightActionScreen,discussion:discussionScreen,votePass:votePassScreen,vote:voteScreen,voteComplete:voteCompleteScreen,result:resultScreen}[state.screen]||(()=>`${topNav()}<div class="card">画面エラー</div>`))();}
 function titleScreen(){return `${topNav()}<div class="card game-title-card">${brand()}<p class="subtitle">クラスにまぎれたニセ転校生を見つけよう！</p><div class="stack"><button class="btn yellow full" id="startSetup">ゲームをはじめる</button><button class="btn rules-button full" data-open="rules">あそびかた</button><button class="btn secondary full" data-open="roles">役職をみる</button><button class="btn secondary full" id="startOnline">オンラインで遊ぶ</button></div></div>`;}
 function countScreen(){return `${topNav()}${brand()}${heading('何人で遊ぶ？','3〜10人に対応')}<div class="card stack"><div class="grid3">${[3,4,5,6,7,8,9,10].map(n=>`<button class="btn choice ${state.playerCount===n?'selected':''}" data-count="${n}">${n}人</button>`).join('')}</div><button class="btn full" id="toPlayers">つぎへ</button></div>`;}
@@ -203,7 +249,26 @@ function voteCompleteScreen(){
   return topNav()+'<div class="vote-complete-wrap"><div class="vote-complete-card"><div class="vote-complete-icon">✓</div><h1>投票が終わりました</h1><p>全員の投票が完了しました。<br>結果を確認しましょう。</p><button class="btn yellow full vote-result-button" id="showResult">結果を表示</button></div></div>';
 }
 function calcResult(){const counts=Array(state.playerCount).fill(0);state.votes.forEach(v=>counts[v]++);const max=Math.max(...counts);const expelled=max<=1?[]:counts.map((c,i)=>c===max?i:-1).filter(i=>i>=0);const tricksterIndex=expelled.find(i=>state.finalRoles[i]==='trickster');if(Number.isInteger(tricksterIndex))return{kind:'trick',winner:'クセモノサイド勝利！',reason:state.players[tricksterIndex].name+'さんのいたずらっ子が最多票の判定対象になりました。',logo:'../../result_kusemono_side_win.png',expelled,max,tricksterIndex};const fakeExists=state.finalRoles.includes('fake'),fakeExpelled=expelled.some(i=>state.finalRoles[i]==='fake');if(!fakeExists&&expelled.length===0)return{kind:'peace',winner:'平和なクラス！',reason:'ニセ転校生がいないことを見抜き、だれも処刑されませんでした。',logo:'../../result_peaceful_class.png',expelled,max};const realWin=fakeExists&&fakeExpelled;return{kind:realWin?'real':'fake',winner:realWin?'ホンモノサイド勝利！':'ニセモノサイド勝利！',reason:fakeExists?(fakeExpelled?'ニセ転校生を見つけました。':'ニセ転校生が正体を隠し切りました。'):'ニセ転校生がいないのに、だれかが処刑されました。',logo:realWin?'../../result_honmono_side_win.png':'../../result_nisemono_side_win.png',expelled,max};}
-function resultScreen(){const r=calcResult(),names=r.expelled.length?r.expelled.map(function(i){return state.players[i].name;}).join('、'):'だれも選ばれませんでした';const voteDetails=state.players.map(function(voter,i){const targetIndex=state.votes[i],target=state.players[targetIndex];return '<div class="vote-detail-row"><div class="vote-detail-person"><span class="avatar">'+voter.icon+'</span><strong>'+esc(voter.name)+'</strong></div><div class="vote-detail-arrow">→</div><div class="vote-detail-person target"><span class="avatar">'+target.icon+'</span><strong>'+esc(target.name)+'</strong></div></div>';}).join('');const resultMark='<img class="result-logo" src="'+r.logo+'" alt="'+r.winner+'">';return topNav()+'<div class="card result-hero result-'+r.kind+'">'+resultMark+'<p class="result-reason">'+esc(r.reason)+'</p></div>'+gameBoard({useFinal:true,revealAll:true,revealRest:true,expelledPlayers:r.expelled})+'<div class="card"><h2>投票結果</h2><p>最多票：'+r.max+'票</p><p><strong>'+esc(names)+'</strong></p><div class="vote-detail-list"><h3>誰が誰に投票した？</h3>'+voteDetails+'</div></div><div class="stack"><button class="btn full" id="restartSame">もう一回遊ぶ</button><button class="btn secondary full" id="restartRoles">役職を選び直す</button></div>';}
+function resultScreen(){
+ const r=calcResult();
+ const names=r.expelled.length?r.expelled.map(i=>state.players[i].name).join('、'):'だれも選ばれませんでした';
+ const votes=state.players.map((voter,i)=>{
+   const target=state.players[state.votes[i]];
+   return '<div class="vote-detail-row"><div class="vote-detail-person"><span class="avatar">'+voter.icon+'</span><strong>'+esc(voter.name)+'</strong></div><div class="vote-detail-arrow">→</div><div class="vote-detail-person target"><span class="avatar">'+target.icon+'</span><strong>'+esc(target.name)+'</strong></div></div>';
+ }).join('');
+ return topNav()+
+  '<div class="card result-hero result-'+r.kind+'">'+
+    '<img class="result-logo" src="'+r.logo+'" alt="'+r.winner+'">'+
+    '<p class="result-reason">'+esc(r.reason)+'</p>'+
+    '<p class="result-mini-summary">最多票 '+r.max+'票：'+esc(names)+'</p></div>'+
+  gameBoard({useFinal:true,revealAll:true,revealRest:true,expelledPlayers:r.expelled})+
+  '<div class="nise-result-actions stack">'+
+    '<details class="nise-result-details"><summary>投票結果・誰が誰に投票したか</summary>'+
+      '<div class="nise-result-detail-body"><div class="vote-detail-list"><h3>投票の内訳</h3>'+votes+'</div></div></details>'+
+    '<button class="btn full" id="restartSame">もう一回遊ぶ</button>'+
+    '<button class="btn secondary full" id="restartRoles">役職を選び直す</button>'+
+  '</div>';
+}
 function startGame(){const d=[];Object.entries(state.roleCounts).forEach(([r,n])=>{for(let i=0;i<n;i++)d.push(r);});state.deck=shuffle(d);state.initialRoles=state.deck.slice(0,state.playerCount);state.finalRoles=[...state.initialRoles];state.rest=state.deck.slice(state.playerCount);state.revealIndex=state.nightIndex=state.voteIndex=0;state.votes=[];state.timerRemaining=state.timerSeconds;state.gameStarted=true;go('revealPass');}
 function queueCover(n){state.coverNext=null;if(n==='revealNext')nextReveal();else if(n==='nightNext')nextNight();else if(n==='voteNext')nextVote();} function nextReveal(){if(++state.revealIndex>=state.playerCount){state.timerRemaining=state.timerSeconds;go('discussion');}else go('revealPass');} function nextNight(){if(++state.nightIndex>=state.playerCount){state.timerRemaining=state.timerSeconds;go('discussion');}else go('nightPass');} function nextVote(){if(++state.voteIndex>=state.playerCount)go('voteComplete');else go('votePass');}
 function openModal(t){state.modal=t;if(t==='roles')state.roleHelpSide='real';if(t==='rules')state.ruleHelpMode='simple';renderModal();} function closeModal(){document.querySelector('.modal-backdrop')?.remove();state.modal=null;}function openRuleRoleDetail(k){
