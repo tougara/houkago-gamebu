@@ -1,0 +1,25 @@
+name: Test Nise Offline UI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'games/nise-transfer-student/**'
+      - 'tests/nise-one-screen.test.mjs'
+      - '.github/workflows/test-nise-offline-ui.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify layout and original game compatibility
+        run: node --test tests/nise-one-screen.test.mjs
