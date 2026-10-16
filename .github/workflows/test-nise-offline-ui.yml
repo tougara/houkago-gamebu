@@ -7,6 +7,9 @@ on:
       - main
     paths:
       - 'games/nise-transfer-student/**'
+      - 'player-registry.js'
+      - 'player-editor.css'
+      - 'tests/shared-player-editor.test.mjs'
       - 'tests/nise-one-screen.test.mjs'
       - '.github/workflows/test-nise-offline-ui.yml'
 
@@ -22,4 +25,4 @@ jobs:
         with:
           node-version: '22'
       - name: Verify layout and original game compatibility
-        run: node --test tests/nise-one-screen.test.mjs
+        run: node --test tests/nise-one-screen.test.mjs tests/shared-player-editor.test.mjs
