@@ -1,0 +1,170 @@
+/* ニセ転校生共通: 1画面完結プレイUI（オフライン先行・オンラインにも再利用可）
+   通常設定/ルールは従来のスクロール画面。プレイ中のみ適用。 */
+.game-app.nise-one-screen{
+  width:min(1080px,100%);height:100dvh;min-height:0;overflow:hidden;
+  padding:clamp(6px,1dvh,12px) clamp(7px,1.5vw,16px) max(7px,env(safe-area-inset-bottom));
+  display:grid;grid-template-rows:auto minmax(0,1fr);
+  gap:clamp(5px,1dvh,11px);
+}
+.nise-one-screen .top-nav{
+  min-height:0;flex:none;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:9px;
+}
+.nise-one-screen .back-home{
+  min-height:40px;min-width:0;padding:8px 9px;
+  justify-content:center;text-align:center;font-size:clamp(11px,2.7vw,14px);
+}
+.nise-one-screen .nise-play-shell{
+  min-width:0;min-height:0;overflow:hidden;
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  gap:clamp(5px,1dvh,11px);
+}
+.nise-one-screen .nise-play-head{min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.nise-one-screen .nise-play-head:has(.topbar){justify-content:space-between}
+.nise-one-screen .nise-play-head .title{
+  margin:0;font-size:clamp(18px,4vw,27px);line-height:1.23;
+  text-align:center;min-width:0;overflow-wrap:anywhere;
+}
+.nise-one-screen .nise-play-head .subtitle{
+  margin:0;font-size:clamp(11px,2.5vw,14px);line-height:1.3;
+  text-align:center;white-space:normal;
+}
+.nise-one-screen .nise-play-head .topbar{margin:0;gap:6px;order:3}
+.nise-one-screen .nise-play-head .topbar .btn{
+  min-height:32px;padding:6px 10px;font-size:11px;
+}
+.nise-one-screen .nise-play-board{
+  min-width:0;min-height:0;align-self:stretch;display:grid;
+  align-items:center;justify-items:stretch;overflow:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.nise-one-screen .nise-play-board .table-board{width:100%;margin:0;gap:clamp(3px,.7dvh,7px)}
+.nise-one-screen .nise-play-board .table-zone{
+  min-width:0;padding:clamp(3px,.65dvh,7px);border-radius:12px;
+}
+.nise-one-screen .nise-play-board .table-zone-title{
+  margin:0 0 2px;font-size:clamp(10px,2.3vw,12px);line-height:1.1;
+}
+.nise-one-screen .nise-play-board .table-card-row{gap:3px;max-width:100%;justify-content:center}
+.nise-one-screen .nise-play-board .table-card-wrap{max-width:100%;min-width:0}
+.nise-one-screen .nise-play-board .table-card{border-radius:7px}
+.nise-one-screen .nise-play-board .table-card-name{font-size:clamp(9px,1.9vw,11px);line-height:1.05;margin-top:2px}
+.nise-one-screen .nise-play-board .table-card-role{font-size:clamp(8px,1.6vw,10px);line-height:1.05}
+.nise-one-screen .nise-play-board .table-card-selectable::after{margin:0;padding:1px 3px;font-size:8px}
+.nise-one-screen .nise-play-actions{
+  min-width:0;min-height:0;max-height:min(38dvh,340px);
+  display:flex;flex-direction:column;gap:clamp(5px,.8dvh,10px);
+  overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;
+}
+.nise-one-screen .nise-play-actions>.card,
+.nise-one-screen .nise-play-actions>.privacy-screen,
+.nise-one-screen .nise-play-actions>.stack,
+.nise-one-screen .nise-play-actions>.vote-card-guide{
+  flex:none;margin:0;
+}
+.nise-one-screen .nise-play-actions .card{
+  padding:clamp(9px,1.25dvh,16px);border-radius:16px;margin:0;
+}
+.nise-one-screen .nise-play-actions .card.stack{gap:6px}
+.nise-one-screen .nise-play-actions .card h2{
+  margin:0 0 5px;font-size:clamp(15px,3.2vw,21px);line-height:1.25;
+}
+.nise-one-screen .nise-play-actions .card p,
+.nise-one-screen .nise-play-actions .role-desc{
+  margin:4px 0 8px;font-size:clamp(12px,2.7vw,15px);line-height:1.4;
+}
+.nise-one-screen .nise-play-actions .note{
+  padding:7px 9px;font-size:clamp(11px,2.45vw,13px);line-height:1.35;
+}
+.nise-one-screen .nise-play-actions .btn{
+  min-height:clamp(39px,6dvh,54px);font-size:clamp(13px,3vw,17px);padding:9px 12px;
+}
+.nise-one-screen .nise-play-actions .role-card-large{
+  width:auto;max-width:min(35%,115px);height:auto;max-height:clamp(62px,11dvh,116px);
+  object-fit:contain;margin:3px auto 5px;
+}
+.nise-one-screen .nise-play-actions .swap-result-cards .role-card-large{max-width:100%;height:clamp(52px,10dvh,95px)}
+.nise-one-screen .nise-play-actions .swap-result-cards{margin:2px 0 5px;gap:7px}
+.nise-one-screen .nise-play-actions .role-reveal h2{margin:2px 0 4px}
+.nise-one-screen .nise-play-actions .observer-status{margin:3px auto 6px;padding:3px 10px;font-size:12px}
+.nise-one-screen .nise-play-actions .privacy-screen{
+  min-height:0;padding:clamp(12px,2dvh,24px);border-radius:19px;
+  align-content:center;flex:1;
+}
+.nise-one-screen .nise-play-actions .privacy-screen h2{
+  font-size:clamp(17px,4vw,26px);line-height:1.3;margin:8px 0;
+}
+.nise-one-screen .nise-play-actions .privacy-screen .avatar{
+  width:clamp(50px,9dvh,76px);height:clamp(50px,9dvh,76px);
+  margin:0 auto;font-size:clamp(29px,5dvh,45px);
+}
+.nise-one-screen .nise-play-actions .privacy-screen p{margin:6px 0;font-size:12px}
+.nise-one-screen .nise-play-actions .privacy-screen .btn{margin-top:9px}
+.nise-one-screen .nise-play-actions .timer-large{
+  font-size:clamp(43px,8dvh,79px);margin:0;line-height:1.05;
+}
+.nise-one-screen .nise-play-actions .timer-start-button{
+  min-height:clamp(41px,6dvh,60px);font-size:clamp(17px,3.8vw,23px);margin:7px 0;
+}
+.nise-one-screen .nise-play-actions .timer-adjust-grid{gap:6px 8px}
+.nise-one-screen .nise-play-actions .timer-adjust-grid .btn{
+  min-height:clamp(35px,5dvh,45px);font-size:clamp(13px,3vw,17px);padding:5px 8px;
+}
+.nise-one-screen .nise-play-actions>.btn{flex:none}
+.nise-one-screen .nise-play-actions>.stack{gap:7px}
+.nise-one-screen .nise-play-actions .result-hero{padding:8px 6px}
+.nise-one-screen .nise-play-head .result-hero{
+  padding:5px 10px;margin:0;box-shadow:none;max-width:100%;border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.nise-one-screen .nise-play-head .result-logo{
+  max-width:min(390px,75%);max-height:clamp(65px,14dvh,125px);object-fit:contain;margin:0 auto;
+}
+.nise-one-screen .nise-play-head .result-reason{
+  margin:0;font-size:clamp(12px,2.6vw,15px);line-height:1.3;text-align:center;
+}
+.nise-one-screen .nise-play-head .result-mini-summary{
+  margin:1px 0 0;font-weight:900;font-size:clamp(11px,2.6vw,14px);color:#425471;
+}
+.nise-one-screen .nise-result-actions{gap:8px}
+.nise-one-screen .nise-result-actions .btn{width:100%}
+.nise-one-screen .nise-result-details{
+  border:1px solid #d6e2f0;border-radius:13px;
+  background:rgba(255,255,255,.94);padding:0;margin:0;overflow:hidden;
+}
+.nise-one-screen .nise-result-details summary{
+  padding:9px 14px;color:#215e97;font-weight:900;cursor:pointer;list-style-position:inside;
+}
+.nise-one-screen .nise-result-details[open]{
+  overflow:auto;max-height:min(36dvh,320px);flex-shrink:0;
+}
+.nise-one-screen .nise-result-details .nise-result-detail-body{padding:0 11px 12px}
+.nise-one-screen .nise-result-details .vote-detail-list{margin:4px 0 0;padding:5px 0 0;gap:5px}
+.nise-one-screen .nise-result-details .vote-detail-row{padding:5px 7px}
+.nise-one-screen .nise-result-details .vote-detail-list h3{font-size:14px}
+.nise-one-screen .nise-play-actions .vote-card-guide{padding:10px}
+.nise-one-screen .nise-play-actions .vote-card-guide p{margin:0}
+/* 横幅と高さに余裕のあるPC・タブレットは、左に盤面、右に操作を配置 */
+@media (min-width:760px) and (min-height:560px){
+  .nise-one-screen .nise-play-shell{
+    grid-template-columns:minmax(0,1fr) minmax(300px, min(39%,410px));
+    grid-template-rows:auto minmax(0,1fr);align-items:stretch;
+    gap:12px;
+  }
+  .nise-one-screen .nise-play-head{grid-column:1/-1;grid-row:1}
+  .nise-one-screen .nise-play-board{grid-column:1;grid-row:2}
+  .nise-one-screen .nise-play-actions{grid-column:2;grid-row:2;max-height:none;justify-content:center}
+  .nise-one-screen .nise-play-board .table-board{--board-desktop:1}
+  .nise-one-screen .nise-play-actions .role-card-large{max-height:min(20dvh,165px)}
+  .nise-one-screen .nise-play-actions .timer-large{font-size:clamp(60px,9dvh,100px)}
+  .nise-one-screen .nise-play-head .result-logo{max-height:140px}
+}
+@media (max-height:660px){
+  .nise-one-screen .nise-play-head .title{font-size:clamp(17px,3.2vw,23px)}
+  .nise-one-screen .nise-play-actions{max-height:43dvh}
+  .nise-one-screen .nise-play-actions .privacy-screen .avatar{width:42px;height:42px;font-size:27px}
+  .nise-one-screen .nise-play-head .result-logo{max-height:75px}
+  .nise-one-screen .nise-play-actions .role-card-large{max-height:66px}
+}
+@media (prefers-reduced-motion:reduce){
+ .nise-one-screen *{scroll-behavior:auto!important}
+}
