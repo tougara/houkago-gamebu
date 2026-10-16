@@ -46,9 +46,9 @@ function room(stage,n=4,extra={}){
     rest:['classmate','fake']}:null,
    ...extra}};
 }
-async function open(width,height){
+async function open(width,height,forceTouch=false){
  const context=await browser.newContext({viewport:{width,height},isMobile:width<1000,
-  hasTouch:width<1000,deviceScaleFactor:1});
+  hasTouch:width<1000||forceTouch,deviceScaleFactor:1});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',err=>errors.push(err.message));
  await page.addInitScript(()=>{
@@ -231,7 +231,7 @@ test('touch tablet keeps Japanese chat input and composition intact through room
 });
 test('opening and tapping chat never moves the field again on tablet portrait/landscape',async()=>{
  for(const [width,height] of [[820,1180],[1024,768],[820,600]]){
-  const {page,context,errors,push}=await open(width,height);
+  const {page,context,errors,push}=await open(width,height,true);
   try{
    await push(room('discussion',4));
    await page.locator('.online-chat-panel summary').click();
