@@ -494,11 +494,9 @@ test('ニセ転校生オンライン: 役職秘匿・3人以上の開始・休�
  }
  for(let i=0;i<4;i++)await send(i,{type:'nise-reveal-done'});
  assert.equal(raw.stage,'night');
- let turns=0;
- while(raw.stage==='night'&&turns++<12){
-  const id=raw.nightOrder[raw.nightCursor];
-  const i=members.findIndex(m=>m.id===id);
-  const role=raw.initial[id];
+ // 全員が順番を待たずに操作する。各自の役職の効果は初期配置に適用。
+ for(let i=3;i>=0;i--){
+  const id=members[i].id,role=raw.initial[id];
   if(role==='president')await send(i,{type:'nise-night-action',kind:'rest'});
   else if(role==='dayDuty')await send(i,{type:'nise-night-action',kind:'rest',index:0});
   else if(role==='observer')await send(i,{type:'nise-night-action',kind:'compare',
@@ -515,6 +513,11 @@ test('ニセ転校生オンライン: 役職秘匿・3人以上の開始・休�
  assert.equal(raw.stage,'voting');
  assert.equal(sockets[3].events.at(-1).room.nise.result,null);
  await send(3,{type:'nise-vote',target:members[0].id});
+ assert.equal(raw.stage,'voteComplete');
+ assert.equal(raw.result,null,'投票完了時に結果を公開しない');
+ await send(1,{type:'nise-publish-result'});
+ assert.equal(raw.stage,'voteComplete','一般参加者は結果を公開できない');
+ await send(0,{type:'nise-publish-result'});
  assert.equal(raw.stage,'result');
  assert.ok(raw.result&&raw.result.final);
  await send(1,{type:'nise-stop'});
