@@ -86,7 +86,7 @@ test('shared layout responds to smartphone and desktop without duplicating the e
  assert.match(oneScreen,/\.game-app\.nise-title-screen/);
  assert.match(oneScreen,/\.game-app\.nise-members-screen/);
  assert.match(oneScreen,/height:100dvh/);
- assert.match(oneScreen,/@media\(min-width:760px\) and \(min-height:490px\)/);
+ assert.match(oneScreen,/@media \(min-width:900px\) and \(min-height:600px\)/);
  assert.match(gameHTML,/one-screen\.css\?v=20261016-pc-title7/);
  assert.match(gameHTML,/player-editor\.css\?v=20261016-compact1/);
  assert.match(gameHTML,/player-registry\.js\?v=20261016-compact1/);
