@@ -198,7 +198,7 @@ function rolesScreen(){
   };
   return topNav()
     +heading('使用する役職','人数＋お休み2枚ぶんのカードを選ぶ')
-    +'<div class="card nise-role-members"><div class="section-row"><div><h2>参加メンバー <small>'+state.playerCount+'人</small></h2></div><button class="small-btn" id="editPlayersFromRoles">変更</button></div><div class="member-chips">'+state.players.map(p=>'<span class="member-chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div></div>'
+    +'<div class="card nise-role-members '+(state.playerCount>=7?'members-many':state.playerCount>=5?'members-medium':'members-few')+'"><div class="section-row"><div><h2>参加メンバー <small>'+state.playerCount+'人</small></h2></div><button class="small-btn" id="editPlayersFromRoles">変更</button></div><div class="member-chips" aria-label="今回の参加者全員">'+state.players.map(p=>'<span class="member-chip" title="'+esc(p.name)+'"><span class="member-chip-icon" aria-hidden="true">'+esc(p.icon)+'</span><span class="member-chip-name">'+esc(p.name)+'</span></span>').join('')+'</div></div>'
     +'<div class="card role-select-card">'
     +'<div class="note '+(valid?'success':'warning')+'"><strong>カード '+totalCards()+' / '+needCards()+'枚</strong><span class="nise-role-note-suffix">'+fakeNote+'</span></div>'
     +'<div class="nise-role-tabs" role="group" aria-label="役職の種類"><button type="button" class="btn '+(state.roleTab==='basic'?'selected':'secondary')+'" data-role-tab="basic" aria-pressed="'+(state.roleTab==='basic')+'">基本レギュ</button><button type="button" class="btn '+(state.roleTab==='advanced'?'selected':'secondary')+'" data-role-tab="advanced" aria-pressed="'+(state.roleTab==='advanced')+'">応用レギュ</button></div>'
