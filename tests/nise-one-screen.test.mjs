@@ -12,9 +12,9 @@ const sourceBetween=(begin,end)=>{
 test('offline game remains valid and loads single-screen overrides after legacy CSS',()=>{
  assert.doesNotThrow(()=>new Function(js));
  assert.match(html,/href="game\.css"/);
- assert.match(html,/href="one-screen\.css\?v=20261016-tabs5"/);
+ assert.match(html,/href="one-screen\.css\?v=20261016-members6"/);
  assert.ok(html.indexOf('href="one-screen.css')>html.indexOf('href="../../resume.css'));
- assert.match(html,/game\.js\?v=20261016-tabs6/);
+ assert.match(html,/game\.js\?v=20261016-members7/);
  assert.match(css,/\.nise-one-screen \.nise-play-shell/);
  assert.match(css,/@media \(min-width:760px\) and \(min-height:560px\)/);
  assert.match(css,/height:100dvh/);
@@ -129,4 +129,14 @@ test('member editing cards keep their natural row height and scroll inside the s
  assert.match(css,/\.nise-members-screen \.shared-editor-workspace\{[^}]*touch-action:pan-y/);
  assert.match(css,/\.nise-members-screen \.shared-player-done\{[^}]*flex:0 0 auto/);
  assert.match(js,/newMemberScroll\.scrollTop=memberScroll/);
+});
+
+test('10 active members use visible multi-row labels while role rows remain fully available',()=>{
+ const view=sourceBetween('function rolesScreen(){','function revealPassScreen(){');
+ assert.match(view,/state\.playerCount>=7\?'members-many'/);
+ assert.match(view,/member-chip-name/);
+ assert.match(view,/aria-label="今回の参加者全員"/);
+ assert.match(css,/\.nise-role-setup \.members-many \.member-chips\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.nise-role-setup \.member-chip-name\{/);
+ assert.doesNotMatch(css,/\.nise-role-setup \.member-chips\{[^}]*overflow-x:auto/);
 });
