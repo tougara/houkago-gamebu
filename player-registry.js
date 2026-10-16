@@ -145,18 +145,48 @@
         '<button type="button" class="shared-record-delete" data-player-record-delete="'+esc(p.id)+'" data-player-record-name="'+esc(p.name)+'" '+(r.plays>0?'':'disabled')+'>この記録を削除</button></section>'
       }).join('')+'</section>';
   }
+  let editingPlayerId=null;
+  let rosterExpanded=false;
   function renderEditor(opts){
-    opts=opts||{};const min=Math.max(MIN_COUNT,Number(opts.min)||MIN_COUNT),max=Math.min(MAX_COUNT,Number(opts.max)||MAX_COUNT);
-    let data=load();let count=Math.max(min,Math.min(max,Number(opts.count)||data.activeCount));if(data.activeCount!==count)data=setActiveCount(count);
-    const players=data.players.slice(0,data.activeCount),used=new Set(data.roster.map(p=>p.icon));
-    const title=opts.title||'参加メンバー',subtitle=opts.subtitle||'名前とアイコンは放課後ゲーム部で共通です',doneLabel=opts.doneLabel||'このメンバーで決定';
+    opts=opts||{};
+    const min=Math.max(MIN_COUNT,Number(opts.min)||MIN_COUNT),max=Math.min(MAX_COUNT,Number(opts.max)||MAX_COUNT);
+    let data=load();
+    const count=Math.max(min,Math.min(max,Number(opts.count)||data.activeCount));
+    if(data.activeCount!==count)data=setActiveCount(count);
+    const players=data.players.slice(0,data.activeCount);
+    const current=players.find(p=>p.id===editingPlayerId)||players[0];
+    editingPlayerId=current?.id||null;
+    const editIndex=Math.max(0,players.findIndex(p=>p.id===editingPlayerId));
+    const used=new Set(data.roster.map(p=>p.icon));
+    const title=opts.title||'参加メンバー';
+    const subtitle=opts.subtitle||'名前とアイコンは放課後ゲーム部で共通です';
+    const doneLabel=opts.doneLabel||'このメンバーで決定';
     const nums=[];for(let n=min;n<=max;n++)nums.push(n);
-    return '<section class="shared-player-editor" data-editor-min="'+min+'" data-editor-max="'+max+'">'+
+    return '<section class="shared-player-editor compact-player-editor" data-editor-min="'+min+'" data-editor-max="'+max+'">'+
       '<header class="shared-player-heading"><h1>'+esc(title)+'</h1><p>'+esc(subtitle)+'</p></header>'+
-      '<section class="shared-player-card shared-roster-card"><div class="shared-roster-head"><div><h2>登録メンバーから選ぶ</h2><p>外したメンバーも消えません。次回また選べます。</p></div><button type="button" class="shared-add-player" data-member-add>＋ 登録</button></div><div class="shared-roster-grid">'+data.roster.map(p=>'<button type="button" class="shared-roster-chip '+(data.activeIds.includes(p.id)?'selected':'')+'" data-member-pick="'+esc(p.id)+'"><span>'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong><small>'+(data.activeIds.includes(p.id)?'参加中':'おやすみ')+'</small></button>').join('')+'</div></section>'+
-      '<section class="shared-player-card shared-player-count"><h2>遊ぶ人数</h2><div class="shared-count-grid">'+nums.map(n=>'<button type="button" class="shared-count-btn '+(n===data.activeCount?'selected':'')+'" data-member-count="'+n+'">'+n+'人</button>').join('')+'</div></section>'+
-      '<div class="shared-player-list">'+players.map((p,i)=>'<section class="shared-player-card shared-player-row"><div class="shared-player-main"><button type="button" class="shared-player-avatar" data-shared-icon-toggle="'+i+'" aria-label="'+(i+1)+'人目のアイコンを変更">'+esc(p.icon)+'</button><label><span>'+(i+1)+'人目</span><input data-member-name="'+i+'" maxlength="12" value="'+esc(p.name)+'"></label></div><div class="shared-icon-grid" data-shared-icon-grid="'+i+'">'+ICONS.map(ic=>'<button type="button" class="shared-icon-btn '+(p.icon===ic?'selected':'')+'" data-member-icon="'+i+'" data-icon="'+esc(ic)+'" '+(p.icon!==ic&&used.has(ic)?'disabled aria-disabled="true"':'')+'>'+esc(ic)+'</button>').join('')+'</div></section>').join('')+'</div>'+
-      '<p class="shared-player-note">登録は最大15人・同じアイコンは使えません。</p><button type="button" class="shared-player-done" data-members-done>'+esc(doneLabel)+'</button></section>';
+      '<div class="shared-editor-workspace">'+
+        '<section class="shared-player-card shared-player-count"><div class="shared-section-header"><h2>遊ぶ人数</h2><strong class="shared-count-current">'+players.length+'人</strong></div><div class="shared-count-grid">'+
+          nums.map(n=>'<button type="button" class="shared-count-btn '+(n===data.activeCount?'selected':'')+'" data-member-count="'+n+'" aria-pressed="'+(n===data.activeCount)+'">'+n+'人</button>').join('')+
+        '</div></section>'+
+        '<section class="shared-player-card shared-participant-card"><div class="shared-section-header"><h2>今回のメンバー</h2><span class="shared-section-hint">タップして編集</span></div>'+
+          '<div class="shared-active-grid">'+players.map((p,i)=>
+            '<button type="button" class="shared-active-chip '+(p.id===editingPlayerId?'selected':'')+'" data-shared-member-edit="'+esc(p.id)+'" aria-pressed="'+(p.id===editingPlayerId)+'" title="'+esc(p.name)+'を編集">'+
+            '<span class="shared-active-avatar">'+esc(p.icon)+'</span><span class="shared-active-info"><strong>'+esc(p.name)+'</strong><small>'+(i+1)+'人目</small></span></button>'
+          ).join('')+'</div></section>'+
+        '<section class="shared-player-card shared-edit-card"><div class="shared-section-header"><h2>名前・アイコンの編集</h2><span class="shared-section-hint">'+(editIndex+1)+' / '+players.length+'人</span></div>'+
+          '<div class="shared-player-main"><button type="button" class="shared-player-avatar" data-shared-icon-toggle="'+editIndex+'" aria-label="'+esc(current?.name||'')+'のアイコンを変更" aria-expanded="false">'+esc(current?.icon||'🎮')+'</button>'+
+            '<label><span>'+esc(current?.name||'')+' の名前</span><input data-member-name="'+editIndex+'" maxlength="12" value="'+esc(current?.name||'')+'" aria-label="参加者の名前"></label></div>'+
+          '<div class="shared-icon-grid" data-shared-icon-grid="'+editIndex+'">'+ICONS.map(ic=>'<button type="button" class="shared-icon-btn '+(current?.icon===ic?'selected':'')+'" data-member-icon="'+editIndex+'" data-icon="'+esc(ic)+'" '+(current?.icon!==ic&&used.has(ic)?'disabled aria-disabled="true"':'')+'>'+esc(ic)+'</button>').join('')+'</div>'+
+          '<p class="shared-edit-hint">アイコンを押すと変更できるよ。</p></section>'+
+        '<section class="shared-player-card shared-roster-card '+(rosterExpanded?'is-expanded':'')+'">'+
+          '<div class="shared-roster-head"><div><h2>登録メンバーの入れ替え</h2><p>今回の参加者を変更したいときだけ開こう</p></div>'+
+            '<div class="shared-roster-controls"><button type="button" class="shared-add-player" data-member-add>＋ 登録</button>'+
+              '<button type="button" class="shared-roster-toggle" data-shared-roster-toggle aria-expanded="'+rosterExpanded+'">'+(rosterExpanded?'閉じる':'開く')+'</button></div></div>'+
+          (rosterExpanded?'<div class="shared-roster-grid">'+data.roster.map(p=>'<button type="button" class="shared-roster-chip '+(data.activeIds.includes(p.id)?'selected':'')+'" data-member-pick="'+esc(p.id)+'" aria-pressed="'+data.activeIds.includes(p.id)+'"><span>'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong><small>'+(data.activeIds.includes(p.id)?'参加中':'おやすみ')+'</small></button>').join('')+'</div>':'')+
+        '</section>'+
+      '</div>'+
+      '<button type="button" class="shared-player-done" data-members-done>'+esc(doneLabel)+'</button>'+
+      '</section>';
   }
 
   if(!window.__houkagoPlayerEditorToggleBound){
@@ -166,8 +196,16 @@
       if(add){const name=prompt('登録するメンバーの名前を入力してください。');if(name){addPlayer(name);window.dispatchEvent(new CustomEvent('houkago-player-selection-changed'))}return}
       const pick=e.target.closest?.('[data-member-pick]');
       if(pick){const root=pick.closest('.shared-player-editor'),min=Number(root?.dataset.editorMin)||MIN_COUNT,max=Number(root?.dataset.editorMax)||MAX_COUNT;const before=load();const on=before.activeIds.includes(pick.dataset.memberPick);if(on&&before.activeIds.length<=min){alert('このゲームは最低'+min+'人必要です。');return}if(!on&&before.activeIds.length>=max){alert('このゲームは最大'+max+'人です。先に1人外してください。');return}toggleActive(pick.dataset.memberPick,{min,max});window.dispatchEvent(new CustomEvent('houkago-player-selection-changed'));return}
+      const edit=e.target.closest?.('[data-shared-member-edit]');
+      if(edit){editingPlayerId=edit.dataset.sharedMemberEdit;window.dispatchEvent(new CustomEvent('houkago-player-selection-changed'));return}
+      const expand=e.target.closest?.('[data-shared-roster-toggle]');
+      if(expand){rosterExpanded=!rosterExpanded;window.dispatchEvent(new CustomEvent('houkago-player-selection-changed'));return}
       const btn=e.target.closest?.('[data-shared-icon-toggle]');if(!btn)return;const root=btn.closest('.shared-player-editor');if(!root)return;const id=btn.dataset.sharedIconToggle;
-      root.querySelectorAll('[data-shared-icon-grid]').forEach(grid=>grid.classList.toggle('open',grid.dataset.sharedIconGrid===id&&!grid.classList.contains('open')));
+      root.querySelectorAll('[data-shared-icon-grid]').forEach(grid=>{
+        const show=grid.dataset.sharedIconGrid===id&&!grid.classList.contains('open');
+        grid.classList.toggle('open',show);
+        btn.setAttribute('aria-expanded',String(show));
+      });
     });
   }
   window.HoukagoPlayers={KEY,ICONS,MIN_COUNT,MAX_COUNT,ROSTER_MAX,load,save,setActiveCount,setActiveIds,toggleActive,setPlayer,setPlayers,addPlayer,reset,renderEditor,renderRecords,recordGame,clearRecord,resolveId};
