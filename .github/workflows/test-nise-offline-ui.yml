@@ -10,6 +10,7 @@ on:
       - 'player-registry.js'
       - 'player-editor.css'
       - 'tests/shared-player-editor.test.mjs'
+      - 'tests/nise-scroll-browser.test.mjs'
       - 'tests/nise-one-screen.test.mjs'
       - '.github/workflows/test-nise-offline-ui.yml'
 
@@ -26,3 +27,9 @@ jobs:
           node-version: '22'
       - name: Verify layout and original game compatibility
         run: node --test tests/nise-one-screen.test.mjs tests/shared-player-editor.test.mjs
+      - name: Install headless Chromium test browser
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install chromium
+      - name: Test inner scrolling on smartphone and desktop
+        run: node --test tests/nise-scroll-browser.test.mjs
