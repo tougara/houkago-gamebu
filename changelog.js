@@ -3,6 +3,16 @@
 globalThis.HOUKAGO_CHANGELOG=[
   {
     "date": "2026-10-16",
+    "datetime": "2026-10-16T21:30:00+09:00",
+    "category": "nise",
+    "major": false,
+    "title": "「ニセ転校生を探せ！」のオンライン画面を改善",
+    "changes": [
+      "オフライン版と同じ画面構成に統一し、役職設定・休み時間・話し合い・投票・結果発表をスマホとPCで見やすくしました。"
+    ]
+  },
+  {
+    "date": "2026-10-16",
     "datetime": "2026-10-16T20:47:12+09:00",
     "category": "site",
     "major": false,
