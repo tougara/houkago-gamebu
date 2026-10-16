@@ -12,9 +12,9 @@ const sourceBetween=(begin,end)=>{
 test('offline game remains valid and loads single-screen overrides after legacy CSS',()=>{
  assert.doesNotThrow(()=>new Function(js));
  assert.match(html,/href="game\.css"/);
- assert.match(html,/href="one-screen\.css\?v=20261016-v3"/);
+ assert.match(html,/href="one-screen\.css\?v=20261016-scroll4"/);
  assert.ok(html.indexOf('href="one-screen.css')>html.indexOf('href="../../resume.css'));
- assert.match(html,/game\.js\?v=20261016-title-members4/);
+ assert.match(html,/game\.js\?v=20261016-scroll5/);
  assert.match(css,/\.nise-one-screen \.nise-play-shell/);
  assert.match(css,/@media \(min-width:760px\) and \(min-height:560px\)/);
  assert.match(css,/height:100dvh/);
@@ -110,4 +110,23 @@ test('role setup switches between four basic and four advanced roles without los
  assert.match(b,/class="role-title">trickster/);
  assert.doesNotMatch(b,/class="role-title">classmate/);
  assert.equal(state.roleCounts.fake,2);
+});
+
+test('role tabs remain fixed while their rows are in a non-shrinking touch-scrollable panel',()=>{
+ const fn=sourceBetween('function rolesScreen(){','function revealPassScreen(){');
+ assert.match(fn,/nise-role-list-scroll/);
+ assert.match(fn,/role="region"/);
+ assert.match(fn,/tabindex="0"/);
+ assert.match(css,/\.nise-role-setup \.nise-role-list-scroll\{/);
+ assert.match(css,/\.nise-role-setup \.nise-role-list-scroll\{[^}]*overflow-y:auto;overflow-x:hidden/);
+ assert.match(css,/\.nise-role-setup \.role-reg-group\{[^}]*min-height:max-content;flex:none/);
+ assert.match(css,/\.nise-role-setup \.role-select-card\{[^}]*overflow:hidden/);
+ assert.match(js,/newRoleScroll\.scrollTop=roleScroll/);
+});
+test('member editing cards keep their natural row height and scroll inside the screen',()=>{
+ assert.match(css,/\.nise-members-screen \.shared-editor-workspace\{[^}]*grid-auto-rows:max-content;align-content:start/);
+ assert.match(css,/\.nise-members-screen \.shared-editor-workspace\{[^}]*overflow-y:auto;overflow-x:hidden/);
+ assert.match(css,/\.nise-members-screen \.shared-editor-workspace\{[^}]*touch-action:pan-y/);
+ assert.match(css,/\.nise-members-screen \.shared-player-done\{[^}]*flex:0 0 auto/);
+ assert.match(js,/newMemberScroll\.scrollTop=memberScroll/);
 });
