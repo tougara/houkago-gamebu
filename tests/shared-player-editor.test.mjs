@@ -92,6 +92,7 @@ test('shared layout responds to smartphone and desktop without duplicating the e
  assert.match(gameHTML,/player-registry\.js\?v=20261016-compact1/);
  assert.match(niseJS,/state\.screen==='title'\?' nise-title-screen'/);
  assert.match(niseJS,/state\.screen==='players'\?' nise-members-screen'/);
+ assert.match(niseJS,/if\(state\.playerCount!==oldCount\)setBaseRoles\(\)/);
  for(const button of ['startSetup','startOnline'])assert.match(niseJS,new RegExp('id="'+button+'"'));
 });
 test('shared stylesheet and script cache tags are refreshed in every game that loads the registry',()=>{
