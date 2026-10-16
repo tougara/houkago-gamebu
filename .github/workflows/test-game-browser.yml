@@ -1,0 +1,31 @@
+name: Test Game Browser
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'games/index.html'
+      - 'games/browser.css'
+      - 'games/favorites.js'
+      - 'tests/games-browser.test.mjs'
+      - '.github/workflows/test-game-browser.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  game-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install chromium
+      - name: Test game filters and responsive layout
+        run: node --test tests/games-browser.test.mjs
