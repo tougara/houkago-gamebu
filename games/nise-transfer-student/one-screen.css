@@ -168,3 +168,24 @@
 @media (prefers-reduced-motion:reduce){
  .nise-one-screen *{scroll-behavior:auto!important}
 }
+
+
+/* 秘密受け渡し／投票終了の演出は盤面を持たない単画面表示 */
+.nise-one-screen > .privacy-screen{
+ min-height:0;height:100%;width:100%;margin:0 auto;max-width:740px;
+ padding:clamp(18px,3dvh,30px);align-self:center;
+}
+.nise-one-screen .vote-complete-wrap{
+ min-height:0;height:100%;width:100%;padding:clamp(8px,2dvh,20px) 0;
+ overflow:hidden;align-self:stretch;justify-self:center;
+}
+.nise-one-screen .vote-complete-card{
+ max-height:100%;overflow:auto;margin:auto;padding:clamp(14px,2dvh,28px);
+}
+.nise-one-screen .vote-complete-icon{
+ width:clamp(48px,9dvh,82px);height:clamp(48px,9dvh,82px);
+ font-size:clamp(28px,5dvh,48px);margin-bottom:clamp(7px,1.3dvh,15px);
+}
+.nise-one-screen .vote-complete-card h1{font-size:clamp(21px,4vw,34px);margin-bottom:6px}
+.nise-one-screen .vote-complete-card p{font-size:clamp(13px,2.6vw,18px);margin-bottom:14px}
+.nise-one-screen .vote-result-button{min-height:48px;font-size:clamp(17px,3.5vw,22px)}
