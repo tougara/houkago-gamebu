@@ -311,3 +311,14 @@ test('results place the vote target directly below every player; card view is co
   }finally{await context.close()}
  }
 });
+
+test('old Worker still gives a safe sequential waiting screen during deployment migration',async()=>{
+ const {page,context,errors,push}=await open(390,740);
+ try{
+  await push(room('night',4,{nightIsMyTurn:false,nightDoneCount:undefined,myNightDone:undefined}));
+  assert.match(await page.locator('.online-wait').innerText(),/自分の番まで待って/);
+  assert.equal(await page.locator('[data-night-done]').count(),0);
+  assert.equal(await page.locator('[data-target]').count(),0);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
