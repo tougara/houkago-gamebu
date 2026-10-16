@@ -568,3 +568,30 @@
  .nise-online-app .nise-play-actions .online-result-actions>.btn{min-height:36px}
  .nise-online-app .nise-play-actions{max-height:min(35dvh,295px)}
 }
+
+
+/* 結果発表: 太い選択枠はカードの外に出さず名前と隣のカードを守る。 */
+.nise-online-app .nise-play-board .online-final-board .table-player-row{
+ column-gap:7px;
+ row-gap:6px;
+}
+.nise-online-app .nise-play-board .online-final-board .table-card-current .table-card{
+ outline:3px solid #ffd34e;
+ outline-offset:-3px;
+}
+.nise-online-app .nise-play-board .online-final-board .table-card-expelled .table-card{
+ outline:3px solid #f23c59;
+ outline-offset:-3px;
+}
+.nise-online-app .nise-play-board .online-final-board .table-card-name{
+ margin-top:6px;
+ min-height:1.2em;
+ line-height:1.2;
+}
+.nise-online-app .nise-play-board .online-final-board .table-card-role{
+ margin-top:2px;
+ line-height:1.2;
+}
+.nise-online-app .nise-play-board .online-final-board .online-vote-under-name{
+ margin-top:2px;
+}
