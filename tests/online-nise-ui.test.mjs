@@ -182,9 +182,14 @@ test('touch tablet keeps Japanese chat input and composition intact through room
  try{
   await push(room('discussion',4));
   await page.locator('.online-chat-panel summary').click();
+  // Input layout must settle BEFORE the user touches the field.
+  assert.equal(await page.locator('#app.nise-chat-editing').count(),1,
+    'opening the chat should prepare tablet keyboard space without touching the input');
   const input=page.locator('#chat-input');
+  await input.tap();
+  assert.equal(await input.evaluate(el=>document.activeElement===el),true,
+    'touching the tablet input should focus the native editable element');
   await input.fill('にほんご');
-  await input.focus();
   await input.evaluate(el=>{
    window.__originalChatInput=el;
    el.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true,data:'にほんご'}));
@@ -222,6 +227,31 @@ test('touch tablet keeps Japanese chat input and composition intact through room
    m.type==='nise-chat'&&m.text==='タブレットから送信'));
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
+});
+test('opening and tapping chat never moves the field again on tablet portrait/landscape',async()=>{
+ for(const [width,height] of [[820,1180],[1024,768],[820,600]]){
+  const {page,context,errors,push}=await open(width,height);
+  try{
+   await push(room('discussion',4));
+   await page.locator('.online-chat-panel summary').click();
+   const field=page.locator('#chat-input');
+   assert.equal(await page.locator('#app.nise-chat-editing').count(),1);
+   const before=await field.boundingBox();
+   await field.tap();
+   assert.equal(await field.evaluate(el=>document.activeElement===el),true,
+     'native touch must focus chat field on '+width+'x'+height);
+   const after=await field.boundingBox();
+   assert.ok(Math.abs(after.x-before.x)<2&&Math.abs(after.y-before.y)<2,
+     'input must not change position during focus: '+width+'x'+height+
+     ' before='+JSON.stringify(before)+' after='+JSON.stringify(after));
+   await field.fill('入力テスト');
+   assert.equal(await field.inputValue(),'入力テスト');
+   await page.locator('.online-chat-panel summary').click();
+   assert.equal(await page.locator('#app.nise-chat-editing').count(),0,
+     'closing chat should restore full game board');
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
 });
 test('touch tablet lobby nickname and invite code remain editable',async()=>{
  const context=await browser.newContext({viewport:{width:820,height:1180},
