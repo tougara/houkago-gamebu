@@ -44,7 +44,7 @@ function button(text,attr='',extra=''){
  return '<button type="button" class="btn '+extra+'" '+attr+'>'+esc(text)+'</button>';
 }
 function cardBack(label,attrs='',extra=''){
- return '<div class="table-card-wrap '+extra+(attrs?' table-card-selectable':'')+'" '+attrs+
+ return '<div class="table-card-wrap '+extra+(attrs?' table-card-selectable':'')+'" '+(attrs?'role="button" tabindex="0" ':'')+attrs+
  '><div class="table-card table-card-back"><div class="table-card-mark">?</div></div><div class="table-card-name">'+esc(label)+'</div></div>';
 }
 function cardFace(role,label,extra=''){
@@ -364,6 +364,11 @@ function action(event){
  if(b.hasAttribute('data-stop')&&isHost())send({type:'nise-stop'});
 }
 $('game-root').addEventListener('click',action);
+$('game-root').addEventListener('keydown',e=>{
+ const card=e.target.closest('[data-target],[data-rest]');
+ if(!card||!['Enter',' '].includes(e.key))return;
+ e.preventDefault();card.click();
+});
 $('game-root').addEventListener('toggle',event=>{
  if(event.target.matches('.online-chat-panel'))chatOpen=event.target.open;
 },true);
