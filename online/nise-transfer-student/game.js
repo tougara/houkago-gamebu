@@ -21,7 +21,7 @@ const baseRoles=['classmate','fake','president','swapper'];
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const roleImg=key=>'../../'+roleDefs[key].image;
 let session=null,room=null,ws=null,retry=0,retryHandle=null,stopped=false,stageKey='',exitToList=false;
-let peeked=false,hold=false,selected=[],votePick='',lastStage='',countdownHandle=null;
+let peeked=false,hold=false,selected=[],votePick='',lastStage='',countdownHandle=null,roleTab='basic',chatOpen=false;
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
 if(!session||!/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/.test(session.code)||
  !/^[a-f0-9]{64}$/.test(session.token)||roomCode&&roomCode!==session.code||
@@ -75,6 +75,7 @@ function timerLeft(){
 function timeText(n){n=Math.max(0,Math.ceil(n));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
 function setupScreen(){
  const game=g(),total=Object.values(game.counts).reduce((a,b)=>a+b,0),required=game.count+2;
+ const valid=total===required;
  const roleRow=k=>{
   const r=roleDefs[k],n=game.counts[k],locked=k==='classmate';
   const max=k==='fake'?(game.count>=6?3:2):k==='classmate'?10:1;
@@ -88,15 +89,25 @@ function setupScreen(){
    button('＋','data-role="'+k+'" data-delta="1" '+(!isHost()||locked||n>=max||game.counts.classmate<1?'disabled':''),'secondary role-step')+
    '</div></div>';
  };
- return heading('使用する役職','人数＋お休み2枚ぶんのカードを選ぼう')+tags()+
- '<div class="card"><h2>参加メンバー</h2><div class="online-member-list">'+game.members.map(p=>'<span>'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div></div>'+
- '<div class="card"><p class="note success">必要：'+required+'枚 ／ 現在：'+total+'枚<br>ニセ転校生は2枚から。クラスメイトは自動調整。</p>'+
- '<div class="role-reg-group"><div class="role-reg-heading">基本レギュ</div>'+baseRoles.map(roleRow).join('')+'</div>'+
- '<div class="role-reg-group"><div class="role-reg-heading">応用レギュ</div>'+roleOrder.filter(k=>!baseRoles.includes(k)).map(roleRow).join('')+'</div></div>'+
- '<div class="card"><h2>話し合い時間</h2><div class="online-action-grid">'+[120,180,300,420].map(n=>button(n/60+'分','data-duration="'+n+'" '+(!isHost()?'disabled':''),game.duration===n?'yellow':'secondary')).join('')+'</div></div>'+
- (isHost()?button('役職を配る','data-game-begin '+(!connected()?'disabled':''),'yellow full'):
- '<div class="card online-wait">ホストが役職を選んでいるよ。<br>設定ができたら全員に配られるよ。</div>');
+ const titles={basic:'基本レギュ',advanced:'応用レギュ'};
+ const keys=roleTab==='advanced'?roleOrder.filter(k=>!baseRoles.includes(k)):baseRoles;
+ return heading('使用する役職','人数＋おやすみ2枚ぶんのカード')+
+ '<div class="online-setup-members"><details><summary>参加メンバー <strong>'+game.count+'人</strong> <span>確認する</span></summary>'+
+ '<div class="online-member-list">'+game.members.map(p=>'<span>'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div></details></div>'+
+ '<div class="card role-select-card">'+
+ '<div class="note '+(valid?'success':'warning')+'"><strong>カード '+total+' / '+required+'枚</strong><span>ニセ転校生は2枚から。クラスメイトは自動調整。</span></div>'+
+ '<div class="nise-role-tabs" role="group" aria-label="役職の種類">'+
+ ['basic','advanced'].map(tab=>button(titles[tab],'data-role-tab="'+tab+'" aria-pressed="'+(roleTab===tab)+'" ',roleTab===tab?'selected':'secondary')).join('')+
+ '</div>'+
+ '<div class="role-reg-group '+roleTab+'"><div class="role-reg-heading"><div><strong>'+titles[roleTab]+'</strong><span>'+(roleTab==='basic'?'まずはここから':'慣れてきたら追加')+'</span></div><span class="role-reg-badge">'+(roleTab==='basic'?'おすすめ':'アレンジ')+'</span></div>'+
+ keys.map(roleRow).join('')+'</div></div>'+
+ '<div class="online-setup-bottom"><div class="online-duration"><span>話し合い時間</span><div class="online-duration-options">'+
+ [120,180,300,420].map(n=>button(n/60+'分','data-duration="'+n+'" aria-pressed="'+(game.duration===n)+'" '+(!isHost()?'disabled':''),game.duration===n?'selected':'secondary')).join('')+
+ '</div></div>'+
+ (isHost()?button('役職を配る','data-game-begin '+(!connected()||!valid?'disabled':''),'yellow full'):
+ '<p class="online-host-hint">ホストが設定中。役職が配られるまで待ってね。</p>')+'</div>';
 }
+
 function privateCard(role){
  if(!role)return '';
  const d=roleDefs[role];return '<div class="online-secret-info"><img class="role-card-large" src="'+roleImg(role)+'" alt="'+esc(d.name)+'"><h2 class="night-role '+d.side+'">'+esc(d.name)+'</h2><p class="role-desc">'+esc(d.desc)+'</p></div>';
@@ -156,24 +167,28 @@ function chatScreen(){
  const msgs=(g()?.chat||[]).map(m=>
   '<div class="online-chat-line'+(m.id===myId()?' own':'')+'"><strong>'+nameOf(m.id)+'</strong><span>'+esc(m.text)+'</span></div>'
  ).join('');
- return '<section class="card online-chat"><h2>オンラインチャット</h2><p class="online-note">話し合い中だけ使えるよ。個人情報は書かず、言葉で楽しく推理しよう。</p>'+
+ return '<details class="online-chat-panel" '+(chatOpen?'open':'')+'><summary>オンラインチャット <span>'+((g()?.chat||[]).length)+'件</span></summary>'+
+ '<div class="online-chat-inner"><p class="online-note">話し合い中だけ使えるよ。個人情報は書かずに楽しく話そう。</p>'+
  '<div class="online-chat-list" id="chat-log" role="log" aria-label="話し合いの会話">'+(msgs||'<p class="online-note">まずはあいさつしてみよう！</p>')+'</div>'+
  '<form class="online-chat-form" data-chat-form><input id="chat-input" name="chat" type="text" maxlength="120" autocomplete="off" placeholder="メッセージを入力" aria-label="チャットメッセージ" required>'+
- '<button class="btn" type="submit">送信</button></form></section>';
+ '<button class="btn" type="submit">送信</button></form></div></details>';
 }
+
 function discussionScreen(){
  const game=g(),running=!!game.deadline;
- const main=heading('話し合い','ニセ転校生は誰？')+tags()+board()+
- '<div class="card"><div class="timer-main-row"><div class="timer timer-large" data-timer>'+timeText(timerLeft())+'</div>'+
+ return heading('話し合い','ニセ転校生は誰？')+tags()+board()+
+ '<div class="card online-timer-panel"><div class="timer-main-row"><div class="timer timer-large" data-timer>'+timeText(timerLeft())+'</div>'+
  button(running?'一時停止':'スタート','data-timer-action="toggle" '+(!isHost()?'disabled':''),'timer-main-toggle')+'</div>'+
  '<div class="timer-adjust-grid">'+[[-60,'−1分'],[60,'＋1分'],[-10,'−10秒'],[10,'＋10秒']].map(([n,title])=>button(title,'data-timer-adjust="'+n+'" '+(!isHost()?'disabled':''),'secondary')).join('')+'</div>'+
- '<p class="online-note">音声通話などで話し合おう。時間が0でも自動で投票には進まないよ。</p></div>'+chatScreen()+
- (isHost()?button('投票へ','data-start-vote','danger full'):'<p class="online-progress-bar">ホストが投票画面へ進めるよ。</p>')+
- '<div class="card"><h2>自分の役職を確認</h2><p class="online-note">必要なときだけ、長押しで表示してね。</p>'+
+ '<p class="online-note">時間が0でも自動で投票には進まないよ。</p></div>'+
+ (isHost()?button('投票へ','data-start-vote','danger full online-primary-action'):
+ '<p class="online-progress-bar">ホストが投票画面へ進めるよ</p>')+
+ '<details class="online-private-check"><summary>自分の役職をもう一度確認</summary>'+
  '<div class="online-role-private '+(hold?'revealed':'')+'">'+privateCard(game.myRole)+
- button('長押しして役職を見る','data-hold-secret','secondary full online-secret-hold')+'</div></div>';
- return main;
+ button('長押しして役職を見る','data-hold-secret','secondary full online-secret-hold')+'</div></details>'+
+ chatScreen();
 }
+
 function votingScreen(){
  const game=g(),others=game.members.filter(m=>m.id!==myId()).map(m=>m.id);
  const details=game.myVoted?'<div class="online-vote-wait">投票したよ。<br>ほかの人が投票を終えるまで待ってね。</div>':
@@ -189,36 +204,73 @@ function resultScreen(){
  if(!r)return '<div class="card online-wait">投票結果を集計しています…</div>';
  const logos={real:'result_honmono_side_win.png',fake:'result_nisemono_side_win.png',trick:'result_kusemono_side_win.png',peace:'result_peaceful_class.png'};
  const names=r.expelled.length?r.expelled.map(id=>member(id).name).join('、'):'だれも選ばれませんでした';
- const all=game.members;
- const rows=all.map(m=>'<div><span>'+esc(m.icon)+' '+esc(m.name)+' → '+nameOf(r.votes[m.id])+'</span><strong>'+r.tally[m.id]+'票</strong></div>').join('');
+ const rows=game.members.map(m=>'<div><span>'+esc(m.icon)+' '+esc(m.name)+' → '+nameOf(r.votes[m.id])+'</span><strong>'+r.tally[m.id]+'票</strong></div>').join('');
  return '<div class="card result-hero result-'+r.kind+'"><img class="result-logo" src="../../'+logos[r.kind]+'" alt="'+esc(r.winner)+'">'+
  '<p class="result-reason">最多 '+r.max+'票：'+esc(names)+'</p></div>'+
  board({face:r.final,rest:r.rest,expelled:r.expelled})+
- '<div class="card"><h2>投票結果</h2><div class="online-results-votes">'+rows+'</div>'+
- '<p class="online-note">役職は休み時間の席替え後の状態で表示しています。</p></div>'+
- (isHost()?'<div class="stack">'+button('もう一回遊ぶ','data-rematch','yellow full')+
- button('役職を選び直す','data-roles-again','secondary full')+button('部屋にもどる','data-stop','secondary full')+'</div>':
- '<div class="card online-wait">ホストが次のゲームを準備するまで待ってね。</div>');
+ '<div class="online-result-actions">'+
+ '<details class="nise-result-details"><summary>投票結果・内訳を見る</summary><div class="nise-result-detail-body">'+
+ '<div class="online-results-votes">'+rows+'</div>'+
+ '<p class="online-note">役職は席替え後の状態です。</p></div></details>'+
+ (isHost()?button('もう一回遊ぶ','data-rematch','yellow full')+
+ button('役職を選び直す','data-roles-again','secondary full')+
+ button('部屋にもどる','data-stop','secondary full'):
+ '<p class="online-progress-bar">ホストが次のゲームを準備しているよ</p>')+
+ '</div>';
+}
+
+function fitBoardCards(){
+ const frame=$('game-root')?.querySelector('.nise-play-board');
+ const boardEl=frame?.querySelector('.table-board');
+ if(!frame||!boardEl)return;
+ const n=g()?.count||3,cols=n<=5?n:n===6?3:n<=8?4:5;
+ const width=frame.clientWidth||window.innerWidth-30;
+ const height=frame.clientHeight||Math.max(190,window.innerHeight*.38);
+ const rows=Math.ceil(n/cols);
+ const byWidth=Math.floor((width-22-(cols-1)*4)/cols);
+ const byHeight=Math.floor((height-50)/(rows===1?2.9:4.55));
+ const size=Math.max(28,Math.min(90,byWidth,byHeight));
+ boardEl.style.setProperty('--card-size',size+'px');
+}
+function onlineLayout(stage){
+ const root=$('game-root');
+ root.className=stage==='setup'?'nise-online-setup':'nise-play-shell';
+ $('app').classList.toggle('nise-online-playing',stage!=='setup');
+ $('app').classList.toggle('nise-online-setting',stage==='setup');
+ if(stage==='setup')return;
+ const head=document.createElement('header');head.className='nise-play-head';
+ const boardArea=document.createElement('section');boardArea.className='nise-play-board';boardArea.setAttribute('aria-label','おやすみと参加者のカード');
+ const actions=document.createElement('section');actions.className='nise-play-actions';actions.setAttribute('aria-label','この画面の操作');
+ const elems=[...root.children];
+ for(const elem of elems){
+  if(elem.classList.contains('table-board'))boardArea.appendChild(elem);
+  else if(['title','subtitle','online-role-legend','result-hero'].some(x=>elem.classList.contains(x)))head.appendChild(elem);
+  else actions.appendChild(elem);
+ }
+ root.append(head,boardArea,actions);
+ fitBoardCards();
 }
 function render(){
  if(!room||!g())return;
  const game=g(),key=game.stage+':'+(game.nightIsMyTurn?'active':'wait')+':'+game.myRole;
- if(key!==lastStage){lastStage=key;selected=[];votePick='';peeked=false;hold=false;window.scrollTo?.({top:0,behavior:'instant'})}
- const html={
- setup:setupScreen,reveal:revealScreen,night:nightScreen,
- discussion:discussionScreen,voting:votingScreen,result:resultScreen
- }[game.stage];
- const draftBefore=$('chat-input');
- const draft=draftBefore?.value||'';
+ if(key!==lastStage){lastStage=key;selected=[];votePick='';peeked=false;hold=false;chatOpen=false;window.scrollTo?.({top:0,behavior:'instant'})}
+ const html={setup:setupScreen,reveal:revealScreen,night:nightScreen,discussion:discussionScreen,voting:votingScreen,result:resultScreen}[game.stage];
+ const draftBefore=$('chat-input'),draft=draftBefore?.value||'';
  const hadFocus=document.activeElement===draftBefore&&!!draftBefore;
+ const actionsScroll=$('game-root').querySelector('.nise-play-actions')?.scrollTop||0;
  $('game-root').innerHTML=html?html():'<div class="card online-wait">画面を準備しています…</div>';
+ onlineLayout(game.stage);
+ if(game.stage!=='setup'){
+  const area=$('game-root').querySelector('.nise-play-actions');
+  if(area)area.scrollTop=actionsScroll;
+ }
  if(game.stage==='discussion'){
   updateTimer();
-  const input=$('chat-input');
-  if(input){input.value=draft;if(hadFocus)input.focus({preventScroll:true})}
+  const input=$('chat-input');if(input){input.value=draft;if(hadFocus)input.focus({preventScroll:true})}
   const log=$('chat-log');if(log)log.scrollTop=log.scrollHeight;
  }
 }
+
 function updateTimer(){
  const t=document.querySelector('[data-timer]');
  if(t)t.textContent=timeText(timerLeft());
@@ -256,6 +308,7 @@ function connect(){
 function action(event){
  const b=event.target.closest('button,[data-target],[data-rest]');if(!b||b.disabled||!connected()||!g())return;
  const game=g();
+ if(b.hasAttribute('data-role-tab')&&game.stage==='setup'){roleTab=b.dataset.roleTab==='advanced'?'advanced':'basic';render();return}
  if(b.hasAttribute('data-role')&&isHost()&&game.stage==='setup'){
   const k=b.dataset.role,n=Number(b.dataset.delta),counts={...game.counts};
   if(k==='classmate'||!roleDefs[k]||![-1,1].includes(n))return;
@@ -311,6 +364,11 @@ function action(event){
  if(b.hasAttribute('data-stop')&&isHost())send({type:'nise-stop'});
 }
 $('game-root').addEventListener('click',action);
+$('game-root').addEventListener('toggle',event=>{
+ if(event.target.matches('.online-chat-panel'))chatOpen=event.target.open;
+},true);
+window.addEventListener('resize',fitBoardCards);
+window.visualViewport?.addEventListener('resize',fitBoardCards);
 $('game-root').addEventListener('submit',event=>{
  if(!event.target.matches('[data-chat-form]'))return;
  event.preventDefault();
