@@ -324,7 +324,7 @@ function bind(){
     state.gameStarted=false;go('result');
   });document.getElementById('restartSame')?.addEventListener('click',()=>{state.navHistory=['title'];state.screen='roles';startGame();});document.getElementById('restartRoles')?.addEventListener('click',()=>{state.gameStarted=false;state.navHistory=['title'];state.screen='roles';render();});
 }
-setBaseRoles();ensurePlayers();render();window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;const d=window.HoukagoPlayers?.load?.();state.playerCount=Math.max(3,Math.min(10,Number(d?.activeCount)||3));state.players=[];ensurePlayers();setBaseRoles();render();});
+setBaseRoles();ensurePlayers();render();window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted)return;const d=window.HoukagoPlayers?.load?.();const oldCount=state.playerCount;state.playerCount=Math.max(3,Math.min(10,Number(d?.activeCount)||3));state.players=[];ensurePlayers();if(state.playerCount!==oldCount)setBaseRoles();render();});
 let guardDiscussionTimerWasRunning=false;
 window.addEventListener('houkago-back-guard-open',()=>{
   guardDiscussionTimerWasRunning=state.screen==='discussion'&&!!state.timerId;
