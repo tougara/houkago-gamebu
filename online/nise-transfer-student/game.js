@@ -250,9 +250,44 @@ function onlineLayout(stage){
  root.append(head,boardArea,actions);
  fitBoardCards();
 }
+/* Keep the actual input node while room updates arrive.
+   Replacing input with innerHTML loses tablet software-keyboard focus and IME composition. */
+function syncDiscussion(){
+ const root=$('game-root');
+ if(g()?.stage!=='discussion'||!root.classList.contains('nise-play-shell')||!$('chat-input'))return false;
+ const messages=g().chat||[],log=$('chat-log');
+ if(log&&Number(log.dataset.messageCount||'-1')!==messages.length){
+  const atBottom=log.scrollTop+log.clientHeight>=log.scrollHeight-32;
+  log.innerHTML=messages.map(m=>
+   '<div class="online-chat-line'+(m.id===myId()?' own':'')+'"><strong>'+nameOf(m.id)+'</strong><span>'+esc(m.text)+'</span></div>'
+  ).join('')||'<p class="online-note">まずはあいさつしてみよう！</p>';
+  log.dataset.messageCount=String(messages.length);
+  if(atBottom)log.scrollTop=log.scrollHeight;
+ }
+ const total=root.querySelector('.online-chat-panel summary span');
+ if(total)total.textContent=messages.length+'件';
+ const toggle=root.querySelector('[data-timer-action="toggle"]');
+ if(toggle)toggle.textContent=g().deadline?'一時停止':'スタート';
+ updateTimer();
+ return true;
+}
+function updateChatKeyboardLayout(){
+ const input=$('chat-input');
+ const focused=!!input&&document.activeElement===input;
+ const app=$('app');
+ app.classList.toggle('nise-chat-editing',focused);
+ if(!focused){app.style.removeProperty('--nise-visual-height');return}
+ const viewport=window.visualViewport;
+ app.style.setProperty('--nise-visual-height',Math.max(240,Math.floor(viewport?.height||window.innerHeight))+'px');
+ requestAnimationFrame(()=>{
+  if(document.activeElement!==input)return;
+  input.scrollIntoView({block:'nearest',behavior:'instant'});
+ });
+}
 function render(){
  if(!room||!g())return;
  const game=g(),key=game.stage+':'+(game.nightIsMyTurn?'active':'wait')+':'+game.myRole;
+ if(key===lastStage&&syncDiscussion())return;
  if(key!==lastStage){lastStage=key;selected=[];votePick='';peeked=false;hold=false;chatOpen=false;window.scrollTo?.({top:0,behavior:'instant'})}
  const html={setup:setupScreen,reveal:revealScreen,night:nightScreen,discussion:discussionScreen,voting:votingScreen,result:resultScreen}[game.stage];
  const draftBefore=$('chat-input'),draft=draftBefore?.value||'';
@@ -269,6 +304,7 @@ function render(){
   const input=$('chat-input');if(input){input.value=draft;if(hadFocus)input.focus({preventScroll:true})}
   const log=$('chat-log');if(log)log.scrollTop=log.scrollHeight;
  }
+ updateChatKeyboardLayout();
 }
 
 function updateTimer(){
@@ -372,8 +408,14 @@ $('game-root').addEventListener('keydown',e=>{
 $('game-root').addEventListener('toggle',event=>{
  if(event.target.matches('.online-chat-panel'))chatOpen=event.target.open;
 },true);
-window.addEventListener('resize',fitBoardCards);
-window.visualViewport?.addEventListener('resize',fitBoardCards);
+window.addEventListener('resize',()=>{fitBoardCards();updateChatKeyboardLayout()});
+window.visualViewport?.addEventListener('resize',()=>{fitBoardCards();updateChatKeyboardLayout()});
+$('game-root').addEventListener('focusin',e=>{
+ if(e.target.matches('#chat-input'))updateChatKeyboardLayout();
+});
+$('game-root').addEventListener('focusout',e=>{
+ if(e.target.matches('#chat-input'))requestAnimationFrame(updateChatKeyboardLayout);
+});
 $('game-root').addEventListener('submit',event=>{
  if(!event.target.matches('[data-chat-form]'))return;
  event.preventDefault();
