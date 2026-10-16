@@ -23,7 +23,7 @@ const app=document.getElementById('app');
 const resumeApi=window.HoukagoResume;
 const RESUME_ID='nise-transfer-student';
 app.addEventListener('click',e=>{const trigger=e.target.closest('[data-role-detail]');if(!trigger)return;e.preventDefault();e.stopPropagation();openModal('roleDetail:'+trigger.dataset.roleDetail);});
-const state={screen:'title',playerCount:SHARED_PLAYERS?.activeCount||3,players:[],roleCounts:{},deck:[],rest:[],initialRoles:[],finalRoles:[],revealIndex:0,nightIndex:0,voteIndex:0,votes:[],coverNext:null,timerSeconds:180,timerRemaining:180,timerId:null,modal:null,roleHelpSide:'real',ruleHelpMode:'simple',navHistory:[],gameStarted:false};
+const state={screen:'title',playerCount:SHARED_PLAYERS?.activeCount||3,players:[],roleCounts:{},deck:[],rest:[],initialRoles:[],finalRoles:[],revealIndex:0,nightIndex:0,voteIndex:0,votes:[],coverNext:null,timerSeconds:180,timerRemaining:180,timerId:null,modal:null,roleHelpSide:'real',ruleHelpMode:'simple',navHistory:[],roleTab:'basic',gameStarted:false};
 function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function needCards(){return state.playerCount+2;} function totalCards(){return Object.values(state.roleCounts).reduce((a,b)=>a+b,0);} function sideLabel(r){const side=ROLE_DEFS[r]?.side;return SIDE_DEFS[side]?.label||'不明なサイド';}
@@ -152,7 +152,7 @@ function activateOneScreenLayout(){
 }
 function render(){
  const compact=ONE_SCREEN_STAGES.has(state.screen);
- app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'')+(compact?' nise-one-screen':'');
+ app.className='game-app'+((state.screen==='voteComplete'||state.screen==='result')?' classroom-result-bg':'')+(compact?' nise-one-screen':'')+(state.screen==='roles'?' nise-role-setup':'');
  app.innerHTML=screenHtml();
  activateOneScreenLayout();
  bind();
@@ -198,11 +198,9 @@ function rolesScreen(){
     +'<div class="card"><div class="section-row"><div><h2>参加メンバー</h2><p>'+state.playerCount+'人で遊びます</p></div><button class="small-btn" id="editPlayersFromRoles">変更</button></div><div class="member-chips">'+state.players.map(p=>'<span class="member-chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div></div>'
     +'<div class="card role-select-card">'
     +'<div class="note '+(valid?'success':'warning')+'">必要：'+needCards()+'枚 ／ 現在：'+totalCards()+'枚<br>'+fakeNote+'<br><span class="auto-balance-note">役職を増減すると、クラスメイトが自動で人数調整されます。</span></div>'
-    +'<div class="role-reg-group basic"><div class="role-reg-heading"><div><strong>基本レギュ</strong><span>まずはここから</span></div><span class="role-reg-badge">おすすめ</span></div>'
-    +BASIC_ROLE_KEYS.map(roleRow).join('')
-    +'</div>'
-    +'<div class="role-reg-group advanced"><div class="role-reg-heading"><div><strong>応用レギュ</strong><span>慣れてきたら追加</span></div><span class="role-reg-badge">アレンジ</span></div>'
-    +ADVANCED_ROLE_KEYS.map(roleRow).join('')
+    +'<div class="nise-role-tabs" role="group" aria-label="役職の種類"><button type="button" class="btn '+(state.roleTab==='basic'?'selected':'secondary')+'" data-role-tab="basic" aria-pressed="'+(state.roleTab==='basic')+'">基本レギュ</button><button type="button" class="btn '+(state.roleTab==='advanced'?'selected':'secondary')+'" data-role-tab="advanced" aria-pressed="'+(state.roleTab==='advanced')+'">応用レギュ</button></div>'
+    +'<div class="role-reg-group '+(state.roleTab==='advanced'?'advanced':'basic')+'"><div class="role-reg-heading"><div><strong>'+(state.roleTab==='advanced'?'応用レギュ':'基本レギュ')+'</strong><span>'+(state.roleTab==='advanced'?'慣れてきたら追加':'まずはここから')+'</span></div><span class="role-reg-badge">'+(state.roleTab==='advanced'?'アレンジ':'おすすめ')+'</span></div>'
+    +(state.roleTab==='advanced'?ADVANCED_ROLE_KEYS:BASIC_ROLE_KEYS).map(roleRow).join('')
     +'</div></div>'
     +'<div class="row role-select-actions"><button class="btn secondary" id="backPlayers">戻る</button><button class="btn '+(valid?'':'role-deal-disabled')+'" id="dealRoles" '+(valid?'':'disabled')+'>'+ (valid?'役職を配る':'枚数を合わせてください') +'</button></div>';
 }
@@ -308,6 +306,7 @@ function bind(){
   document.querySelectorAll('[data-member-icon]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.memberIcon);window.HoukagoPlayers?.setPlayer?.(i,{icon:b.dataset.icon});state.players=[];ensurePlayers();render();}));
   document.querySelector('[data-members-done]')?.addEventListener('click',()=>{state.players=[];ensurePlayers();if(state.navHistory[state.navHistory.length-1]==='roles')state.navHistory.pop();state.screen='roles';render();});
   document.getElementById('toRoles')?.addEventListener('click',()=>go('roles'));document.getElementById('backPlayers')?.addEventListener('click',()=>go('players'));
+  document.querySelectorAll('[data-role-tab]').forEach(b=>b.addEventListener('click',()=>{state.roleTab=b.dataset.roleTab==='advanced'?'advanced':'basic';render();}));
   document.querySelectorAll('[data-role-minus]').forEach(b=>b.addEventListener('click',()=>{const r=b.dataset.roleMinus;if(state.roleCounts[r]<=roleMin(r))return;const wasExact=totalCards()===needCards();state.roleCounts[r]--;if(r!=='classmate'&&wasExact)state.roleCounts.classmate++;render();}));document.querySelectorAll('[data-role-plus]').forEach(b=>b.addEventListener('click',()=>{const r=b.dataset.rolePlus;if(state.roleCounts[r]>=roleMax(r))return;const wasExact=totalCards()===needCards();if(r!=='classmate'&&wasExact&&state.roleCounts.classmate>0){state.roleCounts.classmate--;state.roleCounts[r]++;}else{state.roleCounts[r]++;}render();}));document.getElementById('dealRoles')?.addEventListener('click',startGame);
   bindHold('holdReveal',()=>go('revealRole'));document.getElementById('startRoleAction')?.addEventListener('click',()=>{state.nightIndex=state.revealIndex;go('nightAction');});
   document.getElementById('beginNight')?.addEventListener('click',()=>{state.nightIndex=0;go('nightPass')});bindHold('holdNight',()=>go('nightAction'));document.getElementById('nightDone')?.addEventListener('click',()=>queueCover('revealNext'));
