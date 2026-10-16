@@ -190,63 +190,121 @@
 .nise-one-screen .vote-complete-card p{font-size:clamp(13px,2.6vw,18px);margin-bottom:14px}
 .nise-one-screen .vote-result-button{min-height:48px;font-size:clamp(17px,3.5vw,22px)}
 
-/* 役職設定: 基本/応用タブを切り替え、縦に8役を並べない */
+/* 役職設定: 基本4役 / 応用4役をタブで切り替え、必ず4行が同時に見える。
+   カード内スクロールは使わない。極端に低い画面だけページスクロールに退避。 */
 .game-app.nise-role-setup{
  width:min(880px,100%);height:100dvh;min-height:0;overflow:hidden;
- display:flex;flex-direction:column;
- gap:clamp(4px,.7dvh,8px);
- padding:clamp(6px,.9dvh,12px) clamp(8px,1.3vw,16px) max(8px,env(safe-area-inset-bottom));
+ display:flex;flex-direction:column;gap:clamp(3px,.5dvh,7px);
+ padding:clamp(5px,.7dvh,10px) clamp(7px,1.3vw,14px) max(7px,env(safe-area-inset-bottom));
 }
-.nise-role-setup>.top-nav{flex:0 0 auto;min-height:42px;margin:0}
-.nise-role-setup>.title{font-size:clamp(19px,3.5vw,27px);margin:0;line-height:1.25}
-.nise-role-setup>.subtitle{font-size:clamp(11px,2.5vw,14px);line-height:1.25;margin:0}
-.nise-role-setup>.card:not(.role-select-card){
- margin:0;flex:0 0 auto;padding:8px 12px;
+.nise-role-setup>.top-nav{
+ flex:0 0 auto;min-height:40px;margin:0;
 }
-.nise-role-setup .section-row h2{font-size:clamp(13px,3vw,17px);margin:0}
-.nise-role-setup .section-row p{font-size:11px}
-.nise-role-setup .member-chips{margin-top:4px;gap:4px;max-height:38px;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap}
-.nise-role-setup .member-chip{white-space:nowrap;font-size:11px;padding:5px 7px;flex:none}
+.nise-role-setup>.title{
+ flex:none;font-size:clamp(19px,3.8vw,26px);line-height:1.1;margin:0;
+}
+.nise-role-setup>.subtitle{
+ flex:none;font-size:clamp(11px,2.4vw,13px);line-height:1.15;margin:0;
+}
+.nise-role-setup>.nise-role-members{
+ flex:0 0 auto;margin:0;padding:7px 10px;border-radius:13px;
+}
+.nise-role-setup .nise-role-members .section-row{gap:7px}
+.nise-role-setup .nise-role-members h2{
+ font-size:clamp(13px,2.85vw,16px);line-height:1.2;margin:0;
+}
+.nise-role-setup .nise-role-members h2 small{
+ display:inline-block;padding:1px 6px;background:#e7f4ff;color:#266ca6;border-radius:20px;
+ font-size:11px;vertical-align:middle;
+}
+.nise-role-setup .nise-role-members .small-btn{
+ min-height:30px;padding:3px 11px;font-size:12px;border-radius:9px;
+}
+.nise-role-setup .member-chips{
+ display:flex;flex-wrap:nowrap;gap:5px;margin-top:5px;max-height:26px;
+ overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none;
+}
+.nise-role-setup .member-chips::-webkit-scrollbar{display:none}
+.nise-role-setup .member-chip{
+ white-space:nowrap;flex:none;padding:2px 7px;min-height:22px;
+ font-size:clamp(10px,2.35vw,12px);line-height:1.2;
+}
 .nise-role-setup .role-select-card{
- display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden;
- padding:clamp(7px,1.1dvh,12px);margin:0;
- scrollbar-width:thin;
+ flex:1 1 auto;min-height:0;overflow:hidden;
+ display:flex;flex-direction:column;
+ padding:clamp(6px,.8dvh,10px);margin:0;border-radius:15px;
 }
 .nise-role-setup .role-select-card>.note{
- flex:0 0 auto;padding:5px 8px;margin:0;
- font-size:clamp(10px,2vw,12px);line-height:1.25;
+ flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:7px;
+ min-height:30px;padding:5px 8px;margin:0;border-radius:9px;
+ font-size:clamp(10px,2.35vw,12px);line-height:1.2;
 }
-.nise-role-setup .auto-balance-note{display:none}
-.nise-role-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 0}
-.nise-role-tabs .btn{min-height:42px;padding:8px;font-size:clamp(12px,3vw,16px)}
-.nise-role-tabs .btn.selected{background:#1687e8;color:white;box-shadow:0 3px 0 #0752a5}
-.nise-role-setup .nise-role-list-scroll{
- flex:1 1 0;min-height:0;max-height:100%;width:100%;
- overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;
- -webkit-overflow-scrolling:touch;touch-action:pan-y;
- scrollbar-width:thin;scrollbar-color:#81abd0 #f1f6fb;
- margin-top:7px;border-radius:12px;
+.nise-role-setup .role-select-card>.note strong{flex:none;white-space:nowrap}
+.nise-role-setup .nise-role-note-suffix{text-align:right;min-width:0}
+.nise-role-setup .nise-role-tabs{
+ flex:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:6px 0;
 }
-.nise-role-setup .nise-role-list-scroll:focus-visible{outline:3px solid #2b96eb;outline-offset:-3px}
+.nise-role-setup .nise-role-tabs .btn{
+ min-height:clamp(34px,5dvh,40px);padding:5px;
+ font-size:clamp(12px,2.8vw,15px);border-radius:11px;
+}
+.nise-role-setup .nise-role-tabs .btn.selected{
+ background:#1687e8;color:white;box-shadow:0 3px 0 #0752a5;
+}
 .nise-role-setup .role-reg-group{
- margin:0 0 6px;min-height:max-content;flex:none;width:100%;
+ flex:1 1 0;min-height:0;width:100%;margin:0;
+ display:grid;grid-template-rows:auto repeat(4,minmax(0,1fr));
+ overflow:hidden;border-radius:11px;
 }
-.nise-role-setup .role-reg-heading{padding:7px 10px}
-.nise-role-setup .role-reg-heading strong{font-size:15px}
-.nise-role-setup .role-reg-heading span{font-size:10px}
-.nise-role-setup .role-row{padding:clamp(5px,.7dvh,8px) 9px;gap:8px}
-.nise-role-setup .role-thumb,.nise-role-setup .role-thumb-button{width:42px;height:42px;object-fit:contain}
-.nise-role-setup .role-title{font-size:clamp(13px,2.8vw,16px)}
-.nise-role-setup .role-count-controls{grid-template-columns:36px 23px 36px;gap:4px}
-.nise-role-setup .role-step{width:36px;min-width:36px;height:38px;min-height:38px;padding:0;font-size:20px}
-.nise-role-setup>.role-select-actions{flex:0 0 auto;margin:0}
-.nise-role-setup>.role-select-actions .btn{min-height:47px;padding:7px 12px;font-size:clamp(13px,3vw,17px)}
-@media (min-width:760px){
+.nise-role-setup .role-reg-heading{
+ min-height:25px;gap:6px;padding:3px 9px;
+}
+.nise-role-setup .role-reg-heading>div{display:flex;align-items:center;gap:6px}
+.nise-role-setup .role-reg-heading strong{font-size:clamp(12px,2.7vw,15px);line-height:1.15}
+.nise-role-setup .role-reg-heading span{font-size:10px;line-height:1.15}
+.nise-role-setup .role-reg-badge{padding:3px 6px;font-size:9px!important}
+.nise-role-setup .role-row{
+ min-height:0;grid-template-columns:clamp(34px,5dvh,43px) minmax(0,1fr) auto;
+ gap:clamp(5px,1.7vw,9px);padding:2px 8px;align-items:center;
+}
+.nise-role-setup .role-thumb-button,.nise-role-setup .role-thumb{
+ width:clamp(34px,5dvh,43px);height:clamp(34px,5dvh,43px);
+ object-fit:contain;
+}
+.nise-role-setup .role-title{
+ font-size:clamp(12px,2.85vw,16px);line-height:1.1;
+}
+.nise-role-setup .side-tag{
+ margin-top:2px;padding:3px 6px;font-size:clamp(9px,2.1vw,10px);
+}
+.nise-role-setup .role-count-controls{
+ grid-template-columns:clamp(31px,5dvh,39px) 19px clamp(31px,5dvh,39px);gap:3px;
+}
+.nise-role-setup .role-step{
+ width:clamp(31px,5dvh,39px);min-width:0;
+ height:clamp(32px,5.3dvh,40px);min-height:0;
+ padding:0;font-size:20px;border-radius:10px;
+}
+.nise-role-setup .count{
+ min-width:19px;font-size:clamp(13px,2.8vw,16px);
+}
+.nise-role-setup>.role-select-actions{flex:0 0 auto;margin:0;gap:8px}
+.nise-role-setup>.role-select-actions .btn{
+ min-height:clamp(39px,5.8dvh,48px);
+ padding:6px 10px;font-size:clamp(12px,3vw,17px);
+}
+/* 高さが不足する極小画面では非表示にせずページ全体をスクロール可能にする。 */
+@media (max-height:540px){
+ .game-app.nise-role-setup{height:auto;min-height:100dvh;overflow-y:auto}
+ .nise-role-setup .role-select-card{flex:none;overflow:visible}
  .nise-role-setup .role-reg-group{
-  max-width:770px;width:100%;align-self:center;
+  flex:none;min-height:245px;grid-template-rows:25px repeat(4,55px);
  }
 }
-
+@media (min-width:760px){
+ .nise-role-setup .role-reg-group{max-width:770px;align-self:center}
+ .nise-role-setup .role-row{padding-left:14px;padding-right:14px}
+}
 
 /* タイトル：スマホ縦もPC横も、ページをスクロールせず選べる1画面構成 */
 .game-app.nise-title-screen{
