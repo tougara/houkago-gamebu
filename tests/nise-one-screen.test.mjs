@@ -14,7 +14,7 @@ test('offline game remains valid and loads single-screen overrides after legacy 
  assert.match(html,/href="game\.css"/);
  assert.match(html,/href="one-screen\.css\?v=20261016-v3"/);
  assert.ok(html.indexOf('href="one-screen.css')>html.indexOf('href="../../resume.css'));
- assert.match(html,/game\.js\?v=20261016-title-members3/);
+ assert.match(html,/game\.js\?v=20261016-title-members4/);
  assert.match(css,/\.nise-one-screen \.nise-play-shell/);
  assert.match(css,/@media \(min-width:760px\) and \(min-height:560px\)/);
  assert.match(css,/height:100dvh/);
