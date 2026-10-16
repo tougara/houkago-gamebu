@@ -208,7 +208,7 @@
 .nise-role-setup .member-chips{margin-top:4px;gap:4px;max-height:38px;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap}
 .nise-role-setup .member-chip{white-space:nowrap;font-size:11px;padding:5px 7px;flex:none}
 .nise-role-setup .role-select-card{
- display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:auto;
+ display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden;
  padding:clamp(7px,1.1dvh,12px);margin:0;
  scrollbar-width:thin;
 }
@@ -220,7 +220,17 @@
 .nise-role-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 0}
 .nise-role-tabs .btn{min-height:42px;padding:8px;font-size:clamp(12px,3vw,16px)}
 .nise-role-tabs .btn.selected{background:#1687e8;color:white;box-shadow:0 3px 0 #0752a5}
-.nise-role-setup .role-reg-group{margin:8px 0 0;flex:1 1 auto;min-height:0}
+.nise-role-setup .nise-role-list-scroll{
+ flex:1 1 0;min-height:0;max-height:100%;width:100%;
+ overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;
+ -webkit-overflow-scrolling:touch;touch-action:pan-y;
+ scrollbar-width:thin;scrollbar-color:#81abd0 #f1f6fb;
+ margin-top:7px;border-radius:12px;
+}
+.nise-role-setup .nise-role-list-scroll:focus-visible{outline:3px solid #2b96eb;outline-offset:-3px}
+.nise-role-setup .role-reg-group{
+ margin:0 0 6px;min-height:max-content;flex:none;width:100%;
+}
 .nise-role-setup .role-reg-heading{padding:7px 10px}
 .nise-role-setup .role-reg-heading strong{font-size:15px}
 .nise-role-setup .role-reg-heading span{font-size:10px}
@@ -318,9 +328,12 @@
  flex:1 1 auto;min-height:0;overflow:hidden;
 }
 .nise-members-screen .shared-editor-workspace{
- flex:1 1 auto;min-height:0;overflow:auto;scrollbar-width:thin;
- overscroll-behavior:contain;
- padding:0 2px 5px;
+ flex:1 1 0;min-height:0;max-height:100%;
+ grid-auto-rows:max-content;align-content:start;
+ overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;
+ scrollbar-color:#81abd0 #f1f6fb;overscroll-behavior-y:contain;
+ -webkit-overflow-scrolling:touch;touch-action:pan-y;
+ padding:0 2px 7px;
 }
 .nise-members-screen .shared-player-heading h1{font-size:clamp(19px,3.9vw,27px)}
 .nise-members-screen .shared-player-heading p{font-size:11px}
