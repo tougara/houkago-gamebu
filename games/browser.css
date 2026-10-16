@@ -212,3 +212,24 @@
 @media(prefers-reduced-motion:reduce){
  .games-page .compact-game-card{transition:none}
 }
+
+/* Logo-specific fit: the three assets have different shapes and transparent margins.
+   Fixed image boxes are measured from the artwork frame, never from the image's intrinsic height. */
+.games-page .compact-game-art.game-card-art-nise img,
+.games-page .compact-game-art.game-card-art-docchi img{
+ position:absolute;z-index:2;
+ top:21px;left:8px;
+ width:calc(100% - 16px);height:calc(100% - 30px);
+ max-width:none;max-height:none;
+ object-fit:contain;object-position:center;
+ transform:none;
+}
+.games-page .compact-game-art.word-wolf-card-art img{
+ position:absolute;z-index:2;
+ top:10px;left:5px;
+ width:calc(100% - 10px);height:calc(100% - 18px);
+ max-width:none;max-height:none;
+ object-fit:contain;object-position:center;
+ transform:scale(1.18);
+ transform-origin:center;
+}
