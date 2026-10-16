@@ -170,7 +170,7 @@ function chatScreen(){
  return '<details class="online-chat-panel" '+(chatOpen?'open':'')+'><summary>オンラインチャット <span>'+((g()?.chat||[]).length)+'件</span></summary>'+
  '<div class="online-chat-inner"><p class="online-note">話し合い中だけ使えるよ。個人情報は書かずに楽しく話そう。</p>'+
  '<div class="online-chat-list" id="chat-log" role="log" aria-label="話し合いの会話">'+(msgs||'<p class="online-note">まずはあいさつしてみよう！</p>')+'</div>'+
- '<form class="online-chat-form" data-chat-form><input id="chat-input" name="chat" type="text" maxlength="120" autocomplete="off" placeholder="メッセージを入力" aria-label="チャットメッセージ" required>'+
+ '<form class="online-chat-form" data-chat-form><input id="chat-input" name="chat" type="text" inputmode="text" enterkeyhint="send" maxlength="120" autocomplete="off" autocapitalize="sentences" placeholder="ここをタップして文字を入力" aria-label="チャットメッセージ" required>'+
  '<button class="btn" type="submit">送信</button></form></div></details>';
 }
 
@@ -272,17 +272,22 @@ function syncDiscussion(){
  return true;
 }
 function updateChatKeyboardLayout(){
- const input=$('chat-input');
- const focused=!!input&&document.activeElement===input;
+ const panel=$('game-root').querySelector('.online-chat-panel');
+ const opened=g()?.stage==='discussion'&&!!panel?.open;
  const app=$('app');
- app.classList.toggle('nise-chat-editing',focused);
- if(!focused){app.style.removeProperty('--nise-visual-height');return}
- const viewport=window.visualViewport;
- app.style.setProperty('--nise-visual-height',Math.max(240,Math.floor(viewport?.height||window.innerHeight))+'px');
- requestAnimationFrame(()=>{
-  if(document.activeElement!==input)return;
-  input.scrollIntoView({block:'nearest',behavior:'instant'});
- });
+ // Finish changing columns as the chat is opened, BEFORE the user taps the text field.
+ // Changing the DOM/layout on focusin can interrupt native tablet IME keyboard activation.
+ app.classList.toggle('nise-chat-editing',opened);
+ if(!opened){app.style.removeProperty('--nise-visual-height');return}
+ const vp=window.visualViewport;
+ const height=vp?.height||window.innerHeight;
+ app.style.setProperty('--nise-visual-height',Math.max(240,Math.floor(height))+'px');
+ // Only move the scroll region after the keyboard/viewport has changed, never on focusin.
+ const input=$('chat-input');
+ if(input&&document.activeElement===input){
+  const actions=app.querySelector('.nise-play-actions');
+  if(actions)actions.scrollTop=actions.scrollHeight;
+ }
 }
 function render(){
  if(!room||!g())return;
@@ -406,15 +411,19 @@ $('game-root').addEventListener('keydown',e=>{
  e.preventDefault();card.click();
 });
 $('game-root').addEventListener('toggle',event=>{
- if(event.target.matches('.online-chat-panel'))chatOpen=event.target.open;
+ if(event.target.matches('.online-chat-panel')){
+  chatOpen=event.target.open;
+  updateChatKeyboardLayout();
+ }
 },true);
 window.addEventListener('resize',()=>{fitBoardCards();updateChatKeyboardLayout()});
 window.visualViewport?.addEventListener('resize',()=>{fitBoardCards();updateChatKeyboardLayout()});
+// Do not rebuild the layout on input focus/blur: that can suppress a tablet's IME.
 $('game-root').addEventListener('focusin',e=>{
- if(e.target.matches('#chat-input'))updateChatKeyboardLayout();
+ if(e.target.matches('#chat-input'))e.target.classList.add('chat-input-focused');
 });
 $('game-root').addEventListener('focusout',e=>{
- if(e.target.matches('#chat-input'))requestAnimationFrame(updateChatKeyboardLayout);
+ if(e.target.matches('#chat-input'))e.target.classList.remove('chat-input-focused');
 });
 $('game-root').addEventListener('submit',event=>{
  if(!event.target.matches('[data-chat-form]'))return;
