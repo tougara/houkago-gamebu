@@ -3,6 +3,16 @@
 globalThis.HOUKAGO_CHANGELOG=[
   {
     "date": "2026-10-16",
+    "datetime": "2026-10-16T20:45:00+09:00",
+    "category": "site",
+    "major": false,
+    "title": "ゲーム一覧を探しやすく刷新",
+    "changes": [
+      "検索・人数・ジャンル・お気に入りの組み合わせに対応。おすすめ枠とゲームカードを見直し、スマホ・PCで読みやすくしました。"
+    ]
+  },
+  {
+    "date": "2026-10-16",
     "datetime": "2026-10-16T19:15:00+09:00",
     "category": "nise",
     "major": false,
