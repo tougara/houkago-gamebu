@@ -1,0 +1,30 @@
+name: Test Online Nise UI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'online/nise-transfer-student/**'
+      - 'games/nise-transfer-student/game.css'
+      - 'tests/online-nise-ui.test.mjs'
+      - '.github/workflows/test-online-nise-ui.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install chromium
+      - name: Validate online game layout and actions
+        run: node --test tests/online-nise-ui.test.mjs
