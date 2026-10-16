@@ -49,7 +49,7 @@ async function visit(size,isMobile){
   await page.locator('#editPlayersFromRoles').click();
   await page.locator('[data-member-count="10"]').click();
   await page.locator('[data-members-done]').click();
-  await page.locator('.nise-role-list-scroll').waitFor({state:'visible'});
+  await page.locator('.role-reg-group .role-row').first().waitFor({state:'visible'});
   return {page,context,failures};
 }
 const measure=locator=>locator.evaluate(el=>{
@@ -79,23 +79,54 @@ function footerIsVisible(page,selector){
     return box.top>=0&&box.bottom<=innerHeight+1&&box.height>20;
   });
 }
-for(const [label,size,isMobile] of [
-  ['small phone',{width:360,height:620},true],
-  ['phone portrait',{width:390,height:700},true],
-  ['desktop',{width:1280,height:800},false],
-]){
-  test('roles and member editor scroll without hiding actions: '+label,async()=>{
-    const {page,context,failures}=await visit(size,isMobile);
-    try{
-      const roles=page.locator('.nise-role-list-scroll');
-      await scrollAndVerify(roles,page.locator('.nise-role-list-scroll .role-row').last(),{mustScroll:isMobile});
-      assert.equal(await footerIsVisible(page,'.role-select-actions'),true,'deal role action stays visible');
-      await page.locator('#editPlayersFromRoles').click();
-      await page.locator('[data-member-count="10"]').click();
-      const members=page.locator('.shared-editor-workspace');
-      await scrollAndVerify(members,page.locator('.shared-roster-card'),{mustScroll:isMobile});
-      assert.equal(await footerIsVisible(page,'.shared-player-done'),true,'member confirm stays visible');
-      assert.deepEqual(failures,[],'browser JS should not throw');
-    }finally{await context.close()}
+async function verifyFourRoles(page,expected){
+ const roles=page.locator('.role-reg-group .role-row');
+ assert.equal(await roles.count(),4,'each tab must show exactly four roles');
+ const actual=await roles.locator('.role-title').allTextContents();
+ assert.deepEqual(actual,expected);
+ const bounds=await page.locator('.role-select-card').evaluate(card=>{
+  const cardRect=card.getBoundingClientRect();
+  const els=[...card.querySelectorAll('.role-reg-group .role-row')];
+  const tabs=card.querySelector('.nise-role-tabs')?.getBoundingClientRect();
+  const items=els.map(el=>{
+    const rect=el.getBoundingClientRect(),button=el.querySelector('.role-step')?.getBoundingClientRect();
+    return {top:rect.top,bottom:rect.bottom,height:rect.height,
+      buttonHeight:button?.height||0};
   });
+  return {top:cardRect.top,bottom:cardRect.bottom,overflow:getComputedStyle(card).overflowY,
+    tabsBottom:tabs?.bottom,items};
+ });
+ for(const [i,row] of bounds.items.entries()){
+  assert.ok(row.height>=43,expected[i]+' role row too compressed: '+JSON.stringify(bounds));
+  assert.ok(row.buttonHeight>=31,'button must stay tappable: '+JSON.stringify(row));
+  assert.ok(row.top>=bounds.top-1,'role row clipped at top: '+JSON.stringify(bounds));
+  assert.ok(row.bottom<=bounds.bottom+2,'role row clipped at bottom: '+JSON.stringify(bounds));
+  assert.ok(row.top>=bounds.tabsBottom-2,'role row overlaps tabs: '+JSON.stringify(bounds));
+ }
+ assert.equal(await footerIsVisible(page,'.role-select-actions'),true,
+   'the deal button must remain visible');
+ assert.equal(await page.locator('.nise-role-list-scroll').count(),0,
+   'there should be no scrollable role list inside each tab');
+}
+for(const [label,size,isMobile] of [
+ ['small phone',{width:360,height:620},true],
+ ['phone portrait',{width:390,height:700},true],
+ ['desktop',{width:1280,height:800},false],
+]){
+ test('four basic and four advanced roles all visible; member editor scrolls: '+label,async()=>{
+  const {page,context,failures}=await visit(size,isMobile);
+  try{
+   await verifyFourRoles(page,['クラスメイト','ニセ転校生','学級委員','席替え係']);
+   await page.locator('[data-role-tab="advanced"]').click();
+   await verifyFourRoles(page,['観察係','日直','秘密の協力者','いたずらっ子']);
+   await page.locator('[data-role-tab="basic"]').click();
+   await verifyFourRoles(page,['クラスメイト','ニセ転校生','学級委員','席替え係']);
+   await page.locator('#editPlayersFromRoles').click();
+   const members=page.locator('.shared-editor-workspace');
+   await scrollAndVerify(members,page.locator('.shared-roster-card'));
+   assert.equal(await footerIsVisible(page,'.shared-player-done'),true,
+     'member confirm stays visible');
+   assert.deepEqual(failures,[],'browser JS should not throw');
+  }finally{await context.close()}
+ });
 }
