@@ -182,6 +182,7 @@ test('touch tablet keeps Japanese chat input and composition intact through room
  try{
   await push(room('discussion',4));
   await page.locator('.online-chat-panel summary').click();
+  await page.waitForFunction(()=>document.getElementById('app')?.classList.contains('nise-chat-editing'));
   // Input layout must settle BEFORE the user touches the field.
   assert.equal(await page.locator('#app.nise-chat-editing').count(),1,
     'opening the chat should prepare tablet keyboard space without touching the input');
@@ -234,6 +235,7 @@ test('opening and tapping chat never moves the field again on tablet portrait/la
   try{
    await push(room('discussion',4));
    await page.locator('.online-chat-panel summary').click();
+   await page.waitForFunction(()=>document.getElementById('app')?.classList.contains('nise-chat-editing'));
    const field=page.locator('#chat-input');
    assert.equal(await page.locator('#app.nise-chat-editing').count(),1);
    const before=await field.boundingBox();
@@ -247,6 +249,7 @@ test('opening and tapping chat never moves the field again on tablet portrait/la
    await field.fill('入力テスト');
    assert.equal(await field.inputValue(),'入力テスト');
    await page.locator('.online-chat-panel summary').click();
+   await page.waitForFunction(()=>!document.getElementById('app')?.classList.contains('nise-chat-editing'));
    assert.equal(await page.locator('#app.nise-chat-editing').count(),0,
      'closing chat should restore full game board');
    assert.deepEqual(errors,[]);
