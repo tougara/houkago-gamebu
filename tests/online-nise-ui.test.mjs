@@ -47,8 +47,8 @@ function room(stage,n=4,extra={}){
    ...extra}};
 }
 async function open(width,height){
- const context=await browser.newContext({viewport:{width,height},isMobile:width<650,
-  hasTouch:width<650,deviceScaleFactor:1});
+ const context=await browser.newContext({viewport:{width,height},isMobile:width<1000,
+  hasTouch:width<1000,deviceScaleFactor:1});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',err=>errors.push(err.message));
  await page.addInitScript(()=>{
@@ -173,6 +173,67 @@ test('role secrecy on hold, chatting on demand and key accessibility are preserv
   await card.focus();
   await page.keyboard.press('Enter');
   assert.equal(await page.locator('[data-confirm-vote]').count(),1);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('touch tablet keeps Japanese chat input and composition intact through room updates',async()=>{
+ const {page,context,errors,push}=await open(820,1180);
+ try{
+  await push(room('discussion',4));
+  await page.locator('.online-chat-panel summary').click();
+  const input=page.locator('#chat-input');
+  await input.fill('にほんご');
+  await input.focus();
+  await input.evaluate(el=>{
+   window.__originalChatInput=el;
+   el.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true,data:'にほんご'}));
+  });
+  await push(room('discussion',4,{chat:[{id:'p1',text:'おはよう'}]}));
+  const focus=await page.evaluate(()=>({
+   same:document.getElementById('chat-input')===window.__originalChatInput,
+   focused:document.activeElement===window.__originalChatInput,
+   text:document.getElementById('chat-input')?.value,
+   editing:document.getElementById('app').classList.contains('nise-chat-editing')
+  }));
+  assert.equal(focus.same,true,'WebSocket room push must not replace the input node');
+  assert.equal(focus.focused,true,'tablet keyboard focus should not be lost');
+  assert.equal(focus.text,'にほんご','Japanese composition text must not disappear');
+  assert.equal(focus.editing,true);
+  assert.equal(await page.locator('.online-chat-line').count(),1);
+
+  // Approximate visual viewport reduction when a virtual keyboard covers the lower half.
+  await page.setViewportSize({width:820,height:480});
+  await page.evaluate(()=>window.dispatchEvent(new Event('resize')));
+  const layout=await input.evaluate(el=>{
+   const r=el.getBoundingClientRect();
+   return {top:r.top,bottom:r.bottom,visualHeight:window.visualViewport.height,
+    frame:document.querySelector('.nise-play-actions').getBoundingClientRect().bottom,
+    boardDisplay:getComputedStyle(document.querySelector('.nise-play-board')).display,
+    active:document.activeElement===el};
+  });
+  assert.ok(layout.bottom<=layout.visualHeight+2,
+    'active input must stay above virtual keyboard: '+JSON.stringify(layout));
+  assert.equal(layout.boardDisplay,'none','game board yields room to keyboard');
+  assert.equal(layout.active,true);
+  await input.fill('タブレットから送信');
+  await input.press('Enter');
+  assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent)).some(m=>
+   m.type==='nise-chat'&&m.text==='タブレットから送信'));
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('touch tablet lobby nickname and invite code remain editable',async()=>{
+ const context=await browser.newContext({viewport:{width:820,height:1180},
+  isMobile:true,hasTouch:true,deviceScaleFactor:1});
+ const page=await context.newPage(),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ try{
+  await page.goto(base+'/online/',{waitUntil:'load'});
+  await page.locator('#nickname').fill('タブレット参加者');
+  await page.locator('#code').fill('ABCD2345');
+  assert.equal(await page.locator('#nickname').inputValue(),'タブレット参加者');
+  assert.equal(await page.locator('#code').inputValue(),'ABCD2345');
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
