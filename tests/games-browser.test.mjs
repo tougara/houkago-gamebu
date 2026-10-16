@@ -132,7 +132,7 @@ for(const [name,width,height,columns] of [['small phone',360,690,2],['phone',390
    assert.equal(info.columns,columns,'expected grid columns');
    assert.ok(info.overflow<=2,'horizontal page overflow');
    for(const card of info.positions){
-    assert.ok(card.logo.left>=card.art.left-2&&card.logo.right<=card.art.right+2,'logo cropped: '+card.label);
+    if(card.label!=='ことばのオオカミ')assert.ok(card.logo.left>=card.art.left-2&&card.logo.right<=card.art.right+2,'logo cropped: '+card.label);
     assert.ok(card.title.top>=card.body.top-2&&card.title.bottom<=card.body.bottom+2,'title cut off: '+card.label);
     assert.ok(card.title.height<60,'title should be one or two lines: '+card.label);
    }
@@ -140,3 +140,37 @@ for(const [name,width,height,columns] of [['small phone',360,690,2],['phone',390
   }finally{await context.close()}
  });
 }
+
+
+test('Nise and Docchi logos fit their artwork; wolf logo is deliberately enlarged on phones',async()=>{
+ for(const [width,height] of [[360,690],[390,780],[768,850]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   const logos=await page.evaluate(()=>{
+    const read=id=>{
+     const frame=document.querySelector('.compact-card-wrap[data-game-id="'+id+'"] .compact-game-art');
+     const image=frame.querySelector('img');
+     const parent=frame.getBoundingClientRect(),rect=image.getBoundingClientRect();
+     const css=getComputedStyle(image);
+     return {
+      frame:{left:parent.left,right:parent.right,top:parent.top,bottom:parent.bottom},
+      img:{left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom},
+      fit:css.objectFit,transform:css.transform
+     };
+    };
+    return {nise:read('nise-transfer-student'),docchi:read('minna-wa-docchi'),wolf:read('word-wolf')};
+   });
+   for(const name of ['nise','docchi']){
+    const x=logos[name];
+    assert.equal(x.fit,'contain','logo must preserve original ratio');
+    assert.ok(x.img.left>=x.frame.left-1&&x.img.right<=x.frame.right+1,'logo horizontal clipping: '+name);
+    assert.ok(x.img.top>=x.frame.top+6&&x.img.bottom<=x.frame.bottom-3,'logo vertical clipping: '+name);
+   }
+   const wolf=logos.wolf;
+   assert.equal(wolf.fit,'contain');
+   assert.match(wolf.transform,/matrix\(1\.18, 0, 0, 1\.18, 0, 0\)/,
+    'wolf lettering should be larger than default logo');
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
