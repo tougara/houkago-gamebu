@@ -26,7 +26,7 @@ export function createNise(room){
  const n=room.members.length;
  if(n<3||n>10)throw Error('3〜10人で遊んでね');
  return {stage:'setup',counts:defaultNiseCounts(n),memberIds:room.members.map(m=>m.id),duration:180,
- initial:{},final:{},rest:[],revealed:[],nightOrder:[],nightCursor:0,intel:{},votes:{},
+ initial:{},final:{},rest:[],revealed:[],nightOrder:[],nightCursor:0,nightDone:[],intel:{},votes:{},
  timerRemaining:180,deadline:0,result:null,chat:[],lastChatAt:{}};
 }
 export function dealNise(g){
@@ -34,11 +34,7 @@ export function dealNise(g){
  const deck=shuffle(Object.entries(g.counts).flatMap(([k,n])=>Array(n).fill(k)));
  g.initial=Object.fromEntries(g.memberIds.map((id,i)=>[id,deck[i]]));
  g.final={...g.initial};g.rest=deck.slice(g.memberIds.length);
- g.revealed=[];g.votes={};g.intel={};g.result=null;g.chat=[];g.lastChatAt={};g.deadline=0;g.timerRemaining=g.duration;
- g.nightOrder=shuffle(g.memberIds).sort((a,b)=>{
-  const rank={fake:0,president:1,observer:2,dayDuty:2,swapper:3};
-  return (rank[g.initial[a]]??4)-(rank[g.initial[b]]??4);
- });
+ g.revealed=[];g.votes={};g.intel={};g.nightDone=[];g.result=null;g.chat=[];g.lastChatAt={};g.deadline=0;g.timerRemaining=g.duration;
  g.nightCursor=0;g.stage='reveal';return true;
 }
 const allRevealed=g=>g.memberIds.every(id=>g.revealed.includes(id));
@@ -46,28 +42,30 @@ export function niseView(room,id){
  const g=room.nise;if(!g)return null;
  const me=g.memberIds.includes(id),name=room.members.find(m=>m.id===id)?.name||'';
  const result=g.stage==='result'?g.result:null;
- const current=g.nightOrder[g.nightCursor];
+ const nightDone=g.nightDone||[];
+ const current=me&&!nightDone.includes(id)?id:null;
  const r=g.initial[id];
- const waitingNight=g.stage==='night'&&current!==id;
+ const waitingNight=g.stage==='night'&&nightDone.includes(id);
  const myRole=me&&(g.stage!=='setup')?r:null;
  const voted=!!g.votes[id];
  const publicView={
   stage:g.stage,count:g.memberIds.length,members:room.members.map(m=>({id:m.id,name:m.name,icon:m.icon})),
   restCount:2,counts:g.counts,duration:g.duration,
-  revealedCount:g.revealed.length,votedCount:Object.keys(g.votes).length,
+  revealedCount:g.revealed.length,nightDoneCount:nightDone.length,votedCount:Object.keys(g.votes).length,
   timerRemaining:g.timerRemaining,deadline:g.deadline,
   result,
   myRole,
   myFinalRole:g.stage==='result'&&me?g.final[id]:null,
-  nightIsMyTurn:g.stage==='night'&&current===id,
+  nightIsMyTurn:g.stage==='night'&&me&&!nightDone.includes(id),
   nightWaiting:waitingNight,
-  myIntel:g.stage==='night'&&current===id?g.intel[id]||null:null,
+  myIntel:g.stage==='night'&&me?g.intel[id]||null:null,
+  myNightDone:nightDone.includes(id),
   myVoted:voted,
   chat:g.stage==='discussion'?g.chat||[]:[],
   myRevealed:g.revealed.includes(id),
   isHost:id===room.hostId
  };
- if(g.stage==='night'&&current===id&&r==='fake'){
+ if(g.stage==='night'&&me&&r==='fake'){
   publicView.partners=g.memberIds.filter(other=>other!==id&&g.initial[other]==='fake').map(other=>{
    const p=room.members.find(m=>m.id===other);return{id:other,name:p?.name||'',icon:p?.icon||''}
   });
@@ -107,7 +105,7 @@ export function niseAction(room,id,data){
   return true;
  }
  if(data.type==='nise-night-action'){
-  if(stage!=='night'||g.nightOrder[g.nightCursor]!==id||g.intel[id])return false;
+  if(stage!=='night'||(g.nightDone||[]).includes(id)||g.intel[id])return false;
   const role=g.initial[id],kind=data.kind;
   if(role==='president'&&kind==='player'&&validTarget(g,id,data.target)){
    g.intel[id]={kind,role:g.initial[data.target],target:data.target};
@@ -121,18 +119,18 @@ export function niseAction(room,id,data){
    g.intel[id]={kind:'compare',same:NISE_ROLES[g.initial[a]].side===NISE_ROLES[g.initial[b]].side,targets:[a,b]};
   }else if(role==='swapper'&&kind==='swap'&&validTarget(g,id,data.target)){
    [g.final[id],g.final[data.target]]=[g.final[data.target],g.final[id]];
-   g.intel[id]={kind:'swap',role:g.final[id],target:data.target};
+   g.intel[id]={kind:'swap',role:g.final[id],target:data.target,otherRole:g.final[data.target],originalRole:g.initial[id]};
   }else if(role==='swapper'&&kind==='skip'){
    g.intel[id]={kind:'skip',role:g.final[id]};
   }else return false;
   return true;
  }
  if(data.type==='nise-night-done'){
-  if(stage!=='night'||g.nightOrder[g.nightCursor]!==id)return false;
+  if(stage!=='night'||(g.nightDone||[]).includes(id))return false;
   const r=g.initial[id];
   if(['president','dayDuty','observer','swapper'].includes(r)&&!g.intel[id])return false;
-  g.nightCursor++;
-  if(g.nightCursor>=g.nightOrder.length){g.stage='discussion';g.timerRemaining=g.duration;g.deadline=0}
+  g.nightDone??=[];g.nightDone.push(id);
+  if(g.nightDone.length>=g.memberIds.length){g.stage='discussion';g.timerRemaining=g.duration;g.deadline=0}
   return true;
  }
  if(data.type==='nise-chat'){
@@ -161,8 +159,12 @@ export function niseAction(room,id,data){
  if(data.type==='nise-vote'){
   if(stage!=='voting'||g.votes[id]||!validTarget(g,id,data.target))return false;
   g.votes[id]=data.target;
-  if(Object.keys(g.votes).length===g.memberIds.length){g.stage='result';g.result=niseVoteResult(g,room)}
+  if(Object.keys(g.votes).length===g.memberIds.length){g.stage='voteComplete';g.result=null}
   return true;
+ }
+ if(data.type==='nise-publish-result'){
+  if(!host||stage!=='voteComplete'||Object.keys(g.votes).length!==g.memberIds.length)return false;
+  g.result=niseVoteResult(g,room);g.stage='result';return true;
  }
  if(data.type==='nise-rematch'){
   if(!host||stage!=='result')return false;
