@@ -127,6 +127,9 @@ function revealScreen(){
 
 function nightScreen(){
  const game=g(),role=game.myRole,intel=game.myIntel,done=game.myNightDone;
+ // Backward-compatible with old Workers until the v5 deployment is available.
+ if(game.nightDoneCount===undefined&&!game.nightIsMyTurn)return heading('休み時間','順番に行動中')+tags()+board()+
+  '<div class="card online-wait">いまはほかの人の番だよ。自分の番まで待ってね。</div>';
  const face={[myId()]:role},targets=[],restTargets=[];
  let detail='',info='';
  if(role==='fake'){
@@ -154,7 +157,7 @@ function nightScreen(){
   else if(intel.kind==='compare')info='<p>'+intel.targets.map(nameOf).join(' と ')+' は <strong>'+(intel.same?'同じ陣営':'違う陣営')+'</strong></p>';
   else if(intel.kind==='swap'){
    // Only the swapper sees BOTH exchanged roles in their new board positions.
-   face[myId()]=intel.role;face[intel.target]=intel.originalRole;
+   face[myId()]=intel.role;face[intel.target]=intel.originalRole||'swapper';
    info='<p>'+nameOf(intel.target)+'と交換したよ。交換後のカードを盤面に表示中。</p>';
   }else if(intel.kind==='skip')info='<p>交換せずに進んだよ。</p>';
  }
@@ -166,7 +169,7 @@ function nightScreen(){
  '<div class="card online-day-result"><h2>'+esc(roleDefs[role].name)+'</h2>'+
  (done?'<p class="online-progress-bar">行動完了！ ほかの人を待とう。</p>':detail+info+
  (canFinish?button('行動を終える','data-night-done','yellow full'):''))+
- '<p class="online-night-progress">'+game.nightDoneCount+' / '+game.count+'人が行動完了</p></div>';
+ '<p class="online-night-progress">'+(game.nightDoneCount===undefined?'順番に行動中':game.nightDoneCount+' / '+game.count+'人が行動完了')+'</p></div>';
 }
 
 function privateCardResult(role){
