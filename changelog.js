@@ -3,7 +3,7 @@
 globalThis.HOUKAGO_CHANGELOG=[
   {
     "date": "2026-10-16",
-    "datetime": "2026-10-16T20:45:00+09:00",
+    "datetime": "2026-10-16T20:47:12+09:00",
     "category": "site",
     "major": false,
     "title": "ゲーム一覧を探しやすく刷新",
