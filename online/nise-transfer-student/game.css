@@ -421,3 +421,151 @@
 .nise-online-app.nise-chat-editing .online-chat-panel[open] .online-chat-form{
  flex:0 0 auto;
 }
+
+
+
+/* 2026-10-16: online simultaneous play + card-first compact responsive interface */
+.nise-online-app .nise-play-shell{grid-template-rows:auto minmax(0,1fr) auto}
+.nise-online-app .nise-play-head{gap:2px}
+.nise-online-app .nise-play-head .title{font-size:clamp(18px,4vw,25px)}
+.nise-online-app .nise-play-head .subtitle{font-size:clamp(10px,2.3vw,12px);margin:0}
+.nise-online-app .nise-play-board{align-items:center}
+.nise-online-app .nise-play-board .table-board{gap:4px}
+.nise-online-app .nise-play-board .table-zone{padding:4px 6px}
+.nise-online-app .nise-play-board .table-zone-title{margin:0 0 2px;font-size:11px}
+.nise-online-app .nise-play-board .table-card-row{gap:3px}
+.nise-online-app .nise-play-board .online-person-cell{
+ min-width:0;width:var(--card-size);display:flex;flex-direction:column;
+ justify-self:center;align-items:center;gap:1px;
+}
+.nise-online-app .nise-play-board .online-person-cell>.table-card-wrap{
+ width:var(--card-size);max-width:100%;
+}
+.nise-online-app .nise-play-board .online-vote-under-name{
+ width:100%;text-align:center;font-size:clamp(8px,1.95vw,11px);
+ font-weight:900;line-height:1.16;white-space:normal;overflow-wrap:anywhere;
+ color:#245e92;background:#e7f3ff;border-radius:5px;padding:2px 1px;
+}
+.nise-online-app .nise-play-board .table-card-name{
+ font-size:clamp(9px,2.1vw,11px);line-height:1.05;margin-top:2px;
+}
+.nise-online-app .nise-play-board .table-card-role{
+ font-size:clamp(8px,1.85vw,10px);line-height:1.05;
+}
+.nise-online-app .nise-play-board .online-final-board{gap:3px}
+.nise-online-app .nise-play-board .online-final-board .table-zone{
+ padding:3px 4px;border-radius:11px;
+}
+.nise-online-app .nise-play-board .online-final-board .table-card{
+ border-radius:5px;border-width:1px;
+}
+.nise-online-app .nise-play-board .online-final-board .table-card-name{font-size:10px}
+.nise-online-app .nise-play-actions{max-height:min(31dvh,290px);gap:5px}
+.nise-online-app .nise-play-actions>.card{padding:clamp(8px,1.1dvh,12px);border-radius:13px}
+.nise-online-app .nise-play-actions .btn{
+ min-height:clamp(37px,5.1dvh,46px);padding:7px 9px;
+ font-size:clamp(13px,3vw,17px);
+}
+.nise-online-app .nise-play-actions .online-role-summary{
+ display:flex;flex-direction:column;align-items:center;text-align:center;
+ gap:5px;flex:none;
+}
+.nise-online-app .nise-play-actions .online-role-summary .online-secret-info{
+ display:flex;flex-direction:row;align-items:center;justify-content:center;
+ gap:11px;width:100%;
+}
+.nise-online-app .nise-play-actions .online-role-summary .online-secret-info img{
+ width:clamp(58px,9dvh,85px);height:auto;max-height:clamp(65px,10dvh,100px);
+ margin:0;flex:none;
+}
+.nise-online-app .nise-play-actions .online-role-summary .online-secret-info h2{font-size:clamp(15px,3.6vw,21px)}
+.nise-online-app .nise-play-actions .online-role-summary .online-secret-info p{
+ display:none;
+}
+.nise-online-app .nise-play-actions .online-role-summary>.btn{width:100%}
+.nise-online-app .nise-play-actions .online-role-summary .online-progress-bar{
+ padding:3px 8px;margin:2px 0;font-size:11px;
+}
+.nise-online-app .nise-play-actions .online-day-result{
+ display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.nise-online-app .nise-play-actions .online-day-result h2{font-size:clamp(15px,3.5vw,20px);margin:0}
+.nise-online-app .nise-play-actions .online-day-result p{margin:2px 0}
+.nise-online-app .nise-play-actions .online-day-result .online-research{
+ display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.nise-online-app .nise-play-actions .online-day-result .online-research img{
+ width:clamp(45px,7.5dvh,70px);max-height:clamp(50px,8.5dvh,80px);
+ margin:0;
+}
+.nise-online-app .nise-play-actions .online-night-progress{
+ font-size:11px;font-weight:900;color:#346e9c;
+ margin:2px 0;
+}
+.nise-online-app .nise-play-actions .online-timer-panel{
+ display:flex;flex-direction:column;gap:4px;padding:5px 9px;
+}
+.nise-online-app .nise-play-actions .timer-main-row{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.nise-online-app .nise-play-actions .timer-main-row [data-timer]{
+ font-size:clamp(22px,4.5dvh,36px);
+ line-height:1.1;font-variant-numeric:tabular-nums;
+ font-weight:1000;flex:1;text-align:center;
+}
+.nise-online-app .nise-play-actions .timer-main-row>.btn{
+ flex:1;max-width:165px;min-height:33px;padding:5px 7px;font-size:12px;
+}
+.nise-online-app .online-timer-options>summary{
+ padding:4px 5px;font-weight:900;font-size:11px;color:#406888;
+ cursor:pointer;
+}
+.nise-online-app .nise-play-actions .online-timer-options .timer-adjust-grid{
+ gap:4px;margin-top:3px;
+}
+.nise-online-app .nise-play-actions .online-timer-options .btn{
+ min-height:32px;font-size:12px;
+}
+.nise-online-app .nise-play-actions .online-private-check .online-secret-info{
+ display:flex;flex-direction:row;gap:8px;align-items:center;justify-content:center;
+ padding:6px;
+}
+.nise-online-app .nise-play-actions .online-private-check .role-card-large{
+ max-width:65px;max-height:80px;margin:0;
+}
+.nise-online-app .nise-play-actions .online-private-check .online-secret-info p{display:none}
+.nise-online-app .nise-play-actions .online-publish-panel{
+ text-align:center;padding:10px;
+}
+.nise-online-app .nise-play-actions .online-publish-panel p{margin:4px 0 10px}
+.nise-online-app .nise-play-head .result-hero{
+ width:min(100%,530px);gap:1px;padding:4px 8px;
+}
+.nise-online-app .nise-play-head .result-logo{
+ display:block;width:auto;height:auto;
+ max-height:clamp(90px,18dvh,175px);max-width:min(440px,93vw);
+ object-fit:contain;
+}
+.nise-online-app .nise-play-actions .online-result-actions{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+}
+.nise-online-app .nise-play-actions .online-result-actions>.btn{min-width:0;width:100%}
+.nise-online-app .nise-play-actions .online-result-actions>.btn:first-child{
+ grid-column:1/-1;
+}
+.nise-online-app .nise-play-actions .online-result-actions>.online-progress-bar{grid-column:1/-1;margin:0}
+@media (min-width:760px) and (min-height:560px){
+ .nise-online-app .nise-play-shell{
+  grid-template-columns:minmax(0,1.18fr) minmax(275px,.82fr);
+ }
+ .nise-online-app .nise-play-board .online-final-board .table-card-name{
+  font-size:clamp(10px,1.2vw,12px);
+ }
+ .nise-online-app .nise-play-actions{max-height:none}
+ .nise-online-app .nise-play-head .result-logo{max-height:min(21dvh,220px)}
+}
+@media (max-height:710px){
+ .nise-online-app .nise-play-head .result-logo{max-height:clamp(70px,12dvh,105px)}
+ .nise-online-app .nise-play-actions .online-result-actions>.btn{min-height:36px}
+ .nise-online-app .nise-play-actions{max-height:min(35dvh,295px)}
+}
