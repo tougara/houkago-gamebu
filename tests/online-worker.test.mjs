@@ -492,7 +492,13 @@ test('ニセ転校生オンライン: 役職秘匿・3人以上の開始・休�
   assert.ok(!Object.hasOwn(seen,'final'));
   assert.ok(!Object.hasOwn(seen,'votes'));
  }
- for(let i=0;i<4;i++)await send(i,{type:'nise-reveal-done'});
+ await send(0,{type:'nise-reveal-done'});
+ assert.equal(raw.stage,'night','first confirmed player immediately begins night');
+ assert.equal(sockets[0].events.at(-1).room.nise.stage,'night');
+ assert.equal(sockets[1].events.at(-1).room.nise.stage,'reveal','unconfirmed member keeps private reveal screen');
+ await send(1,{type:'nise-night-done'});
+ assert.equal(raw.nightDone.length,0,'unconfirmed member cannot skip night actions');
+ for(let i=1;i<4;i++)await send(i,{type:'nise-reveal-done'});
  assert.equal(raw.stage,'night');
  // 全員が順番を待たずに操作する。各自の役職の効果は初期配置に適用。
  for(let i=3;i>=0;i--){
