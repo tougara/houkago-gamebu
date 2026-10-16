@@ -76,3 +76,304 @@
 .online-chat-form{display:grid;grid-template-columns:minmax(0,1fr) 75px;gap:7px;margin-top:11px}
 .online-chat-form input{min-width:0;width:100%;height:48px;background:white;border-radius:11px;border:2px solid #d5e3f1;padding:8px 10px;font-size:15px}
 .online-chat-form .btn{height:48px;min-height:48px;padding:8px;border-radius:11px}
+
+
+/* 2026-10-16 Offline-aligned online UX: one-screen game shell.
+   The lobby and offline game keep their own styles. */
+.nise-online-app{
+ width:min(1080px,100%);height:100dvh;min-height:0;max-height:100dvh;
+ overflow:hidden;display:flex;flex-direction:column;
+ gap:clamp(5px,.8dvh,10px);
+ padding:clamp(6px,1dvh,12px) clamp(7px,1.5vw,16px) max(7px,env(safe-area-inset-bottom));
+}
+.nise-online-app>.top-nav{
+ margin:0;flex:0 0 auto;
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
+ align-items:center;gap:clamp(4px,1.2vw,9px);
+}
+.nise-online-app .top-nav .back-home{
+ min-width:0;min-height:clamp(38px,5.5dvh,47px);
+ padding:7px 6px;justify-content:center;text-align:center;
+ font-size:clamp(10px,2.55vw,13px);white-space:nowrap;
+}
+.nise-online-app .online-connection{
+ font-size:clamp(9px,2vw,11px);padding:7px;white-space:nowrap;
+}
+.nise-online-app>.online-message{margin:0;flex:0 0 auto;padding:7px 10px;font-size:12px}
+.nise-online-app>#game-root{flex:1 1 0;min-height:0;min-width:0;overflow:hidden}
+.nise-online-app .online-role-legend{
+ margin:0;justify-content:center;gap:4px;
+}
+.nise-online-app .online-role-legend>span{
+ font-size:clamp(9px,2.2vw,11px);padding:3px 7px;
+}
+.nise-online-app .nise-play-shell{
+ display:grid;min-height:0;min-width:0;height:100%;gap:clamp(5px,.9dvh,10px);
+ grid-template-rows:auto minmax(0,1fr) auto;
+ overflow:hidden;
+}
+.nise-online-app .nise-play-head{
+ min-width:0;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:3px;text-align:center;
+}
+.nise-online-app .nise-play-head .title{
+ margin:0;font-size:clamp(19px,4.4vw,28px);line-height:1.15;
+}
+.nise-online-app .nise-play-head .subtitle{
+ margin:0;font-size:clamp(11px,2.45vw,14px);line-height:1.2;
+}
+.nise-online-app .nise-play-board{
+ min-height:0;min-width:0;display:grid;place-items:center;
+ overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;
+}
+.nise-online-app .nise-play-board .table-board{
+ width:100%;min-width:0;margin:0;gap:clamp(4px,.75dvh,8px);
+}
+.nise-online-app .nise-play-board .table-zone{
+ padding:clamp(4px,.8dvh,9px);border-radius:13px;
+}
+.nise-online-app .nise-play-board .table-zone-title{
+ margin:0 0 3px;font-size:clamp(10px,2.3vw,12px);
+}
+.nise-online-app .nise-play-board .table-card-row{gap:3px}
+.nise-online-app .nise-play-board .table-card-wrap{max-width:100%;min-width:0}
+.nise-online-app .nise-play-board .table-card-name{
+ font-size:clamp(9px,2.1vw,11px);margin-top:2px;line-height:1.1;
+}
+.nise-online-app .nise-play-board .table-card-role{font-size:clamp(8px,1.7vw,10px)}
+.nise-online-app .nise-play-actions{
+ min-width:0;min-height:0;display:flex;flex-direction:column;
+ gap:clamp(6px,.8dvh,10px);
+ max-height:min(36dvh,350px);
+ overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;
+}
+.nise-online-app .nise-play-actions>.card{
+ flex:none;margin:0;padding:clamp(9px,1.4dvh,14px);border-radius:16px;
+}
+.nise-online-app .nise-play-actions .card h2{margin:0 0 4px;font-size:clamp(16px,3.5vw,21px)}
+.nise-online-app .nise-play-actions .card p,
+.nise-online-app .nise-play-actions .online-note{
+ margin:3px 0 8px;font-size:clamp(11px,2.55vw,13px);line-height:1.35;
+}
+.nise-online-app .nise-play-actions .btn{
+ min-height:clamp(40px,6dvh,53px);padding:8px 10px;
+ font-size:clamp(13px,3vw,17px);border-radius:12px;
+}
+.nise-online-app .nise-play-actions .online-role-private{padding:6px 7px}
+.nise-online-app .nise-play-actions .role-card-large{
+ width:auto;height:auto;max-width:38%;max-height:clamp(72px,14dvh,130px);
+ object-fit:contain;margin:5px auto;
+}
+.nise-online-app .nise-play-actions .online-day-result{padding:clamp(9px,1.5dvh,15px)}
+.nise-online-app .nise-play-actions .online-research{display:flex;align-items:center;justify-content:center;gap:8px}
+.nise-online-app .nise-play-actions .online-research .role-card-large{
+ width:auto;max-width:90px;max-height:clamp(55px,9dvh,88px);margin:2px;
+}
+.nise-online-app .nise-play-actions>.online-progress-bar,
+.nise-online-app .nise-play-actions>.online-vote-wait{
+ flex:0 0 auto;margin:0;padding:8px;border-radius:12px;font-size:12px;
+}
+.nise-online-app .nise-play-actions .online-vote-confirm{margin:0;padding:10px}
+.nise-online-app .nise-play-actions .online-vote-confirm h2{font-size:15px;line-height:1.25}
+.nise-online-app .nise-play-actions .timer-main-row{
+ display:grid;grid-template-columns:1fr minmax(95px,.7fr);gap:8px;align-items:center;
+}
+.nise-online-app .nise-play-actions .timer-large{
+ margin:0;font-size:clamp(43px,8dvh,77px);line-height:1.05;
+}
+.nise-online-app .nise-play-actions .timer-main-toggle{
+ min-height:clamp(47px,7dvh,66px);
+}
+.nise-online-app .nise-play-actions .timer-adjust-grid{gap:5px 7px}
+.nise-online-app .nise-play-actions .timer-adjust-grid .btn{
+ min-height:clamp(34px,5dvh,44px);font-size:clamp(12px,2.8vw,15px);
+}
+.nise-online-app .nise-play-actions .online-timer-panel{padding:9px 12px}
+.nise-online-app .nise-play-actions .online-timer-panel .online-note{margin:4px 0 0}
+.nise-online-app .nise-play-actions .online-primary-action{flex:0 0 auto}
+.nise-online-app .online-private-check,
+.nise-online-app .online-chat-panel,
+.nise-online-app .nise-result-details{
+ flex:0 0 auto;margin:0;min-width:0;background:rgba(255,255,255,.96);
+ border:1px solid #d6e2ed;border-radius:12px;overflow:hidden;
+}
+.nise-online-app .online-private-check>summary,
+.nise-online-app .online-chat-panel>summary,
+.nise-online-app .nise-result-details>summary{
+ cursor:pointer;padding:9px 12px;color:#276493;
+ font-size:clamp(12px,2.7vw,14px);font-weight:950;
+}
+.nise-online-app .online-chat-panel>summary span{
+ background:#e4f0fa;color:#326c99;font-size:10px;
+ padding:2px 7px;border-radius:99px;margin-left:6px;
+}
+.nise-online-app .online-chat-inner{padding:4px 9px 10px}
+.nise-online-app .online-chat-list{
+ min-height:70px;max-height:min(22dvh,180px);gap:5px;padding:7px;
+}
+.nise-online-app .online-chat-line{padding:7px 9px;font-size:12px}
+.nise-online-app .online-chat-form{grid-template-columns:minmax(0,1fr) 62px;gap:6px;margin-top:7px}
+.nise-online-app .online-chat-form input{height:40px;min-height:40px;font-size:14px}
+.nise-online-app .online-chat-form .btn{height:40px;min-height:40px;padding:5px;font-size:12px}
+.nise-online-app .nise-play-head .result-hero{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ margin:0;padding:4px 10px;border-radius:13px;
+ box-shadow:none;background:rgba(255,253,249,.88);
+}
+.nise-online-app .nise-play-head .result-logo{
+ max-height:clamp(75px,13dvh,125px);max-width:min(410px,86vw);
+ width:auto;object-fit:contain;margin:0 auto;
+}
+.nise-online-app .nise-play-head .result-reason{
+ font-size:clamp(11px,2.6vw,14px);line-height:1.25;margin:2px 0 0;
+}
+.nise-online-app .online-result-actions{
+ display:flex;flex-direction:column;flex:none;gap:6px;margin:0;
+}
+.nise-online-app .nise-result-details .nise-result-detail-body{padding:2px 10px 10px}
+.nise-online-app .nise-result-details[open]{
+ max-height:min(28dvh,240px);overflow:auto;
+}
+.nise-online-app .online-results-votes{gap:4px}
+.nise-online-app .online-results-votes>div{
+ font-size:12px;padding:7px 8px;gap:4px;
+}
+.nise-online-app .online-result-actions>.btn{width:100%;margin:0}
+/* Online role setup matches the offline basic/advanced four-role tabs. */
+.nise-online-app .nise-online-setup{
+ display:flex;flex-direction:column;gap:clamp(5px,.75dvh,9px);
+ height:100%;min-height:0;overflow:hidden;
+}
+.nise-online-app .nise-online-setup>.title{
+ flex:none;font-size:clamp(20px,4.1vw,28px);margin:0;line-height:1.1;
+}
+.nise-online-app .nise-online-setup>.subtitle{
+ flex:none;margin:0;font-size:clamp(11px,2.5vw,14px);line-height:1.2;
+}
+.nise-online-app .online-setup-members{
+ flex:0 0 auto;background:rgba(255,255,255,.96);border:1px solid #e4ded5;
+ border-radius:12px;
+}
+.nise-online-app .online-setup-members details>summary{
+ padding:8px 12px;cursor:pointer;font-size:13px;font-weight:950;
+}
+.nise-online-app .online-setup-members details>summary strong{
+ color:#176eae;background:#e6f2fd;border-radius:999px;padding:3px 8px;
+}
+.nise-online-app .online-setup-members details>summary span{float:right;color:#43759a;font-size:11px}
+.nise-online-app .online-setup-members .online-member-list{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:4px;max-height:min(22dvh,180px);overflow:auto;margin:0;padding:6px 10px 10px;
+}
+.nise-online-app .online-setup-members .online-member-list span{
+ padding:5px 7px;margin:0;overflow-wrap:anywhere;font-size:11px;
+}
+.nise-online-app .nise-online-setup .role-select-card{
+ flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;
+ margin:0;padding:clamp(6px,.95dvh,11px);border-radius:14px;
+}
+.nise-online-app .nise-online-setup .role-select-card>.note{
+ flex:none;display:flex;align-items:center;justify-content:space-between;gap:6px;
+ padding:6px 8px;margin:0;font-size:clamp(10px,2.15vw,12px);line-height:1.2;
+}
+.nise-online-app .nise-online-setup .role-select-card>.note strong{white-space:nowrap}
+.nise-online-app .nise-online-setup .nise-role-tabs{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ margin:6px 0;gap:6px;flex:none;
+}
+.nise-online-app .nise-online-setup .nise-role-tabs>.btn{
+ min-height:clamp(35px,5dvh,43px);font-size:clamp(12px,2.8vw,15px);
+ padding:6px 8px;
+}
+.nise-online-app .nise-online-setup .nise-role-tabs>.btn.selected{
+ background:#1687e8;color:#fff;box-shadow:0 3px 0 #0752a5;
+}
+.nise-online-app .nise-online-setup .role-reg-group{
+ flex:1 1 0;min-height:0;display:grid;grid-template-rows:auto repeat(4,minmax(0,1fr));
+ margin:0;padding:0;width:100%;overflow:hidden;border-radius:11px;
+}
+.nise-online-app .nise-online-setup .role-reg-heading{
+ display:flex;align-items:center;justify-content:space-between;gap:5px;
+ padding:4px 9px;min-height:24px;background:#eef8ff;
+}
+.nise-online-app .nise-online-setup .role-reg-group.advanced .role-reg-heading{background:#f8f1ff}
+.nise-online-app .nise-online-setup .role-reg-heading strong{font-size:14px}
+.nise-online-app .nise-online-setup .role-reg-heading span{font-size:10px}
+.nise-online-app .nise-online-setup .role-row{
+ display:grid;grid-template-columns:clamp(32px,5dvh,45px) minmax(0,1fr) auto;
+ align-items:center;min-height:0;padding:2px 8px;
+ gap:clamp(4px,1.4vw,9px);
+}
+.nise-online-app .nise-online-setup .role-thumb,.nise-online-app .nise-online-setup .role-thumb-button{
+ width:clamp(32px,5dvh,45px);height:clamp(32px,5dvh,45px);
+ object-fit:contain;
+}
+.nise-online-app .nise-online-setup .role-title{
+ font-size:clamp(12px,2.9vw,16px);line-height:1.12;
+}
+.nise-online-app .nise-online-setup .side-tag{
+ font-size:clamp(9px,2vw,11px);margin-top:2px;padding:3px 5px;
+}
+.nise-online-app .nise-online-setup .role-count-controls{
+ grid-template-columns:clamp(31px,5dvh,38px) 19px clamp(31px,5dvh,38px);
+ gap:3px;
+}
+.nise-online-app .nise-online-setup .role-step{
+ width:clamp(31px,5dvh,38px);min-width:0;min-height:clamp(32px,5dvh,40px);
+ height:clamp(32px,5dvh,40px);font-size:19px;padding:0;border-radius:10px;
+}
+.nise-online-app .nise-online-setup .count{font-size:15px;min-width:19px}
+.nise-online-app .online-setup-bottom{
+ flex:none;display:grid;gap:5px;margin:0;
+}
+.nise-online-app .online-duration{
+ display:flex;gap:8px;align-items:center;
+ padding:5px 8px;background:#fff;border:1px solid #e1e6eb;border-radius:12px;
+}
+.nise-online-app .online-duration>span{
+ font-size:11px;font-weight:950;white-space:nowrap;
+}
+.nise-online-app .online-duration-options{
+ min-width:0;flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;
+}
+.nise-online-app .online-duration-options>.btn{
+ min-height:33px;padding:5px 2px;font-size:clamp(10px,2.3vw,13px);border-radius:9px;
+}
+.nise-online-app .online-duration-options>.btn.selected{background:#1687e8;color:white}
+.nise-online-app .online-setup-bottom>.btn{
+ min-height:clamp(43px,6dvh,53px);font-size:clamp(15px,3.4vw,19px);
+}
+.nise-online-app .online-host-hint{
+ margin:0;padding:10px;text-align:center;border-radius:12px;
+ color:#236491;background:#e8f3fc;font-size:12px;font-weight:900;
+}
+/* Desktop/tablet : board left, actions to the right. Same hierarchy as offline. */
+@media(min-width:760px) and (min-height:560px){
+ .nise-online-app .nise-play-shell{
+  grid-template-columns:minmax(0,1fr) minmax(280px,39%);
+  grid-template-rows:auto minmax(0,1fr);gap:12px;
+ }
+ .nise-online-app .nise-play-head{grid-column:1/-1;grid-row:1}
+ .nise-online-app .nise-play-board{grid-column:1;grid-row:2}
+ .nise-online-app .nise-play-actions{
+  grid-column:2;grid-row:2;max-height:none;justify-content:center;
+ }
+ .nise-online-app .nise-online-setup{max-width:780px;margin:auto;width:100%}
+ .nise-online-app .online-setup-members .online-member-list{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+ }
+}
+@media(max-height:590px){
+ .nise-online-app .nise-play-actions{max-height:44dvh}
+ .nise-online-app .nise-play-head .result-logo{max-height:65px}
+ .nise-online-app .nise-online-setup .role-reg-heading{min-height:20px;padding:2px 7px}
+ .nise-online-app .nise-online-setup .role-select-card>.note{padding:3px 6px}
+}
+@media(max-height:510px){
+ .nise-online-app{height:auto;min-height:100dvh;max-height:none;overflow:auto}
+ .nise-online-app .nise-online-setup{height:auto;min-height:570px}
+ .nise-online-app .nise-online-setup .role-reg-group{
+  min-height:260px;grid-template-rows:22px repeat(4,58px);
+ }
+ .nise-online-app .nise-play-shell{height:auto;min-height:510px}
+}
