@@ -377,3 +377,47 @@
  }
  .nise-online-app .nise-play-shell{height:auto;min-height:510px}
 }
+
+
+/* Tablet soft keyboard: dedicate the visible screen to the active chat composer.
+   No entire-page lock prevents tapping and typing in the IME. */
+.nise-online-app .online-chat-form input{
+ font-size:16px;touch-action:auto;-webkit-user-select:text;user-select:text;
+}
+.nise-online-app.nise-chat-editing{
+ height:var(--nise-visual-height,100dvh);
+ max-height:var(--nise-visual-height,100dvh);
+ min-height:0;
+}
+.nise-online-app.nise-chat-editing .nise-play-shell{
+ display:grid;grid-template-columns:minmax(0,1fr);
+ grid-template-rows:auto minmax(0,1fr);
+}
+.nise-online-app.nise-chat-editing .nise-play-head{
+ grid-column:1;grid-row:1;
+}
+.nise-online-app.nise-chat-editing .nise-play-board,
+.nise-online-app.nise-chat-editing .online-timer-panel,
+.nise-online-app.nise-chat-editing .online-private-check,
+.nise-online-app.nise-chat-editing .online-primary-action,
+.nise-online-app.nise-chat-editing .nise-play-actions>.online-progress-bar{
+ display:none;
+}
+.nise-online-app.nise-chat-editing .nise-play-actions{
+ grid-column:1;grid-row:2;max-height:none;min-height:0;
+ justify-content:flex-start;overflow-y:auto;
+ scroll-padding-bottom:12px;
+}
+.nise-online-app.nise-chat-editing .online-chat-panel[open]{
+ display:flex;flex-direction:column;flex:1 1 0;min-height:0;
+}
+.nise-online-app.nise-chat-editing .online-chat-panel[open] .online-chat-inner{
+ display:flex;flex-direction:column;min-height:0;flex:1 1 0;
+}
+.nise-online-app.nise-chat-editing .online-chat-panel[open] .online-chat-list{
+ flex:1 1 0;min-height:45px;max-height:none;
+ overflow-y:auto;
+}
+.nise-online-app.nise-chat-editing .online-chat-panel[open] .online-chat-form{
+ flex:0 0 auto;
+}
