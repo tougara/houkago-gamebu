@@ -37,7 +37,7 @@ function room(stage,n=4,extra={}){
  return {code:'ABCD2345',phase:'nise',hostId:'p0',members,gameId:'nise-transfer-student',
   nise:{stage,count:n,members,duration:180,counts:counts(n),
    myRole:'president',revealedCount:0,myRevealed:false,
-   nightIsMyTurn:true,myIntel:null,nightWaiting:false,
+   nightIsMyTurn:true,myIntel:null,nightWaiting:false,myNightDone:false,nightDoneCount:0,
    timerRemaining:180,deadline:0,chat:[],votedCount:0,myVoted:false,
    result:stage==='result'?{
     kind:'real',winner:'ホンモノサイド勝利',expelled:['p1'],max:2,
@@ -143,40 +143,58 @@ for(const [name,w,h] of [['small phone',360,620],['phone',390,740],['desktop',12
    await page.locator('[data-confirm-vote]').click();
    const sent=await page.evaluate(()=>window.__onlineFakeWS.sent);
    assert.ok(sent.some(x=>x.type==='nise-vote'&&x.target==='p1'));
+   await push(room('voteComplete',4));
+   assert.equal(await page.locator('[data-publish-result]').count(),1);
+   await page.locator('[data-publish-result]').click();
+   assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent))
+    .some(x=>x.type==='nise-publish-result'));
    await push(room('result',4));
-   assert.equal(await page.locator('.nise-result-details[open]').count(),0);
-   await page.locator('.nise-result-details summary').click();
-   assert.equal(await page.locator('.online-results-votes>div').count(),4);
+   assert.equal(await page.locator('.online-vote-under-name').count(),4);
+   assert.equal(await page.locator('.online-final-board .table-player-row .table-card-wrap').count(),4);
    assert.deepEqual(errors,[]);
   }finally{await context.close()}
  });
 }
-test('role secrecy on hold, chatting on demand and key accessibility are preserved',async()=>{
+test('your own role is visible without long press, simultaneous night actions and vote remain secret',async()=>{
  const {page,context,errors,push}=await open(390,740);
  try{
   await push(room('reveal',4,{myRole:'fake'}));
-  const role=page.locator('.online-secret-info').first();
-  assert.equal(await role.isVisible(),false,'role must start hidden');
-  await page.locator('[data-hold-secret]').first().dispatchEvent('pointerdown',{pointerId:7});
-  assert.equal(await role.isVisible(),true,'role visible only while holding');
-  await page.locator('[data-hold-secret]').first().dispatchEvent('pointerup',{pointerId:7});
-  assert.equal(await role.isVisible(),false,'role hidden on release');
+  assert.equal(await page.locator('.online-role-summary .online-secret-info').isVisible(),true);
+  assert.equal(await page.locator('[data-hold-secret]').count(),0);
+  await page.locator('[data-reveal-done]').click();
+  assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent))
+   .some(x=>x.type==='nise-reveal-done'));
+  await push(room('night',4,{myRole:'swapper',nightIsMyTurn:true,myIntel:null}));
+  assert.equal(await page.locator('[data-target]').count(),3);
+  await page.locator('[data-target="p1"]').click();
+  assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent))
+   .some(x=>x.type==='nise-night-action'&&x.kind==='swap'&&x.target==='p1'));
+  await push(room('night',4,{myRole:'swapper',nightIsMyTurn:true,myIntel:{
+   kind:'swap',target:'p1',role:'fake',originalRole:'swapper',otherRole:'swapper'
+  }}));
+  const pairs=await page.locator('.table-player-row .online-person-cell .table-card-role').allTextContents();
+  assert.equal(pairs[0],'ニセ転校生');
+  assert.equal(pairs[1],'席替え係');
+  await page.locator('[data-night-done]').click();
+  assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent))
+   .some(x=>x.type==='nise-night-done'));
   await push(room('discussion',4));
   assert.equal(await page.locator('.online-chat-panel[open]').count(),0);
   await page.locator('.online-chat-panel summary').click();
   await page.locator('#chat-input').fill('こんにちは');
   await page.locator('.online-chat-form button').click();
-  assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent)).some(
-   x=>x.type==='nise-chat'&&x.text==='こんにちは'));
+  assert.ok((await page.evaluate(()=>window.__onlineFakeWS.sent))
+   .some(x=>x.type==='nise-chat'&&x.text==='こんにちは'));
   await push(room('voting',4));
-  const card=page.locator('[data-target="p1"]');
-  await card.focus();
+  await page.locator('[data-target="p1"]').focus();
   await page.keyboard.press('Enter');
   assert.equal(await page.locator('[data-confirm-vote]').count(),1);
+  await push(room('voteComplete',4));
+  assert.equal(await page.locator('.result-hero').count(),0,
+    'voting completion must not reveal winners');
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
-
 test('touch tablet keeps Japanese chat input and composition intact through room updates',async()=>{
  const {page,context,errors,push}=await open(820,1180);
  try{
@@ -269,4 +287,26 @@ test('touch tablet lobby nickname and invite code remain editable',async()=>{
   assert.equal(await page.locator('#code').inputValue(),'ABCD2345');
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
+});
+
+
+test('results place the vote target directly below every player; card view is compact',async()=>{
+ for(const [width,height,n] of [[360,620,3],[390,740,4],[820,1180,10],[1280,800,10]]){
+  const {page,context,errors,push}=await open(width,height);
+  try{
+   await push(room('result',n));
+   const votes=page.locator('.online-final-board .online-vote-under-name');
+   assert.equal(await votes.count(),n);
+   const text=await votes.allTextContents();
+   assert.ok(text.every(x=>x.includes('に投票')),'vote targets must be on cards');
+   const logo=await page.locator('.result-logo').boundingBox();
+   assert.ok(logo.width>130&&logo.height>50,'victory artwork should stand out');
+   const sizes=await page.locator('.online-final-board .table-card').first().evaluate(el=>{
+    const frame=document.querySelector('.nise-play-board').getBoundingClientRect();
+    return {card:el.getBoundingClientRect().height,frame:frame.height};
+   });
+   assert.ok(sizes.card<140,'result cards must be compact');
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
 });
