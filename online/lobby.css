@@ -13,3 +13,12 @@ button.primary,.entry-part button,.game-change button{min-height:47px;padding:9p
 .room-bottom{display:grid;gap:10px;margin-top:17px}.room-bottom .primary{width:100%;font-size:18px}.room-bottom .hint{text-align:center;margin:0}.room-bottom .leave{min-height:44px;background:#422b3e;color:#ffe6ec;border:1px solid #8e5776;border-radius:11px;font-weight:900}
 @media(max-width:550px){.split{grid-template-columns:1fr}.online-page{padding:10px 10px 30px}.panel{padding:14px}.entry-part{padding:14px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* tablet native text entry: never block IME focus or caret selection */
+#nickname,#code{
+ font-size:16px;touch-action:auto;-webkit-user-select:text;user-select:text;
+ -webkit-appearance:none;appearance:none;caret-color:#1461a8;
+ scroll-margin-block:15vh;
+}
+#nickname:focus,#code:focus{outline:3px solid #7ed4ff;outline-offset:2px}
+html{scroll-padding-bottom:25vh}
