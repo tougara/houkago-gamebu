@@ -24,6 +24,12 @@
   const featuredDescription = featuredLink.querySelector('.featured-copy span');
   const featuredMeta = featuredLink.querySelector('.featured-meta');
   const filters = Array.from(document.querySelectorAll('[data-game-filter]'));
+  const playerFilters = Array.from(document.querySelectorAll('[data-player-filter]'));
+  const favoriteOnly = document.getElementById('favoriteOnly');
+  const searchInput = document.getElementById('gameSearch');
+  const searchClear = document.getElementById('gameSearchClear');
+  const noResults = document.getElementById('gamesNoResults');
+  const comingSection = document.querySelector('.games-coming-section');
   const count = document.getElementById('gameCount');
   const empty = document.getElementById('favoritesEmpty');
 
@@ -78,6 +84,24 @@
 
   let favorites = readFavorites();
   let activeFilter = 'all';
+  let activePlayers = 'all';
+  let showFavoritesOnly = false;
+
+  const normalize = (value) => String(value || '').normalize('NFKC').toLocaleLowerCase('ja').trim();
+  function searchMatches(card, value) {
+    if (!value) return true;
+    const id = card.dataset.gameId;
+    const link = cardById.get(id);
+    if (!link) return false;
+    const text = normalize([
+      link.querySelector('h2')?.textContent,
+      link.dataset.categories,
+      link.querySelector('.compact-tags')?.textContent,
+      descriptions[id],
+      id
+    ].join(' '));
+    return value.split(/\s+/).filter(Boolean).every((term) => text.includes(term));
+  }
 
   function showFeaturedGame(id) {
     const card = cardById.get(id);
@@ -130,20 +154,35 @@
       filter.classList.toggle('selected', selected);
       filter.setAttribute('aria-pressed', String(selected));
     });
+    playerFilters.forEach((button) => {
+      const selected = button.dataset.playerFilter === activePlayers;
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+    favoriteOnly.classList.toggle('selected', showFavoritesOnly);
+    favoriteOnly.setAttribute('aria-pressed', String(showFavoritesOnly));
+    searchClear.hidden = !searchInput.value.trim();
 
     let visible = 0;
+    const query = normalize(searchInput.value);
     document.querySelectorAll('[data-game-card]').forEach((card) => {
       const categories = (card.dataset.categories || '').split(' ');
+      const min = Number(card.querySelector('[data-player-min]')?.dataset.playerMin || card.dataset.playerMin || 0);
+      const max = Number(card.querySelector('[data-player-max]')?.dataset.playerMax || card.dataset.playerMax || 0);
+      const people = Number(activePlayers);
+      const playerMatch = activePlayers === 'all' || (min <= people && max >= people);
       const id = card.dataset.gameId;
-      const show = activeFilter === 'all' ||
-        (activeFilter === 'favorites' ? !!id && favorites.includes(id) : categories.includes(activeFilter));
+      const show = (activeFilter === 'all' || categories.includes(activeFilter)) &&
+        playerMatch && (!showFavoritesOnly || favorites.includes(id)) && searchMatches(card, query);
       card.hidden = !show;
       if (show) visible++;
     });
     count.textContent = String(visible);
-    empty.hidden = activeFilter !== 'favorites' || visible !== 0;
-    // When filtering favorites, never show an unrelated default recommendation.
-    featuredSection.hidden = activeFilter === 'favorites' && favorites.length === 0;
+    empty.hidden = !showFavoritesOnly || favorites.length !== 0 || !!query;
+    noResults.hidden = visible !== 0 || !empty.hidden;
+    const isDefault = !query && activeFilter === 'all' && activePlayers === 'all' && !showFavoritesOnly;
+    featuredSection.hidden = !isDefault;
+    comingSection.hidden = !isDefault;
   }
 
   function toggleFavorite(id) {
@@ -164,6 +203,23 @@
       activeFilter = filter.dataset.gameFilter;
       refresh();
     });
+  });
+  playerFilters.forEach((button) => {
+    button.addEventListener('click', () => {
+      activePlayers = button.dataset.playerFilter;
+      refresh();
+    });
+  });
+  favoriteOnly.addEventListener('click', () => {
+    showFavoritesOnly = !showFavoritesOnly;
+    refresh();
+  });
+  searchInput.addEventListener('input', refresh);
+  searchInput.addEventListener('search', refresh);
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    refresh();
+    searchInput.focus();
   });
 
   refresh();
