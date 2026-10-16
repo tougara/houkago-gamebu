@@ -37,7 +37,6 @@ export function dealNise(g){
  g.revealed=[];g.votes={};g.intel={};g.nightDone=[];g.result=null;g.chat=[];g.lastChatAt={};g.deadline=0;g.timerRemaining=g.duration;
  g.nightCursor=0;g.stage='reveal';return true;
 }
-const allRevealed=g=>g.memberIds.every(id=>g.revealed.includes(id));
 export function niseView(room,id){
  const g=room.nise;if(!g)return null;
  const me=g.memberIds.includes(id),name=room.members.find(m=>m.id===id)?.name||'';
@@ -45,27 +44,31 @@ export function niseView(room,id){
  const nightDone=g.nightDone||[];
  const current=me&&!nightDone.includes(id)?id:null;
  const r=g.initial[id];
- const waitingNight=g.stage==='night'&&nightDone.includes(id);
+ const revealed=g.revealed.includes(id);
+ // Each player remains on their private role screen until THEY confirm,
+ // even after somebody else has already started the simultaneous night.
+ const viewStage=g.stage==='night'&&me&&!revealed?'reveal':g.stage;
+ const waitingNight=g.stage==='night'&&revealed&&nightDone.includes(id);
  const myRole=me&&(g.stage!=='setup')?r:null;
  const voted=!!g.votes[id];
  const publicView={
-  stage:g.stage,count:g.memberIds.length,members:room.members.map(m=>({id:m.id,name:m.name,icon:m.icon})),
+  stage:viewStage,count:g.memberIds.length,members:room.members.map(m=>({id:m.id,name:m.name,icon:m.icon})),
   restCount:2,counts:g.counts,duration:g.duration,
   revealedCount:g.revealed.length,nightDoneCount:nightDone.length,votedCount:Object.keys(g.votes).length,
   timerRemaining:g.timerRemaining,deadline:g.deadline,
   result,
   myRole,
   myFinalRole:g.stage==='result'&&me?g.final[id]:null,
-  nightIsMyTurn:g.stage==='night'&&me&&!nightDone.includes(id),
+  nightIsMyTurn:g.stage==='night'&&me&&revealed&&!nightDone.includes(id),
   nightWaiting:waitingNight,
-  myIntel:g.stage==='night'&&me?g.intel[id]||null:null,
+  myIntel:viewStage==='night'&&me?g.intel[id]||null:null,
   myNightDone:nightDone.includes(id),
   myVoted:voted,
   chat:g.stage==='discussion'?g.chat||[]:[],
-  myRevealed:g.revealed.includes(id),
+  myRevealed:revealed,
   isHost:id===room.hostId
  };
- if(g.stage==='night'&&me&&r==='fake'){
+ if(viewStage==='night'&&me&&r==='fake'){
   publicView.partners=g.memberIds.filter(other=>other!==id&&g.initial[other]==='fake').map(other=>{
    const p=room.members.find(m=>m.id===other);return{id:other,name:p?.name||'',icon:p?.icon||''}
   });
@@ -99,13 +102,14 @@ export function niseAction(room,id,data){
   if(!host||stage!=='setup')return false;return dealNise(g);
  }
  if(data.type==='nise-reveal-done'){
-  if(stage!=='reveal'||g.revealed.includes(id))return false;
+  if(!['reveal','night'].includes(stage)||g.revealed.includes(id))return false;
   g.revealed.push(id);
-  if(allRevealed(g)){g.stage='night';g.nightCursor=0}
+  // Begin night with the first confirmation; other players can still confirm later.
+  if(stage==='reveal'){g.stage='night';g.nightCursor=0}
   return true;
  }
  if(data.type==='nise-night-action'){
-  if(stage!=='night'||(g.nightDone||[]).includes(id)||g.intel[id])return false;
+  if(stage!=='night'||!g.revealed.includes(id)||(g.nightDone||[]).includes(id)||g.intel[id])return false;
   const role=g.initial[id],kind=data.kind;
   if(role==='president'&&kind==='player'&&validTarget(g,id,data.target)){
    g.intel[id]={kind,role:g.initial[data.target],target:data.target};
@@ -126,7 +130,7 @@ export function niseAction(room,id,data){
   return true;
  }
  if(data.type==='nise-night-done'){
-  if(stage!=='night'||(g.nightDone||[]).includes(id))return false;
+  if(stage!=='night'||!g.revealed.includes(id)||(g.nightDone||[]).includes(id))return false;
   const r=g.initial[id];
   if(['president','dayDuty','observer','swapper'].includes(r)&&!g.intel[id])return false;
   g.nightDone??=[];g.nightDone.push(id);
