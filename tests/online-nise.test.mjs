@@ -49,29 +49,50 @@ test('役職確認は本人だけ、他人の役職・おやすみ・投票先�
  assert.equal(r.nise.stage,'night');
 });
 
-test('学級委員が確認したおやすみ2枚は学級委員以外には送られない',()=>{
- const r=make(4);const g=r.nise;dealNise(g);
+test('全員の夜行動は順番を待たずに同時処理し、調査は最初の役職を参照',()=>{
+ const r=make(4),g=r.nise;dealNise(g);
  g.initial={p0:'fake',p1:'president',p2:'swapper',p3:'classmate'};
  g.final={...g.initial};g.rest=['fake','classmate'];
- g.stage='night';g.nightOrder=['p0','p1','p2','p3'];g.nightCursor=0;
- assert.equal(act(r,'p1',{type:'nise-night-action',kind:'rest'}),false,'not your turn');
- assert.equal(act(r,'p0',{type:'nise-night-done'}),true);
- assert.equal(act(r,'p1',{type:'nise-night-action',kind:'rest'}),true);
- assert.deepEqual(niseView(r,'p1').myIntel.roles,['fake','classmate']);
- assert.equal(niseView(r,'p0').myIntel,null);
- assert.equal(niseView(r,'p2').myIntel,null);
- assert.equal(act(r,'p1',{type:'nise-night-action',kind:'player',target:'p0'}),false,'one investigation only');
- assert.equal(act(r,'p1',{type:'nise-night-done'}),true);
+ g.stage='night';g.nightDone=[];
+ assert.equal(niseView(r,'p1').nightIsMyTurn,true);
+ assert.equal(niseView(r,'p2').nightIsMyTurn,true);
  assert.equal(act(r,'p2',{type:'nise-night-action',kind:'swap',target:'p0'}),true);
  assert.equal(g.final.p0,'swapper');
  assert.equal(g.final.p2,'fake');
+ assert.equal(niseView(r,'p2').myIntel.originalRole,'swapper');
  assert.equal(niseView(r,'p2').myIntel.role,'fake');
- assert.equal(niseView(r,'p1').myIntel,null);
- assert.equal(act(r,'p2',{type:'nise-night-done'}),true);
+ assert.equal(niseView(r,'p2').myIntel.otherRole,'swapper');
+ // The president can examine their target AFTER the swap, but sees its ORIGINAL role.
+ assert.equal(act(r,'p1',{type:'nise-night-action',kind:'player',target:'p0'}),true);
+ assert.equal(niseView(r,'p1').myIntel.role,'fake');
+ assert.equal(niseView(r,'p1').myIntel.target,'p0');
+ assert.equal(niseView(r,'p0').myIntel,null);
+ assert.equal(act(r,'p1',{type:'nise-night-action',kind:'rest'}),false);
  assert.equal(act(r,'p3',{type:'nise-night-done'}),true);
+ assert.equal(niseView(r,'p3').myNightDone,true);
+ assert.equal(niseView(r,'p2').myNightDone,false);
+ assert.equal(act(r,'p1',{type:'nise-night-done'}),true);
+ assert.equal(act(r,'p2',{type:'nise-night-done'}),true);
+ assert.equal(act(r,'p0',{type:'nise-night-done'}),true);
+ assert.equal(g.stage,'discussion');
+ assert.deepEqual(g.nightDone.sort(),['p0','p1','p2','p3']);
+ assert.equal(act(r,'p2',{type:'nise-night-done'}),false);
+});
+test('複数人の同時調査も初期スナップショットを参照する',()=>{
+ const r=make(5),g=r.nise;dealNise(g);
+ g.initial={p0:'swapper',p1:'observer',p2:'dayDuty',p3:'fake',p4:'president'};
+ g.final={...g.initial};g.rest=['fake','classmate'];g.stage='night';g.nightDone=[];
+ assert.equal(act(r,'p0',{type:'nise-night-action',kind:'swap',target:'p3'}),true);
+ assert.equal(act(r,'p1',{type:'nise-night-action',kind:'compare',targets:['p3','p4']}),true);
+ assert.equal(niseView(r,'p1').myIntel.same,false);
+ assert.equal(act(r,'p4',{type:'nise-night-action',kind:'player',target:'p3'}),true);
+ assert.equal(niseView(r,'p4').myIntel.role,'fake');
+ assert.equal(act(r,'p2',{type:'nise-night-action',kind:'rest',index:1}),true);
+ assert.deepEqual(niseView(r,'p2').myIntel.roles,['classmate']);
+ assert.equal(niseView(r,'p3').myIntel,null);
+ for(const id of g.memberIds)assert.equal(act(r,id,{type:'nise-night-done'}),true);
  assert.equal(g.stage,'discussion');
 });
-
 test('秘密投票は1人1票。最多票・席替え後の役職で勝敗が決まる',()=>{
  const r=make(4);const g=r.nise;dealNise(g);
  g.stage='voting';g.initial={p0:'fake',p1:'president',p2:'swapper',p3:'classmate'};
@@ -82,12 +103,34 @@ test('秘密投票は1人1票。最多票・席替え後の役職で勝敗が決
  assert.equal(niseView(r,'p3').votedCount,1);
  assert.equal(niseView(r,'p3').result,null);
  for(const [id,target] of [['p1','p2'],['p2','p1'],['p3','p2']])act(r,id,{type:'nise-vote',target});
+ assert.equal(g.stage,'voteComplete');
+ assert.equal(g.result,null,'result stays private until host publishes');
+ assert.equal(niseView(r,'p1').result,null);
+ assert.equal(act(r,'p1',{type:'nise-publish-result'}),false,'guest cannot publish');
+ assert.equal(act(r,'p0',{type:'nise-publish-result'}),true);
  assert.equal(g.stage,'result');
  assert.equal(g.result.kind,'real');
  assert.deepEqual(g.result.expelled,['p2']);
  assert.equal(niseView(r,'p3').result.final.p2,'fake');
 });
 
+test('結果発表前は投票先と勝敗を見せず、公開操作は一度きり',()=>{
+ const r=make(3),g=r.nise;dealNise(g);
+ g.stage='voting';g.initial={p0:'classmate',p1:'fake',p2:'president'};
+ g.final={...g.initial};
+ const votes=[['p0','p1'],['p1','p0'],['p2','p1']];
+ for(const [id,target] of votes)assert.equal(act(r,id,{type:'nise-vote',target}),true);
+ assert.equal(g.stage,'voteComplete');
+ for(const id of g.memberIds){
+  const view=niseView(r,id);
+  assert.equal(view.result,null);
+  assert.ok(!('votes' in view));
+  assert.ok(!('final' in view));
+ }
+ assert.equal(act(r,'p0',{type:'nise-publish-result'}),true);
+ assert.equal(act(r,'p0',{type:'nise-publish-result'}),false);
+ assert.equal(g.result.kind,'real');
+});
 test('同票最多が全員対象・いたずらっ子勝利・無投票相当の平和も判定',()=>{
  const r=make(4),g=r.nise;dealNise(g);
  g.final={p0:'fake',p1:'trickster',p2:'classmate',p3:'president'};
