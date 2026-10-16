@@ -542,9 +542,8 @@
  width:min(100%,530px);gap:1px;padding:4px 8px;
 }
 .nise-online-app .nise-play-head .result-logo{
- display:block;width:auto;height:auto;
- max-height:clamp(90px,18dvh,175px);max-width:min(440px,93vw);
- object-fit:contain;
+ display:block;width:min(84vw,380px);height:clamp(80px,16dvh,160px);
+ max-height:none;max-width:100%;object-fit:contain;margin:0 auto;
 }
 .nise-online-app .nise-play-actions .online-result-actions{
  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
@@ -562,10 +561,10 @@
   font-size:clamp(10px,1.2vw,12px);
  }
  .nise-online-app .nise-play-actions{max-height:none}
- .nise-online-app .nise-play-head .result-logo{max-height:min(21dvh,220px)}
+ .nise-online-app .nise-play-head .result-logo{height:clamp(90px,19dvh,185px);width:min(410px,100%)}
 }
 @media (max-height:710px){
- .nise-online-app .nise-play-head .result-logo{max-height:clamp(70px,12dvh,105px)}
+ .nise-online-app .nise-play-head .result-logo{height:clamp(74px,12dvh,105px)}
  .nise-online-app .nise-play-actions .online-result-actions>.btn{min-height:36px}
  .nise-online-app .nise-play-actions{max-height:min(35dvh,295px)}
 }
