@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id),STORE='houkago-online-session-v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const requested=new URLSearchParams(location.search).get('room')||'';
-let session=null,room=null,socket=null,retry=0,retryTimer=null,leaving=false,lastStage='';
+let session=null,room=null,socket=null,retry=0,retryTimer=null,leaving=false,lastStage='',sawWord=false;
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
 if(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session.token)||
  (requested&&requested!==session.code)||!/^https:\/\/[a-z0-9.-]+$/i.test(base)){
@@ -53,7 +53,7 @@ function reveal(d){
  if(d.myRevealed)return '<section class="panel large-center"><h2>確認完了！</h2><p>残りのプレイヤーを待ってね。</p></section>'+status;
  return '<section class="panel"><h2>自分だけのお題</h2><p class="hint">下のボタンを長押ししている間だけ表示。まわりに見せないでね。</p>'+
   '<button id="secret-holder" type="button" class="secret-holder">長押ししてお題を確認</button>'+
-  '<p class="hint">自分がオオカミかどうかは分からないよ。</p>'+btn('お題を確認した','word-done','gold')+'</section>'+status;
+  '<p class="hint">自分がオオカミかどうかは分からないよ。</p>'+'<button type="button" id="word-done" class="btn gold" data-action="word-done" '+(sawWord?'':'disabled')+'>お題を確認した</button>'+'</section>'+status;
 }
 const clock=n=>{n=Math.max(0,Math.ceil(n));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')};
 const remain=d=>d.paused?d.durationLeft:Math.max(0,Math.ceil((d.deadline-Date.now())/1000));
@@ -95,10 +95,10 @@ function result(d){
 }
 const headings={setup:'ゲーム設定',customInput:'お題を決めよう',reveal:'自分のお題を確認',discussion:'話し合いタイム',voting:'オオカミに投票',voteComplete:'全員の投票完了',runoffReady:'決選投票',reverse:'逆転チャンス！',result:'結果発表'};
 function hideWord(){const el=$('secret-holder');if(el){el.classList.remove('showing');el.textContent='長押ししてお題を確認'}}
-function showWord(){const el=$('secret-holder'),d=game();if(el&&!d?.myRevealed&&d?.myWord){el.classList.add('showing');el.textContent=d.myWord;}}
+function showWord(){const el=$('secret-holder'),d=game();if(el&&!d?.myRevealed&&d?.myWord){el.classList.add('showing');el.textContent=d.myWord;sawWord=true;const done=$('word-done');if(done)done.disabled=false;}}
 function render(){
  const d=game();if(!d)return;
- if(lastStage!==d.stage){lastStage=d.stage;window.scrollTo?.(0,0)}
+ if(lastStage!==d.stage){lastStage=d.stage;sawWord=false;window.scrollTo?.(0,0)}
  hideWord();$('stage-title').textContent=headings[d.stage]||'ことばのオオカミ';
  $('room-summary').textContent=d.activeIds.length+'人でプレイ · '+room.code+(d.authorId?' · 出題者 '+(person(d.authorId)?.name||''):'');
  const views={
@@ -115,7 +115,7 @@ function render(){
 function refreshTimer(){const el=$('live-clock'),d=game();if(el&&d)el.textContent=clock(remain(d))}
 setInterval(refreshTimer,250);
 document.addEventListener('pointerdown',e=>{if(e.target.closest?.('#secret-holder')){e.preventDefault();showWord()}});
-['pointerup','pointercancel','pointerleave'].forEach(type=>document.addEventListener(type,e=>{if(e.target.closest?.('#secret-holder'))hideWord()}));
+['pointerup','pointercancel','pointerout'].forEach(type=>document.addEventListener(type,hideWord));
 document.addEventListener('keydown',e=>{if(e.target.id==='secret-holder'&&(e.key===' '||e.key==='Enter')){e.preventDefault();showWord()}});
 document.addEventListener('keyup',e=>{if(e.target.id==='secret-holder'&&(e.key===' '||e.key==='Enter')){e.preventDefault();hideWord()}});
 window.addEventListener('blur',hideWord);document.addEventListener('visibilitychange',()=>{if(document.hidden)hideWord()});
