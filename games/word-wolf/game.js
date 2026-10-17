@@ -57,7 +57,7 @@ function passScreen(type){
  const title=type==='word'?'お題を確認':'ひみつ投票';
  const stage=type==='vote'&&state.voteStage===2?'決選投票：':'';
  return nav()+heading(stage+title,(index+1)+' / '+state.players.length+'人目')+
- '<section class="card pass-card"><div class="person-icon">'+esc(person.icon)+'</div><h2>'+esc(person.name)+' さん</h2><p>この人だけがスマホを見てね。<br>ほかの人は画面を見ないで待ってね。</p>'+(type==='word'?'<button type="button" class="btn gold handoff-word-hold" data-open-word>長押ししてお題を見る</button>':button('投票する','data-open-vote','gold'))+'</section>';
+ '<section class="card pass-card"><div class="person-icon">'+esc(person.icon)+'</div>'+(type==='word'?'<h2>'+esc(person.name)+'さんに<br>スマホを渡してください</h2><p>ほかの人は見ないでね。<br>受け取ったら長押しして進んでね。</p>':'<h2>'+esc(person.name)+' さん</h2><p>この人だけがスマホを見てね。<br>ほかの人は画面を見ないで待ってね。</p>')+(type==='word'?'<button type="button" class="btn gold handoff-word-hold" data-open-word>長押ししてお題を見る</button>':button('投票する','data-open-vote','gold'))+'</section>';
 }
 function wordScreen(){
  const p=state.players[state.handoff];
