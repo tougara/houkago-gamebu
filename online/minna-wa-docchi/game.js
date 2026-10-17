@@ -185,11 +185,17 @@ function draw(){
 }
 // Preserve the existing secret-vote rendering, then layer battle-only stages on top.
 const baseDraw=draw;
+let rosterLayout='';
 draw=function(){
  baseDraw();
  if(!room||room.phase!=='secret')return;
  const g=room.secret||{},isHost=host(),battle=g.mode==='battle',stage=g.stage;
  const pending=stage==='setup'&&!g.modeSelected;
+ const root=document.querySelector('.online-docchi');
+ root.classList.toggle('online-mode-select',pending);
+ root.classList.toggle('online-setup-select',stage==='setup'&&!pending);
+ const layout=stage==='setup'?'setup':'playing';
+ if(rosterLayout!==layout){$('member-panel').open=layout==='playing';rosterLayout=layout;}
  $('mode-stage').hidden=!pending;
  $('mode-host').hidden=!isHost;
  $('mode-guest').hidden=isHost;
@@ -253,6 +259,10 @@ draw=function(){
  if(stage==='preview'&&battle)$('preview-sensitive').hidden=true;
  $('room-brief').textContent=stage==='preview'?'まずは全員でお題を確認':
    'オンライン · '+(battle?'よみあいバトル':'ひみつ投票')+' ／ '+room.members.length+'人参加 · 招待コード '+room.code;
+ if(stage==='setup'){
+   $('page-heading').textContent=pending?'モードをえらぶ':(battle?'よみあいバトル':'ひみつ投票')+'の設定';
+   $('room-brief').textContent=room.members.length+'人参加 · 招待コード '+room.code;
+ }
 };
 function connect(){
  if(!session)return;
