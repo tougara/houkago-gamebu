@@ -109,3 +109,249 @@ html,body{background:#e9eef4;color:#17213b}
  #battle-ranking .rank-row{grid-template-columns:42px minmax(0,1fr) auto;padding:11px;gap:7px}
  #battle-ranking .rank-row strong{font-size:18px}
 }
+
+
+/* Phone-first one-screen online mode and setup (2026-10-17) */
+.online-docchi.online-mode-select,
+.online-docchi.online-setup-select{
+ padding:7px 9px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+.online-mode-select .online-nav,
+.online-setup-select .online-nav{gap:5px;margin:0 0 5px}
+.online-mode-select .online-nav .nav-pill,
+.online-setup-select .online-nav .nav-pill{
+ min-height:38px;
+ padding:7px 6px;
+ font-size:clamp(10px,2.7vw,12px);
+}
+.online-mode-select .online-heading,
+.online-setup-select .online-heading{margin:2px 0 6px}
+.online-mode-select .online-heading h1,
+.online-setup-select .online-heading h1{
+ margin:0 0 2px;
+ font-size:clamp(21px,5.7vw,26px);
+ line-height:1.18;
+}
+.online-mode-select .online-heading p,
+.online-setup-select .online-heading p{
+ font-size:11px;
+ line-height:1.28;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.online-mode-select #mode-stage .game-logo{
+ display:block;
+ width:min(65vw,245px);
+ max-width:100%;
+ height:clamp(82px,14dvh,112px);
+ object-fit:contain;
+ margin:0 auto 6px;
+}
+.online-mode-select #mode-stage .mode-grid{gap:9px}
+.online-mode-select #mode-stage .mode-card{
+ padding:12px 13px;
+ border-radius:19px;
+}
+.online-mode-select #mode-stage .mode-card h2{
+ font-size:clamp(20px,5.4vw,24px);
+ line-height:1.16;
+ margin:2px 0 6px;
+}
+.online-mode-select #mode-stage .mode-card p{
+ font-size:clamp(12px,3.2vw,14px);
+ line-height:1.32;
+ margin:0 0 7px;
+}
+.online-mode-select #mode-stage .mode-kicker{font-size:10px}
+.online-mode-select #mode-stage .mini-flow{gap:4px;font-size:10px;line-height:1.2}
+.online-mode-select #mode-stage .mini-flow span{padding:4px 6px}
+.online-mode-select #mode-stage .mode-start-btn{
+ min-height:44px;
+ margin-top:9px;
+ border-radius:13px;
+ padding:9px 11px;
+ font-size:clamp(13px,3.6vw,16px);
+}
+.online-mode-select #mode-guest{padding:13px;font-size:13px}
+.online-setup-select #host-setup{min-width:0}
+.online-setup-select .online-back-mode{
+ min-height:33px;
+ padding:6px 10px;
+ margin:0 0 6px;
+ border-radius:10px;
+ font-size:11px;
+}
+.online-setup-select #setup-stage .card{
+ border-radius:17px;
+ box-shadow:0 8px 18px rgba(30,44,64,.1);
+}
+.online-setup-select #setup-stage .online-rounds,
+.online-setup-select #setup-stage .options-card{
+ padding:9px 11px;
+ margin:0 0 7px;
+}
+.online-setup-select #setup-stage .setup-section h2,
+.online-setup-select #setup-stage .section-row.compact h2{
+ margin:0;
+ font-size:16px;
+ line-height:1.18;
+}
+.online-setup-select #setup-stage .section-row.compact p{font-size:10px}
+.online-setup-select #setup-stage .online-rounds .choice-row{
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:6px;
+ margin-top:6px;
+}
+.online-setup-select #setup-stage .choice-chip{
+ min-height:39px;
+ font-size:13px;
+ border-radius:10px;
+}
+.online-setup-select #setup-stage .category-grid.compact{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:4px 6px;
+ margin-top:7px;
+}
+.online-setup-select #setup-stage .category-grid.compact .category-chip{
+ min-height:34px;
+ padding:5px 6px;
+ border-radius:10px;
+ font-size:clamp(11px,2.9vw,12px);
+ line-height:1.15;
+}
+.online-setup-select #setup-stage .category-grid.compact .category-chip small{
+ display:inline;
+ font-size:9px;
+ margin-left:3px;
+}
+.online-setup-select #secret-genre-note{
+ margin:5px 0 0!important;
+ padding:5px 7px;
+ font-size:10px;
+}
+.online-setup-select #setup-stage .custom-quick{padding:0 11px}
+.online-custom-summary,
+.online-member-summary{
+ display:flex;
+ align-items:center;
+ gap:7px;
+ min-height:39px;
+ cursor:pointer;
+ list-style:none;
+ font-weight:900;
+}
+.online-custom-summary::-webkit-details-marker,
+.online-member-summary::-webkit-details-marker{display:none}
+.online-custom-summary::marker,
+.online-member-summary::marker{content:""}
+.online-custom-summary strong,
+.online-member-summary strong{font-size:13px}
+.online-custom-summary #custom-count,
+.online-member-summary #member-count{
+ min-width:0;
+ margin-left:auto;
+ color:#667085;
+ font-size:10px;
+ font-weight:850;
+}
+.online-expand-label{
+ flex:none;
+ border-radius:999px;
+ background:#e9f5ff;
+ color:#146db6;
+ padding:5px 8px;
+ font-size:0;
+ line-height:1;
+}
+.online-expand-label::after{content:"開く";font-size:11px}
+details[open] > summary .online-expand-label::after{content:"閉じる"}
+.online-custom-summary:focus-visible,
+.online-member-summary:focus-visible{outline:3px solid #ffb41f;outline-offset:2px}
+.online-setup-select .online-custom-body{padding:0 0 10px}
+.online-setup-select .online-custom-body .online-detail-hint{margin:0;font-size:11px}
+.online-setup-select #setup-stage .quick-question-form{margin-top:7px}
+.online-setup-select #setup-stage .quick-question-form>input,
+.online-setup-select #setup-stage .quick-question-form>div>input{min-height:34px;font-size:13px}
+.online-setup-select .online-docchi .options-footer,
+.online-setup-select .options-footer{
+ position:static;
+ padding:3px 0 5px;
+ background:transparent;
+}
+.online-setup-select .options-footer .pool-count{margin:0 0 5px;font-size:11px}
+.online-setup-select .options-footer .btn{min-height:45px}
+.online-mode-select #member-panel,
+.online-setup-select #member-panel{
+ margin:7px 0 5px;
+ padding:0 11px;
+ border-radius:16px;
+ box-shadow:0 6px 15px rgba(30,44,64,.08);
+}
+.online-mode-select #member-panel .member-chips,
+.online-setup-select #member-panel .member-chips{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:5px;
+ margin:0 0 10px;
+}
+.online-mode-select #member-panel .member-chip,
+.online-setup-select #member-panel .member-chip{
+ min-width:0;
+ padding:5px 6px;
+ font-size:11px;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.online-mode-select .online-leave,
+.online-setup-select .online-leave{
+ min-height:39px;
+ padding:8px 10px;
+ margin:5px 0 0;
+ border-radius:12px;
+ font-size:12px;
+ box-shadow:0 3px 0 #c6d0dc;
+}
+@media(max-width:420px) and (max-height:740px){
+ .online-mode-select #mode-stage .game-logo{height:clamp(72px,12dvh,94px);margin-bottom:4px}
+ .online-mode-select #mode-stage .mode-card{padding:10px 12px}
+ .online-mode-select #mode-stage .mode-card p{margin-bottom:5px}
+ .online-mode-select #mode-stage .mini-flow{display:none}
+ .online-mode-select #mode-stage .mode-start-btn{margin-top:7px}
+ .online-setup-select #setup-stage .online-rounds,
+ .online-setup-select #setup-stage .options-card{padding:7px 10px;margin-bottom:5px}
+ .online-setup-select #setup-stage .category-grid.compact .category-chip{min-height:31px;padding:4px 5px}
+ .online-setup-select #secret-genre-note{display:none}
+}
+@media(max-width:420px) and (max-height:610px){
+ .online-mode-select #mode-stage .game-logo{height:62px}
+ .online-mode-select .online-heading p,
+ .online-setup-select .online-heading p{font-size:10px}
+ .online-mode-select #mode-stage .mode-card h2{font-size:20px}
+ .online-mode-select #mode-stage .mode-card p{font-size:12px}
+ .online-setup-select #setup-stage .category-grid.compact .category-chip{min-height:29px}
+ .online-setup-select #setup-stage .choice-chip{min-height:35px}
+}
+@media(min-width:640px){
+ .online-mode-select #mode-stage .mode-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:stretch;
+  gap:12px;
+ }
+ .online-mode-select #mode-stage .mode-card{display:flex;flex-direction:column}
+ .online-mode-select #mode-stage .mini-flow{margin-top:auto}
+ .online-setup-select #host-setup{
+  display:grid;
+  grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+  align-items:start;
+  column-gap:12px;
+ }
+ .online-setup-select #back-to-mode,
+ .online-setup-select #host-setup > .custom-quick,
+ .online-setup-select #host-setup > .options-footer{grid-column:1/-1}
+ .online-setup-select #host-setup > .online-rounds{grid-column:1}
+ .online-setup-select #host-setup > .options-card:not(.custom-quick){grid-column:2}
+}
