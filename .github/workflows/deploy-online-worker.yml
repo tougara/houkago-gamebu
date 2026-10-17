@@ -9,6 +9,7 @@ on:
       - 'worker/**'
       - 'tests/online-worker.test.mjs'
       - 'tests/online-nise.test.mjs'
+      - 'tests/online-word-wolf.test.mjs'
       - '.github/workflows/deploy-online-worker.yml'
 
 permissions:
