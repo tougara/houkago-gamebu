@@ -77,6 +77,7 @@ export function wolfView(room,id){
   categories:WOLF_CATEGORIES,questionsTotal:WOLF_PAIRS.length,
   members:room.members.map(m=>({id:m.id,name:m.name,icon:m.icon})),
   activeIds:[...g.activeIds],authorId:g.authorId,playing,author,
+  isWolf:stage==='reverse'&&id===g.wolfId,
   myWord:canReadWord?(id===g.wolfId?g.minority:g.majority):null,
   myRevealed:g.revealed.includes(id),revealedCount:g.revealed.length,
   voteCount:count,voted:Object.hasOwn(g.votes,id),
