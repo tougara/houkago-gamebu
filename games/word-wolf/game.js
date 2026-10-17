@@ -18,7 +18,8 @@ const state={
  voteStage:1,voter:0,votes:[],firstVotes:[],runoffVotes:[],candidates:[],
  votedOut:-1,answer:'',verdict:'',resultRecorded:false
 };
-let ticker=null;
+let ticker=null,wordHoldTimer=null,wordHoldPointer=null,wordHoldKey=null;
+function cancelWordHold(){if(wordHoldTimer!==null){clearTimeout(wordHoldTimer);wordHoldTimer=null}wordHoldPointer=null;wordHoldKey=null}
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const random=n=>{if(n<=1)return 0;if(window.crypto?.getRandomValues){const v=new Uint32Array(1);const bound=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(v)}while(v[0]>=bound);return v[0]%n}return Math.floor(Math.random()*n)};
 const label=i=>state.players[i]?.name||'プレイヤー';
@@ -56,12 +57,12 @@ function passScreen(type){
  const title=type==='word'?'お題を確認':'ひみつ投票';
  const stage=type==='vote'&&state.voteStage===2?'決選投票：':'';
  return nav()+heading(stage+title,(index+1)+' / '+state.players.length+'人目')+
- '<section class="card pass-card"><div class="person-icon">'+esc(person.icon)+'</div><h2>'+esc(person.name)+' さん</h2><p>この人だけがスマホを見てね。<br>ほかの人は画面を見ないで待ってね。</p>'+button(type==='word'?'お題を確認する':'投票する',type==='word'?'data-open-word':'data-open-vote','gold')+'</section>';
+ '<section class="card pass-card"><div class="person-icon">'+esc(person.icon)+'</div><h2>'+esc(person.name)+' さん</h2><p>この人だけがスマホを見てね。<br>ほかの人は画面を見ないで待ってね。</p>'+(type==='word'?'<button type="button" class="btn gold handoff-word-hold" data-open-word>長押ししてお題を見る</button>':button('投票する','data-open-vote','gold'))+'</section>';
 }
 function wordScreen(){
  const p=state.players[state.handoff];
  return nav()+heading('お題をひみつで確認',esc(p.name)+' さんのお題')+
- '<section class="card word-card"><p>下のボタンを長押ししている間だけ表示されるよ。</p><div class="word-secret" data-word-value aria-live="off"><span>？？？</span></div><button type="button" class="hold-button" data-hold-word>ここを長押ししてお題を見る</button><p class="hint">自分がウルフかどうかは分からないよ。</p>'+button('確認した！ 次の人へ','data-word-done disabled','gold')+'</section>';
+ '<section class="card word-card"><p>この画面は自分だけで確認してね。お題を覚えたら次へ進もう。</p><div class="word-secret revealed" data-word-value><span>'+esc(state.handoff===state.wolf?state.minority:state.majority)+'</span></div><p class="hint">自分がウルフかどうかは分からないよ。</p>'+button('確認した！ 次の人へ','data-word-done','gold')+'</section>';
 }
 function discussionScreen(){
  return nav()+heading('みんなで話し合おう','お題そのものは言わずに会話しよう')+
@@ -123,6 +124,7 @@ function refreshClock(){
  const b=app.querySelector('[data-pause]');if(b)b.textContent=state.paused?'再開':'一時停止';
 }
 function render(){
+ cancelWordHold();
  app.className='word-wolf-app screen-'+state.screen;
  app.innerHTML=screenHtml();
  window.scrollTo({top:0,behavior:'instant'});
@@ -205,20 +207,9 @@ function submitCustomTopics(form){
  }
  startRound({id:'custom',a,b,category:'custom'},true);
 }
-function revealWord(show){
- const field=app.querySelector('[data-word-value]'),btn=app.querySelector('[data-hold-word]');
- if(!field||state.screen!=='word')return;
- field.replaceChildren();
- const span=document.createElement('span');
- span.textContent=show?(state.handoff===state.wolf?state.minority:state.majority):'？？？';
- field.appendChild(span);
- field.classList.toggle('revealed',show);
- btn?.classList.toggle('holding',show);
- if(show){state.seen=true;const done=app.querySelector('[data-word-done]');if(done)done.disabled=false}
-}
 function nextWord(){
  if(!state.seen)return;
- revealWord(false);state.seen=false;state.handoff++;
+ state.seen=false;state.handoff++;
  if(state.handoff===state.players.length){
   state.paused=false;state.seconds=state.minutes*60;state.deadline=Date.now()+state.seconds*1000;
   go('discussion',false);
@@ -342,7 +333,6 @@ app.addEventListener('click',event=>{
  if(b.matches('[data-minutes]')){state.minutes=Number(b.dataset.minutes);render();return}
  if(b.matches('[data-category]')){const c=b.dataset.category;state.categories=state.categories.includes(c)?state.categories.filter(x=>x!==c):[...state.categories,c];render();return}
  if(b.matches('[data-begin]')){begin();return}
- if(b.matches('[data-open-word]')){state.seen=false;go('word',false);return}
  if(b.matches('[data-word-done]')){nextWord();return}
  if(b.matches('[data-pause]')){togglePause();return}
  if(b.matches('[data-plus]')){adjustClock(30);return}
@@ -374,17 +364,33 @@ app.addEventListener('submit',event=>{
  if(!event.target.matches('[data-answer-form]'))return;
  event.preventDefault();submitAnswer(event.target.elements.answer?.value||'');
 });
-function isHold(target){return target?.closest?.('[data-hold-word]')&&state.screen==='word'}
-app.addEventListener('pointerdown',e=>{if(!isHold(e.target))return;e.preventDefault();try{e.target.setPointerCapture(e.pointerId)}catch(err){}revealWord(true)});
-['pointerup','pointercancel','lostpointercapture','pointerleave'].forEach(type=>app.addEventListener(type,e=>{
- if(state.screen==='word'&&(isHold(e.target)||app.querySelector('.word-secret.revealed')))revealWord(false);
+function startWordHold(e,kind){
+ if(state.screen!=='pass'||!e.target.closest?.('[data-open-word]'))return;
+ if(kind==='pointer'&&e.button!==0)return;
+ if(wordHoldTimer!==null)return;
+ e.preventDefault();
+ if(kind==='pointer'){wordHoldPointer=e.pointerId;try{e.target.setPointerCapture(e.pointerId)}catch(err){}}
+ else wordHoldKey=e.key;
+ wordHoldTimer=setTimeout(()=>{
+  wordHoldTimer=null;wordHoldPointer=null;wordHoldKey=null;
+  if(state.screen!=='pass')return;
+  state.seen=true;
+  go('word',false);
+ },700);
+}
+app.addEventListener('pointerdown',e=>startWordHold(e,'pointer'));
+['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(type=>app.addEventListener(type,e=>{
+ if(wordHoldPointer===e.pointerId)cancelWordHold();
 }));
-app.addEventListener('keydown',e=>{if(isHold(e.target)&&[' ','Enter'].includes(e.key)){e.preventDefault();revealWord(true)}});
-app.addEventListener('keyup',e=>{if(isHold(e.target)&&[' ','Enter'].includes(e.key)){e.preventDefault();revealWord(false)}});
-window.addEventListener('blur',()=>{if(state.screen==='word')revealWord(false);pauseClock()});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(state.screen==='word')revealWord(false);pauseClock();persistResume()}});
-window.addEventListener('pagehide',()=>{if(state.screen==='word')revealWord(false);pauseClock();persistResume()});
-window.addEventListener('houkago-back-guard-open',()=>{if(state.screen==='word')revealWord(false);pauseClock();persistResume()});
+app.addEventListener('keydown',e=>{
+ if(e.repeat)return;
+ if((e.key===' '||e.key==='Enter')&&e.target.closest?.('[data-open-word]'))startWordHold(e,'key');
+});
+app.addEventListener('keyup',e=>{if(wordHoldKey===e.key)cancelWordHold()});
+window.addEventListener('blur',()=>{cancelWordHold();pauseClock()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){cancelWordHold();pauseClock();persistResume()}});
+window.addEventListener('pagehide',()=>{cancelWordHold();pauseClock();persistResume()});
+window.addEventListener('houkago-back-guard-open',()=>{cancelWordHold();pauseClock();persistResume()});
 window.addEventListener('houkago-back-guard-save',persistResume);
 window.addEventListener('houkago-player-selection-changed',()=>{if(state.gameStarted||state.screen==='customTopics')return;const y=window.scrollY;loadPlayers();render();window.scrollTo(0,y)});
 loadPlayers();render();
