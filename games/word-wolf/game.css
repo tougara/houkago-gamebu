@@ -63,3 +63,7 @@ button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}button
 @media(min-width:600px){.word-wolf-app{padding-left:28px;padding-right:28px}.vote-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:370px){.word-wolf-app{padding:10px 10px 25px}.card{padding:13px}.vote-choice{min-height:103px}.timer-controls{gap:5px}.timer-controls .btn{font-size:12px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Setup member editing stays available without a duplicate member list */
+.screen-setup .setup-member-edit{display:flex;justify-content:flex-end;margin:-6px 0 10px}
+.screen-setup .setup-member-edit .nav-pill{padding:7px 12px;min-height:36px;font-size:12px;color:#286aab;background:#eef7ff;border-color:#c6dff4;box-shadow:0 3px 8px rgba(15,28,49,.06)}
