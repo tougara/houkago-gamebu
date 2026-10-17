@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#e9eef4">
 <title>みんなはどっち？ オンライン｜放課後ゲーム部</title>
 <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
-<link rel="stylesheet" href="../../games/minna-wa-docchi/game.css">
-<link rel="stylesheet" href="./game.css">
+<link rel="stylesheet" href="../../games/minna-wa-docchi/game.css?v=20261017-fit1">
+<link rel="stylesheet" href="./game.css?v=20261017-online-fit1">
 </head>
 <body>
 <main class="docchi-app online-docchi screen-options" id="app">
@@ -58,11 +58,10 @@
      <div id="category-options" class="category-grid compact"></div>
      <p id="secret-genre-note" class="deep-note compact">「恋バナ」「ちょっとディープ」は初期状態ではOFF</p>
     </section>
-    <section class="card options-card custom-quick">
-     <div class="section-row compact">
-      <div><h2>問題を考える</h2><p id="custom-count">保存中 0問</p></div>
-      <button type="button" id="toggle-custom-list" class="small-btn compact">一覧</button>
-     </div>
+    <details class="card options-card custom-quick" id="custom-editor-panel">
+     <summary class="online-custom-summary"><strong>マイお題・質問の追加</strong><span id="custom-count">保存中 0問</span><span class="online-expand-label" aria-hidden="true">開く</span></summary>
+     <div class="online-custom-body">
+      <div class="section-row compact"><p class="online-detail-hint">自分たちだけの質問を作れるよ</p><button type="button" id="toggle-custom-list" class="small-btn compact">一覧</button></div>
      <form id="custom-form" class="quick-question-form">
        <input id="custom-q" aria-label="質問" maxlength="70" placeholder="質問を書く" required>
        <div>
@@ -77,7 +76,8 @@
       <button type="button" id="import-saved" class="small-btn compact">保存済みのお題を読み込む</button>
       <div id="custom-list" class="custom-list"></div>
      </div>
-    </section>
+     </div>
+    </details>
     <div class="options-footer">
      <p id="question-total" class="pool-count">この設定で出るお題：<strong>160問</strong></p>
      <button type="button" id="begin" class="btn full">この設定でスタート</button>
@@ -180,10 +180,10 @@
     <p id="finish-wait" class="online-wait-message">ホストが部屋に戻すまで待ってね。</p>
   </section>
  </div>
- <section id="member-panel" class="card setup-section online-members" hidden>
-  <div class="section-row compact"><div><h2>参加メンバー</h2><p id="member-count"></p></div></div>
+ <details id="member-panel" class="card setup-section online-members" hidden>
+  <summary class="online-member-summary"><strong>参加メンバー</strong><span id="member-count"></span><span class="online-expand-label" aria-hidden="true">開く</span></summary>
   <div id="member-list" class="member-chips"></div>
- </section>
+ </details>
  <button id="leave-room" type="button" class="btn secondary full online-leave">部屋から退出</button>
 </main>
 <script src="../config.js"></script>
