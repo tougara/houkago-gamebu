@@ -2,6 +2,7 @@
 import {SECRET_QUESTIONS} from './secret-questions.js';
 import {BATTLE_QUESTIONS} from './battle-questions.js';
 import {createNise,niseView,niseAction} from './nise-engine.js';
+import {createWolf,wolfView,wolfAction} from './wolf-engine.js';
 const TTL=2*60*60*1000, MAX=10;
 const ROUND_OPTIONS=[3,5,7,10], DEFAULT_ROUNDS=5;
 const CATEGORIES=[...new Set(SECRET_QUESTIONS.map(q=>q.category))];
@@ -13,7 +14,7 @@ const defaultCategoriesFor=mode=>mode==='battle'?[...BATTLE_CATEGORIES]:[...DEFA
 const ALPHABET='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE=/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 const TOKEN=/^[a-f0-9]{64}$/;
-const GAMES=new Set(['minna-wa-docchi','kyokasho-tower','kankaku-meter','pitadome-challenge','link-burst','nise-transfer-student','gesture-battle']);
+const GAMES=new Set(['minna-wa-docchi','kyokasho-tower','kankaku-meter','pitadome-challenge','link-burst','nise-transfer-student','gesture-battle','word-wolf']);
 const ICONS=new Set(['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','🦍','🦄','👻']);
 const response=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store',...headers}});
 const err=(text,status=400)=>response({ok:false,error:text},status);
@@ -54,7 +55,7 @@ const secretView=room=>{
  };
 };
 const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,
-  expiresAt:room.expiresAt,phase:room.nise?'nise':room.secret?'secret':'lobby',secret:secretView(room),
+  expiresAt:room.expiresAt,phase:room.wolf?'wolf':room.nise?'nise':room.secret?'secret':'lobby',secret:secretView(room),
   maxPlayers:MAX,members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
 const cors=origin=>({'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'Content-Type'});
 async function readBody(request){
@@ -73,7 +74,7 @@ export default {
     const url=new URL(request.url),origin=request.headers.get('Origin');
     const allowed=[env.ALLOWED_ORIGIN,'http://localhost:8788','http://127.0.0.1:8788'].filter(Boolean);
     if(request.method==='GET'&&url.pathname==='/api/health')
-      return response({ok:true,mode:'lobby-secret-nise',version:4},200,allowed.includes(origin)?cors(origin):{});
+      return response({ok:true,mode:'lobby-secret-nise-wolf',version:5},200,allowed.includes(origin)?cors(origin):{});
     if(!allowed.includes(origin))return err('許可されていないアクセスです',403);
     const headers=cors(origin),reply=(data,status=200)=>response(data,status,headers);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -147,7 +148,7 @@ export class OnlineRoom{
   }
   async join(request){
     if(!this.active())return err('部屋が見つからないか期限切れです',404);
-    if(this.room.secret||this.room.nise)return err('ゲーム中は新しく参加できません。終了後に試してね',409);
+    if(this.room.secret||this.room.nise||this.room.wolf)return err('ゲーム中は新しく参加できません。終了後に試してね',409);
     if(this.room.members.length>=MAX)return err('満員です',409);
     const {name,icon}=await request.json();
     if(!safeName(name))return err('名前が必要です',400);
@@ -170,7 +171,7 @@ export class OnlineRoom{
     const room=this.snapshot();
     for(const ws of this.sockets()){
       const id=ws.deserializeAttachment()?.id;
-      this.send(ws,{type:'room',room:{...room,nise:niseView(this.room,id)},voted:!!this.room.secret?.votes?.[id],
+      this.send(ws,{type:'room',room:{...room,nise:niseView(this.room,id),wolf:wolfView(this.room,id)},voted:!!this.room.secret?.votes?.[id],
         myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
           (this.room.secret.votes?.[id]||null):null,
         predicted:!!this.room.secret?.predictions?.[id]});
@@ -237,7 +238,7 @@ export class OnlineRoom{
     const [client,server]=Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({id:player.id});
-    this.send(server,{type:'welcome',selfId:player.id,room:{...this.snapshot(),nise:niseView(this.room,player.id)},
+    this.send(server,{type:'welcome',selfId:player.id,room:{...this.snapshot(),nise:niseView(this.room,player.id),wolf:wolfView(this.room,player.id)},
       voted:!!this.room.secret?.votes?.[player.id],
       myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
         (this.room.secret.votes?.[player.id]||null):null,
@@ -252,11 +253,11 @@ export class OnlineRoom{
     const id=ws.deserializeAttachment()?.id,player=this.room.members.find(m=>m.id===id);
     if(!player)return void ws.close(4003,'unauthorized');
     if(data.type==='ready'){
-      if(this.room.secret||this.room.nise||typeof data.ready!=='boolean')return;
+      if(this.room.secret||this.room.nise||this.room.wolf||typeof data.ready!=='boolean')return;
       player.ready=data.ready;await this.ctx.storage.put('room',this.room);this.broadcast();return;
     }
     if(data.type==='game'){
-      if(this.room.secret||this.room.nise||this.room.hostId!==id||!GAMES.has(data.gameId))return;
+      if(this.room.secret||this.room.nise||this.room.wolf||this.room.hostId!==id||!GAMES.has(data.gameId))return;
       this.room.gameId=data.gameId;
       for(const m of this.room.members)m.ready=false;
       await this.ctx.storage.put('room',this.room);this.broadcast();return;
@@ -268,7 +269,7 @@ export class OnlineRoom{
       await this.saveAndBroadcast();return;
     }
     if(data.type==='nise-start'){
-      if(this.room.nise||this.room.secret||this.room.hostId!==id||this.room.gameId!=='nise-transfer-student'||
+      if(this.room.nise||this.room.secret||this.room.wolf||this.room.hostId!==id||this.room.gameId!=='nise-transfer-student'||
          this.room.members.length<3||!this.snapshot().allReady)return;
       this.room.nise=createNise(this.room);
       await this.saveAndBroadcast();return;
@@ -278,8 +279,23 @@ export class OnlineRoom{
       if(niseAction(this.room,id,data))await this.saveAndBroadcast();
       return;
     }
+    if(data.type==='wolf-start'){
+      if(this.room.wolf||this.room.nise||this.room.secret||id!==this.room.hostId||
+         this.room.gameId!=='word-wolf'||this.room.members.length<3||!this.snapshot().allReady)return;
+      this.room.wolf=createWolf(this.room);await this.saveAndBroadcast();return;
+    }
+    if(data.type==='wolf-stop'){
+      if(!this.room.wolf||id!==this.room.hostId)return;
+      this.room.wolf=null;
+      for(const member of this.room.members)member.ready=false;
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type?.startsWith('wolf-')){
+      if(this.room.wolf&&wolfAction(this.room,id,data))await this.saveAndBroadcast();
+      return;
+    }
     if(data.type==='secret-start'){
-      if(this.room.secret||this.room.nise||this.room.hostId!==id||this.room.gameId!=='minna-wa-docchi'||!this.snapshot().allReady)return;
+      if(this.room.secret||this.room.nise||this.room.wolf||this.room.hostId!==id||this.room.gameId!=='minna-wa-docchi'||!this.snapshot().allReady)return;
       this.startSecret();
       await this.saveAndBroadcast();return;
     }
@@ -390,6 +406,11 @@ export class OnlineRoom{
     if(!this.room||!this.room.members.some(m=>m.id===id))return;
     this.room.members=this.room.members.filter(m=>m.id!==id);
     if(this.room.hostId===id)this.room.hostId=this.room.members[0]?.id||null;
+    if(this.room.wolf){
+      // お題配布・投票中の退出では秘密情報を保持せずロビーへ戻す。
+      this.room.wolf=null;
+      for(const member of this.room.members)member.ready=false;
+    }
     if(this.room.nise){
       // 途中での人数変更は秘密情報と投票の整合性を崩すため、安全にロビーへ戻す。
       this.room.nise=null;
