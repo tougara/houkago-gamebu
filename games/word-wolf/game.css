@@ -28,8 +28,8 @@ button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}button
 .word-card{text-align:center;padding:24px 16px}.word-card>p{font-size:14px;line-height:1.8;font-weight:700;color:var(--muted)}
 .word-secret{height:142px;background:#182644;border-radius:19px;display:grid;place-items:center;color:#a9bbd7;margin:18px 0 12px;transition:background .12s}
 .word-secret span{font-size:clamp(27px,8vw,42px);font-weight:1000;overflow-wrap:anywhere}.word-secret.revealed{background:linear-gradient(150deg,#174b79,#1c9ad2);color:white}
-.hold-button{width:100%;min-height:85px;border-radius:18px;border:2px dashed #2a90d9;color:#235587;background:#e3f5ff;font-weight:1000;padding:15px;touch-action:none;user-select:none;-webkit-user-select:none}
-.hold-button.holding{background:#ffe6a3;border-color:#d68e20;color:#714b17}.word-card>.btn{margin-top:22px}
+.handoff-word-hold{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;min-height:64px}
+.handoff-word-hold:active{background:linear-gradient(#ffe78f,#ffc34b)}.word-card>.btn{margin-top:22px}
 .talk-card{text-align:center;padding:20px 12px}.talk-card .label{font-size:15px;font-weight:900;color:var(--muted)}.timer{font-variant-numeric:tabular-nums;font-size:clamp(64px,19vw,115px);font-weight:1000;letter-spacing:-.045em;line-height:1.45;color:#234c83}
 .talk-card [data-clock-note]{margin:0 0 22px;font-size:14px;font-weight:900;color:#496684}
 .timer-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.timer-controls .btn{font-size:13px;min-height:49px;padding:7px}
