@@ -46,6 +46,16 @@ jobs:
       - name: Deploy Cloudflare Worker
         working-directory: worker
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler deploy --config wrangler.jsonc
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Cloudflare's API tokens are one-line values. A pasted trailing
+          # newline makes the Authorization header invalid in Wrangler.
+          # Normalize without printing either secret into the action logs.
+          export CLOUDFLARE_API_TOKEN="$(printf '%s' "$CF_TOKEN" | tr -d '[:space:]')"
+          export CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$CF_ACCOUNT_ID" | tr -d '[:space:]')"
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Cloudflare API token or account ID is blank after trimming whitespace."
+            exit 1
+          fi
+          npx wrangler deploy --config wrangler.jsonc
