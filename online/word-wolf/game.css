@@ -27,6 +27,7 @@
 .large-center{text-align:center;padding:19px 13px}.large-center h2{font-size:23px;margin:6px 0 9px}.large-center p{color:var(--muted);font-size:13px;font-weight:800;line-height:1.6}
 .secret-holder{min-height:134px;border:2px dashed #5ba5e3;border-radius:17px;background:#eef7ff;margin:13px 0;display:grid;place-items:center;text-align:center;padding:15px;color:#285985;font-weight:900;user-select:none;-webkit-user-select:none;touch-action:none}
 .secret-holder.showing{background:linear-gradient(150deg,#174b79,#1c9ad2);border-style:solid;color:#fff}
+.online-word-visible{border-style:solid;touch-action:auto;user-select:text;-webkit-user-select:text;cursor:default}
 .secret-holder strong{font-size:clamp(26px,8vw,38px);overflow-wrap:anywhere}
 .timer{font-variant-numeric:tabular-nums;font-weight:1000;font-size:clamp(67px,19vw,98px);color:#1b5f9b;line-height:1.25;text-align:center}
 .timer-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.timer-controls .btn{min-height:39px;font-size:12px;padding:7px}
