@@ -35,13 +35,14 @@ function setupScreen(){
  const chosen=state.players.find(p=>p.id===state.hostId);
  const valid=custom?(state.players.length>=4&&!!chosen):selected.length>0;
  return nav()+heading('ゲーム設定','ルールと話し合い時間を決めよう')+
+ '<div class="setup-member-edit"><button type="button" class="nav-pill" data-edit-members>メンバーを変更</button></div>'+
  '<section class="card"><h2>お題の決め方</h2><div class="select-grid"><button type="button" class="select-option '+(!custom?'selected':'')+'" data-topic-source="auto" aria-pressed="'+(!custom)+'"><strong>おまかせ</strong><small>150ペアから自動で決定</small></button><button type="button" class="select-option '+(custom?'selected':'')+'" data-topic-source="custom" aria-pressed="'+custom+'"><strong>自分たちで決める</strong><small>出題者1人が自由入力</small></button></div></section>'+
  (custom?
  '<section class="card"><h2>お題を決める人は？</h2><p class="intro">出題者はお題を知っているので、ゲームには参加しないよ。</p><div class="host-grid">'+state.players.map(p=>'<button type="button" class="host-choice '+(state.hostId===p.id?'selected':'')+'" data-host-id="'+esc(p.id)+'" aria-pressed="'+(state.hostId===p.id)+'"><span class="host-icon">'+esc(p.icon)+'</span><strong>'+esc(p.name)+'</strong><small>'+(state.hostId===p.id?'出題者':'この人にする')+'</small></button>').join('')+'</div><p class="hint">'+(state.players.length>=4?state.players.length+'人中 '+(state.players.length-1)+'人でプレイ ＋ 出題者1人':'出題者ありは4人以上必要です')+'</p>'+(!chosen?'<p class="topic-warning">出題者をひとり選んでね。</p>':'')+'</section>':
  '<section class="card"><h2>お題ジャンル <span class="count">'+selected.length+' / '+CATEGORIES.length+'</span></h2><div class="genre-grid">'+CATEGORIES.map(c=>'<button type="button" class="choice '+(selected.includes(c)?'selected':'')+'" data-category="'+esc(c)+'" aria-pressed="'+selected.includes(c)+'">'+esc(c)+'</button>').join('')+'</div><p class="hint">1ジャンル以上を選んでね。お題は全150ペア。</p></section>')+
  '<section class="card"><h2>勝敗ルール</h2><div class="select-grid"><button type="button" class="select-option '+(state.mode==='simple'?'selected':'')+'" data-mode="simple"><strong>シンプル</strong><small>ウルフを当てたら市民の勝ち</small></button><button type="button" class="select-option '+(state.mode==='reverse'?'selected':'')+'" data-mode="reverse"><strong>逆転チャンスあり</strong><small>見つかったウルフはお題を自由回答</small></button></div></section>'+
  '<section class="card"><h2>話し合い時間</h2><div class="small-grid">'+[2,3,5,7].map(n=>'<button type="button" class="choice '+(state.minutes===n?'selected':'')+'" data-minutes="'+n+'">'+n+'分</button>').join('')+'</div><p class="hint">ゲーム中に10秒・30秒ずつ増減できるよ。</p></section>'+
- '<section class="card compact"><h2>今回のメンバー <span class="count">'+state.players.length+'人</span></h2><div class="chips">'+state.players.map(p=>'<span class="chip">'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div>'+button('メンバーを変更','data-edit-members','secondary')+'</section>'+
+
  '<div class="stack">'+button(custom?'出題者にスマホを渡す':'この設定でゲーム開始','data-begin '+(!valid?'disabled':''),'gold')+'</div>';
 }
 function customTopicsScreen(){
