@@ -7,7 +7,7 @@ const names={
  'minna-wa-docchi':'みんなはどっち？','kyokasho-tower':'教科書タワー',
  'kankaku-meter':'感覚メーター','pitadome-challenge':'ピタ止めチャレンジ',
  'link-burst':'リンクバースト！','nise-transfer-student':'ニセ転校生を探せ！',
- 'gesture-battle':'ジェスチャーバトル'
+ 'gesture-battle':'ジェスチャーバトル','word-wolf':'ことばのオオカミ'
 };
 const STORE='houkago-online-session-v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
@@ -82,9 +82,9 @@ $('join').addEventListener('click',async()=>{
 const send=command=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(command))};
 function draw(){
  if(!room)return;
- if((room.phase==='secret'||room.phase==='nise')&&session?.code){
+ if((room.phase==='secret'||room.phase==='nise'||room.phase==='wolf')&&session?.code){
    stopSocket();
-   const page=room.phase==='nise'?'nise-transfer-student':'minna-wa-docchi';
+   const page=room.phase==='nise'?'nise-transfer-student':room.phase==='wolf'?'word-wolf':'minna-wa-docchi';
    location.replace('./'+page+'/?room='+encodeURIComponent(session.code));
    return;
  }
@@ -98,8 +98,8 @@ function draw(){
  $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
  $('ready').disabled=ws?.readyState!==WebSocket.OPEN;
  const hostStart=$('start-secret');
- const supported=['minna-wa-docchi','nise-transfer-student'].includes(room.gameId);
- const minimum=room.gameId==='nise-transfer-student'?3:2;
+ const supported=['minna-wa-docchi','nise-transfer-student','word-wolf'].includes(room.gameId);
+ const minimum=['nise-transfer-student','word-wolf'].includes(room.gameId)?3:2;
  hostStart.hidden=!host||!supported;
  hostStart.textContent=(names[room.gameId]||room.gameId)+' の画面へ進む';
  hostStart.disabled=!room.allReady||room.members.length<minimum||ws?.readyState!==WebSocket.OPEN;
@@ -156,6 +156,12 @@ $('start-secret').addEventListener('click',async()=>{
    if(!health.ok||health.version<4){notice('通信サーバーの更新待ちだよ。更新後にもう一度押してね。');return}
   }catch{notice('通信サーバーを確認できないよ。接続を確認してね。');return}
   send({type:'nise-start'});
+  }else if(room.gameId==='word-wolf'&&room.members.length>=3){
+  try{
+   const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
+   if(!health.ok||health.version<5){notice('ことばのオオカミのサーバー更新待ちだよ。更新後にもう一度押してね。');return}
+  }catch{notice('通信サーバーを確認できないよ。接続を確認してね。');return}
+  send({type:'wolf-start'});
  }else if(room.gameId==='minna-wa-docchi')send({type:'secret-start'});
 });
 $('ready').addEventListener('click',()=>{
