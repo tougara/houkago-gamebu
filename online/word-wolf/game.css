@@ -1,0 +1,41 @@
+:root{--ink:#1b2942;--muted:#63728b;--line:#dce5f1;--blue:#218de6;--gold:#ffc356;--paper:rgba(255,255,255,.96);--shadow:0 9px 22px rgba(17,32,61,.11)}
+*{box-sizing:border-box}html{background:#10233f}body{margin:0;color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.48;cursor:default}
+[hidden]{display:none!important}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f6ac29;outline-offset:2px}
+.wolf-online-app{width:min(720px,100%);min-height:100dvh;margin:0 auto;padding:9px 10px calc(20px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(239,246,255,.82),rgba(250,250,249,.9)),url("../../kotoba_no_ookami_night_background.png") center/cover fixed}
+.top-nav{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center;margin-bottom:4px}
+.nav-pill,.connection{min-width:0;min-height:39px;padding:8px 7px;display:grid;place-items:center;border:1px solid #d8e4f1;border-radius:13px;background:#fff;box-shadow:0 4px 10px #1b355118;text-decoration:none;color:#20344e;font-size:clamp(10px,2.8vw,13px);font-weight:900;text-align:center}
+.connection{font-size:10px;color:#956b20;background:#fff8e6}.connection.connected{color:#21784d;background:#e9fff1}
+.game-brand{height:clamp(83px,14dvh,123px);display:grid;place-items:center;margin:0}
+.game-brand img{display:block;width:min(70vw,285px);max-height:100%;object-fit:contain;filter:drop-shadow(0 5px 9px rgba(12,25,55,.27))}
+.online-heading{text-align:center;margin:1px 0 9px}.online-heading h1{margin:0 0 3px;font-size:clamp(22px,5.7vw,30px);line-height:1.2}.online-heading p{margin:0;color:var(--muted);font-size:11px;font-weight:850;line-height:1.4}
+.panel{border:1px solid var(--line);border-radius:18px;background:var(--paper);padding:13px;margin-bottom:9px;box-shadow:var(--shadow)}
+.panel h2{font-size:clamp(16px,4.5vw,20px);margin:0 0 8px;line-height:1.25}.panel h2 small{float:right;color:var(--muted);font-size:11px}
+.hint{font-size:11px;color:var(--muted);line-height:1.45;font-weight:800;margin:7px 0 0}.notice{border:1px solid #f1b2b8;background:#fff1f3;color:#953b4b;padding:9px 12px;border-radius:13px;margin-bottom:8px;font-size:12px;font-weight:900}.notice.good{border-color:#9ed7b5;color:#257c50;background:#eafff1}
+.btn{display:block;width:100%;min-height:46px;border:0;border-radius:13px;background:linear-gradient(#4aa8ff,#1678d3);color:#fff;font-weight:1000;padding:10px 13px;box-shadow:0 4px 0 #0d5ba4}.btn.gold{background:linear-gradient(#ffdc79,#ffc13b);box-shadow:0 4px 0 #cc8d24;color:#402c11}.btn.gray{background:#e9eff7;box-shadow:0 3px 0 #c6d2df;color:#24405f}.btn.danger{background:#fff1ee;box-shadow:0 3px 0 #edd0c9;color:#a14740}.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #a9a9a9}
+.stack{display:grid;gap:7px}.action-foot{position:sticky;bottom:0;z-index:1;padding:7px 0 max(6px,env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,#f1f6fd 24%,#f1f6fd 100%)}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.choice-grid button{min-width:0;border:2px solid #dce5f1;background:#f5f8fd;border-radius:13px;min-height:61px;padding:8px 7px;text-align:center;font-weight:950;color:var(--ink)}
+.choice-grid button strong{display:block;font-size:clamp(12px,3.5vw,16px);line-height:1.35}.choice-grid button small{display:block;font-size:10px;font-weight:750;color:var(--muted);line-height:1.3;margin-top:4px}
+.choice-grid button.selected,.time-row button.selected,.genre-grid button.selected{border-color:#238de1;background:#e6f5ff;color:#0e5b9b;box-shadow:inset 0 0 0 1px #238de1}
+.time-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.time-row button,.genre-grid button{min-height:39px;border:2px solid #dce5f1;background:#f7faff;color:#223750;border-radius:11px;font-size:12px;font-weight:900;padding:6px}
+.genre-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.genre-grid button{min-height:34px;font-size:clamp(10px,2.8vw,13px)}
+.field-label{display:block;font-size:12px;font-weight:950;margin:7px 0 5px;color:#384b66}
+.field,.select{display:block;width:100%;min-width:0;min-height:44px;padding:9px 11px;border:2px solid #d8e4f1;border-radius:11px;background:#fff;color:#182d48;font-size:16px}
+.compact-note{font-size:11px;color:#61718a;font-weight:800}
+.member-pills{display:flex;flex-wrap:wrap;gap:5px}.member-pills span{font-size:11px;font-weight:900;padding:6px 9px;border:1px solid #dae6f4;border-radius:99px;background:#f1f7ff}
+.member-pills span.wolf-author{background:#ffefca;border-color:#eecb79}
+.count-progress{text-align:center;font-size:13px;font-weight:900;color:#5b6980;margin:7px 0}
+.large-center{text-align:center;padding:19px 13px}.large-center h2{font-size:23px;margin:6px 0 9px}.large-center p{color:var(--muted);font-size:13px;font-weight:800;line-height:1.6}
+.secret-holder{min-height:134px;border:2px dashed #5ba5e3;border-radius:17px;background:#eef7ff;margin:13px 0;display:grid;place-items:center;text-align:center;padding:15px;color:#285985;font-weight:900;user-select:none;-webkit-user-select:none;touch-action:none}
+.secret-holder.showing{background:linear-gradient(150deg,#174b79,#1c9ad2);border-style:solid;color:#fff}
+.secret-holder strong{font-size:clamp(26px,8vw,38px);overflow-wrap:anywhere}
+.timer{font-variant-numeric:tabular-nums;font-weight:1000;font-size:clamp(67px,19vw,98px);color:#1b5f9b;line-height:1.25;text-align:center}
+.timer-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.timer-controls .btn{min-height:39px;font-size:12px;padding:7px}
+.vote-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.vote-grid button{min-width:0;min-height:90px;border-radius:15px;border:2px solid #d8e4f1;background:#f4f9ff;color:#223b59;display:grid;justify-items:center;align-content:center;gap:5px;padding:8px;font-weight:950}
+.vote-grid button strong{font-size:13px;overflow-wrap:anywhere;max-width:100%}.vote-grid .avatar{font-size:29px}.vote-grid button:disabled{opacity:.35}.vote-grid button:not(:disabled):active{background:#ffefcc;border-color:#efb64c}
+.two-words{display:grid;grid-template-columns:1fr 1fr;gap:7px}.two-words>div{background:#e9f4ff;border-radius:14px;padding:12px 6px;text-align:center}.two-words>div:nth-child(2){background:#fff0f2}.two-words small{display:block;font-size:11px;color:var(--muted);font-weight:900}.two-words strong{display:block;margin-top:7px;font-size:clamp(18px,5vw,25px);overflow-wrap:anywhere}
+.winner{text-align:center;font-size:clamp(25px,7vw,34px);font-weight:1000;padding:13px 2px}.winner.human{color:#176fbd}.winner.wolf{color:#ba4560}
+.tally-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px dashed #dce5f1;font-size:13px;font-weight:900}.tally-row:last-child{border-bottom:0}.tally-row b{margin-left:auto;color:#1a6aa9;font-variant-numeric:tabular-nums}
+.wolf-reveal{text-align:center;font-size:20px;font-weight:1000;color:#ad385a;background:#fff0f3;border-radius:13px;padding:11px}
+@media(max-width:420px) and (max-height:760px){.wolf-online-app{padding:6px 8px 12px}.game-brand{height:clamp(65px,11dvh,91px)}.online-heading{margin-bottom:6px}.panel{padding:10px 11px;margin-bottom:6px}.panel h2{margin-bottom:6px}.choice-grid button{min-height:54px;padding:6px}.genre-grid button{min-height:30px;padding:4px}.time-row button{min-height:34px}.btn{min-height:42px}.hint{margin-top:5px}}
+@media(min-width:640px){.setup-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}.setup-columns>.panel{margin-bottom:0}.game-brand{height:125px}.vote-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
