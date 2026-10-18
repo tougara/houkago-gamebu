@@ -80,9 +80,9 @@ $('join').addEventListener('click',async()=>{
 const send=command=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(command))};
 function draw(){
  if(!room)return;
- if((room.phase==='secret'||room.phase==='nise'||room.phase==='wolf'||room.phase==='pita'||room.phase==='meter'||room.phase==='tower')&&session?.code){
+ if((room.phase==='secret'||room.phase==='nise'||room.phase==='wolf'||room.phase==='pita'||room.phase==='meter'||room.phase==='tower'||room.phase==='link')&&session?.code){
    stopSocket();
-   const page=room.phase==='nise'?'nise-transfer-student':room.phase==='wolf'?'word-wolf':room.phase==='pita'?'pitadome-challenge':room.phase==='meter'?'kankaku-meter':room.phase==='tower'?'kyokasho-tower':'minna-wa-docchi';
+   const page=room.phase==='nise'?'nise-transfer-student':room.phase==='wolf'?'word-wolf':room.phase==='pita'?'pitadome-challenge':room.phase==='meter'?'kankaku-meter':room.phase==='tower'?'kyokasho-tower':room.phase==='link'?'link-burst':'minna-wa-docchi';
    location.replace('./'+page+'/?room='+encodeURIComponent(session.code));
    return;
  }
@@ -96,13 +96,13 @@ function draw(){
  $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
  $('ready').disabled=ws?.readyState!==WebSocket.OPEN;
  const hostStart=$('start-secret');
- const supported=['minna-wa-docchi','nise-transfer-student','word-wolf','pitadome-challenge','kankaku-meter','kyokasho-tower'].includes(room.gameId);
+ const supported=['minna-wa-docchi','nise-transfer-student','word-wolf','pitadome-challenge','kankaku-meter','kyokasho-tower','link-burst'].includes(room.gameId);
  const minimum=['nise-transfer-student','word-wolf'].includes(room.gameId)?3:2;
- const tooMany=room.gameId==='kyokasho-tower'&&room.members.length>6;
+ const tooMany=(room.gameId==='kyokasho-tower'&&room.members.length>6)||(room.gameId==='link-burst'&&room.members.length>2);
  hostStart.hidden=!host||!supported;
  hostStart.textContent=(names[room.gameId]||room.gameId)+' の画面へ進む';
  hostStart.disabled=!room.allReady||room.members.length<minimum||tooMany||ws?.readyState!==WebSocket.OPEN;
- $('waiting').textContent=tooMany?'教科書タワーは最大6人まで。ホストが人数を調整してね。':room.members.length<minimum&&supported?
+ $('waiting').textContent=tooMany?(room.gameId==='link-burst'?'リンクバースト！は2人専用。ホストが人数を調整してね。':'教科書タワーは最大6人まで。ホストが人数を調整してね。'):room.members.length<minimum&&supported?
    'このゲームは'+minimum+'人以上で遊べるよ。友達を招待してね。':
    room.allReady?(supported?'全員準備OK！ ホストが進むと全員同時に移動するよ。':'このゲームのオンライン版は準備中だよ。'):
    '全員が準備OKになったらホストがゲーム画面に進めるよ。';
@@ -179,6 +179,12 @@ $('start-secret').addEventListener('click',async()=>{
    if(!health.ok||health.version<8){notice('教科書タワーのサーバー更新待ちだよ。更新後にもう一度押してね。');return}
   }catch{notice('通信サーバーを確認できないよ。接続を確認してね。');return}
   send({type:'tower-start'});
+ }else if(room.gameId==='link-burst'&&room.members.length===2){
+  try{
+   const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
+   if(!health.ok||health.version<9){notice('リンクバースト！のサーバー更新待ちだよ。');return}
+  }catch{notice('通信サーバーを確認できないよ。接続を確認してね。');return}
+  send({type:'link-start'});
  }else if(room.gameId==='minna-wa-docchi')send({type:'secret-start'});
 });
 $('ready').addEventListener('click',()=>{
