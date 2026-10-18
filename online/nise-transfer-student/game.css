@@ -595,3 +595,111 @@
 .nise-online-app .nise-play-board .online-final-board .online-vote-under-name{
  margin-top:2px;
 }
+
+/* Online role reference: a compact fourth nav action and image-first role gallery. */
+.nise-online-app>.top-nav{
+ grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto;
+ gap:clamp(3px,.9vw,8px);
+}
+.nise-online-app .nise-role-guide-open{
+ appearance:none;display:grid;place-items:center;min-height:clamp(38px,5.5dvh,47px);
+ margin:0;padding:6px 8px;border:1px solid #bdd8ed;border-radius:12px;
+ background:#e7f2ff;color:#235c91;cursor:pointer;
+ font:900 clamp(10px,2.5vw,13px)/1.1 inherit;white-space:nowrap;
+}
+.nise-online-app .role-thumb-button{
+ display:grid;place-items:center;cursor:pointer;border-radius:9px;
+}
+.nise-online-app .role-thumb-button:focus-visible,
+.nise-online-app .nise-role-guide-open:focus-visible{
+ outline:3px solid #f4bf3b;outline-offset:2px;
+}
+.nise-online-app .role-thumb-button:active{transform:scale(.96)}
+.nise-role-guide-overlay[hidden]{display:none!important}
+.nise-role-guide-overlay{
+ position:fixed;inset:0;z-index:9999;
+ display:grid;place-items:center;padding:12px;
+ background:rgba(7,19,41,.76);
+ backdrop-filter:blur(3px);
+}
+.nise-role-guide-dialog{
+ display:flex;flex-direction:column;width:min(580px,100%);
+ max-height:min(92dvh,790px);min-height:0;
+ overflow:hidden;border:2px solid #cbdff8;border-radius:19px;
+ background:#f6faff;color:#273d5b;
+ box-shadow:0 20px 50px rgba(5,18,42,.48);
+}
+.nise-role-guide-head{
+ flex:none;display:flex;align-items:center;justify-content:space-between;
+ gap:12px;padding:11px 13px;
+ background:linear-gradient(120deg,#d9ebff,#f8f7ec);
+ border-bottom:1px solid #c4d7ee;
+}
+.nise-role-guide-head h2{margin:0;font-size:clamp(19px,4.5vw,25px);color:#254d7e;font-weight:1000}
+.nise-role-guide-close{
+ flex:none;width:42px;height:42px;display:grid;place-items:center;
+ background:white;color:#305b8e;border:1px solid #c6d5eb;border-radius:11px;
+ font-size:30px;line-height:1;cursor:pointer;font-weight:800;
+}
+.nise-role-guide-content{
+ flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+ padding:12px 13px 17px;scrollbar-width:thin;
+}
+.nise-guide-instruction{
+ margin:0 0 5px;text-align:center;font-weight:900;font-size:13px;line-height:1.55;
+}
+.nise-guide-notice{
+ font-size:11px;font-weight:750;color:#607995;text-align:center;
+ line-height:1.45;margin:0 0 12px;
+}
+.nise-guide-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.nise-guide-item{
+ display:flex;flex-direction:column;align-items:center;gap:4px;
+ min-width:0;padding:9px 5px 7px;
+ background:#fff;border:1px solid #d5e3f2;border-radius:13px;
+ color:#2a4564;cursor:pointer;box-shadow:0 3px 7px #254a7212;
+}
+.nise-guide-item img{width:min(100%,132px);height:clamp(92px,24vw,156px);object-fit:contain}
+.nise-guide-item strong{font-size:clamp(12px,3.2vw,15px);line-height:1.25;overflow-wrap:anywhere}
+.nise-guide-item .side-tag{font-size:10px;max-width:100%;white-space:normal;line-height:1.2}
+.nise-guide-item small{color:#677d94;font-size:11px;font-weight:800}
+.nise-guide-item:active{background:#e8f3ff;transform:scale(.985)}
+.nise-guide-item:focus-visible,
+.nise-role-guide-overlay button:focus-visible{outline:3px solid #f3b631;outline-offset:2px}
+.nise-guide-detail{
+ display:flex;flex-direction:column;align-items:center;text-align:center;
+ gap:7px;padding:1px 5px 7px;
+}
+.nise-guide-large-image{
+ display:block;width:min(100%,305px);height:min(45dvh,340px);
+ object-fit:contain;
+}
+.nise-guide-detail h3{font-size:clamp(20px,5vw,26px);margin:0;color:#284f85}
+.nise-guide-detail .side-tag{font-size:12px}
+.nise-guide-detail p{
+ font-size:clamp(13px,3.5vw,16px);font-weight:800;line-height:1.7;
+ margin:6px 0 5px;max-width:470px;text-align:left;
+}
+.nise-role-guide-dialog .nise-guide-back{
+ width:100%;max-width:360px;min-height:46px;
+ font-size:15px;margin:5px 0 2px;
+}
+@media(min-width:520px){
+ .nise-guide-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .nise-guide-item img{height:130px}
+}
+@media(max-width:360px){
+ .nise-online-app>.top-nav{gap:3px}
+ .nise-online-app .top-nav .back-home{padding:5px 2px;font-size:9px}
+ .nise-online-app .nise-role-guide-open{padding:5px 5px;font-size:10px}
+ .nise-online-app .online-connection{font-size:9px;padding:6px 3px}
+ .nise-role-guide-dialog{max-height:95dvh}
+ .nise-guide-item{padding:6px 3px}
+}
+@media(max-height:520px) and (orientation:landscape){
+ .nise-role-guide-dialog{max-height:95dvh}
+ .nise-guide-large-image{height:45dvh}
+ .nise-guide-item img{height:88px}
+}
