@@ -86,7 +86,7 @@ function blocks(p){
  }
  const active=new Set();
  if(p.piece){const a=p.piece;rotation[a.rot].forEach(([dx,dy])=>active.add((a.y+dy)+':'+(a.x+dx)))}
- const burst=new Set((p.burst||[]).map(x=>{const [y,x]=x.split(':');return (Number(y)-2)+':'+x}));
+ const burst=new Set((p.burst||[]).map(pos=>{const [y,x]=pos.split(':');return (Number(y)-2)+':'+x}));
  return display.map((row,y)=>row.map((ch,x)=>{
   const color=palette[ch];return '<div class="block '+(color?color[0]:'')+
   (active.has(y+':'+x)?' active':'')+(burst.has(y+':'+x)?' burst':'')+'">'+
@@ -198,7 +198,7 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>{const act=keyNames[e.key.toLowerCase()];if(act){e.preventDefault();input(act,false)}});
 addEventListener('blur',releaseAll);
-addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll()});
 function connect(){
  if(leaving)return;clearTimeout(retryTimer);
  if(ws){ws.onclose=null;ws.close()}
