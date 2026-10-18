@@ -84,7 +84,7 @@ function setupScreen(){
   const r=roleDefs[k],n=game.counts[k],locked=k==='classmate';
   const max=k==='fake'?(game.count>=6?3:2):k==='classmate'?10:1;
   const min=k==='fake'?2:0;
-  return '<div class="role-row"><span class="role-thumb-button"><img class="role-thumb" src="'+roleImg(k)+'" alt=""></span>'+
+  return '<div class="role-row"><button type="button" class="role-thumb-button" data-role-detail="'+k+'" aria-label="'+esc(r.name)+'の役職を確認" title="'+esc(r.name)+'の詳細"><img class="role-thumb" src="'+roleImg(k)+'" alt=""></button>'+
    '<div class="role-info"><div class="role-title">'+r.name+'</div><span class="side-tag '+r.side+'">'+
    (r.side==='fake'?'ニセモノ':r.side==='trick'?'クセモノ':'ホンモノ')+'</span></div>'+
    '<div class="role-count-controls">'+
@@ -364,7 +364,12 @@ function connect(){
  current.onerror=()=>{};
 }
 function action(event){
- const b=event.target.closest('button,[data-target],[data-rest]');if(!b||b.disabled||!connected()||!g())return;
+ const b=event.target.closest('button,[data-target],[data-rest]');if(!b||b.disabled)return;
+ if(b.hasAttribute('data-role-detail')){
+  if(roleDefs[b.dataset.roleDetail])openGuide(b.dataset.roleDetail);
+  return;
+ }
+ if(!connected()||!g())return;
  const game=g();
  if(b.hasAttribute('data-role-tab')&&game.stage==='setup'){roleTab=b.dataset.roleTab==='advanced'?'advanced':'basic';render();return}
  if(b.hasAttribute('data-role')&&isHost()&&game.stage==='setup'){
