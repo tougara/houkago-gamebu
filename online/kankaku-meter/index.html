@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#6f62d9">
+<title>感覚メーター オンライン｜放課後ゲーム部</title>
+<link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
+<link rel="stylesheet" href="../shared-ui.css?v=20261018-shared1">
+<link rel="stylesheet" href="./game.css?v=20261018-meter1">
+</head><body>
+<main class="meter-online">
+<nav class="top-nav hk-online-nav">
+<a href="../" class="hk-online-link" id="back-lobby">← 部屋にもどる</a>
+<a href="../../games/" class="hk-online-link">ゲームをえらぶ</a>
+<span class="hk-online-connection" id="connection">接続待ち</span>
+</nav>
+<header class="brand">
+<img src="../../kankaku_meter_logo.png" alt="感覚メーター">
+<span>ONLINE / COOPERATIVE GAME</span>
+</header>
+<div id="notice" class="hk-online-notice" role="status" aria-live="polite" hidden></div>
+<div id="game-root" aria-live="polite"><section class="panel">オンラインルームに接続中…</section></div>
+</main>
+<script src="../config.js"></script>
+<script src="../shared-ui.js?v=20261018-shared2"></script>
+<script src="./game.js?v=20261018-meter1"></script>
+</body></html>
