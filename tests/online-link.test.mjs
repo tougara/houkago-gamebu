@@ -13,6 +13,7 @@ const make=()=>{
  r.link=createLink(r);return r;
 };
 const act=(r,id,type,other={})=>linkAction(r,id,{type,...other});
+const startPlaying=g=>{for(let i=0;i<70;i++)advanceLink(g,50);assert.equal(g.stage,'playing')};
 test('online engine maintains original 7x13 visible board, deterministic shared pairs and scoring',()=>{
  assert.equal(E.COLS,7);assert.equal(E.ROWS,15);assert.equal(E.HIDDEN,2);
  const a=E.make(null,7893),b=E.make(null,7893);
@@ -53,7 +54,7 @@ test('host starts and clients see same blocks with their own perspective',()=>{
 });
 test('JAM cancels incoming, transfers to opponent, and both see their own HUD',()=>{
  const r=make();act(r,'p0','link-begin');
- const g=r.link;advanceLink(g,3500);
+ const g=r.link;startPlaying(g);
  const a=g.states.p0,b=g.states.p1;
  E.queueJam(a,3);
  a.phase='interturn';a.piece=null;a.readyAttack=11;
@@ -67,7 +68,7 @@ test('JAM cancels incoming, transfers to opponent, and both see their own HUD',(
 });
 test('a disconnected duel pauses and supports host-only resume without changing boards',()=>{
  const r=make();act(r,'p0','link-begin');
- advanceLink(r.link,3500);const before=r.link.states.p0.board.map(row=>row.slice());
+ startPlaying(r.link);const before=r.link.states.p0.board.map(row=>row.slice());
  assert.equal(interruptLink(r.link),true);
  assert.equal(r.link.stage,'interrupted');
  assert.equal(act(r,'p1','link-resume'),false);
@@ -78,12 +79,12 @@ test('a disconnected duel pauses and supports host-only resume without changing 
 });
 test('server game outcome keeps current boards; simultaneous knockout produces draw',()=>{
  const r=make();act(r,'p0','link-begin');
- advanceLink(r.link,3500);
+ startPlaying(r.link);
  r.link.states.p0.over=true;r.link.states.p1.over=true;
  advanceLink(r.link,50);
  assert.equal(r.link.stage,'finished');
  assert.deepEqual(linkView(r,'p0').winners,[]);
- const t=make();act(t,'p0','link-begin');advanceLink(t.link,3500);
+ const t=make();act(t,'p0','link-begin');startPlaying(t.link);
  t.link.states.p0.over=true;advanceLink(t.link,50);
  assert.deepEqual(linkView(t,'p1').winners,['p1']);
  assert.equal(linkView(t,'p0').self.over,true);
