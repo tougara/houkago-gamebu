@@ -703,3 +703,41 @@
  .nise-guide-large-image{height:45dvh}
  .nise-guide-item img{height:88px}
 }
+
+/* Offline test-play switcher: renders actual online Nise UI with simulated room data. */
+.nise-demo-tools[hidden]{display:none!important}
+.nise-demo-tools{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));z-index:900;width:min(340px,calc(100vw - 16px));font-family:system-ui,"Yu Gothic",sans-serif}
+.nise-demo-tools details{
+ border:2px solid #3c72aa;border-radius:13px;overflow:hidden;
+ color:#1b3d64;background:#f9fcff;
+ box-shadow:0 7px 24px rgba(10,29,55,.45);
+}
+.nise-demo-tools summary{
+ min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+ cursor:pointer;padding:10px 12px;background:#d9eeff;list-style:none;
+}
+.nise-demo-tools summary::-webkit-details-marker{display:none}
+.nise-demo-tools summary:before{content:'☰';font-size:16px;color:#23568e}
+.nise-demo-tools summary strong{font-size:13px;font-weight:1000;white-space:nowrap}
+.nise-demo-tools summary span{font-size:11px;font-weight:850;margin-left:auto;color:#4473a0}
+.nise-demo-controls{padding:10px;max-height:69dvh;overflow:auto;overscroll-behavior:contain}
+.nise-demo-section-label,.nise-demo-role-label{display:block;color:#2e5c85;font-size:12px;font-weight:950;margin:1px 0 8px}
+.nise-demo-stage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:13px}
+.nise-demo-stage-grid button{
+ min-height:42px;border:1px solid #aac8e6;border-radius:10px;
+ background:#fff;color:#295782;font:900 12px/1.2 inherit;cursor:pointer;
+}
+.nise-demo-stage-grid button.selected{background:#2777ba;color:white;border-color:#276aab}
+.nise-demo-role-label{margin-bottom:5px}
+.nise-demo-controls select{
+ width:100%;height:44px;padding:7px 10px;border-radius:10px;
+ border:1px solid #9fc2e8;background:white;color:#1f456c;
+ font-size:14px;font-weight:900;
+}
+.nise-demo-tip{font-size:11px;font-weight:750;line-height:1.6;color:#56728d;margin:9px 2px 0}
+.nise-demo-tools button:focus-visible,.nise-demo-tools select:focus-visible,
+.nise-demo-tools summary:focus-visible{outline:3px solid #e5a637;outline-offset:2px}
+@media(max-height:420px){
+ .nise-demo-controls{max-height:67dvh}
+ .nise-demo-tools{width:min(320px,52vw)}
+}
