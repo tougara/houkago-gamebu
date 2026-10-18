@@ -1,6 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+import {OnlineRoom} from '../worker/src/index.js';
 import {createPita,pitaAction,pitaView,pitaPosition,pitaGrade,pitaLimits} from '../worker/src/pita-engine.js';
 if(!globalThis.crypto)globalThis.crypto=webcrypto;
 const fixture=(n=3)=>{
@@ -86,4 +88,49 @@ test('timeout stop reaches a result without waiting for disconnected members',()
  assert.equal(action(r,'p0','pita-close'),true);
  assert.equal(r.pita.results.filter(x=>x.timedOut).length,4);
  assert.equal(r.pita.results.length,5);
+});
+
+test('online page, lobby and Worker have coherent navigation and valid client script',()=>{
+ const html=readFileSync(new URL('../online/pitadome-challenge/index.html',import.meta.url),'utf8');
+ const game=readFileSync(new URL('../online/pitadome-challenge/game.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/pitadome-challenge/game.css',import.meta.url),'utf8');
+ const lobby=readFileSync(new URL('../online/lobby.js',import.meta.url),'utf8');
+ assert.doesNotThrow(()=>new Function(game));
+ assert.ok(html.includes('../shared-ui.js'));
+ assert.ok(html.includes('pitadome_challenge_logo.png'));
+ assert.ok(css.includes('pitadome_challenge_background.png'));
+ assert.ok(lobby.includes("type:'pita-start'"));
+ assert.ok(lobby.includes("room.phase==='pita'"));
+ assert.ok(game.includes("type:'pita-stop'"));
+});
+test('Worker routes host-only Pita actions, keeps results sealed, then returns to lobby',async()=>{
+ const memory=new Map(),sockets=[];
+ const storage={
+  get:async k=>memory.get(k),put:async(k,v)=>memory.set(k,structuredClone(v)),
+  setAlarm:async()=>{},deleteAll:async()=>memory.clear(),deleteAlarm:async()=>{}
+ };
+ const context={storage,getWebSockets:()=>sockets,blockConcurrencyWhile:cb=>cb()};
+ const worker=new OnlineRoom(context,{});
+ const req=(path,body)=>new Request('https://internal'+path,{method:'POST',body:JSON.stringify(body)});
+ const created=await (await worker.fetch(req('/create',{code:'ABCD2345',name:'host',gameId:'pitadome-challenge'}))).json();
+ const joined=await (await worker.fetch(req('/join',{name:'guest'}))).json();
+ const socket=id=>({events:[],deserializeAttachment(){return{id}},send(text){this.events.push(JSON.parse(text))},close(){}});
+ const a=socket(created.id),b=socket(joined.id);sockets.push(a,b);
+ const send=(s,action)=>worker.webSocketMessage(s,JSON.stringify(action));
+ await send(a,{type:'ready',ready:true});await send(b,{type:'ready',ready:true});
+ await send(b,{type:'pita-start'});assert.equal(worker.room.pita,undefined);
+ await send(a,{type:'pita-start'});assert.equal(worker.snapshot().phase,'pita');
+ assert.equal(worker.snapshot().pita,undefined,'private per-player view is not global room snapshot');
+ await send(b,{type:'pita-begin'});assert.equal(worker.room.pita.stage,'setup');
+ await send(a,{type:'pita-begin'});assert.equal(worker.room.pita.stage,'playing');
+ const ms=perfectTime(worker.room.pita);
+ await send(a,{type:'pita-stop',elapsedMs:ms,choice:'attack'});
+ assert.equal(worker.room.pita.stage,'playing');
+ assert.ok(b.events.at(-1).room.pita.results.length===0);
+ await send(b,{type:'pita-stop',elapsedMs:ms,choice:'heal'});
+ assert.equal(worker.room.pita.stage,'review');
+ assert.equal(b.events.at(-1).room.pita.results.length,2);
+ await send(a,{type:'pita-stop-game'});
+ assert.equal(worker.snapshot().phase,'lobby');
+ assert.ok(worker.room.members.every(x=>x.ready===false));
 });
