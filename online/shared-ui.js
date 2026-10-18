@@ -27,16 +27,27 @@ function notice(target,message='',positive=false){
  el.classList.toggle('ok',Boolean(positive));
  el.classList.toggle('good',Boolean(positive));
 }
-function progress(label,current,total){
+function progress(label,current,total,{className=''}={}){
  const done=Math.max(0,Number(current)||0);
  const max=Math.max(0,Number(total)||0);
- return '<p class="hk-online-progress" role="status">'+escapeHTML(label)+' '+done+' / '+max+'人</p>';
+ const extra=/^[a-zA-Z0-9 _-]*$/.test(className)?className.trim():'';
+ return '<p class="hk-online-progress'+(extra?' '+extra:'')+'" role="status">'+escapeHTML(label)+' '+done+' / '+max+'人</p>';
 }
-function roster(members,{authorId='',title='参加メンバー'}={}){
+function memberChips(members,{authorId='',hostId='',chipClass=''}={}){
+ const list=Array.isArray(members)?members:[];
+ const extra=/^[a-zA-Z0-9 _-]*$/.test(chipClass)?chipClass.trim():'';
+ return list.map(m=>{
+  const author=Boolean(authorId&&m.id===authorId);
+  const host=Boolean(hostId&&m.id===hostId);
+  return '<span class="hk-online-member'+(author?' hk-online-author':'')+(extra?' '+extra:'')+'">'+
+   escapeHTML(m.icon||'？')+' '+escapeHTML(m.name||'プレイヤー')+
+   (author?'（出題者）':host?'［ホスト］':'')+'</span>';
+ }).join('');
+}
+function roster(members,{authorId='',hostId='',title='参加メンバー'}={}){
  const list=Array.isArray(members)?members:[];
  return '<details class="panel hk-online-roster"><summary>'+escapeHTML(title)+' '+list.length+'人（タップして確認）</summary>'+
-  '<div class="hk-online-members">'+list.map(m=>'<span class="hk-online-member'+(authorId&&m.id===authorId?' hk-online-author':'')+'">'+escapeHTML(m.icon||'？')+' '+escapeHTML(m.name||'プレイヤー')+
-   (authorId&&m.id===authorId?'（出題者）':'')+'</span>').join('')+'</div></details>';
+  '<div class="hk-online-members">'+memberChips(list,{authorId,hostId})+'</div></details>';
 }
-window.HoukagoOnlineUI=Object.freeze({escapeHTML,connection,notice,progress,roster});
+window.HoukagoOnlineUI=Object.freeze({escapeHTML,connection,notice,progress,memberChips,roster});
 })();
