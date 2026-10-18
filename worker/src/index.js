@@ -119,7 +119,7 @@ export class OnlineRoom{
   constructor(ctx,env){
     this.ctx=ctx;this.env=env;this.room=null;
     this.linkTimer=null;this.linkLastTime=0;this.linkLastBroadcast=0;this.linkLastPersist=0;this.linkPersistPromise=null;
-    ctx.blockConcurrencyWhile(async()=>{this.room=await ctx.storage.get('room')||null});
+    ctx.blockConcurrencyWhile(async()=>{this.room=await ctx.storage.get('room')||null;this.startLinkLoop()});
   }
   startLinkLoop(){
     if(this.linkTimer||!this.room?.link||
@@ -278,6 +278,7 @@ export class OnlineRoom{
         (this.room.secret.votes?.[player.id]||null):null,
       predicted:!!this.room.secret?.predictions?.[player.id]});
     this.broadcast();
+    this.startLinkLoop();
     return new Response(null,{status:101,webSocket:client});
   }
   async webSocketMessage(ws,message){
@@ -285,6 +286,7 @@ export class OnlineRoom{
     if(typeof message!=='string'||message.length>512)return;
     let data;try{data=JSON.parse(message)}catch{return}
     const id=ws.deserializeAttachment()?.id,player=this.room.members.find(m=>m.id===id);
+    if(this.room?.link)this.startLinkLoop();
     if(!player)return void ws.close(4003,'unauthorized');
     if(data.type==='ready'){
       if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link||typeof data.ready!=='boolean')return;
