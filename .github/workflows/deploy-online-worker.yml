@@ -10,6 +10,7 @@ on:
       - 'tests/online-worker.test.mjs'
       - 'tests/online-nise.test.mjs'
       - 'tests/online-word-wolf.test.mjs'
+      - 'tests/online-pita.test.mjs'
       - '.github/workflows/deploy-online-worker.yml'
 
 permissions:
