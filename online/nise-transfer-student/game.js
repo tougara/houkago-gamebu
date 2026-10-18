@@ -97,7 +97,7 @@ function setupScreen(){
  const keys=roleTab==='advanced'?roleOrder.filter(k=>!baseRoles.includes(k)):baseRoles;
  return heading('使用する役職','人数＋おやすみ2枚ぶんのカード')+
  '<div class="online-setup-members"><details><summary>参加メンバー <strong>'+game.count+'人</strong> <span>確認する</span></summary>'+
- '<div class="online-member-list">'+game.members.map(p=>'<span>'+esc(p.icon)+' '+esc(p.name)+'</span>').join('')+'</div></details></div>'+
+ '<div class="online-member-list">'+onlineUI.memberChips(game.members)+'</div></details></div>'+
  '<div class="card role-select-card">'+
  '<div class="note '+(valid?'success':'warning')+'"><strong>カード '+total+' / '+required+'枚</strong><span>ニセ転校生は2枚から。クラスメイトは自動調整。</span></div>'+
  '<div class="nise-role-tabs" role="group" aria-label="役職の種類">'+
@@ -170,7 +170,7 @@ function nightScreen(){
  '<div class="card online-day-result"><h2>'+esc(roleDefs[role].name)+'</h2>'+
  (done?'<p class="online-progress-bar">行動完了！ ほかの人を待とう。</p>':detail+info+
  (canFinish?button('行動を終える','data-night-done','yellow full'):''))+
- '<p class="online-night-progress">'+(game.nightDoneCount===undefined?'順番に行動中':game.nightDoneCount+' / '+game.count+'人が行動完了')+'</p></div>';
+ (game.nightDoneCount===undefined?'<p class="online-night-progress">順番に行動中</p>':onlineUI.progress('行動完了',game.nightDoneCount,game.count,{className:'online-night-progress'}))+'</div>';
 }
 
 function privateCardResult(role){
@@ -209,7 +209,7 @@ function votingScreen(){
  button('選び直す','data-clear-vote','secondary full')+'</div>':'<div class="card"><p>怪しい人のカードをタップしてね。自分には投票できないよ。</p></div>');
  return heading('ニセ転校生を探そう','1人だけ選んで秘密投票')+tags()+
  board({targets:game.myVoted?[]:others})+details+
- '<p class="online-progress-bar">'+game.votedCount+' / '+game.count+'人が投票済み</p>';
+ onlineUI.progress('投票済み',game.votedCount,game.count,{className:'online-progress-bar'});
 }
 function voteCompleteScreen(){
  const game=g();
