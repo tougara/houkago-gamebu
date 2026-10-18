@@ -230,3 +230,71 @@ test('online Nise offers all eight illustrated role guides in setup and during p
  assert.ok(!('final' in publicView),'guide must not receive other private identities');
  assert.ok(!('rest' in publicView),'guide must not receive hidden rest cards');
 });
+
+test('オフライン試遊はオンライン画面のまま全7画面と全8役職を通信なしで確認できる',()=>{
+ const previewSource=readFileSync(new URL('../online/nise-transfer-student/offline-preview.js',import.meta.url),'utf8');
+ const gameSource=readFileSync(new URL('../online/nise-transfer-student/game.js',import.meta.url),'utf8');
+ const html=readFileSync(new URL('../online/nise-transfer-student/index.html',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/nise-transfer-student/game.css',import.meta.url),'utf8');
+ const lobby=readFileSync(new URL('../online/index.html',import.meta.url),'utf8');
+ assert.doesNotThrow(()=>new Function(previewSource));
+ assert.doesNotThrow(()=>new Function(gameSource));
+ assert.match(gameSource,/const demoMode=query\.get\('testPlay'\)==='1'/);
+ assert.match(gameSource,/if\(demoMode\)\{\s*room=demo\.currentRoom\(\)/);
+ assert.match(gameSource,/if\(demoMode\)\{\s*if\(!demo\.action\(obj\)\)/);
+ assert.match(html,/offline-preview\.js\?v=/);
+ assert.match(html,/id="offline-test-tools"/);
+ assert.match(css,/\.nise-demo-stage-grid/);
+ assert.match(lobby,/nise-transfer-student\/\?testPlay=1/);
+ const fakeWindow={};
+ new Function('window','location',previewSource)(fakeWindow,{search:'?testPlay=1'});
+ const d=fakeWindow.NiseOfflinePreview;
+ assert.ok(d);
+ assert.equal(d.currentRoom().nise.stage,'setup');
+ assert.equal(d.currentRoom().nise.members.length,4);
+ assert.equal(d.currentRoom().hostId,d.session.id);
+ assert.equal(d.currentRoom().nise.counts.fake,2);
+ assert.equal(d.action({type:'nise-begin'}),true);
+ assert.equal(d.currentRoom().nise.stage,'reveal');
+ assert.equal(d.action({type:'nise-reveal-done'}),true);
+ assert.equal(d.currentRoom().nise.stage,'night');
+ const target=d.currentRoom().nise.members[1].id;
+ assert.equal(d.action({type:'nise-night-action',kind:'player',target}),true);
+ assert.equal(d.currentRoom().nise.myIntel.kind,'player');
+ assert.equal(d.action({type:'nise-night-done'}),true);
+ assert.equal(d.currentRoom().nise.stage,'discussion');
+ assert.equal(d.action({type:'nise-chat',text:'みんなよろしく'}),true);
+ assert.ok(d.currentRoom().nise.chat.some(m=>m.text==='みんなよろしく'));
+ assert.equal(d.action({type:'nise-start-vote'}),true);
+ assert.equal(d.currentRoom().nise.stage,'voting');
+ assert.equal(d.action({type:'nise-vote',target}),true);
+ assert.equal(d.currentRoom().nise.stage,'voteComplete');
+ assert.equal(d.action({type:'nise-publish-result'}),true);
+ const result=d.currentRoom().nise.result;
+ assert.equal(d.currentRoom().nise.stage,'result');
+ assert.ok(result&&result.kind&&result.winner);
+ assert.equal(Object.keys(result.final).length,4);
+ assert.ok(!('initial' in d.currentRoom().nise),'no extra secret roles in view');
+ for(const key of d.roles){
+  assert.equal(d.setRole(key),true);
+  assert.equal(d.currentRoom().nise.myRole,key);
+  const counts=d.currentRoom().nise.counts;
+  assert.equal(Object.values(counts).reduce((a,b)=>a+b,0),6);
+  assert.equal(counts.fake,2);
+  assert.ok(counts[key]>=1);
+  assert.equal(d.jump('night'),true);
+  assert.equal(d.currentRoom().nise.stage,'night');
+  assert.ok(d.currentRoom().nise.nightIsMyTurn);
+ }
+ assert.equal(Object.keys(d.stages).length,7);
+ for(const stage of Object.keys(d.stages)){
+  assert.equal(d.jump(stage),true);
+  assert.equal(d.currentRoom().nise.stage,stage);
+ }
+ assert.equal(d.action({type:'nise-begin'}),true);
+ assert.equal(d.action({type:'nise-stop'}),true);
+ assert.equal(d.currentRoom().nise.stage,'setup');
+ const noPreview={};
+ new Function('window','location',previewSource)(noPreview,{search:''});
+ assert.equal(noPreview.NiseOfflinePreview,undefined);
+});
