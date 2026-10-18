@@ -17,10 +17,11 @@ const person=id=>room?.members?.find(m=>m.id===id);
 const label=id=>{const p=person(id);return (p?.icon||'？')+' '+(p?.name||'不明')};
 const btn=(s,k,style='')=>'<button type="button" class="btn '+style+'" data-action="'+k+'">'+esc(s)+'</button>';
 const send=(type,rest={})=>{if(socket?.readyState===WebSocket.OPEN){socket.send(JSON.stringify({type,...rest}));return true}notice('通信が切れているよ。再接続を待ってね。');return false};
-function notice(s,good=false){$('notice').hidden=!s;$('notice').textContent=s||'';$('notice').classList.toggle('good',good)}
+const onlineUI=window.HoukagoOnlineUI;
+function notice(s,good=false){onlineUI.notice('notice',s,good)}
 function lobby(clear=false){leaving=true;if(clear)sessionStorage.removeItem(STORE);if(socket){socket.onclose=null;socket.close();socket=null}location.replace('../'+(clear?'':'?room='+encodeURIComponent(session.code)))}
 const choice=(s,description,selected,value)=>'<button type="button" class="'+(selected?'selected':'')+'" data-setting="'+value+'"><strong>'+esc(s)+'</strong><small>'+esc(description)+'</small></button>';
-const roster=d=>'<details class="panel"><summary class="field-label">参加メンバー '+d.members.length+'人（タップして確認）</summary><div class="member-pills">'+d.members.map(m=>'<span class="'+(m.id===d.authorId?'wolf-author':'')+'">'+esc(m.icon)+' '+esc(m.name)+(m.id===d.authorId?'（出題者）':'')+'</span>').join('')+'</div></details>';
+const roster=d=>onlineUI.roster(d.members,{authorId:d.authorId});
 function setup(d){
  if(!host())return '<section class="panel large-center"><h2>ホストがゲーム設定中</h2><p>ルールとお題を決めているよ。少し待ってね。</p></section>'+roster(d);
  const s=d.settings,custom=s.source==='custom';
@@ -48,7 +49,7 @@ function customInput(d){
   '<div class="action-foot"><button class="btn gold" type="submit">お題を決定して開始</button></div></form></section>';
 }
 function reveal(d){
- const status='<p class="count-progress">お題を確認済み '+d.revealedCount+' / '+d.activeIds.length+'人</p>';
+ const status=onlineUI.progress('お題を確認済み',d.revealedCount,d.activeIds.length);
  if(!d.playing)return '<section class="panel large-center"><h2>みんながお題を確認中</h2><p>出題者はここで待っていてね。</p></section>'+status;
  if(d.myRevealed)return '<section class="panel large-center"><h2>確認完了！</h2><p>残りのプレイヤーを待ってね。</p></section>'+status;
  return '<section class="panel"><h2>自分だけのお題</h2><p class="hint">あなたの端末にだけ表示しているよ。お題を覚えたら確認完了を押してね。</p>'+
@@ -67,7 +68,7 @@ function discussion(d){
    (host()?'<div class="action-foot">'+btn('話し合いを終えて投票へ','start-vote','gold')+'</div>':'');
 }
 function vote(d){
- const status='<p class="count-progress">投票済み '+d.voteCount+' / '+d.activeIds.length+'人</p>';
+ const status=onlineUI.progress('投票済み',d.voteCount,d.activeIds.length);
  if(!d.playing)return '<section class="panel large-center"><h2>投票を待っているよ</h2><p>出題者は投票には参加しないよ。</p></section>'+status;
  if(d.voted)return '<section class="panel large-center"><h2>投票完了！</h2><p>全員が投票するまで結果は秘密だよ。</p></section>'+status;
  return '<section class="panel"><h2>'+(d.runoff?'決選投票':'オオカミは誰？')+'</h2><p class="hint">怪しい人を選んでね。自分への投票は禁止。</p><div class="vote-grid">'+
@@ -143,8 +144,8 @@ $('game-root').addEventListener('submit',e=>{
 function connect(){
  if(leaving)return;clearTimeout(retryTimer);
  const current=new WebSocket(base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+encodeURIComponent(session.token));socket=current;
- $('connection').textContent='接続待ち';
- current.onopen=()=>{if(current!==socket)return;retry=0;$('connection').textContent='接続中';$('connection').classList.add('connected');notice('')};
+ onlineUI.connection('connection','connecting');
+ current.onopen=()=>{if(current!==socket)return;retry=0;onlineUI.connection('connection','connected');notice('')};
  current.onmessage=event=>{
   if(current!==socket)return;let msg;try{msg=JSON.parse(event.data)}catch{return}
   if(msg.type==='room'||msg.type==='welcome'){
@@ -154,7 +155,7 @@ function connect(){
   else if(msg.type==='error')notice(msg.error||'通信エラー');
  };
  current.onclose=event=>{
-  if(current!==socket||leaving)return;socket=null;$('connection').textContent='再接続中…';$('connection').classList.remove('connected');
+  if(current!==socket||leaving)return;socket=null;onlineUI.connection('connection','reconnecting');
   if([4000,4002,4003].includes(event.code)){lobby(true);return}
   retry=Math.min(7,retry+1);retryTimer=setTimeout(connect,Math.min(1500*2**(retry-1),15000));
  };
