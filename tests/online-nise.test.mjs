@@ -291,6 +291,7 @@ test('オフライン試遊はオンライン画面のまま全7画面と全8役
   assert.equal(d.jump(stage),true);
   assert.equal(d.currentRoom().nise.stage,stage);
  }
+ assert.equal(d.jump('setup'),true);
  assert.equal(d.action({type:'nise-begin'}),true);
  assert.equal(d.action({type:'nise-stop'}),true);
  assert.equal(d.currentRoom().nise.stage,'setup');
