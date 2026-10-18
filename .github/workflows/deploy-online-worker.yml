@@ -12,6 +12,7 @@ on:
       - 'tests/online-word-wolf.test.mjs'
       - 'tests/online-pita.test.mjs'
       - 'tests/online-meter.test.mjs'
+      - 'tests/online-tower.test.mjs'
       - '.github/workflows/deploy-online-worker.yml'
 
 permissions:
