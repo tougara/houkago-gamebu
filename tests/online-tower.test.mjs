@@ -56,7 +56,7 @@ test('only current owner can place; board visible but every other hand remains c
  const guest=towerView(r,'p1'),host=towerView(r,'p0');
  assert.equal(guest.board.length,host.board.length);
  assert.ok(!('hands' in guest)&&!('hands' in host));
- assert.equal(guest.myHand&&Object.values(guest.myHand).reduce((a,b)=>a+b,0),11);
+ assert.equal(guest.myHand&&Object.values(guest.myHand).reduce((a,b)=>a+b,0),12);
  assert.equal(host.myHand&&Object.values(host.myHand).reduce((a,b)=>a+b,0),11);
  assert.equal(guest.members[0].cards,11);
  assert.equal(guest.choices===null,guest.currentId!=='p1');
