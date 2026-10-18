@@ -725,7 +725,7 @@
 .nise-demo-stage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:13px}
 .nise-demo-stage-grid button{
  min-height:42px;border:1px solid #aac8e6;border-radius:10px;
- background:#fff;color:#295782;font:900 12px/1.2 inherit;cursor:pointer;
+ background:#fff;color:#295782;font-size:12px;font-weight:900;line-height:1.2;cursor:pointer;
 }
 .nise-demo-stage-grid button.selected{background:#2777ba;color:white;border-color:#276aab}
 .nise-demo-role-label{margin-bottom:5px}
