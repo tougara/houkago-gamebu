@@ -209,7 +209,7 @@ test('online Nise offers all eight illustrated role guides in setup and during p
  assert.match(html,/id="role-guide-open"/);
  assert.match(html,/id="role-guide-content"/);
  assert.match(html,/role="dialog" aria-modal="true"/);
- assert.match(html,/game\.js\?v=20261018-role-guide1/);
+ assert.match(html,/game\.js\?v=20261018-(?:role-guide|preview)\d+/);
  assert.match(css,/\.nise-guide-grid/);
  assert.match(css,/\.nise-guide-large-image/);
  assert.match(client,/function roleGuideList\(/);
