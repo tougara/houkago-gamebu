@@ -605,7 +605,7 @@
  appearance:none;display:grid;place-items:center;min-height:clamp(38px,5.5dvh,47px);
  margin:0;padding:6px 8px;border:1px solid #bdd8ed;border-radius:12px;
  background:#e7f2ff;color:#235c91;cursor:pointer;
- font:900 clamp(10px,2.5vw,13px)/1.1 inherit;white-space:nowrap;
+ font-size:clamp(10px,2.5vw,13px);font-weight:900;line-height:1.1;white-space:nowrap;
 }
 .nise-online-app .role-thumb-button{
  display:grid;place-items:center;cursor:pointer;border-radius:9px;
