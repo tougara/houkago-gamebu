@@ -28,7 +28,9 @@ function lobby(clear=false){
  location.replace('../'+(clear?'':'?room='+encodeURIComponent(session.code)));
 }
 function exitGame(){
- if(confirm('対戦画面からロビーに戻る？ 試合中の場合は、相手が待機することになるよ。'))lobby();
+ if(!confirm(host()?'対戦を終了して全員ロビーに戻る？':'部屋から退出する？ 相手の対戦は一時停止されるよ。'))return;
+ if(host())send('link-stop');
+ else send('leave');
 }
 function controls(){
  return '<div class="controls" aria-label="自分の操作ボタン">'+
@@ -125,7 +127,7 @@ function refresh(g){
   if(banner){banner.hidden=false;banner.textContent='PAUSE'}
   if(actions)actions.innerHTML='<p class="side-state">通信が切断されたため一時停止。両者が戻ってから再開。</p>'+
    (host()?'<button class="btn" data-action="resume">3・2・1 で再開</button>':'')+
-   '<button class="btn alt" data-action="return">ロビーへ</button>';
+   '<button class="btn alt" data-action="return">対戦を終了・退出</button>';
  }else if(g.stage==='finished'){
   releaseAll();
   const won=g.winners.includes(g.meId),draw=g.winners.length===0;
