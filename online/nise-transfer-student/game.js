@@ -7,14 +7,14 @@ const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const query=new URLSearchParams(location.search);
 const roomCode=(query.get('room')||'').toUpperCase();
 const roleDefs={
- classmate:{name:'クラスメイト',side:'real',image:'role_classmate.png',desc:'特別な能力なし。話し合いでニセ転校生を探そう。'},
- fake:{name:'ニセ転校生',side:'fake',image:'role_fake_transfer_student.png',desc:'ほかのニセ転校生がいれば確認できるよ。'},
- president:{name:'学級委員',side:'real',image:'role_class_representative.png',desc:'参加者1人の役職か、おやすみ2枚を確認。'},
- dayDuty:{name:'日直',side:'real',image:'role_day_duty.png',desc:'おやすみの役職カードを1枚確認。'},
- observer:{name:'観察係',side:'real',image:'role_observer.png',desc:'参加者2人の陣営が同じかどうかを確認。'},
- swapper:{name:'席替え係',side:'real',image:'role_seat_changer.png',desc:'自分と相手の役職を交換できるよ。'},
- collaborator:{name:'秘密の協力者',side:'fake',image:'role_secret_collaborator.png',desc:'ニセモノ側。ニセ転校生の正体は分からない。'},
- trickster:{name:'いたずらっ子',side:'trick',image:'role_trickster.png',desc:'最多票で選ばれると、クセモノサイドの単独勝利。'}
+ classmate:{name:'クラスメイト',side:'real',image:'role_classmate.png',desc:'特別な能力はありません。話し合いでニセ転校生を見つけましょう。'},
+ fake:{name:'ニセ転校生',side:'fake',image:'role_fake_transfer_student.png',desc:'休み時間にほかのニセ転校生を確認できます。最終投票でニセ転校生が判定対象にならなければニセモノサイドの勝利です。'},
+ president:{name:'学級委員',side:'real',image:'role_class_representative.png',desc:'休み時間に「参加者1人の役職を見る」か「おやすみ2枚を両方見る」のどちらかを選べます。'},
+ dayDuty:{name:'日直',side:'real',image:'role_day_duty.png',desc:'休み時間に、おやすみ2枚のうち好きな1枚だけ確認できます。'},
+ observer:{name:'観察係',side:'real',image:'role_observer.png',desc:'休み時間に参加者2人を選び、同じ陣営か違う陣営かを調べられます。具体的な役職までは分かりません。'},
+ swapper:{name:'席替え係',side:'real',image:'role_seat_changer.png',desc:'休み時間に自分と参加者1人の役職カードを交換できます。交換しなくてもOK。交換後の自分の役職を確認できます。'},
+ collaborator:{name:'秘密の協力者',side:'fake',image:'role_secret_collaborator.png',desc:'ニセモノサイドの味方ですがニセ転校生ではありません。ニセ転校生が誰かは分かりません。休み時間の特別な行動はありません。'},
+ trickster:{name:'いたずらっ子',side:'trick',image:'role_trickster.png',desc:'クセモノサイド。休み時間の行動はありません。最終投票で自分が最多票の判定対象になれば、ほかの陣営より優先して単独勝利です。'}
 };
 const roleOrder=['classmate','fake','president','swapper','observer','dayDuty','collaborator','trickster'];
 const baseRoles=['classmate','fake','president','swapper'];
@@ -35,6 +35,61 @@ const me=()=>room?.members?.find(m=>m.id===myId())||{name:session.name||'あな�
 const member=id=>room?.members?.find(m=>m.id===id)||{name:'プレイヤー',icon:'🎮'};
 const nameOf=id=>{const m=member(id);return esc(m.icon||'')+' '+esc(m.name)};
 const onlineUI=window.HoukagoOnlineUI;
+const sideNames={real:'ホンモノサイド',fake:'ニセモノサイド',trick:'クセモノサイド'};
+const roleGuide=$('role-guide'),roleGuideBody=$('role-guide-content');
+let guidePreviousFocus=null,guideSelected=null;
+function roleGuideList(){
+ const counts=g()?.counts||{};
+ return '<p class="nise-guide-instruction">見たい役職アイコンをタップしてね。カードを大きく表示して、能力と陣営を確認できるよ。</p>'+
+ '<p class="nise-guide-notice">役職の説明だけを表示します。誰がどの役職なのかは公開されません。</p>'+
+ '<div class="nise-guide-grid">'+roleOrder.map(k=>{
+  const d=roleDefs[k],n=counts[k]||0;
+  return '<button class="nise-guide-item" type="button" data-guide-role="'+k+'" aria-label="'+esc(d.name)+'の説明を見る">'+
+  '<img src="'+roleImg(k)+'" alt="" loading="lazy">'+
+  '<strong>'+esc(d.name)+'</strong><span class="side-tag '+d.side+'">'+esc(sideNames[d.side])+'</span>'+
+  '<small>'+(n?'今回 '+n+'枚':'今回 0枚')+'</small></button>';
+ }).join('')+'</div>';
+}
+function roleGuideDetail(key){
+ const d=roleDefs[key];if(!d)return roleGuideList();
+ return '<div class="nise-guide-detail"><img class="nise-guide-large-image" src="'+roleImg(key)+'" alt="'+esc(d.name)+'の役職カード">'+
+ '<h3>'+esc(d.name)+'</h3><span class="side-tag '+d.side+'">'+esc(sideNames[d.side])+'</span>'+
+ '<p>'+esc(d.desc)+'</p><button type="button" class="btn secondary nise-guide-back" data-guide-back>← 役職一覧にもどる</button></div>';
+}
+function guideShow(key=null){
+ guideSelected=roleDefs[key]?key:null;
+ $('role-guide-title').textContent=guideSelected?roleDefs[guideSelected].name:'役職一覧';
+ roleGuideBody.innerHTML=guideSelected?roleGuideDetail(guideSelected):roleGuideList();
+ roleGuideBody.scrollTop=0;
+ (guideSelected?roleGuideBody.querySelector('[data-guide-back]'):roleGuideBody.querySelector('[data-guide-role]'))?.focus({preventScroll:true});
+}
+function openGuide(key=null){
+ if(roleGuide.hidden)guidePreviousFocus=document.activeElement;
+ roleGuide.hidden=false;
+ guideShow(key);
+}
+function closeGuide(){
+ if(roleGuide.hidden)return;
+ roleGuide.hidden=true;roleGuideBody.replaceChildren();guideSelected=null;
+ const previous=guidePreviousFocus;guidePreviousFocus=null;
+ (previous?.isConnected?previous:$('role-guide-open'))?.focus({preventScroll:true});
+}
+$('role-guide-open').addEventListener('click',()=>openGuide());
+roleGuide.addEventListener('click',e=>{
+ if(e.target===roleGuide||e.target.closest('[data-guide-close]')){closeGuide();return}
+ const key=e.target.closest('[data-guide-role]')?.dataset.guideRole;
+ if(key&&roleDefs[key]){guideShow(key);return}
+ if(e.target.closest('[data-guide-back]'))guideShow();
+});
+document.addEventListener('keydown',e=>{
+ if(roleGuide.hidden)return;
+ if(e.key==='Escape'){e.preventDefault();closeGuide();return}
+ if(e.key!=='Tab')return;
+ const choices=[...roleGuide.querySelectorAll('button:not([disabled])')];
+ const first=choices[0],last=choices[choices.length-1];
+ if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+ else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+});
 function notice(s,good=false){onlineUI.notice('notice',s,good)}
 function connected(){return ws?.readyState===WebSocket.OPEN}
 function send(obj){
