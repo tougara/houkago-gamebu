@@ -8,19 +8,20 @@
 <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
 <link rel="stylesheet" href="../../games/minna-wa-docchi/game.css?v=20261017-fit1">
 <link rel="stylesheet" href="./game.css?v=20261017-online-fit1">
+<link rel="stylesheet" href="../shared-ui.css?v=20261018-shared1">
 </head>
 <body>
 <main class="docchi-app online-docchi screen-options" id="app">
- <nav class="top-nav online-nav">
-  <a href="../" id="lobby-link" class="nav-pill">← もどる</a>
-  <a href="../../games/" id="game-list-link" class="nav-pill">ゲームをえらぶ</a>
-  <span class="nav-pill online-status" id="connection">接続待ち</span>
+ <nav class="top-nav online-nav hk-online-nav">
+  <a href="../" id="lobby-link" class="nav-pill hk-online-link">← もどる</a>
+  <a href="../../games/" id="game-list-link" class="nav-pill hk-online-link">ゲームをえらぶ</a>
+  <span class="nav-pill online-status hk-online-connection" id="connection">接続待ち</span>
  </nav>
  <header class="screen-heading online-heading">
   <h1 id="page-heading">ジャンル・お題</h1>
   <p id="room-brief">部屋に接続中…</p>
  </header>
- <div id="notice" class="online-notice" role="status" aria-live="polite" hidden></div>
+ <div id="notice" class="online-notice hk-online-notice" role="status" aria-live="polite" hidden></div>
  <div id="game-shell" hidden>
   <div id="progress-header" class="online-progress" hidden>
     <span id="stage-label">準備中</span><strong id="round-info"></strong>
@@ -187,6 +188,8 @@
  <button id="leave-room" type="button" class="btn secondary full online-leave">部屋から退出</button>
 </main>
 <script src="../config.js"></script>
-<script src="../../game-back-guard.js?v=20261015-resume1"></script><script src="./game.js?v=20261017-online-fit1"></script>
+<script src="../../game-back-guard.js?v=20261015-resume1"></script>
+<script src="../shared-ui.js?v=20261018-shared1"></script>
+<script src="./game.js?v=20261018-shared1"></script>
 </body>
 </html>
