@@ -135,6 +135,7 @@ function render(){
  const key=g.stage+':'+g.round+':'+g.startedAt+':'+g.mySubmitted;
  if(g.stage==='playing'&&!g.mySubmitted&&!g.members.find(m=>m.id===session.id)?.eliminated&&localKey===key){
   const progress=$('round-progress');if(progress)progress.textContent=g.submittedCount+' / '+g.activeCount+'人 ストップ済み';
+  if(!frame)frame=requestAnimationFrame(tick);
   return;
  }
  stopFrame();
@@ -165,7 +166,10 @@ $('game-root').addEventListener('click',event=>{
  if(a==='stop'){stopRound();return}
  if(a==='begin')send({type:'pita-begin'});
  if(a==='next')send({type:'pita-next'});
- if(a==='close')send({type:'pita-close'});
+ if(a==='close'){
+  if(Date.now()-g.startedAt<25000)notice('25秒経過後に締め切れるよ。');
+  else send({type:'pita-close'});
+ }
  if(a==='stop-game'&&confirm('オンライン対戦を終了してロビーへ戻す？'))send({type:'pita-stop-game'});
 });
 function connect(){
