@@ -7,7 +7,7 @@
 <title>ニセ転校生を探せ！ オンライン｜放課後ゲーム部</title>
 <link rel="icon" href="../../houkago_gamebu_browser_icon_transparent.png">
 <link rel="stylesheet" href="../../games/nise-transfer-student/game.css">
-<link rel="stylesheet" href="./game.css?v=20261016-result-border4">
+<link rel="stylesheet" href="./game.css?v=20261018-role-guide1">
 <link rel="stylesheet" href="../shared-ui.css?v=20261018-shared1">
 </head>
 <body>
@@ -15,12 +15,22 @@
 <nav class="top-nav hk-online-nav">
  <a class="back-home hk-online-link" href="../" id="return-lobby">← 部屋にもどる</a>
  <a class="back-home hk-online-link" href="../../games/" id="game-list-link">ゲームをえらぶ</a>
+ <button type="button" class="nise-role-guide-open hk-online-link" id="role-guide-open" aria-haspopup="dialog" aria-controls="role-guide">役職一覧</button>
  <span class="online-connection hk-online-connection" id="connection">接続待ち</span>
 </nav>
 <div id="notice" class="online-message hk-online-notice" role="status" aria-live="polite" hidden></div>
 <div id="game-root" aria-live="polite"><div class="card online-wait">オンラインルームに接続しています…</div></div>
 </main>
+<div class="nise-role-guide-overlay" id="role-guide" hidden>
+ <section class="nise-role-guide-dialog" id="role-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="role-guide-title" tabindex="-1">
+  <header class="nise-role-guide-head">
+   <h2 id="role-guide-title">役職一覧</h2>
+   <button type="button" class="nise-role-guide-close" data-guide-close aria-label="役職一覧を閉じる">×</button>
+  </header>
+  <div class="nise-role-guide-content" id="role-guide-content"></div>
+ </section>
+</div>
 <script src="../config.js"></script>
 <script src="../shared-ui.js?v=20261018-shared2"></script>
-<script src="./game.js?v=20261018-shared2"></script>
+<script src="./game.js?v=20261018-role-guide1"></script>
 </body></html>
