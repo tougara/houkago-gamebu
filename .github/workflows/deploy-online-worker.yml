@@ -13,6 +13,7 @@ on:
       - 'tests/online-pita.test.mjs'
       - 'tests/online-meter.test.mjs'
       - 'tests/online-tower.test.mjs'
+      - 'tests/online-link.test.mjs'
       - '.github/workflows/deploy-online-worker.yml'
 
 permissions:
