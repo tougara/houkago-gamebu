@@ -29,7 +29,8 @@ function rememberQuestion(q){
  }catch{}
 }
 const socketReady=()=>ws?.readyState===WebSocket.OPEN;
-const say=(message,ok=false)=>{const el=$('notice');el.hidden=!message;el.textContent=message||'';el.classList.toggle('ok',ok)};
+const onlineUI=window.HoukagoOnlineUI;
+const say=(message,ok=false)=>onlineUI.notice('notice',message,ok);
 const send=message=>{if(socketReady()){ws.send(JSON.stringify(message));return true}say('通信が切れているよ。再接続まで待ってね。');return false};
 function goLobby(clear=false){
  if(clear)sessionStorage.removeItem(STORE);
@@ -269,8 +270,8 @@ function connect(){
  clearTimeout(timer);
  const url=base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+session.token;
  const current=new WebSocket(url);ws=current;
- $('connection').textContent='接続中…';
- current.onopen=()=>{if(current!==ws)return;retry=0;$('connection').textContent='接続中';$('connection').classList.add('connected');say('');draw()};
+ onlineUI.connection('connection','connecting');
+ current.onopen=()=>{if(current!==ws)return;retry=0;onlineUI.connection('connection','connected');say('');draw()};
  current.onmessage=event=>{
   if(current!==ws)return;
   let data;try{data=JSON.parse(event.data)}catch{return}
@@ -282,7 +283,7 @@ function connect(){
  };
  current.onclose=event=>{
   if(current!==ws||exiting)return;
-  ws=null;$('connection').textContent='再接続中…';$('connection').classList.remove('connected');
+  ws=null;onlineUI.connection('connection','reconnecting');
   if([4000,4002,4003].includes(event.code)){goLobby(true);return}
   retry=Math.min(7,retry+1);
   timer=setTimeout(connect,Math.min(1500*2**(retry-1),15000));
