@@ -80,9 +80,9 @@ $('join').addEventListener('click',async()=>{
 const send=command=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(command))};
 function draw(){
  if(!room)return;
- if((room.phase==='secret'||room.phase==='nise'||room.phase==='wolf')&&session?.code){
+ if((room.phase==='secret'||room.phase==='nise'||room.phase==='wolf'||room.phase==='pita')&&session?.code){
    stopSocket();
-   const page=room.phase==='nise'?'nise-transfer-student':room.phase==='wolf'?'word-wolf':'minna-wa-docchi';
+   const page=room.phase==='nise'?'nise-transfer-student':room.phase==='wolf'?'word-wolf':room.phase==='pita'?'pitadome-challenge':'minna-wa-docchi';
    location.replace('./'+page+'/?room='+encodeURIComponent(session.code));
    return;
  }
@@ -96,7 +96,7 @@ function draw(){
  $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
  $('ready').disabled=ws?.readyState!==WebSocket.OPEN;
  const hostStart=$('start-secret');
- const supported=['minna-wa-docchi','nise-transfer-student','word-wolf'].includes(room.gameId);
+ const supported=['minna-wa-docchi','nise-transfer-student','word-wolf','pitadome-challenge'].includes(room.gameId);
  const minimum=['nise-transfer-student','word-wolf'].includes(room.gameId)?3:2;
  hostStart.hidden=!host||!supported;
  hostStart.textContent=(names[room.gameId]||room.gameId)+' の画面へ進む';
@@ -160,6 +160,12 @@ $('start-secret').addEventListener('click',async()=>{
    if(!health.ok||health.version<5){notice('ことばのオオカミのサーバー更新待ちだよ。更新後にもう一度押してね。');return}
   }catch{notice('通信サーバーを確認できないよ。接続を確認してね。');return}
   send({type:'wolf-start'});
+ }else if(room.gameId==='pitadome-challenge'&&room.members.length>=2){
+  try{
+   const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
+   if(!health.ok||health.version<6){notice('ピタ止めのサーバー更新待ちだよ。更新後にもう一度押してね。');return}
+  }catch{notice('通信サーバーを確認できないよ。接続を確認してね。');return}
+  send({type:'pita-start'});
  }else if(room.gameId==='minna-wa-docchi')send({type:'secret-start'});
 });
 $('ready').addEventListener('click',()=>{
