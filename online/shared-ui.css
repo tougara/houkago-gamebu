@@ -1,0 +1,65 @@
+/* 放課後ゲーム部 / オンライン共通UI v1
+   3作品で共通のナビゲーション・通信状態・通知・人数表示・名簿。
+   固有のゲーム画面/背景/役職カードは従来のCSSが担当する。 */
+.hk-online-nav{
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
+ gap:clamp(4px,1.5vw,8px);align-items:center;
+}
+.hk-online-nav>.hk-online-link{
+ display:grid;place-items:center;min-width:0;
+ min-height:clamp(38px,5.5dvh,44px);
+ padding:7px 6px;border:1px solid #d9e4f0;border-radius:12px;
+ background:#fff;color:#223953;box-shadow:0 3px 10px rgba(26,48,80,.08);
+ text-decoration:none;text-align:center;font-size:clamp(10px,2.8vw,13px);
+ font-weight:900;line-height:1.25;white-space:normal;
+}
+.hk-online-nav>.hk-online-link:focus-visible{
+ outline:3px solid #ecab2d;outline-offset:2px;
+}
+.hk-online-nav>.hk-online-connection{
+ display:grid;place-items:center;min-width:0;
+ min-height:clamp(38px,5.5dvh,44px);padding:6px 8px;
+ border:1px solid #efdfbd;border-radius:12px;
+ background:#fff6e4;color:#866126;box-shadow:none;
+ font-size:clamp(9px,2.5vw,11px);font-weight:900;
+ line-height:1.25;white-space:nowrap;
+}
+.hk-online-nav>.hk-online-connection[data-hk-state="connected"],
+.hk-online-nav>.hk-online-connection.connected{
+ background:#e4f8ec;color:#17754e;border-color:#b3e4c8;
+}
+.hk-online-nav>.hk-online-connection[data-hk-state="reconnecting"]{
+ background:#fff1e2;color:#9b5924;border-color:#f1d5b4;
+}
+#notice.hk-online-notice{
+ border-radius:12px;border:1px solid #edb4be;
+ background:#fff0f2;color:#97374d;
+ font-size:12px;font-weight:900;line-height:1.5;
+ padding:9px 11px;
+}
+#notice.hk-online-notice[data-hk-kind="success"]{
+ border-color:#a9d9ba;background:#e8f9ef;color:#206a46;
+}
+.hk-online-progress{
+ color:#526783;text-align:center;font-size:13px;
+ font-weight:900;line-height:1.45;margin:8px 0;
+}
+.hk-online-roster>summary{
+ cursor:pointer;list-style-position:inside;
+ font-size:12px;font-weight:900;color:#536783;
+ padding:2px 0;
+}
+.hk-online-members{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.hk-online-member{
+ display:inline-flex;align-items:center;max-width:100%;
+ padding:7px 10px;border:1px solid #dce5f2;
+ border-radius:999px;background:#f4f8ff;color:#34465f;
+ font-size:12px;font-weight:900;overflow-wrap:anywhere;
+}
+.hk-online-member.hk-online-author{
+ border-color:#efd089;background:#fff0c9;color:#78551e;
+}
+@media(max-width:370px){
+ .hk-online-nav>.hk-online-link{padding:6px 4px;font-size:10px}
+ .hk-online-nav>.hk-online-connection{padding:5px;font-size:9px}
+}
