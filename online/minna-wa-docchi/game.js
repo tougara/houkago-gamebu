@@ -112,10 +112,8 @@ function draw(){
  $('stage-label').textContent=stage==='setup'?'ゲームの準備':stage==='preview'?'お題確認中':stage==='voting'?'回答中':stage==='allAnswered'?'全員回答完了':stage==='result'?'結果発表':stage==='finished'?'ゲーム終了':'準備中';
  $('round-info').textContent=stage==='setup'?'':g.round+' / '+g.roundCount+'問';
  $('member-count').textContent=room.members.length+'人';
- const memberList=$('member-list');memberList.replaceChildren();
- for(const m of room.members){
-  memberList.append(addText('span',(m.icon||'')+' '+m.name+(m.id===room.hostId?'［ホスト］':''),'member-chip'));
- }
+ const memberList=$('member-list');
+ memberList.innerHTML=onlineUI.memberChips(room.members,{hostId:room.hostId,chipClass:'member-chip'});
  for(const id of ['setup-stage','question-stage','compose-stage','vote-stage','all-answered-stage','result-stage','finished-stage'])$(id).hidden=true;
  // Worker protocol sends "voting", while the DOM section is "vote-stage".
  // Keep an explicit mapping so a valid phase can never silently blank the screen.
