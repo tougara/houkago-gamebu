@@ -34,7 +34,8 @@ const isHost=()=>room?.hostId===myId();
 const me=()=>room?.members?.find(m=>m.id===myId())||{name:session.name||'あなた',icon:'🎮'};
 const member=id=>room?.members?.find(m=>m.id===id)||{name:'プレイヤー',icon:'🎮'};
 const nameOf=id=>{const m=member(id);return esc(m.icon||'')+' '+esc(m.name)};
-function notice(s,good=false){const el=$('notice');el.hidden=!s;el.textContent=s||'';el.classList.toggle('ok',good)}
+const onlineUI=window.HoukagoOnlineUI;
+function notice(s,good=false){onlineUI.notice('notice',s,good)}
 function connected(){return ws?.readyState===WebSocket.OPEN}
 function send(obj){
  if(!connected()){notice('通信が切れています。自動再接続まで待ってね。');return false}
@@ -339,10 +340,10 @@ function moveLobby(){
 function connect(){
  if(stopped)return;
  if(ws){const old=ws;ws=null;old.onclose=null;try{old.close()}catch{}}
- $('connection').textContent='接続中…';$('connection').classList.remove('connected');
+ onlineUI.connection('connection','connecting');
  const url=base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+encodeURIComponent(session.token);
  const current=new WebSocket(url);ws=current;
- current.onopen=()=>{if(ws!==current)return;retry=0;$('connection').textContent='接続中';$('connection').classList.add('connected');notice('')};
+ current.onopen=()=>{if(ws!==current)return;retry=0;onlineUI.connection('connection','connected');notice('')};
  current.onmessage=e=>{
   if(ws!==current)return;
   let packet;try{packet=JSON.parse(e.data)}catch{return}
@@ -355,7 +356,7 @@ function connect(){
  };
  current.onclose=e=>{
   if(ws!==current||stopped)return;
-  ws=null;$('connection').textContent='再接続中';$('connection').classList.remove('connected');
+  ws=null;onlineUI.connection('connection','reconnecting');
   if([4000,4002,4003].includes(e.code)){sessionStorage.removeItem(STORE);stopped=true;location.replace('../');return}
   retry=Math.min(retry+1,6);
   retryHandle=setTimeout(connect,Math.min(1000*2**(retry-1),15000));
