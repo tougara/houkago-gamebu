@@ -7,23 +7,25 @@
 <title>ことばのオオカミ オンライン｜放課後ゲーム部</title>
 <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
 <link rel="stylesheet" href="./game.css?v=20261018-wordreveal2">
+<link rel="stylesheet" href="../shared-ui.css?v=20261018-shared1">
 </head>
 <body>
 <main class="wolf-online-app">
- <nav class="top-nav">
-  <a href="../" id="back-lobby" class="nav-pill">← 部屋にもどる</a>
-  <a href="../../games/" id="back-games" class="nav-pill">ゲームをえらぶ</a>
-  <span id="connection" class="connection">接続待ち</span>
+ <nav class="top-nav hk-online-nav">
+  <a href="../" id="back-lobby" class="nav-pill hk-online-link">← 部屋にもどる</a>
+  <a href="../../games/" id="back-games" class="nav-pill hk-online-link">ゲームをえらぶ</a>
+  <span id="connection" class="connection hk-online-connection">接続待ち</span>
  </nav>
  <div class="game-brand"><img src="../../kotoba_no_ookami_logo_transparent.png" alt="ことばのオオカミ"></div>
  <header class="online-heading">
   <h1 id="stage-title">接続しています…</h1>
   <p id="room-summary">オンラインで一緒に遊ぼう</p>
  </header>
- <div id="notice" role="status" aria-live="polite" class="notice" hidden></div>
+ <div id="notice" role="status" aria-live="polite" class="notice hk-online-notice" hidden></div>
  <div id="game-root" aria-live="polite"><section class="panel">オンラインルームに接続しています…</section></div>
 </main>
 <script src="../config.js"></script>
-<script src="./game.js?v=20261018-wordreveal2"></script>
+<script src="../shared-ui.js?v=20261018-shared1"></script>
+<script src="./game.js?v=20261018-shared1"></script>
 </body>
 </html>
