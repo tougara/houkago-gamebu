@@ -200,3 +200,33 @@ test('online-only chat never reveals secret role data and can be sent only durin
  assert.equal(niseView(r,'p1').chat.length,0);
  assert.equal(act(r,'p1',{type:'nise-chat',text:'投票中です'}),false);
 });
+
+test('online Nise offers all eight illustrated role guides in setup and during play without exposing other roles',()=>{
+ const html=readFileSync(new URL('../online/nise-transfer-student/index.html',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/nise-transfer-student/game.css',import.meta.url),'utf8');
+ const client=readFileSync(new URL('../online/nise-transfer-student/game.js',import.meta.url),'utf8');
+ assert.doesNotThrow(()=>new Function(client),'client script is syntactically valid');
+ assert.match(html,/id="role-guide-open"/);
+ assert.match(html,/id="role-guide-content"/);
+ assert.match(html,/role="dialog" aria-modal="true"/);
+ assert.match(html,/game\.js\?v=20261018-role-guide1/);
+ assert.match(css,/\.nise-guide-grid/);
+ assert.match(css,/\.nise-guide-large-image/);
+ assert.match(client,/function roleGuideList\(/);
+ assert.match(client,/function roleGuideDetail\(/);
+ assert.match(client,/function openGuide\(/);
+ assert.match(client,/data-role-detail="\x27\+k\+/,'setup role icon opens details');
+ assert.match(client,/sideNames\[d\.side\]/);
+ assert.match(client,/roleGuide\.hidden=true/);
+ const imageNames=['role_classmate.png','role_fake_transfer_student.png',
+  'role_class_representative.png','role_seat_changer.png','role_observer.png',
+  'role_day_duty.png','role_secret_collaborator.png','role_trickster.png'];
+ for(const image of imageNames)assert.ok(client.includes(image),'missing '+image);
+ const r=make(6);
+ act(r,'p0',{type:'nise-begin'});
+ const publicView=niseView(r,'p1');
+ assert.ok(publicView.counts,'the publicly configured deck counts can be shown in guide');
+ assert.ok(!('initial' in publicView),'guide must not receive all private identities');
+ assert.ok(!('final' in publicView),'guide must not receive other private identities');
+ assert.ok(!('rest' in publicView),'guide must not receive hidden rest cards');
+});
