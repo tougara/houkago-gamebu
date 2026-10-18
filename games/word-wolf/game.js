@@ -379,9 +379,19 @@ function startWordHold(e,kind){
  },700);
 }
 app.addEventListener('pointerdown',e=>startWordHold(e,'pointer'));
+app.addEventListener('pointermove',e=>{
+ if(wordHoldPointer!==e.pointerId)return;
+ const button=app.querySelector('[data-open-word]');
+ if(!button){cancelWordHold();return}
+ const bounds=button.getBoundingClientRect();
+ if(e.clientX<bounds.left||e.clientX>bounds.right||e.clientY<bounds.top||e.clientY>bounds.bottom)cancelWordHold();
+});
 ['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(type=>app.addEventListener(type,e=>{
  if(wordHoldPointer===e.pointerId)cancelWordHold();
 }));
+app.addEventListener('contextmenu',e=>{
+ if(e.target.closest?.('[data-open-word]'))e.preventDefault();
+});
 app.addEventListener('keydown',e=>{
  if(e.repeat)return;
  if((e.key===' '||e.key==='Enter')&&e.target.closest?.('[data-open-word]'))startWordHold(e,'key');
