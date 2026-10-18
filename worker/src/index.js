@@ -5,6 +5,7 @@ import {createNise,niseView,niseAction} from './nise-engine.js';
 import {createWolf,wolfView,wolfAction} from './wolf-engine.js';
 import {createPita,pitaView,pitaAction} from './pita-engine.js';
 import {createMeter,meterView,meterAction} from './meter-engine.js';
+import {createTower,towerView,towerAction} from './tower-engine.js';
 const TTL=2*60*60*1000, MAX=10;
 const ROUND_OPTIONS=[3,5,7,10], DEFAULT_ROUNDS=5;
 const CATEGORIES=[...new Set(SECRET_QUESTIONS.map(q=>q.category))];
@@ -57,7 +58,7 @@ const secretView=room=>{
  };
 };
 const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,
-  expiresAt:room.expiresAt,phase:room.meter?'meter':room.pita?'pita':room.wolf?'wolf':room.nise?'nise':room.secret?'secret':'lobby',secret:secretView(room),
+  expiresAt:room.expiresAt,phase:room.tower?'tower':room.meter?'meter':room.pita?'pita':room.wolf?'wolf':room.nise?'nise':room.secret?'secret':'lobby',secret:secretView(room),
   maxPlayers:MAX,members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
 const cors=origin=>({'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'Content-Type'});
 async function readBody(request){
@@ -76,7 +77,7 @@ export default {
     const url=new URL(request.url),origin=request.headers.get('Origin');
     const allowed=[env.ALLOWED_ORIGIN,'http://localhost:8788','http://127.0.0.1:8788'].filter(Boolean);
     if(request.method==='GET'&&url.pathname==='/api/health')
-      return response({ok:true,mode:'lobby-secret-nise-wolf-pita-meter',version:7},200,allowed.includes(origin)?cors(origin):{});
+      return response({ok:true,mode:'lobby-secret-nise-wolf-pita-meter-tower',version:8},200,allowed.includes(origin)?cors(origin):{});
     if(!allowed.includes(origin))return err('許可されていないアクセスです',403);
     const headers=cors(origin),reply=(data,status=200)=>response(data,status,headers);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -150,7 +151,7 @@ export class OnlineRoom{
   }
   async join(request){
     if(!this.active())return err('部屋が見つからないか期限切れです',404);
-    if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter)return err('ゲーム中は新しく参加できません。終了後に試してね',409);
+    if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower)return err('ゲーム中は新しく参加できません。終了後に試してね',409);
     if(this.room.members.length>=MAX)return err('満員です',409);
     const {name,icon}=await request.json();
     if(!safeName(name))return err('名前が必要です',400);
@@ -173,7 +174,7 @@ export class OnlineRoom{
     const room=this.snapshot();
     for(const ws of this.sockets()){
       const id=ws.deserializeAttachment()?.id;
-      this.send(ws,{type:'room',room:{...room,nise:niseView(this.room,id),wolf:wolfView(this.room,id),pita:pitaView(this.room,id),meter:meterView(this.room,id)},voted:!!this.room.secret?.votes?.[id],
+      this.send(ws,{type:'room',room:{...room,nise:niseView(this.room,id),wolf:wolfView(this.room,id),pita:pitaView(this.room,id),meter:meterView(this.room,id),tower:towerView(this.room,id)},voted:!!this.room.secret?.votes?.[id],
         myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
           (this.room.secret.votes?.[id]||null):null,
         predicted:!!this.room.secret?.predictions?.[id]});
@@ -240,7 +241,7 @@ export class OnlineRoom{
     const [client,server]=Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({id:player.id});
-    this.send(server,{type:'welcome',selfId:player.id,room:{...this.snapshot(),nise:niseView(this.room,player.id),wolf:wolfView(this.room,player.id),pita:pitaView(this.room,player.id),meter:meterView(this.room,player.id)},
+    this.send(server,{type:'welcome',selfId:player.id,room:{...this.snapshot(),nise:niseView(this.room,player.id),wolf:wolfView(this.room,player.id),pita:pitaView(this.room,player.id),meter:meterView(this.room,player.id),tower:towerView(this.room,player.id)},
       voted:!!this.room.secret?.votes?.[player.id],
       myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
         (this.room.secret.votes?.[player.id]||null):null,
@@ -255,11 +256,11 @@ export class OnlineRoom{
     const id=ws.deserializeAttachment()?.id,player=this.room.members.find(m=>m.id===id);
     if(!player)return void ws.close(4003,'unauthorized');
     if(data.type==='ready'){
-      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||typeof data.ready!=='boolean')return;
+      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||typeof data.ready!=='boolean')return;
       player.ready=data.ready;await this.ctx.storage.put('room',this.room);this.broadcast();return;
     }
     if(data.type==='game'){
-      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.hostId!==id||!GAMES.has(data.gameId))return;
+      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.hostId!==id||!GAMES.has(data.gameId))return;
       this.room.gameId=data.gameId;
       for(const m of this.room.members)m.ready=false;
       await this.ctx.storage.put('room',this.room);this.broadcast();return;
@@ -271,7 +272,7 @@ export class OnlineRoom{
       await this.saveAndBroadcast();return;
     }
     if(data.type==='nise-start'){
-      if(this.room.nise||this.room.secret||this.room.wolf||this.room.pita||this.room.meter||this.room.hostId!==id||this.room.gameId!=='nise-transfer-student'||
+      if(this.room.nise||this.room.secret||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.hostId!==id||this.room.gameId!=='nise-transfer-student'||
          this.room.members.length<3||!this.snapshot().allReady)return;
       this.room.nise=createNise(this.room);
       await this.saveAndBroadcast();return;
@@ -282,7 +283,7 @@ export class OnlineRoom{
       return;
     }
     if(data.type==='wolf-start'){
-      if(this.room.wolf||this.room.nise||this.room.secret||this.room.pita||this.room.meter||id!==this.room.hostId||
+      if(this.room.wolf||this.room.nise||this.room.secret||this.room.pita||this.room.meter||this.room.tower||id!==this.room.hostId||
          this.room.gameId!=='word-wolf'||this.room.members.length<3||!this.snapshot().allReady)return;
       this.room.wolf=createWolf(this.room);await this.saveAndBroadcast();return;
     }
@@ -296,8 +297,24 @@ export class OnlineRoom{
       if(this.room.wolf&&wolfAction(this.room,id,data))await this.saveAndBroadcast();
       return;
     }
+    if(data.type==='tower-start'){
+      if(this.room.tower||this.room.meter||this.room.secret||this.room.nise||this.room.wolf||this.room.pita||
+         id!==this.room.hostId||this.room.gameId!=='kyokasho-tower'||
+         this.room.members.length<2||this.room.members.length>6||!this.snapshot().allReady)return;
+      this.room.tower=createTower(this.room);await this.saveAndBroadcast();return;
+    }
+    if(data.type==='tower-stop'){
+      if(!this.room.tower||id!==this.room.hostId)return;
+      this.room.tower=null;
+      for(const member of this.room.members)member.ready=false;
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type?.startsWith('tower-')){
+      if(this.room.tower&&towerAction(this.room,id,data))await this.saveAndBroadcast();
+      return;
+    }
     if(data.type==='meter-start'){
-      if(this.room.meter||this.room.secret||this.room.nise||this.room.wolf||this.room.pita||
+      if(this.room.meter||this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.tower||
          id!==this.room.hostId||this.room.gameId!=='kankaku-meter'||
          this.room.members.length<2||!this.snapshot().allReady)return;
       this.room.meter=createMeter(this.room);await this.saveAndBroadcast();return;
@@ -313,7 +330,7 @@ export class OnlineRoom{
       return;
     }
     if(data.type==='pita-start'){
-      if(this.room.pita||this.room.secret||this.room.nise||this.room.wolf||this.room.meter||
+      if(this.room.pita||this.room.secret||this.room.nise||this.room.wolf||this.room.meter||this.room.tower||
          id!==this.room.hostId||this.room.gameId!=='pitadome-challenge'||
          this.room.members.length<2||!this.snapshot().allReady)return;
       this.room.pita=createPita(this.room);await this.saveAndBroadcast();return;
@@ -329,7 +346,7 @@ export class OnlineRoom{
       return;
     }
     if(data.type==='secret-start'){
-      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.hostId!==id||this.room.gameId!=='minna-wa-docchi'||!this.snapshot().allReady)return;
+      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.hostId!==id||this.room.gameId!=='minna-wa-docchi'||!this.snapshot().allReady)return;
       this.startSecret();
       await this.saveAndBroadcast();return;
     }
@@ -448,6 +465,11 @@ export class OnlineRoom{
     if(this.room.nise){
       // 途中での人数変更は秘密情報と投票の整合性を崩すため、安全にロビーへ戻す。
       this.room.nise=null;
+      for(const member of this.room.members)member.ready=false;
+    }
+    if(this.room.tower){
+      // 秘密の手札・配布枚数の整合性を守るため人数が変わったらロビーへ戻す。
+      this.room.tower=null;
       for(const member of this.room.members)member.ready=false;
     }
     if(this.room.meter){
