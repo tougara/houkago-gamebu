@@ -6,6 +6,8 @@ const STORE='houkago-online-session-v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const query=new URLSearchParams(location.search);
 const roomCode=(query.get('room')||'').toUpperCase();
+const demoMode=query.get('testPlay')==='1'&&!!window.NiseOfflinePreview;
+const demo=demoMode?window.NiseOfflinePreview:null;
 const roleDefs={
  classmate:{name:'クラスメイト',side:'real',image:'role_classmate.png',desc:'特別な能力はありません。話し合いでニセ転校生を見つけましょう。'},
  fake:{name:'ニセ転校生',side:'fake',image:'role_fake_transfer_student.png',desc:'休み時間にほかのニセ転校生を確認できます。最終投票でニセ転校生が判定対象にならなければニセモノサイドの勝利です。'},
@@ -23,9 +25,10 @@ const roleImg=key=>'../../'+roleDefs[key].image;
 let session=null,room=null,ws=null,retry=0,retryHandle=null,stopped=false,stageKey='',exitToList=false;
 let peeked=false,hold=false,selected=[],votePick='',lastStage='',countdownHandle=null,roleTab='basic',chatOpen=false;
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
-if(!session||!/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/.test(session.code)||
+if(demoMode)session=demo.session;
+if(!demoMode&&(!session||!/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/.test(session.code)||
  !/^[a-f0-9]{64}$/.test(session.token)||roomCode&&roomCode!==session.code||
- !/^https:\/\/[a-z0-9.-]+$/i.test(base)){
+ !/^https:\/\/[a-z0-9.-]+$/i.test(base))){
  location.replace('../'+(roomCode?'?room='+encodeURIComponent(roomCode):''));return;
 }
 const myId=()=>session.id;
@@ -91,8 +94,12 @@ document.addEventListener('keydown',e=>{
  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
 });
 function notice(s,good=false){onlineUI.notice('notice',s,good)}
-function connected(){return ws?.readyState===WebSocket.OPEN}
+function connected(){return demoMode||ws?.readyState===WebSocket.OPEN}
 function send(obj){
+ if(demoMode){
+  if(!demo.action(obj)){notice('この段階では操作できないよ。画面切替から確認してね。');return false}
+  room=demo.currentRoom();render();return true;
+ }
  if(!connected()){notice('通信が切れています。自動再接続まで待ってね。');return false}
  ws.send(JSON.stringify(obj));return true;
 }
@@ -393,6 +400,12 @@ function moveLobby(){
  location.replace('../?room='+encodeURIComponent(session.code));
 }
 function connect(){
+ if(demoMode){
+  room=demo.currentRoom();
+  $('connection').textContent='通信なし・試遊';
+  $('connection').classList.remove('connected');
+  render();return;
+ }
  if(stopped)return;
  if(ws){const old=ws;ws=null;old.onclose=null;try{old.close()}catch{}}
  onlineUI.connection('connection','connecting');
@@ -532,6 +545,7 @@ $('game-root').addEventListener('keyup',e=>{if(['Enter',' '].includes(e.key))hol
 window.addEventListener('blur',holdEnd);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)holdEnd()});
 $('game-list-link').addEventListener('click',e=>{
+ if(demoMode)return;
  if(room?.phase==='nise'){
   e.preventDefault();
   if(!window.confirm('ゲームを抜けて、ゲーム一覧へ移動する？\nプレイ中なら部屋の試合は終了するよ。'))return;
@@ -540,6 +554,7 @@ $('game-list-link').addEventListener('click',e=>{
  }
 });
 $('return-lobby').addEventListener('click',e=>{
+ if(demoMode)return;
  if(room?.phase==='nise'){
   e.preventDefault();
   if(!window.confirm('ゲームを終了して部屋に戻る？\nホストが終了すると全員ロビーへ戻るよ。'))return;
@@ -547,6 +562,39 @@ $('return-lobby').addEventListener('click',e=>{
   else send({type:'leave'});
  }
 });
+if(demoMode){
+ const shell=$('offline-test-tools'),controls=$('offline-test-actions');
+ shell.hidden=false;
+ controls.innerHTML='<div class="nise-demo-section-label">好きな画面に切り替え</div>'+
+  '<div class="nise-demo-stage-grid">'+Object.entries(demo.stages).map(([key,text])=>
+   '<button type="button" data-demo-stage="'+key+'">'+esc(text)+'</button>').join('')+'</div>'+
+  '<label class="nise-demo-role-label" for="nise-demo-role">自分の役職を切り替え</label>'+
+  '<select id="nise-demo-role">'+demo.roles.map(k=>
+   '<option value="'+k+'">'+esc(roleDefs[k].name)+'</option>').join('')+'</select>'+
+  '<p class="nise-demo-tip">仮の4人で操作を再現中。画面のボタンも押せるよ。通信・部屋作成・ほかの人への通知は行いません。</p>';
+ const select=$('nise-demo-role');select.value=demo.role;
+ const updateDemoBar=()=>{
+  $('offline-test-current').textContent='確認中：'+demo.stages[demo.stage];
+  controls.querySelectorAll('[data-demo-stage]').forEach(b=>{
+   b.classList.toggle('selected',b.dataset.demoStage===demo.stage);
+   b.setAttribute('aria-pressed',String(b.dataset.demoStage===demo.stage));
+  });
+  select.value=demo.role;
+ };
+ shell.addEventListener('click',e=>{
+  const button=e.target.closest('[data-demo-stage]');if(!button)return;
+  if(demo.jump(button.dataset.demoStage)){
+   room=demo.currentRoom();lastStage='';render();
+   $('offline-test-details').open=false;
+  }
+ });
+ select.addEventListener('change',()=>{
+  demo.setRole(select.value);room=demo.currentRoom();lastStage='';render();
+ });
+ const originalRender=render;
+ render=function(){originalRender();updateDemoBar()};
+ updateDemoBar();
+}
 countdownHandle=setInterval(updateTimer,500);
 connect();
 })();
