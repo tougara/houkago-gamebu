@@ -17,12 +17,10 @@ const supplied=(new URLSearchParams(location.search).get('room')||'').toUpperCas
 if(/^[A-Z2-9]{8}$/.test(supplied))$('code').value=supplied;
 const preferred=new URLSearchParams(location.search).get('game');
 if(names[preferred])$('game').value=preferred;
-function notice(text,good=false){
- const el=$('notice');el.hidden=!text;el.classList.toggle('ok',good);el.textContent=text||'';
-}
-function connected(value){
- $('connection').textContent=value?'接続中':'接続待ち・再接続中';
- $('connection').classList.toggle('connected',value);
+const onlineUI=window.HoukagoOnlineUI;
+function notice(text,good=false){onlineUI.notice('notice',text,good)}
+function connected(value,phase='reconnecting'){
+ onlineUI.connection('connection',value?'connected':phase);
  $('ready').disabled=!value;
 }
 function busy(value){$('create').disabled=value||!configured;$('join').disabled=value||!configured}
@@ -63,7 +61,7 @@ function enter(answer){
  session={code:answer.code,id:answer.id,token:answer.token,name:$('nickname').value.trim().slice(0,16)};
  persist();room=answer.room;$('entry').hidden=true;$('room-panel').hidden=false;
  history.replaceState(null,'','?room='+encodeURIComponent(session.code));
- notice('部屋に入れたよ！',true);connected(false);draw();connect();
+ notice('部屋に入れたよ！',true);connected(false,'connecting');draw();connect();
 }
 $('create').addEventListener('click',async()=>{
  const name=nameInput();if(!name||!configured)return;
@@ -127,7 +125,7 @@ function draw(){
 }
 function connect(){
  if(!session||!configured)return;
- stopSocket();connected(false);
+ stopSocket();connected(false,'connecting');
  const endpoint=base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+encodeURIComponent(session.token);
  const current=new WebSocket(endpoint);ws=current;
  current.onopen=()=>{if(ws!==current)return;retry=0;connected(true);notice('オンライン接続できたよ',true);draw()};
