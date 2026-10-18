@@ -1,0 +1,42 @@
+:root{color-scheme:dark;--gold:#ffd58a;--ink:#fff3d9;--panel:rgba(6,22,38,.91);--line:rgba(246,212,142,.35)}
+*{box-sizing:border-box}html{background:#071522}body{margin:0;color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif}
+button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{opacity:.5;cursor:default}
+button:focus-visible,a:focus-visible{outline:3px solid #ffdc83;outline-offset:3px}
+.pita-online{width:min(730px,100%);min-height:100dvh;margin:auto;padding:10px 12px 36px;background:linear-gradient(#06132189,#061321dd),url("../../pitadome_challenge_background.png") center/cover fixed}
+.top-nav{margin-bottom:10px}.game-brand{text-align:center;margin:4px 0 13px}
+.game-brand img{display:block;width:min(410px,86%);height:88px;object-fit:contain;margin:auto;filter:drop-shadow(0 6px 9px #0009)}
+.game-brand span{display:block;font-size:10px;letter-spacing:.24em;color:#e5bd77;font-weight:950}
+.panel{border:1px solid var(--line);border-radius:20px;padding:18px 15px;background:var(--panel);box-shadow:0 12px 22px #0006;margin:10px 0}
+h1,h2,h3,p{margin-top:0}h1{font-size:clamp(22px,6vw,29px);text-align:center;margin-bottom:10px}
+h2{font-size:18px;margin-bottom:12px}p{line-height:1.5}
+.muted{color:#c3cddb;font-size:13px}.center{text-align:center}.gold{color:var(--gold)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;width:100%;border-radius:14px;border:1px solid #e4c58a;background:#18324a;color:white;font-weight:900;padding:10px}
+.btn.primary{background:linear-gradient(110deg,#f8d28b,#d89843);border-color:#ffe2a3;color:#232021}
+.btn.danger{border-color:#e5a0a0;background:#642a34}
+.actions{display:grid;gap:10px;margin-top:16px}
+.rules{padding:0 0 0 21px;line-height:1.85;font-size:14px}.rules strong{color:var(--gold)}
+.stat-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:900}
+.round{font-size:15px;color:var(--gold)}.hearts{color:#ffb0b6;letter-spacing:.1em;font-weight:900}
+.target{font-size:clamp(60px,17vw,106px);line-height:1.12;font-weight:1000;text-align:center;letter-spacing:-.07em;text-shadow:0 0 30px #f6aa5377}
+.target small{display:block;letter-spacing:0;font-size:14px;color:#ccd6e3}
+.value{font-size:clamp(48px,12vw,86px);font-weight:1000;text-align:center;line-height:1.25;font-variant-numeric:tabular-nums}
+.track{position:relative;height:22px;border-radius:40px;background:linear-gradient(90deg,#ad3b59,#edaf56,#45bfa0,#edaf56,#ad3b59);margin:20px 7px 26px}
+.target-marker{position:absolute;height:34px;width:4px;border-radius:4px;top:-6px;background:#fff;box-shadow:0 0 10px white;transform:translateX(-50%)}
+.current-marker{position:absolute;height:42px;width:14px;border-radius:6px;top:-10px;background:#0a1732;border:3px solid #fff;box-shadow:0 0 9px #fff8;transform:translateX(-50%)}
+.clock{display:flex;justify-content:space-between;font-size:13px;font-weight:900;color:#cdd5e2}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.choice{min-height:68px;border:1px solid #7c8b9a;border-radius:14px;background:#112b40;color:#f4f5fa;font-weight:900}
+.choice.selected{background:#684624;border:2px solid var(--gold);color:#ffe5ad}
+.choice small{display:block;font-size:11px;opacity:.9;line-height:1.4;font-weight:700}
+.stop{width:100%;min-height:104px;border:0;border-radius:22px;background:linear-gradient(#ffdb83,#e27734);color:#29201b;font-weight:1000;font-size:clamp(32px,9vw,52px);box-shadow:0 9px 0 #9f4a23,0 15px 24px #0006;touch-action:manipulation}
+.stop:active{transform:translateY(4px);box-shadow:0 5px 0 #9f4a23}
+.progress{padding:10px 13px;border-radius:12px;background:#22354c;color:#f9e6b8;text-align:center;font-weight:900}
+.roster{display:grid;gap:8px}.person{display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:12px;padding:9px 11px;background:#183047;border:1px solid #435268;font-size:13px}
+.person.dead{opacity:.55}.person b{font-size:14px}.person small{font-size:12px;color:#ccd6e0}
+.results{display:grid;gap:8px}.result{background:#112d44;border:1px solid #5e6474;border-radius:14px;padding:11px}
+.result-head{display:flex;justify-content:space-between;align-items:center;gap:7px;font-size:14px;font-weight:900}
+.result-details{display:flex;flex-wrap:wrap;gap:5px 13px;margin-top:5px;font-size:12px;color:#d8e0e8}
+.grade{font-weight:1000}.grade.perfect{color:#ffda75}.grade.excellent{color:#8bfff0}.grade.great{color:#a7d9ff}.grade.miss{color:#ff9cab}
+.winner{font-size:26px;font-weight:1000;color:#ffe09e;text-align:center}
+@media(max-width:360px){.panel{padding:13px 10px}.btn{min-height:43px}.game-brand img{height:70px}.person{padding:8px}}
+@media(min-width:650px){.pita-online{padding:14px 24px}.play-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.play-grid .panel{margin-top:0}.stop{min-height:126px}}
