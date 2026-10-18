@@ -23,10 +23,19 @@ function fresh(){
  setRoles();
 }
 function setRoles(){
- const others=['fake','classmate','swapper'];
+ // テスト役職の変更時も、本人＋3人＋おやすみ2枚を実在する6枚の構成にする。
+ const basic={
+  classmate:{others:['fake','president','swapper'],rest:['fake','classmate']},
+  fake:{others:['fake','classmate','president'],rest:['classmate','swapper']},
+  president:{others:['fake','classmate','swapper'],rest:['fake','classmate']},
+  swapper:{others:['fake','classmate','president'],rest:['fake','classmate']}
+ };
+ const arrangement=basic[currentRole]||{others:['fake','classmate','classmate'],rest:['fake','president']};
  state.initial={[ID]:currentRole};
- members.slice(1).forEach((m,i)=>state.initial[m.id]=others[i]);
- state.final={...state.initial};
+ members.slice(1).forEach((m,i)=>state.initial[m.id]=arrangement.others[i]);
+ state.final={...state.initial};state.rest=[...arrangement.rest];
+ state.counts=Object.fromEntries(roles.map(k=>[k,0]));
+ for(const key of [...Object.values(state.initial),...state.rest])state.counts[key]++;
  state.intel=null;state.nightDone=false;
 }
 function result(){
