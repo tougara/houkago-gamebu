@@ -375,6 +375,7 @@ test('online phases render question and answers with offline layout and no blank
    send(text){this.sent.push(JSON.parse(text))}close(){}
  }
  const win={HOUKAGO_ONLINE_API_URL:'https://houkago-online-api.example.workers.dev',
+   HoukagoOnlineUI:{connection(){},notice(){},memberChips(){return ''}},
    addEventListener(){}};
  new Function('window','document','location','sessionStorage','localStorage','WebSocket',
    'URLSearchParams','setTimeout','clearTimeout','confirm',js)(
