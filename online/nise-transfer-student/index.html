@@ -8,17 +8,19 @@
 <link rel="icon" href="../../houkago_gamebu_browser_icon_transparent.png">
 <link rel="stylesheet" href="../../games/nise-transfer-student/game.css">
 <link rel="stylesheet" href="./game.css?v=20261016-result-border4">
+<link rel="stylesheet" href="../shared-ui.css?v=20261018-shared1">
 </head>
 <body>
 <main id="app" class="game-app nise-online-app">
-<nav class="top-nav">
- <a class="back-home" href="../" id="return-lobby">← 部屋にもどる</a>
- <a class="back-home" href="../../games/" id="game-list-link">ゲームをえらぶ</a>
- <span class="online-connection" id="connection">接続待ち</span>
+<nav class="top-nav hk-online-nav">
+ <a class="back-home hk-online-link" href="../" id="return-lobby">← 部屋にもどる</a>
+ <a class="back-home hk-online-link" href="../../games/" id="game-list-link">ゲームをえらぶ</a>
+ <span class="online-connection hk-online-connection" id="connection">接続待ち</span>
 </nav>
-<div id="notice" class="online-message" role="status" aria-live="polite" hidden></div>
+<div id="notice" class="online-message hk-online-notice" role="status" aria-live="polite" hidden></div>
 <div id="game-root" aria-live="polite"><div class="card online-wait">オンラインルームに接続しています…</div></div>
 </main>
 <script src="../config.js"></script>
-<script src="./game.js?v=20261016-simultaneous4"></script>
+<script src="../shared-ui.js?v=20261018-shared1"></script>
+<script src="./game.js?v=20261018-shared1"></script>
 </body></html>
