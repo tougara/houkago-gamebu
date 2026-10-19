@@ -277,7 +277,8 @@ function connect(){
   if(current!==ws)return;
   let data;try{data=JSON.parse(event.data)}catch{return}
   if(data.type==='welcome'||data.type==='room'){
-    room=data.room;voted=!!data.voted;myChoice=data.myChoice||null;predicted=!!data.predicted;draw()
+    room=data.room;
+   window.dispatchEvent(new CustomEvent('houkago-online-room-state',{detail:room}));voted=!!data.voted;myChoice=data.myChoice||null;predicted=!!data.predicted;draw()
    }
   else if(data.type==='left')goLobby(true);
   else if(data.type==='error')say(data.error||'エラーが発生したよ');
