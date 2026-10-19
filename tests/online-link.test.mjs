@@ -89,15 +89,26 @@ test('server game outcome keeps current boards; simultaneous knockout produces d
  assert.deepEqual(linkView(t,'p1').winners,['p1']);
  assert.equal(linkView(t,'p0').self.over,true);
 });
-test('browser client syntax and requested landscape / solo-controller layout',()=>{
+test('browser client syntax and portrait-first solo-controller / tiny opponent layout',()=>{
  const game=readFileSync(new URL('../online/link-burst/game.js',import.meta.url),'utf8');
  const css=readFileSync(new URL('../online/link-burst/game.css',import.meta.url),'utf8');
  const html=readFileSync(new URL('../online/link-burst/index.html',import.meta.url),'utf8');
  const lobby=readFileSync(new URL('../online/lobby.js',import.meta.url),'utf8');
  assert.doesNotThrow(()=>new Function(game));
  assert.ok(css.includes('.control[data-key="rotate"]{grid-column:5 / 7;grid-row:1 / 3'));
- assert.ok(css.includes('.opponent-board'));
- assert.ok(css.includes('orientation:portrait'));
+ assert.ok(css.includes('grid-template-rows:1.3fr .7fr'),'solo-style movement control arrangement');
+ assert.match(css,/\.match\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) var\(--online-opp-width\)/);
+ assert.match(css,/\.me-area\{display:contents\}/);
+ assert.match(css,/\.me-top\{[\s\S]*?grid-column:1;grid-row:1/);
+ assert.match(css,/\.side\{[\s\S]*?grid-column:2;grid-row:1/);
+ assert.match(css,/\.controls\{[\s\S]*?grid-column:1\/-1;grid-row:2/);
+ assert.match(css,/\.opponent-board\{[\s\S]*?aspect-ratio:7\/13/);
+ assert.match(css,/\.me-board-wrap\{[\s\S]*?aspect-ratio:7\/13/);
+ assert.match(css,/background_vertical\.png/);
+ assert.doesNotMatch(game,/スマホを横向きにしてね|overlay-portrait/);
+ assert.match(game,/縦持ちで、自分の盤面を大きく/);
+ assert.ok(game.indexOf('class="opponent-board"')<game.indexOf('class="me-rail"'),
+  'tiny opponent must be above NEXT and received JAM');
  assert.ok(html.includes('../shared-ui.js'));
  assert.ok(lobby.includes("type:'link-start'"));
  assert.ok(lobby.includes("room.phase==='link'"));
