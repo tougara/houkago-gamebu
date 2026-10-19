@@ -245,7 +245,7 @@ test('オフライン試遊はオンライン画面のまま全7画面と全8役
  assert.match(html,/offline-preview\.js\?v=/);
  assert.match(html,/id="offline-test-tools"/);
  assert.match(css,/\.nise-demo-stage-grid/);
- assert.match(lobby,/nise-transfer-student\/\?testPlay=1/);
+ assert.match(lobby,/href="\.\/preview\/"/);
  const fakeWindow={};
  new Function('window','location',previewSource)(fakeWindow,{search:'?testPlay=1'});
  const d=fakeWindow.NiseOfflinePreview;
