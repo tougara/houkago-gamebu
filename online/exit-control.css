@@ -1,0 +1,19 @@
+/* Shared exit control across every online game. Existing back links are intercepted. */
+.hk-exit-button{appearance:none;flex:0 0 auto;min-width:52px;min-height:34px;padding:5px 7px;border:1px solid #f0b6b4;border-radius:10px;background:#682f3d;color:#fff4ec;font:900 12px/1.2 system-ui,-apple-system,sans-serif;cursor:pointer;touch-action:manipulation;white-space:nowrap}
+.hk-exit-button:disabled{opacity:.45}
+.hk-exit-overlay{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;background:rgba(5,16,31,.83);padding:12px;overflow:auto}
+.hk-exit-dialog{box-sizing:border-box;width:min(450px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;padding:18px 15px;border:2px solid #ffe6ad;border-radius:20px;background:#fefcf8;color:#203449;box-shadow:0 12px 40px #0009;font:800 13px/1.45 system-ui,-apple-system,sans-serif}
+.hk-exit-dialog h2{font:1000 clamp(21px,5.2vw,26px)/1.2 system-ui,sans-serif;margin:0 0 8px;color:#203449}
+.hk-exit-dialog p{margin:0 0 10px}
+.hk-exit-dialog>button{display:block;width:100%;min-height:49px;padding:9px 12px;border:1px solid #acbcd1;border-radius:12px;font:1000 15px/1.2 system-ui,sans-serif;cursor:pointer;margin-top:10px}
+.hk-exit-dialog>button:disabled{opacity:.5}
+.hk-exit-dialog .hk-exit-stop{background:linear-gradient(#ffe499,#eebb65);border-color:#c79b44;color:#392514}
+.hk-exit-dialog .hk-exit-leave{background:#9b344d;border-color:#822439;color:#fff}
+.hk-exit-dialog .hk-exit-cancel{background:#e5edf7;color:#294460}
+.hk-exit-dialog .hk-exit-local{background:#eef0f2;color:#39465a}
+.hk-exit-dialog small{display:block;font-size:11px;color:#58708a;line-height:1.4;margin:5px 0 4px}
+.hk-exit-status{color:#aa3048;font-size:12px;min-height:0;margin-top:9px!important}
+.hk-exit-open{overflow:hidden!important}
+.hk-exit-dialog button:focus-visible,.hk-exit-button:focus-visible{outline:3px solid #ffde73;outline-offset:2px}
+.nise-online-app>.top-nav:has(.hk-exit-button){grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto auto;gap:3px}
+@media(max-width:380px){.hk-exit-button{min-width:42px;min-height:30px;padding:4px;font-size:10px}.nise-online-app>.top-nav:has(.hk-exit-button){gap:2px}}
