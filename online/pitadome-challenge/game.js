@@ -186,7 +186,7 @@ function tick(){
   if(counter)counter.textContent=cue?.kind==='start'?'START！':'開始まで '+Math.ceil(remaining/1000)+'秒';
   if(cursor)cursor.style.left='0%';
   if(cue)showFx('countdown:'+d.round+':'+cue.title,
-   {kind:cue.kind,title:cue.title,subtitle:cue.kind==='countdown'?'READY':''},
+   {kind:cue.kind,title:cue.title},
    Math.max(100,Math.ceil(cue.duration)));
  }else{
   // START！のカットインを残さず、バーが動き始めた瞬間に消す。
