@@ -38,7 +38,7 @@ let state={stage:initial,round:1,mode:'secret',role:'host',question:0,order:[...
  customTopics:[],results:[],answers:0,mySubmitted:false,submittedCount:0,complete:false,
  settings:{difficulty:'normal',roundCount:5,categories:[...categories]},wolfSettings:{
  source:'auto',mode:'reverse',duration:180,categories:['日常','食べ物','学校'],authorId:me},
- pitaSpeed:66,hand:emptyHand(),board:[],moves:0,selected:-1,
+ pitaSpeed:32,pitaStartedAt:Date.now()+2300,hand:emptyHand(),board:[],moves:0,selected:-1,
  incoming:3,score:0,opponentScore:1280,linkPiece:{a:'blue',b:'red',x:3,y:2,rot:1},
  linkBoard:null,opponentBoard:null};
 let connection=null,openSockets=new Set(),toolbar=null;
@@ -54,7 +54,7 @@ function reset(){
  state.stage=initial;state.round=1;state.question=0;state.order=[...ids];state.shown=[];
  state.seen=false;state.customTopics=[];state.results=[];state.answers=0;state.mySubmitted=false;
  state.submittedCount=0;state.complete=false;state.hand=emptyHand();state.board=[];
- state.moves=0;state.incoming=3;state.score=0;state.opponentScore=1280;
+ state.moves=0;state.incoming=3;state.score=0;state.opponentScore=1280;state.pitaStartedAt=Date.now()+2300;
  state.linkPiece={a:'blue',b:'red',x:3,y:2,rot:1};state.linkBoard=boardRows();
  state.opponentBoard=boardRows(true);state.role=role;state.mode=mode;
 }
@@ -101,15 +101,20 @@ function snapshot(){
  if(game==='pitadome-challenge'){
   const examples=members.map((m,i)=>({
    id:m.id,grade:['perfect','excellent','great','miss'][i%4],
-   value:[49.4,52.7,55.3,68.2][i%4],error:[.6,2.7,5.3,18.2][i%4],
-   heal:i===0?2:0,attack:i===1?1:0,
-   lifeBefore:3,lifeAfter:i===3?2:4,eliminated:false,pressure:i%2
+   value:[50,51,53,79][i%4],error:[0,1,3,29][i%4],
+   points:[100,95,80,0][i%4],combo:[2,3,1,0][i%4],
+   special:i===0,triple:false,chargeReward:0,charge:120+i*45,
+   heal:i===0?1:0,attack:i===0?2:0,damage:i===3?1:0,safe:15,
+   lifeBefore:3,lifeAfter:i===3?2:3,eliminated:false,pressure:i%2,timedOut:false
   }));
   room.pita={
-   stage,round,maxRounds:25,target:50,speed:state.pitaSpeed,deadline:Date.now()+18000,
-   startedAt:Date.now()-1000,pressure:0,mySubmitted:state.mySubmitted,
+   stage,round,maxRounds:25,target:50,speed:state.pitaSpeed,
+   profile:{minValue:0,maxValue:100,refPoint:50,barScale:.86,speed:32,movement:'normal',gimmicks:['基本']},
+   initialMotion:{value:0,dir:1,elapsed:0,legIndex:0,reversePhase:0,reverseBaseDir:1},
+   deadline:state.pitaStartedAt+18000,startedAt:state.pitaStartedAt,
+   pressure:0,baseSafe:15,safe:15,chargeLimit:350,mySubmitted:state.mySubmitted,
    submittedCount:state.submittedCount,activeCount:members.length,
-   members:members.map((m,i)=>({...m,lives:stage==='finished'?(i===0?2:0):3,eliminated:false})),
+   members:members.map((m,i)=>({...m,lives:stage==='finished'?(i===0?2:0):3,eliminated:stage==='finished'&&i!==0,score:i*70+200,charge:120+i*45,combo:i+2,streak:i%3,perfects:i===0?3:1})),
    results:['review','finished'].includes(stage)?examples:[],
    finalRound:round>=5,winnerIds:stage==='finished'?[me]:[],
    limits:{perfect:2,excellent:5,great:10}
@@ -228,10 +233,11 @@ function handle(data){
   if(type==='wolf-again')state.stage='setup';
  }
  if(game==='pitadome-challenge'){
-  if(type==='pita-begin')state.stage='playing';
+  if(type==='pita-begin'){state.stage='playing';state.pitaStartedAt=Date.now()+2300}
   if(type==='pita-stop'||type==='pita-close'){state.stage='review';state.mySubmitted=true;state.submittedCount=ids.length}
   if(type==='pita-next'){
    state.stage=state.round>=5?'finished':'playing';state.round++;
+   state.pitaStartedAt=Date.now()+2300;
    state.mySubmitted=false;state.submittedCount=0;
   }
  }
