@@ -19,6 +19,7 @@
     <nav class="games-sticky-nav" aria-label="ゲーム一覧の操作">
       <a class="back-link" href="../">← トップへ</a>
       <button class="games-settings-btn" type="button" data-hg-settings-open>⚙ 共通設定</button>
+      <button type="button" class="games-saves-btn" id="openSavedGames">続きのセーブ管理</button>
     </nav>
     <header class="games-header browser-header">
       <div class="section-heading compact-heading">
@@ -182,6 +183,7 @@
 
   <script src="../settings.js"></script>
   <script src="../resume.js"></script>
+  <script>document.getElementById("openSavedGames").addEventListener("click",()=>window.HoukagoResume?.manage?.());</script>
   <script src="favorites.js?v=20261016-browser1"></script>
 </body>
 </html>
