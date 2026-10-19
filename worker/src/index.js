@@ -95,7 +95,7 @@ export default {
       }
       return reply({ok:false,error:'部屋を作成できませんでした'},503);
     }
-    const path=url.pathname.match(/^\/api\/rooms\/([A-Z2-9]{8})\/(join|ws)$/);
+    const path=url.pathname.match(/^\/api\/rooms\/([A-Z2-9]{8})\/(join|ws|exit)$/);
     if(!path||!CODE.test(path[1]))return reply({ok:false,error:'部屋が見つかりません'},404);
     const [,code,action]=path,obj=env.ROOMS.get(env.ROOMS.idFromName('room:'+code));
     if(action==='join'&&request.method==='POST'){
@@ -104,6 +104,14 @@ export default {
       if(!await admit(env,request,'join'))return reply({ok:false,error:'参加操作が多すぎます'},429);
       const r=await obj.fetch(new Request('https://internal/join',{method:'POST',
         body:JSON.stringify({name,icon:ICONS.has(body.icon)?body.icon:'🎮'})}));
+      return reply(await r.json(),r.status);
+    }
+    if(action==='exit'&&request.method==='POST'){
+      const body=await readBody(request);
+      if(!TOKEN.test(body?.token)||!['leave','stop'].includes(body.mode))
+        return reply({ok:false,error:'退出情報を確認してね'},400);
+      const r=await obj.fetch(new Request('https://internal/exit',{method:'POST',
+        body:JSON.stringify({token:body.token,mode:body.mode})}));
       return reply(await r.json(),r.status);
     }
     if(action==='ws'&&request.method==='GET'){
@@ -155,6 +163,7 @@ export class OnlineRoom{
     if(path==='/create')return this.create(request);
     if(path==='/join')return this.join(request);
     if(path==='/ws')return this.connect(request);
+    if(path==='/exit')return this.exitRoom(request);
     return err('not found',404);
   }
   async limit(request){
@@ -261,6 +270,24 @@ export class OnlineRoom{
     g.scores=Object.fromEntries(this.room.members.map(m=>[m.id,0]));
     g.battleResult=null;g.counts=null;g.answeredCount=0;
     return true;
+  }
+  async exitRoom(request){
+    if(!this.active())return err('部屋が見つからないか期限切れです',404);
+    const body=await readBody(request);
+    if(!TOKEN.test(body?.token)||!['stop','leave'].includes(body.mode))return err('無効な退出操作です',400);
+    const hash=await digest(body.token);
+    const me=this.room.members.find(m=>m.tokenHash===hash);
+    if(!me)return err('参加情報が無効です',401);
+    if(body.mode==='stop'){
+      if(me.id!==this.room.hostId)return err('対戦の終了はホスト専用です',403);
+      this.stopLinkLoop();
+      for(const phase of ['secret','nise','wolf','pita','meter','tower','link'])this.room[phase]=null;
+      for(const member of this.room.members)member.ready=false;
+      await this.saveAndBroadcast();
+      return response({ok:true,mode:'stop'});
+    }
+    await this.removeMember(me.id);
+    return response({ok:true,mode:'leave'});
   }
   async connect(request){
     if(!this.active())return err('部屋が見つからないか期限切れです',404);
