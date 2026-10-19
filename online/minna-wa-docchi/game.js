@@ -23,6 +23,7 @@ function storedQuestions(){
  }catch{return []}
 }
 function rememberQuestion(q){
+ if(window.HoukagoOfflinePreview)return; // 試遊で通常プレイ用のお題保存を変更しない
  try{
   const items=storedQuestions();
   if(!items.some(x=>x.q===q.q&&x.a===q.a&&x.b===q.b)){
