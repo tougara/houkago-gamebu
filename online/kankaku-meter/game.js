@@ -222,6 +222,7 @@ function connect(){
   if(data.type==='error'){notice(data.error||'通信を確認してね');return}
   if(data.type!=='welcome'&&data.type!=='room')return;
   room=data.room;
+   window.dispatchEvent(new CustomEvent('houkago-online-room-state',{detail:room}));
   if(room.phase!=='meter'){lobby();return}
   render();
  };
