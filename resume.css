@@ -89,3 +89,15 @@ body.hg-resume-open{overflow:hidden!important}
     padding:6px 11px;
   }
 }
+
+/* Common saved-game deletion: clear individual / all without deleting rankings or players. */
+.hg-resume-delete{display:block;width:100%;margin-top:12px;min-height:44px;border:1px solid #db8b9b;border-radius:12px;background:#fff0f0;color:#a12e49;font:900 13px system-ui,sans-serif}
+.hg-resume-manage-btn{display:block;margin:6px 0 0 auto;padding:5px 9px;border:1px solid #ffdca6;border-radius:9px;background:#1a395f;color:#fff0d5;font:850 11px system-ui,sans-serif;min-height:30px}
+.hg-resume-manager-list{max-height:min(47dvh,340px);overflow-y:auto;display:grid;gap:7px;margin:10px 0}
+.hg-resume-manager-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:11px;background:#eef2f8;border:1px solid #d2dce9;padding:8px 10px}
+.hg-resume-manager-item span{min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:850}
+.hg-resume-manager-item button{min-width:68px;min-height:38px;border:1px solid #d48ca0;border-radius:8px;background:#fff;color:#a12e49;font:900 12px system-ui,sans-serif}
+.hg-resume-manager-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+.hg-resume-manager-actions button{min-height:44px;border-radius:10px;border:1px solid #c3d0df;background:#f5f8ff;font:900 13px system-ui,sans-serif;color:#273950}
+.hg-resume-manager-actions [data-hg-manager-all]{color:#a22e48;background:#fff0f2;border-color:#d99aae}
+.hg-resume-manager-actions [data-hg-manager-all]:disabled{opacity:.4}
