@@ -145,3 +145,26 @@ test('公開Workerルートは認証済みの退出コマンドのみ受け付�
  assert.match(source,/X-Room-Token|digest\(body\.token\)/);
  assert.match(source,/data\.type==='room-stop'/);
 });
+
+test('独立した2人対戦3画面も戻る保護があり、ソロセーブと対戦セーブを混同しない',()=>{
+ const pages=[
+  'games/pitadome-challenge/versus/index.html',
+  'games/link-burst/versus/index.html',
+  'games/link-burst/versus/play.html'
+ ];
+ for(const path of pages){
+  const html=get(path);
+  assert.match(html,/game-back-guard\.js\?v=20261019-exit2/);
+ }
+ assert.match(get('games/pitadome-challenge/versus/index.html'),/resume\.js\?v=/);
+ assert.match(get('games/link-burst/versus/play.html'),/resume\.js\?v=/);
+ const guard=get('game-back-guard.js');
+ assert.match(guard,/pitadome-versus/);
+ assert.match(guard,/link-burst-versus/);
+ const {api}=resume();
+ api.save('link-burst',{title:'solo',path:'/games/link-burst/'},{test:'solo'});
+ api.save('link-burst-versus',{title:'versus',path:'/games/link-burst/versus/play.html'},{test:'vs'});
+ api.discard('link-burst-versus');
+ assert.equal(api.load('link-burst-versus'),null);
+ assert.ok(api.load('link-burst'));
+});
