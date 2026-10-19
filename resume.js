@@ -2,6 +2,7 @@
   const PREFIX='houkago_resume_v1_';
   const INDEX='houkago_resume_index_v1';
   const RUNTIME_KEYS=new Set(['timerId','countdownId','rafId','startDelayId']);
+  const discarded=new Set(); // Prevent pagehide autosave from recreating a deliberately deleted save.
 
   function replacer(key,value){
     if(RUNTIME_KEYS.has(key))return null;
@@ -20,7 +21,7 @@
   }
   function writeIndex(x){try{localStorage.setItem(INDEX,JSON.stringify(x))}catch(e){}}
   function save(gameId,meta,state){
-    if(!gameId||!state)return null;
+    if(!gameId||!state||discarded.has(gameId))return null;
     const now=Date.now();
     const payload={version:1,gameId,updatedAt:now,meta:meta||{},state};
     try{
@@ -31,6 +32,11 @@
       window.dispatchEvent(new CustomEvent('houkago-resume-change'));
       return payload;
     }catch(e){return null}
+  }
+  function discard(gameId){
+    if(!gameId)return;
+    discarded.add(gameId);
+    clear(gameId);
   }
   function load(gameId){
     try{
@@ -169,5 +175,5 @@
     document.body.classList.add('hg-resume-open');renderItems();
     wrap.querySelector('[data-hg-manager-close]').focus();
   }
-  window.HoukagoResume={PREFIX,INDEX,save,load,clear,clearAll,savedGames,latest,offer,mountLatest,manage};
+  window.HoukagoResume={PREFIX,INDEX,save,load,clear,discard,clearAll,savedGames,latest,offer,mountLatest,manage};
 })();
