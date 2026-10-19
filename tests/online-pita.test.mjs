@@ -4,7 +4,7 @@ import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {OnlineRoom} from '../worker/src/index.js';
 import {PitadomeVersusRules as R} from '../worker/src/pita-versus-rules.js';
-import {createPita,pitaAction,pitaView,pitaPosition,pitaGrade,pitaLimits,pitaMotionAt} from '../worker/src/pita-engine.js';
+import {createPita,pitaAction,pitaView,pitaPosition,pitaGrade,pitaLimits,pitaMotionAt,PITA_COUNTDOWN_STEP_MS,PITA_START_CUTIN_MS,PITA_COUNTDOWN_MS} from '../worker/src/pita-engine.js';
 if(!globalThis.crypto)globalThis.crypto=webcrypto;
 const fixture=(n=3)=>{const room={hostId:'p0',members:Array.from({length:n},(_,i)=>({id:'p'+i,name:'人'+i,icon:'🐶'}))};room.pita=createPita(room);return room};
 const action=(r,id,type,extra={})=>pitaAction(r,id,{type,...extra});
@@ -17,6 +17,48 @@ function timeFor(g,predicate,id='p0'){
  }
  throw Error('no stop found');
 }
+test('オンラインの3・2・1・STARTはオフライン2Pと同じ1120 / 1500msで表示する',()=>{
+ const original=readFileSync(new URL('../games/pitadome-challenge/effects.js',import.meta.url),'utf8');
+ const effectGlobal={};
+ new Function('globalThis',original)(effectGlobal);
+ const timing=effectGlobal.PitadomeEffects.TIMING;
+ assert.equal(PITA_COUNTDOWN_STEP_MS,timing.countdown);
+ assert.equal(PITA_START_CUTIN_MS,timing.start);
+ assert.equal(PITA_COUNTDOWN_MS,3*timing.countdown+timing.start);
+ assert.equal(PITA_COUNTDOWN_MS,4860);
+ const room=fixture(2);
+ const now=Date.now();
+ action(room,'p0','pita-begin');
+ assert.ok(Math.abs(room.pita.startedAt-now-PITA_COUNTDOWN_MS)<200);
+ assert.equal(room.pita.deadline-room.pita.startedAt,18000);
+ const client=readFileSync(new URL('../online/pitadome-challenge/game.js',import.meta.url),'utf8');
+ const cueSource=client.match(/function countdownCue\(remaining,timing\)\{[\s\S]*?\n\}/)?.[0];
+ assert.ok(cueSource,'countdown timing helper should exist');
+ const cue=new Function(cueSource+';return countdownCue')();
+ assert.deepEqual(cue(4860,timing),{kind:'countdown',title:'3',duration:1120});
+ assert.deepEqual(cue(3740,timing),{kind:'countdown',title:'2',duration:1120});
+ assert.deepEqual(cue(2620,timing),{kind:'countdown',title:'1',duration:1120});
+ assert.deepEqual(cue(1500,timing),{kind:'start',title:'START！',duration:1500});
+ assert.equal(cue(0,timing),null);
+});
+test('目標数字は毎ラウンド再抽選・同一参加者の直前の目標を除外する',()=>{
+ const easy=[0.04,0.24,0.74,0.98].map(n=>R.roundProfile(1,'easy',()=>n).target);
+ const normal=[0.04,0.24,0.74,0.98].map(n=>R.roundProfile(1,'normal',()=>n).target);
+ assert.equal(new Set(easy).size,4);
+ assert.equal(new Set(normal).size,4);
+ assert.ok(easy.every(n=>n>=1&&n<=100));
+ assert.ok(normal.every(n=>n>=10&&n<=90));
+ const room=fixture(4);
+ action(room,'p1','pita-difficulty',{difficulty:'easy'});
+ action(room,'p0','pita-begin');
+ const first={...room.pita.targets};
+ room.pita.stage='review';room.pita.finalRound=false;
+ assert.equal(action(room,'p0','pita-next'),true);
+ for(const id of room.pita.memberIds){
+  assert.notEqual(room.pita.targets[id],first[id],'target must differ from previous for '+id);
+  assert.equal(room.pita.profiles[id].target,room.pita.targets[id]);
+ }
+});
 test('オンラインKOはオフライン2人対戦と同じ判定・動き・連続成功・回復ゲージを使う',()=>{
  assert.equal(R.CHARGE_LIMIT,350);
  assert.equal(R.tier(0,15),'perfect');assert.equal(R.tier(1,15),'excellent');
