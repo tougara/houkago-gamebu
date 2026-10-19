@@ -1,6 +1,10 @@
 /* オンライン版ピタ止め：既存2人KOの判定・回復ゲージ・連続成功を2〜10人同時対戦へ適用 */
 import {PitadomeVersusRules as R} from './pita-versus-rules.js';
 export const PITA_MAX_ROUNDS=25;
+// オフライン2人対戦の effects.TIMING と同期。3→2→1→START の合計は4.86秒。
+export const PITA_COUNTDOWN_STEP_MS=1120;
+export const PITA_START_CUTIN_MS=1500;
+export const PITA_COUNTDOWN_MS=3*PITA_COUNTDOWN_STEP_MS+PITA_START_CUTIN_MS;
 const random=n=>{const b=new Uint32Array(1);crypto.getRandomValues(b);return b[0]%n};
 const active=g=>g.memberIds.filter(id=>g.lives[id]>0);
 export const pitaPosition=(elapsedMs,speed)=>{const v=((elapsedMs*speed/1000)%200+200)%200;return v<=100?v:200-v};
@@ -28,7 +32,7 @@ function beginRound(g){
  g.target=g.targets[first];g.speed=g.profile.speed;
  g.pressure=Object.fromEntries(g.memberIds.map(id=>[id,Math.min(3,g.nextPressure[id]||0)]));
  g.nextPressure={};g.submissions={};g.results=[];
- g.startedAt=Date.now()+2300;g.deadline=g.startedAt+18000;
+ g.startedAt=Date.now()+PITA_COUNTDOWN_MS;g.deadline=g.startedAt+18000;
  g.stage='playing';
 }
 export function createPita(room){
