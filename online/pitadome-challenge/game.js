@@ -9,8 +9,10 @@ const onlineUI=window.HoukagoOnlineUI;
 let session=null,room=null,ws=null,retry=0,retryTimer=null,leaving=false;
 let localKey='',origin=0,frame=0,choice='attack',submitting=false;
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
-if(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session.token)||
- (requested&&requested!==session.code)||!/^https:\/\/[a-z0-9.-]+$/i.test(base)){
+// 試遊時だけ共通プレビューの仮セッションを使用。本物の保存データは変更しない。
+if(window.HoukagoOfflinePreview)session=window.HoukagoOfflinePreview.session;
+if(!window.HoukagoOfflinePreview&&(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session.token)||
+ (requested&&requested!==session.code)||!/^https:\/\/[a-z0-9.-]+$/i.test(base))){
  location.replace('../'+(requested?'?room='+encodeURIComponent(requested):''));return;
 }
 const esc=v=>onlineUI.escapeHTML(v);
