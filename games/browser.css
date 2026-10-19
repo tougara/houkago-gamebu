@@ -233,3 +233,8 @@
  transform:scale(1.18);
  transform-origin:center;
 }
+
+/* Saved game manager reachable even if homepage latest save is hidden. */
+.games-sticky-nav .games-saves-btn{appearance:none;min-height:36px;padding:7px 10px;border:1px solid #a8c5e5;border-radius:11px;background:#eaf4ff;color:#255781;font:900 clamp(10px,2.6vw,13px)/1.2 system-ui,-apple-system,sans-serif;white-space:nowrap;cursor:pointer}
+.games-sticky-nav .games-saves-btn:focus-visible{outline:3px solid #edbf43;outline-offset:2px}
+@media(max-width:410px){.games-sticky-nav{gap:4px}.games-sticky-nav .games-saves-btn{padding:6px 7px;font-size:10px}}
