@@ -189,6 +189,9 @@ test('オンラインはオフライン演出を再利用して縦1画面・参�
  assert.ok(!css.includes('#6e243c,#c15561'));
  assert.ok(css.includes('.meter-cursor.blind'));
  assert.ok(css.includes('.meter-labels>.meter-ref'));
+ assert.ok(css.includes('#pita-fx .pv-cutin-perfect .pv-cutin-title'));
+ assert.ok(css.includes('max-width:600px'));
+ assert.ok(!js.includes("subtitle:cue.kind==='countdown'?'READY':''"));
  assert.ok(lobby.includes("type:'pita-start'"));
  assert.ok(lobby.includes("room.phase==='pita'"));
 });
