@@ -152,7 +152,7 @@ function connect(){
   if(current!==socket)return;let msg;try{msg=JSON.parse(event.data)}catch{return}
   if(msg.type==='room'||msg.type==='welcome'){
    room=msg.room;
-   window.dispatchEvent(new CustomEvent('houkago-online-room-state',{detail:room}));
+   window.dispatchEvent?.(new CustomEvent('houkago-online-room-state',{detail:room}));
    if(room.phase!=='wolf'){lobby();return}notice('');render();
   }else if(msg.type==='left')lobby(true);
   else if(msg.type==='error')notice(msg.error||'通信エラー');
