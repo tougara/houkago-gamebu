@@ -1,0 +1,18 @@
+/* 共有・オフライン試遊の小さな操作パネル（通常プレイには読み込まない） */
+.hog-demo-tools{position:fixed!important;right:max(7px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));width:min(350px,calc(100vw - 16px));z-index:11000;pointer-events:none;font-family:system-ui,-apple-system,"Yu Gothic",sans-serif;color:#203c5d}
+.hog-demo-tools *, .hog-demo-tools *:before,.hog-demo-tools *:after{box-sizing:border-box}
+.hog-demo-details{pointer-events:auto;background:#fbfdff;border:2px solid #7c9dd1;border-radius:13px;overflow:hidden;box-shadow:0 6px 24px #0a1c3d7a}
+.hog-demo-details summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;min-height:42px;list-style:none;background:linear-gradient(115deg,#d5ebff,#f5f4db);font-size:12px;line-height:1.2;color:#214e7d}
+.hog-demo-details summary::-webkit-details-marker{display:none}
+.hog-demo-details summary:before{content:"☰";font-size:18px}
+.hog-demo-details summary strong{font-weight:1000;white-space:nowrap}
+#hog-demo-status{margin-left:auto;font-size:11px;font-weight:850;color:#446b9a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hog-demo-body{padding:10px;max-height:70dvh;overflow-y:auto;overscroll-behavior:contain;background:#fbfdff}
+.hog-demo-label{margin:5px 0 8px;font-size:12px;font-weight:950;color:#2b577f;line-height:1.4}
+.hog-demo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.hog-demo-grid button,.hog-demo-menu{display:grid;place-items:center;text-align:center;min-height:39px;padding:7px 6px;border:1px solid #adcae8;border-radius:10px;background:#fff;color:#2c5681;font:900 12px/1.25 system-ui,-apple-system,"Yu Gothic",sans-serif;text-decoration:none;cursor:pointer}
+.hog-demo-grid button.selected{color:#fff;background:#397dbc;border-color:#286ca9}
+.hog-demo-grid button:active{transform:scale(.98)}
+.hog-demo-help{color:#506e8b;font:750 11px/1.6 system-ui,-apple-system,"Yu Gothic",sans-serif;margin:2px 3px 4px}
+.hog-demo-tools button:focus-visible,.hog-demo-menu:focus-visible,.hog-demo-details summary:focus-visible{outline:3px solid #dfa737;outline-offset:2px}
+@media(max-height:440px) and (orientation:landscape){.hog-demo-tools{width:min(310px,43vw)}.hog-demo-body{max-height:68dvh}.hog-demo-grid button{min-height:32px}}
