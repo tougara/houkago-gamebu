@@ -49,10 +49,52 @@ let state={stage:initial,round:1,mode:'secret',role:'host',question:0,order:[...
  customTopics:[],results:[],answers:0,mySubmitted:false,submittedCount:0,complete:false,
  settings:{difficulty:'normal',roundCount:5,categories:[...categories]},wolfSettings:{
  source:'auto',mode:'reverse',duration:180,categories:['日常','食べ物','学校'],authorId:me},
- pitaSpeed:32,pitaDifficulty:'normal',pitaVariant:'basic',pitaTarget:50,pitaStartedAt:Date.now()+PITA_PREVIEW_PREP_MS,hand:emptyHand(),board:[],moves:0,selected:-1,
+ pitaSpeed:32,pitaDifficulty:'normal',pitaVariant:'basic',pitaTarget:50,pitaStartedAt:Date.now()+PITA_PREVIEW_PREP_MS,
+ pitaLife:3,pitaScore:0,pitaCombo:0,pitaStreak:0,pitaCharge:0,pitaQuiet:0,pitaMushin:false,pitaPerfects:0,pitaResults:null,hand:emptyHand(),board:[],moves:0,selected:-1,
  incoming:3,score:0,opponentScore:1280,linkPiece:{a:'blue',b:'red',x:3,y:2,rot:1},
  linkBoard:null,opponentBoard:null};
 let connection=null,openSockets=new Set(),toolbar=null;
+
+/* ローカル試遊のSTOPも元の2P判定を使用。固定PERFECTをやめる。 */
+function previewPitaStop(ms){
+ const R=window.PitadomeVersusRules;
+ if(!R||state.stage!=='playing'||state.mySubmitted||!Number.isInteger(ms))return false;
+ const d=snapshot().pita,p=d.profile,n=Math.min(18000,Math.max(100,ms));
+ let motion={...d.initialMotion};
+ for(let i=0;i<n;i+=20)motion=R.advanceMotion(motion,Math.min(20,n-i)/1000,p);
+ const prev={combo:state.pitaCombo,greatStreak:state.pitaStreak,charge:state.pitaCharge,
+  quiet:state.pitaQuiet,mushinActive:state.pitaMushin,score:state.pitaScore};
+ const attempt=n<18000?R.evaluateStop(motion.value,d.target,prev,d.safe):null;
+ const result=attempt||{value:null,error:null,tier:'miss',perfect:false,combo:0,
+  greatStreak:0,charge:state.pitaCharge,quiet:state.pitaQuiet,points:0,
+  special:false,triple:false,chargeReward:0,mushinReady:false,total:state.pitaScore,safe:d.safe};
+ const lifeBefore=state.pitaLife;
+ const rewards=R.applyRewards(lifeBefore,{...result,error:result.error??1000});
+ state.pitaLife=rewards.life;state.pitaCombo=result.combo;state.pitaStreak=result.greatStreak;
+ state.pitaCharge=result.charge;state.pitaQuiet=result.quiet;
+ state.pitaMushin=result.mushinReady;state.pitaScore=result.total;
+ if(result.perfect)state.pitaPerfects++;
+ const self={id:me,target:d.target,value:result.value,error:result.error,grade:result.tier,
+  points:result.points,combo:result.combo,special:result.special,triple:result.triple,
+  chargeReward:result.chargeReward,charge:result.charge,
+  heal:rewards.healed,attack:rewards.pressure,damage:rewards.damage,safe:d.safe,
+  lifeBefore,lifeAfter:rewards.life,eliminated:rewards.life===0,
+  pressure:0,timedOut:n>=18000};
+ const opponents=members.slice(1).map((member,i)=>{
+  const diff=[6,19,2,1,12,4][(state.round+i)%6];
+  const value=Math.max(p.minValue,Math.min(p.maxValue,d.target+(i%2?-diff:diff)));
+  const other=R.evaluateStop(value,d.target,{},d.safe);
+  return {id:member.id,target:d.target,value:other.value,error:other.error,grade:other.tier,
+   points:other.points,combo:other.combo,special:other.special,triple:other.triple,
+   chargeReward:other.chargeReward,charge:other.charge,heal:0,
+   attack:other.special?2:0,damage:other.error>other.safe?1:0,
+   safe:d.safe,lifeBefore:3,lifeAfter:other.error>other.safe?2:3,
+   eliminated:false,pressure:0,timedOut:false};
+ });
+ state.pitaResults=[self,...opponents];
+ state.mySubmitted=true;state.submittedCount=members.length;state.stage='review';
+ return true;
+}
 function boardRows(opponent=false){
  const rows=Array.from({length:13},()=>Array(7).fill('0'));
  const matrix=opponent?
@@ -66,6 +108,8 @@ function reset(){
  state.seen=false;state.customTopics=[];state.results=[];state.answers=0;state.mySubmitted=false;
  state.submittedCount=0;state.complete=false;state.hand=emptyHand();state.board=[];
  state.moves=0;state.incoming=3;state.score=0;state.opponentScore=1280;state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;state.pitaDifficulty='normal';state.pitaVariant='basic';state.pitaTarget=50;
+ state.pitaLife=3;state.pitaScore=0;state.pitaCombo=0;state.pitaStreak=0;state.pitaCharge=0;
+ state.pitaQuiet=0;state.pitaMushin=false;state.pitaPerfects=0;state.pitaResults=null;
  state.linkPiece={a:'blue',b:'red',x:3,y:2,rot:1};state.linkBoard=boardRows();
  state.opponentBoard=boardRows(true);state.role=role;state.mode=mode;
 }
@@ -123,11 +167,11 @@ function snapshot(){
   if(state.pitaVariant==='150'&&!easy){profile.maxValue=150;profile.refPoint=75;profile.gimmicks=['上限150']}
   if(state.pitaVariant==='200'&&!easy){profile.maxValue=200;profile.refPoint=100;profile.gimmicks=['上限200']}
   const examples=members.map((m,i)=>({
-   id:m.id,grade:['perfect','excellent','great','miss'][i%4],
-   value:[state.pitaTarget,state.pitaTarget+1,state.pitaTarget+3,state.pitaTarget+29][i%4],error:[0,1,3,29][i%4],
-   points:[100,95,80,0][i%4],combo:[2,3,1,0][i%4],
-   special:i===0,triple:false,chargeReward:0,charge:120+i*45,
-   heal:i===0?1:0,attack:i===0?2:0,damage:i===3?1:0,safe:15,
+   id:m.id,grade:['great','safe','miss','excellent'][i%4],
+   value:[state.pitaTarget+2,state.pitaTarget+7,state.pitaTarget+24,state.pitaTarget+1][i%4],error:[2,7,24,1][i%4],
+   points:[90,40,10,95][i%4],combo:[1,0,0,1][i%4],
+   special:false,triple:false,chargeReward:0,charge:120+i*45,
+   heal:0,attack:0,damage:i===2?1:0,safe:15,
    lifeBefore:3,lifeAfter:i===3?2:3,eliminated:false,pressure:i%2,timedOut:false
   }));
   room.pita={
@@ -138,8 +182,14 @@ function snapshot(){
    deadline:state.pitaStartedAt+18000,startedAt:state.pitaStartedAt,
    pressure:0,baseSafe:state.pitaDifficulty==='easy'?20:15,safe:state.pitaDifficulty==='easy'?20:15,chargeLimit:350,mySubmitted:state.mySubmitted,
    submittedCount:state.submittedCount,activeCount:members.length,
-   members:members.map((m,i)=>({...m,difficulty:i===0?state.pitaDifficulty:'normal',lives:stage==='finished'?(i===0?2:0):3,eliminated:stage==='finished'&&i!==0,score:i*70+200,charge:120+i*45,combo:i+2,streak:i%3,perfects:i===0?3:1})),
-   results:['review','finished'].includes(stage)?examples:[],
+   members:members.map((m,i)=>({...m,difficulty:i===0?state.pitaDifficulty:'normal',
+    lives:i===0?state.pitaLife:stage==='finished'?0:3,
+    eliminated:i===0?state.pitaLife<=0:stage==='finished',
+    score:i===0?state.pitaScore:i*70+200,
+    charge:i===0?state.pitaCharge:120+i*45,combo:i===0?state.pitaCombo:i+2,
+    streak:i===0?state.pitaStreak:i%3,perfects:i===0?state.pitaPerfects:1})),
+   demoSample:stage==='review'&&!state.pitaResults,
+   results:['review','finished'].includes(stage)?(state.pitaResults||examples):[],
    finalRound:round>=5,winnerIds:stage==='finished'?[me]:[],
    limits:{perfect:2,excellent:5,great:10}
   };
@@ -222,6 +272,7 @@ function choose(stage){
  state.seen=false;
  if(game==='pitadome-challenge'&&stage==='playing'){
   drawPitaPreviewTarget();state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;
+  state.pitaResults=null;
  }
  if(game==='kyokasho-tower'&&['roundResult','finished'].includes(stage)&&!state.board.length){
   state.board=[{level:0,x:0,subject:'japanese'},{level:0,x:1,subject:'math'},{level:1,x:0,subject:'japanese'}];
@@ -265,11 +316,12 @@ function handle(data){
  }
  if(game==='pitadome-challenge'){
   if(type==='pita-difficulty'&&state.stage==='setup'&&['easy','normal'].includes(data.difficulty))state.pitaDifficulty=data.difficulty;
-  if(type==='pita-begin'){state.stage='playing';drawPitaPreviewTarget();state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS}
-  if(type==='pita-stop'||type==='pita-close'){state.stage='review';state.mySubmitted=true;state.submittedCount=ids.length}
+  if(type==='pita-begin'){state.stage='playing';drawPitaPreviewTarget();state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;state.pitaResults=null}
+  if(type==='pita-stop')previewPitaStop(data.elapsedMs);
+  if(type==='pita-close')previewPitaStop(18000);
   if(type==='pita-next'){
    state.stage=state.round>=5?'finished':'playing';state.round++;
-   if(state.stage==='playing')drawPitaPreviewTarget();
+   if(state.stage==='playing'){drawPitaPreviewTarget();state.pitaResults=null;}
    state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;
    state.mySubmitted=false;state.submittedCount=0;
   }
