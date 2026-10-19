@@ -29,7 +29,7 @@ test('オフライン8作品で途中保存・復元・バック保護・タイ�
   assert.match(html,/resume\.js/,'resume loaded: '+game);
   assert.match(html,/game-back-guard\.js/,'back guard loaded: '+game);
   assert.match(js,/HoukagoResume/,'resume API: '+game);
-  assert.match(js,/\.offer\??\(|\.offer\(/,'resume offer: '+game);
+  assert.match(js,/\.offer(?:\?\.)?\(/,'resume offer: '+game);
   assert.match(js,/pagehide/,'pagehide save: '+game);
   assert.doesNotThrow(()=>new Function(js),'valid JS: '+game);
  }
