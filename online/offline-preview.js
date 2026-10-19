@@ -38,7 +38,7 @@ let state={stage:initial,round:1,mode:'secret',role:'host',question:0,order:[...
  customTopics:[],results:[],answers:0,mySubmitted:false,submittedCount:0,complete:false,
  settings:{difficulty:'normal',roundCount:5,categories:[...categories]},wolfSettings:{
  source:'auto',mode:'reverse',duration:180,categories:['日常','食べ物','学校'],authorId:me},
- pitaSpeed:32,pitaDifficulty:'normal',pitaStartedAt:Date.now()+2300,hand:emptyHand(),board:[],moves:0,selected:-1,
+ pitaSpeed:32,pitaDifficulty:'normal',pitaVariant:'basic',pitaStartedAt:Date.now()+2300,hand:emptyHand(),board:[],moves:0,selected:-1,
  incoming:3,score:0,opponentScore:1280,linkPiece:{a:'blue',b:'red',x:3,y:2,rot:1},
  linkBoard:null,opponentBoard:null};
 let connection=null,openSockets=new Set(),toolbar=null;
@@ -54,7 +54,7 @@ function reset(){
  state.stage=initial;state.round=1;state.question=0;state.order=[...ids];state.shown=[];
  state.seen=false;state.customTopics=[];state.results=[];state.answers=0;state.mySubmitted=false;
  state.submittedCount=0;state.complete=false;state.hand=emptyHand();state.board=[];
- state.moves=0;state.incoming=3;state.score=0;state.opponentScore=1280;state.pitaStartedAt=Date.now()+2300;state.pitaDifficulty='normal';
+ state.moves=0;state.incoming=3;state.score=0;state.opponentScore=1280;state.pitaStartedAt=Date.now()+2300;state.pitaDifficulty='normal';state.pitaVariant='basic';
  state.linkPiece={a:'blue',b:'red',x:3,y:2,rot:1};state.linkBoard=boardRows();
  state.opponentBoard=boardRows(true);state.role=role;state.mode=mode;
 }
@@ -99,6 +99,18 @@ function snapshot(){
   };
  }
  if(game==='pitadome-challenge'){
+  const easy=state.pitaDifficulty==='easy';
+  const profile={minValue:easy?1:0,maxValue:100,refPoint:50,barScale:.86,
+   speed:easy?26:32,movement:'normal',blind:false,blindStart:30,blindEnd:55,gimmicks:['基本']};
+  if(state.pitaVariant==='short'){profile.barScale=.58;profile.gimmicks=['短尺']}
+  if(state.pitaVariant==='long'){profile.barScale=1;profile.gimmicks=['長尺']}
+  if(state.pitaVariant==='blind'){profile.blind=true;profile.gimmicks=['隠し'];profile.blindStart=20;profile.blindEnd=45}
+  if(state.pitaVariant==='fast'){profile.speed=easy?45:118;profile.movement=easy?'normal':'hyper';profile.gimmicks=['高速']}
+  if(state.pitaVariant==='variable'){profile.speed=40;profile.movement='change';profile.gimmicks=['変速']}
+  if(state.pitaVariant==='reverse'){profile.speed=48;profile.movement='reverse';profile.gimmicks=['折り返し']}
+  if(state.pitaVariant==='reference'&&!easy){profile.refPoint=72;profile.gimmicks=['基準変化']}
+  if(state.pitaVariant==='150'&&!easy){profile.maxValue=150;profile.refPoint=75;profile.gimmicks=['上限150']}
+  if(state.pitaVariant==='200'&&!easy){profile.maxValue=200;profile.refPoint=100;profile.gimmicks=['上限200']}
   const examples=members.map((m,i)=>({
    id:m.id,grade:['perfect','excellent','great','miss'][i%4],
    value:[50,51,53,79][i%4],error:[0,1,3,29][i%4],
@@ -108,10 +120,10 @@ function snapshot(){
    lifeBefore:3,lifeAfter:i===3?2:3,eliminated:false,pressure:i%2,timedOut:false
   }));
   room.pita={
-   stage,round,maxRounds:25,target:50,speed:state.pitaSpeed,
+   stage,round,maxRounds:25,target:state.pitaVariant==='150'?85:state.pitaVariant==='200'?120:50,speed:profile.speed,
    difficulty:state.pitaDifficulty,
-   profile:{minValue:state.pitaDifficulty==='easy'?1:0,maxValue:100,refPoint:50,barScale:.86,speed:state.pitaDifficulty==='easy'?26:32,movement:'normal',gimmicks:['基本']},
-   initialMotion:{value:0,dir:1,elapsed:0,legIndex:0,reversePhase:0,reverseBaseDir:1},
+   profile,
+   initialMotion:{value:profile.minValue,dir:1,elapsed:0,legIndex:0,reversePhase:0,reverseBaseDir:1},
    deadline:state.pitaStartedAt+18000,startedAt:state.pitaStartedAt,
    pressure:0,baseSafe:state.pitaDifficulty==='easy'?20:15,safe:state.pitaDifficulty==='easy'?20:15,chargeLimit:350,mySubmitted:state.mySubmitted,
    submittedCount:state.submittedCount,activeCount:members.length,
@@ -323,6 +335,10 @@ function tools(){
  '<div class="hog-demo-label">操作する立場</div>'+
  '<div class="hog-demo-grid two"><button type="button" data-demo-role="host">ホスト</button>'+
  '<button type="button" data-demo-role="guest">参加者</button></div>'+
+ (game==='pitadome-challenge'?'<div class="hog-demo-label">ピタ止め：メーター確認（試遊用）</div>'+
+ '<div class="hog-demo-grid">'+
+ [['basic','基本'],['short','短尺'],['long','長尺'],['blind','隠し'],['fast','高速'],['variable','変速'],['reverse','折り返し'],['reference','基準変更'],['150','上限150'],['200','上限200']]
+  .map(([key,title])=>'<button type="button" data-demo-pita="'+key+'">'+title+'</button>').join('')+'</div>':'')+
  (game==='minna-wa-docchi'?'<div class="hog-demo-label">ゲームモード</div><div class="hog-demo-grid two">'+
  '<button type="button" data-demo-mode="secret">ひみつ投票</button>'+
  '<button type="button" data-demo-mode="battle">よみあいバトル</button></div>':'')+
@@ -336,6 +352,7 @@ function tools(){
   if(b.dataset.demoStage){choose(b.dataset.demoStage);el.querySelector('details').open=false}
   else if(b.dataset.demoRole){state.role=b.dataset.demoRole;emit()}
   else if(b.dataset.demoMode){state.mode=b.dataset.demoMode;choose('setup')}
+  else if(b.dataset.demoPita){state.pitaVariant=b.dataset.demoPita;state.pitaStartedAt=Date.now()+2300;choose('playing');el.querySelector('details').open=false}
   else if(b.hasAttribute('data-demo-reset')){reset();emit()}
  });
  updateTools();
@@ -351,6 +368,7 @@ function updateTools(){
  toolbar.querySelectorAll('[data-demo-role]').forEach(b=>{
   b.classList.toggle('selected',b.dataset.demoRole===state.role);
  });
+ toolbar.querySelectorAll('[data-demo-pita]').forEach(b=>b.classList.toggle('selected',b.dataset.demoPita===state.pitaVariant));
  toolbar.querySelectorAll('[data-demo-mode]').forEach(b=>{
   b.classList.toggle('selected',b.dataset.demoMode===state.mode);
  });
