@@ -268,6 +268,7 @@ function connect(){
   if(msg.type==='error'){notice(msg.error||'通信を確認してね');return}
   if(msg.type!=='room'&&msg.type!=='welcome')return;
   room=msg.room;
+   window.dispatchEvent(new CustomEvent('houkago-online-room-state',{detail:room}));
   if(room.phase!=='pita'){lobby();return}
   render();
  };
