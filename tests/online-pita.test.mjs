@@ -66,7 +66,7 @@ test('参加者それぞれが通常／かんたんを選択でき、150・200�
  assert.equal(R.roundProfile(5,'normal',()=>0.4).barScale,.58);
  assert.equal(R.roundProfile(11,'normal',()=>0.4).blind,true);
  assert.equal(R.roundProfile(15,'normal',()=>0.4).movement,'reverse');
- assert.equal(R.roundProfile(9,'easy',()=>0.4).movement,'change');
+ assert.equal(R.roundProfile(7,'easy',()=>0.4).movement,'change');
  assert.equal(R.roundProfile(1,'easy',()=>0.4).minValue,1);
 });
 test('全員の結果は揃うまで非公開。PERFECTは回復・妨害、MISSはライフ減少',()=>{
