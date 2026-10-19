@@ -191,6 +191,12 @@ test('オンラインはオフライン演出を再利用して縦1画面・参�
  assert.ok(css.includes('.meter-labels>.meter-ref'));
  assert.ok(css.includes('#pita-fx .pv-cutin-perfect .pv-cutin-title'));
  assert.ok(css.includes('max-width:600px'));
+ // Visual regression guard: not giant original cut-ins, not overly small previous ones.
+ assert.match(css,/pv-cutin-countdown \.pv-cutin-title\{\s*font-size:clamp\(104px,30vw,188px\)/);
+ assert.match(css,/pv-cutin-start \.pv-cutin-title\{\s*font-size:clamp\(50px,15\.5vw,112px\)/);
+ assert.match(css,/pv-cutin-perfect \.pv-cutin-title\{\s*font-size:clamp\(40px,11\.2vw,86px\)/);
+ assert.match(css,/@media\(max-width:360px\)/);
+
  assert.ok(!js.includes("subtitle:cue.kind==='countdown'?'READY':''"));
  assert.ok(lobby.includes("type:'pita-start'"));
  assert.ok(lobby.includes("room.phase==='pita'"));
