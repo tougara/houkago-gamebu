@@ -117,7 +117,7 @@ function results(d){
  (self?'<div class="tiny-stats"><span>目標 <strong>'+d.target+'</strong></span><span>STOP <strong>'+(self.value??'—')+'</strong></span>'+
  '<span>誤差 <strong>'+(self.error??'—')+'</strong></span><span>＋<strong>'+self.points+'</strong>点</span></div>':'')+
  '<div class="fx-note">'+esc(hint)+'</div></div>'+
- '<div class="review-title">全員の判定結果 <small>('+sorted.length+'人)</small></div>'+
+ '<div class="review-title">全員の判定結果 <small>('+sorted.length+'人)</small>'+(d.demoSample?' <small>サンプル表示</small>':'')+'</div>'+
  '<div class="results-list">'+sorted.map(row=>{
   const m=person(row.id);
   const grade=grades[row.grade]||'MISS!';
