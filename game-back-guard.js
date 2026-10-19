@@ -8,7 +8,11 @@
   const ROOT='/games/';
   const path=location.pathname;
   const after=path.split('/').filter(Boolean);
-  const gameId=after[0]==='games'?after[1]:null;
+  // Standalone 2-player pages have their own save slots, separate from solo games.
+  const gameId=after[0]!=='games'?null:
+    after[2]==='versus'&&after[1]==='pitadome-challenge'?'pitadome-versus':
+    after[2]==='versus'&&after[1]==='link-burst'&&after[3]==='play.html'?'link-burst-versus':
+    after[1];
   const defaultExit=path.startsWith('/online/')?'/online/':ROOT;
   const guardFlag='__houkagoBackGuard';
   let manualActive=null,modal=null,leaving=false;
