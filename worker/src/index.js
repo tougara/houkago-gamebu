@@ -503,6 +503,16 @@ export class OnlineRoom{
       for(const member of this.room.members)member.ready=false;
       await this.saveAndBroadcast();return;
     }
+    // Every online game accepts the same host-only safe return-to-lobby action.
+    // Do not touch memberships: guests can remain in the room and ready up again.
+    if(data.type==='room-stop'){
+      if(id!==this.room.hostId)return;
+      this.stopLinkLoop();
+      for(const phase of ['secret','nise','wolf','pita','meter','tower','link'])
+        this.room[phase]=null;
+      for(const member of this.room.members)member.ready=false;
+      await this.saveAndBroadcast();return;
+    }
     if(data.type==='remove'){
       if(id!==this.room.hostId||data.memberId===id||typeof data.memberId!=='string')return;
       return this.removeMember(data.memberId);
