@@ -166,17 +166,31 @@ function initClock(d){
  simMs=0;motion=d.initialMotion?{...d.initialMotion}:null;
  if(!motion&&R&&d.profile)motion=R.initialMotion(d.profile,()=>0);
 }
+// オフライン2Pの3・2・1（各1120ms）とSTART（1500ms）をそのまま再現。
+function countdownCue(remaining,timing){
+ const step=timing.countdown,start=timing.start;
+ if(remaining>start+2*step)return {kind:'countdown',title:'3',duration:remaining-(start+2*step)};
+ if(remaining>start+step)return {kind:'countdown',title:'2',duration:remaining-(start+step)};
+ if(remaining>start)return {kind:'countdown',title:'1',duration:remaining-start};
+ if(remaining>0)return {kind:'start',title:'START！',duration:remaining};
+ return null;
+}
 function tick(){
  const d=g();if(!d||d.stage!=='playing'||d.mySubmitted||myRow(d)?.eliminated||submitting){frame=0;return}
  let elapsed=Math.round(performance.now()-origin);
  const p=d.profile;
  const cursor=$('meterCursor'),counter=$('time-left');
  if(elapsed<0){
-  if(counter)counter.textContent='開始まで '+Math.ceil(-elapsed/1000);
+  const remaining=-elapsed;
+  const cue=countdownCue(remaining,FX?.TIMING||{countdown:1120,start:1500});
+  if(counter)counter.textContent=cue?.kind==='start'?'START！':'開始まで '+Math.ceil(remaining/1000)+'秒';
   if(cursor)cursor.style.left='0%';
-  const countdown=Math.ceil(-elapsed/1000);
-  if(countdown>=1&&countdown<=3)showFx('countdown:'+d.round+':'+countdown,{kind:'countdown',title:countdown.toString(),subtitle:'READY'},Math.min(650,Math.max(320,-elapsed%1000)));
+  if(cue)showFx('countdown:'+d.round+':'+cue.title,
+   {kind:cue.kind,title:cue.title,subtitle:cue.kind==='countdown'?'READY':''},
+   Math.max(100,Math.ceil(cue.duration)));
  }else{
+  // START！のカットインを残さず、バーが動き始めた瞬間に消す。
+  if(fxKey==='countdown:'+d.round+':START！'){clearFx();fxKey='started:'+d.round}
   if(p&&motion&&R){
    const targetStep=Math.floor(Math.min(18000,elapsed)/20)*20;
    while(simMs<targetStep){motion=R.advanceMotion(motion,.02,p);simMs+=20}
