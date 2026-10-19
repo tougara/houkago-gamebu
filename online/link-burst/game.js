@@ -217,7 +217,7 @@ function connect(){
   if(msg.type==='error'){notice(msg.error||'接続エラー');return}
   if(msg.type!=='welcome'&&msg.type!=='room')return;
   room=msg.room;
-   window.dispatchEvent(new CustomEvent('houkago-online-room-state',{detail:room}));
+   window.dispatchEvent?.(new CustomEvent('houkago-online-room-state',{detail:room}));
   if(room.phase!=='link'){lobby();return}
   render();
  };
