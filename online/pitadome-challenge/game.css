@@ -111,3 +111,42 @@ button:focus-visible,a:focus-visible{outline:3px solid #ffe392;outline-offset:2p
 @media(max-height:525px){.meter-shell{height:57px}.meter-container{min-height:60px}.meter-track{top:13px}.meter-cursor{top:1px;height:36px}.meter-labels{top:40px}.meter-labels>.meter-ref:before{top:-10px;height:7px}.blind-zone{top:11px;height:19px}.difficulty-option{min-height:62px}.game-brand{height:28px}.top-nav{min-height:27px}.pita-online .hk-online-link{padding:3px 7px}.aim{gap:2px}.aim .target-number{font-size:clamp(48px,13dvh,72px)}.meter-container{min-height:47px}.play-arena .arena-head{font-size:10px}.pita-stop{height:55px;font-size:28px}.member-rail{min-height:26px}.stage-hud{min-height:24px;padding:3px 7px}}
 @media(min-width:680px){.pita-online{max-width:860px}.play-arena{max-width:750px;width:100%;margin:0 auto}.pita-stop{max-width:680px;margin:auto}}
 @media(prefers-reduced-motion:reduce){.champ-screen:before,.champ-screen:after,.champ-particles i,.champ-title,.champ-crown{animation:none}}
+
+/* Online-specific adaptation of offline KO cut-ins:
+   keep the original animation but make words fit even a narrow phone viewport. */
+.pita-online #pita-fx .pv-cutin-content{
+ width:calc(100vw - 34px);max-width:600px;min-width:0;
+ gap:clamp(4px,1dvh,9px);padding:0 4px;
+}
+.pita-online #pita-fx .pv-cutin-title{
+ display:block;max-width:100%;font-size:clamp(30px,8.2vw,72px);
+ line-height:1.06;letter-spacing:0;white-space:nowrap;
+ overflow:visible;overflow-wrap:normal;text-align:center;
+}
+.pita-online #pita-fx .pv-cutin-countdown .pv-cutin-title{
+ font-size:clamp(70px,20vw,132px);
+}
+.pita-online #pita-fx .pv-cutin-start .pv-cutin-title{
+ font-size:clamp(36px,10vw,82px);
+}
+.pita-online #pita-fx .pv-cutin-judge .pv-cutin-title{
+ font-size:clamp(30px,8.2vw,72px);
+}
+.pita-online #pita-fx .pv-cutin-perfect .pv-cutin-title{
+ font-size:clamp(32px,9vw,78px);
+}
+.pita-online #pita-fx .pv-cutin-win .pv-cutin-title{
+ font-size:clamp(32px,9vw,80px);
+}
+.pita-online #pita-fx .pv-cutin-subtitle{
+ font-size:clamp(12px,3.2vw,20px);
+ max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.25;
+}
+.pita-online #pita-fx .pv-cutin-kicker,.pita-online #pita-fx .pv-cutin-crown{
+ font-size:clamp(10px,2.8vw,18px);letter-spacing:.06em;
+}
+@media(max-width:360px){
+ .pita-online #pita-fx .pv-cutin-title{font-size:clamp(26px,8vw,40px)}
+ .pita-online #pita-fx .pv-cutin-perfect .pv-cutin-title{font-size:clamp(29px,8.5vw,44px)}
+ .pita-online #pita-fx .pv-cutin-start .pv-cutin-title{font-size:clamp(34px,10vw,48px)}
+}
