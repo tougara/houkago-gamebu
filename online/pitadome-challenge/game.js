@@ -45,20 +45,23 @@ function gauge(d){
  return '<div class="gauge"><span>回復ゲージ</span><span class="gauge-track"><i style="width:'+Math.min(100,100*charge/limit)+'%"></i></span>'+
  '<b>'+charge+' / '+limit+'</b></div>';
 }
-function stageName(d){return 'LEVEL '+Math.ceil(d.round)+' ・ '+esc((d.profile?.gimmicks||['基本']).join(' / '))}
+function stageName(d){return 'LEVEL '+Math.ceil(d.round)+' ・ '+(d.difficulty==='easy'?'かんたん':'通常')+' ・ '+esc((d.profile?.gimmicks||['基本']).join(' / '))}
 function playArena(d){
  const p=d.profile||{minValue:0,maxValue:100,barScale:.86,gimmicks:['基本']};
- const targetPct=Math.max(0,Math.min(100,(d.target-p.minValue)/(p.maxValue-p.minValue)*100));
- const safePct=(d.safe??10)/(p.maxValue-p.minValue)*100;
- const labels=p.refPoint??50;
+ const range=p.maxValue-p.minValue;
+ const refPct=Math.max(0,Math.min(100,((p.refPoint??50)-p.minValue)/range*100));
+ const tickLabels=d.difficulty==='easy'
+  ?Array.from({length:10},(_,i)=>{const v=(i+1)*10;return '<span class="meter-tick" style="left:'+((v-p.minValue)/range*100)+'%">'+v+'</span>'}).join('')
+  :'<span class="meter-start">'+p.minValue+'</span><span class="meter-ref" style="left:'+refPct+'%">'+p.refPoint+'</span><span class="meter-end">'+p.maxValue+'</span>';
+ const blind=p.blind?'<span class="blind-zone" style="left:'+p.blindStart+'%;width:'+(p.blindEnd-p.blindStart)+'%"></span>':'';
  return '<section class="card play-arena" aria-label="自分のピタ止めゲーム盤面">'+
  '<div class="arena-head"><span>'+stageName(d)+'</span><b>合格 ±'+(d.safe??10)+(d.pressure?' / 妨害 '+d.pressure:'')+'</b></div>'+
  '<div class="aim"><small>この数字をねらえ！</small><div class="target-number">'+d.target+'</div>'+
  '<span class="aim-label">目標にぴったり止めよう</span></div>'+
  '<div class="meter-container"><div class="meter-shell" style="width:'+Math.round((p.barScale||.86)*100)+'%">'+
- '<div class="meter-track"></div><div class="safe-range" style="left:'+Math.max(0,targetPct-safePct)+'%;width:'+Math.min(100-Math.max(0,targetPct-safePct),safePct*2)+'%"></div>'+
- '<div class="target-cursor" style="left:'+targetPct+'%"></div><div class="meter-cursor" id="meterCursor"></div>'+
- '</div><div class="meter-labels"><span>'+p.minValue+'</span><span>'+labels+'</span><span>'+p.maxValue+'</span></div></div>'+
+ '<div class="meter-track"></div>'+blind+
+ '<div class="meter-cursor" id="meterCursor"></div>'+
+ '<div class="meter-labels">'+tickLabels+'</div></div></div>'+
  '<div class="arena-footer"><span id="meter-tip">連続成功でCOMBO！</span><b id="time-left">残り 18.0秒</b></div>'+
  '</section>';
 }
@@ -66,8 +69,12 @@ function setup(d){
  return '<div class="stage-screen setup-view">'+
  '<section class="card setup-hero"><h1>ONLINE KO SURVIVAL</h1>'+
  '<p>オフライン2人対戦の仕組みで、2〜10人が同時にチャレンジ！ 最後の1人を目指せ。</p></section>'+
- '<section class="card setup-rules"><ul>'+
- '<li>全員同じ目標・動きのメーター。<strong>STOPを押して判定！</strong></li>'+
+ '<section class="card setup-rules"><div class="difficulty-panel"><strong>自分のむずかしさを選ぼう</strong>'+
+ '<p>2人対戦と同じく、参加者ごとに通常／かんたんを選べるよ。自分のバーと目標で挑戦する。</p>'+
+ '<div class="difficulty-grid"><button type="button" class="difficulty-option'+((myRow(d)?.difficulty||'normal')==='normal'?' selected':'')+'" data-difficulty="normal" aria-pressed="'+((myRow(d)?.difficulty||'normal')==='normal')+'"><b>通常</b><small>基準・速度・150／200などの変化あり</small></button>'+
+ '<button type="button" class="difficulty-option easy'+(myRow(d)?.difficulty==='easy'?' selected':'')+'" data-difficulty="easy" aria-pressed="'+(myRow(d)?.difficulty==='easy')+'"><b>かんたん</b><small>目盛り10刻み／ゆっくり／隠しも有利に</small></button></div>'+
+ '<p class="difficulty-caption">今回の選択：'+d.members.map(m=>esc(m.icon+' '+m.name+'（'+(m.difficulty==='easy'?'かんたん':'通常')+'）')).join(' ・ ')+'</p></div><ul>'+
+ '<li>全員同時に挑戦。<strong>自分のモードのバーと目標でSTOP！</strong></li>'+
  '<li>オフライン2人対戦と同じ判定：<strong>誤差0はPERFECT</strong>、誤差1はEXCELLENT、誤差2〜3はGREAT。</li>'+
  '<li>PERFECTまたは<strong>GREAT以上の3連続</strong>でライフ回復と次ラウンドの妨害が自動発動。</li>'+
  '<li>高得点で<strong>回復ゲージ</strong>が満タンになるとライフを回復。</li>'+
@@ -174,7 +181,7 @@ function tick(){
    const targetStep=Math.floor(Math.min(18000,elapsed)/20)*20;
    while(simMs<targetStep){motion=R.advanceMotion(motion,.02,p);simMs+=20}
    const value=Math.max(0,Math.min(100,(motion.value-p.minValue)/(p.maxValue-p.minValue)*100));
-   if(cursor)cursor.style.left=value+'%';
+   if(cursor){cursor.style.left=value+'%';cursor.classList.toggle('blind',Boolean(p.blind&&value>=p.blindStart&&value<=p.blindEnd))}
   }
   if(counter)counter.textContent='残り '+time(Math.max(0,18000-elapsed)/1000)+'秒';
   const close=document.querySelector('[data-action="close"]');
@@ -185,7 +192,7 @@ function tick(){
 }
 function render(){
  const d=g();if(!d){stopFrame();renderKey='';$('game-root').innerHTML='<section class="card">ロビーへ戻ります…</section>';return}
- const key=d.stage+':'+d.round+':'+d.startedAt+':'+d.mySubmitted+':'+(myRow(d)?.eliminated||false);
+ const key=d.stage+':'+d.round+':'+d.startedAt+':'+d.mySubmitted+':'+(myRow(d)?.eliminated||false)+':'+(d.stage==='setup'?d.members.map(m=>m.difficulty).join('-'):'');
  if(key===renderKey&&d.stage==='playing'){
   $('round-progress')?.replaceChildren(document.createTextNode(d.submittedCount+' / '+d.activeCount+'人 STOP完了'));
   return;
@@ -220,6 +227,10 @@ $('game-root').addEventListener('pointerdown',e=>{
  e.preventDefault();stopRound();
 });
 $('game-root').addEventListener('click',e=>{
+ const difficulty=e.target.closest('[data-difficulty]');
+ if(difficulty&&g()?.stage==='setup'){
+  send({type:'pita-difficulty',difficulty:difficulty.dataset.difficulty});return;
+ }
  const button=e.target.closest('[data-action]');if(!button)return;
  const act=button.dataset.action,d=g();if(!d)return;
  if(act==='stop'){stopRound();return}
