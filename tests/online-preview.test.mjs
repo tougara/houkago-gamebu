@@ -147,3 +147,24 @@ test('ピタ止めのオフライン試遊で通常・かんたん、オフラ�
  const script=text('offline-preview.js');
  assert.ok(script.includes('data-demo-pita'));
 });
+
+test('ピタ止め試遊もオフラインと同じカウントダウンで毎ラウンド目標を変える',()=>{
+ const d=build('pitadome-challenge').HoukagoOfflinePreview;
+ d.handle({type:'pita-begin'});
+ const before=d.snapshot().pita;
+ assert.ok(Math.abs(before.startedAt-Date.now()-4860)<200);
+ const first=before.target;
+ d.handle({type:'pita-stop',elapsedMs:1000});
+ d.handle({type:'pita-next'});
+ const after=d.snapshot().pita;
+ assert.notEqual(after.target,first);
+ assert.ok(Math.abs(after.startedAt-Date.now()-4860)<200);
+ assert.equal(d.choosePitaVariant('150'),true);
+ assert.ok(d.snapshot().pita.target>=12&&d.snapshot().pita.target<=138);
+ assert.equal(d.choosePitaVariant('200'),true);
+ assert.ok(d.snapshot().pita.target>=16&&d.snapshot().pita.target<=184);
+ d.choose('setup');
+ d.handle({type:'pita-difficulty',difficulty:'easy'});
+ d.choose('playing');
+ assert.ok(d.snapshot().pita.target>=1&&d.snapshot().pita.target<=100);
+});
