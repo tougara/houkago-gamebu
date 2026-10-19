@@ -8,11 +8,12 @@ import {createPita,pitaAction,pitaView,pitaPosition,pitaGrade,pitaLimits,pitaMot
 if(!globalThis.crypto)globalThis.crypto=webcrypto;
 const fixture=(n=3)=>{const room={hostId:'p0',members:Array.from({length:n},(_,i)=>({id:'p'+i,name:'人'+i,icon:'🐶'}))};room.pita=createPita(room);return room};
 const action=(r,id,type,extra={})=>pitaAction(r,id,{type,...extra});
-function timeFor(g,predicate){
- let m={...g.initialMotion};
+function timeFor(g,predicate,id='p0'){
+ const profile=g.profiles?.[id]||g.profile,motion=g.motions?.[id]||g.initialMotion,target=g.targets?.[id]??g.target;
+ let m={...motion};
  for(let ms=20;ms<18000;ms+=20){
-  m=R.advanceMotion(m,.02,g.profile);
-  if(ms>=100&&predicate(Math.abs(Math.round(m.value)-g.target),Math.round(m.value)))return ms;
+  m=R.advanceMotion(m,.02,profile);
+  if(ms>=100&&predicate(Math.abs(Math.round(m.value)-target),Math.round(m.value)))return ms;
  }
  throw Error('no stop found');
 }
@@ -36,19 +37,47 @@ test('オンラインKOはオフライン2人対戦と同じ判定・動き・�
  assert.equal(Math.round(pitaMotionAt(r.pita.profile,r.pita.initialMotion,t)),r.pita.target);
  for(let i=0;i<10;i++){
   assert.equal(pitaView(r,'p'+i).safe,15);
-  assert.equal(pitaView(r,'p'+i).target,r.pita.target);
+  assert.equal(pitaView(r,'p'+i).target,r.pita.targets['p'+i]);
   assert.equal(pitaView(r,'p'+i).chargeLimit,350);
  }
 });
+test('参加者それぞれが通常／かんたんを選択でき、150・200・隠し・短尺・折り返しはオフライン2人対戦と同じ設定',()=>{
+ const r=fixture(3),g=r.pita;
+ assert.equal(action(r,'p0','pita-difficulty',{difficulty:'hard'}),false);
+ assert.equal(action(r,'p1','pita-difficulty',{difficulty:'easy'}),true);
+ assert.equal(action(r,'p2','pita-difficulty',{difficulty:'normal'}),false);
+ assert.equal(pitaView(r,'p1').members.find(x=>x.id==='p1').difficulty,'easy');
+ assert.equal(pitaView(r,'p0').members.find(x=>x.id==='p1').difficulty,'easy');
+ action(r,'p0','pita-begin');
+ assert.equal(g.difficulties.p1,'easy');
+ const easy=pitaView(r,'p1'),normal=pitaView(r,'p0');
+ assert.equal(easy.profile.minValue,1);
+ assert.equal(easy.profile.maxValue,100);
+ assert.equal(normal.profile.minValue,0);
+ assert.equal(normal.profile.refPoint,50);
+ assert.equal(easy.profile.speed,R.roundProfile(1,'easy',()=>0.4).speed);
+ assert.equal(normal.profile.speed,R.roundProfile(1,'normal',()=>0.4).speed);
+ assert.equal(easy.safe,20);assert.equal(normal.safe,15);
+ assert.equal(action(r,'p1','pita-difficulty',{difficulty:'normal'}),false);
+ assert.notDeepEqual(g.profiles.p0,g.profiles.p1);
+ // 段階ごとのギミック・数値範囲の仕様を原版から流用。
+ assert.equal(R.roundProfile(13,'normal',()=>0.4).maxValue,150);
+ assert.equal(R.roundProfile(19,'normal',()=>0.4).maxValue,200);
+ assert.equal(R.roundProfile(5,'normal',()=>0.4).barScale,.58);
+ assert.equal(R.roundProfile(11,'normal',()=>0.4).blind,true);
+ assert.equal(R.roundProfile(15,'normal',()=>0.4).movement,'reverse');
+ assert.equal(R.roundProfile(9,'easy',()=>0.4).movement,'change');
+ assert.equal(R.roundProfile(1,'easy',()=>0.4).minValue,1);
+});
 test('全員の結果は揃うまで非公開。PERFECTは回復・妨害、MISSはライフ減少',()=>{
  const r=fixture(),g=r.pita;action(r,'p0','pita-begin');
- const perfect=timeFor(g,e=>e===0),miss=timeFor(g,e=>e>16);
+ const perfect=timeFor(g,e=>e===0),miss=timeFor(g,e=>e>16,'p1'),perfect2=timeFor(g,e=>e===0,'p2');
  assert.equal(action(r,'p0','pita-stop',{elapsedMs:perfect}),true);
  assert.equal(action(r,'p0','pita-stop',{elapsedMs:perfect}),false);
  assert.deepEqual(pitaView(r,'p1').results,[]);
  assert.equal(pitaView(r,'p1').submittedCount,1);
  assert.equal(action(r,'p1','pita-stop',{elapsedMs:miss}),true);
- assert.equal(action(r,'p2','pita-stop',{elapsedMs:perfect}),true);
+ assert.equal(action(r,'p2','pita-stop',{elapsedMs:perfect2}),true);
  assert.equal(g.stage,'review');assert.equal(g.results.length,3);
  assert.equal(g.results.find(v=>v.id==='p0').grade,'perfect');
  assert.equal(g.results.find(v=>v.id==='p0').special,true);
@@ -65,7 +94,7 @@ test('全員の結果は揃うまで非公開。PERFECTは回復・妨害、MISS
 test('GREAT以上3連続はSPECIAL、350点でゲージが回復になる',()=>{
  const r=fixture(2),g=r.pita;action(r,'p0','pita-begin');
  const great=timeFor(g,e=>e>=1&&e<=3);
- const miss=timeFor(g,e=>e>16);
+ const miss=timeFor(g,e=>e>16,'p1');
  // 前回までGREAT系2連続・回復ゲージは満タン直前
  g.streaks.p0=2;g.charges.p0=349;g.lives.p0=1;
  action(r,'p0','pita-stop',{elapsedMs:great});
@@ -111,6 +140,13 @@ test('オンラインはオフライン演出を再利用して縦1画面・参�
  assert.ok(css.includes('champ-particles'));assert.ok(css.includes('.pita-stop'));
  assert.ok(js.includes('FX.cutinHtml'));
  assert.ok(js.includes('回復ゲージ'));assert.ok(js.includes('GREAT'));
+ assert.ok(js.includes("data-difficulty=\"easy\""));
+ assert.ok(js.includes('blind-zone'));assert.ok(js.includes('meter-tick'));
+ assert.ok(!js.includes('target-cursor'));assert.ok(!js.includes('safe-range'));
+ assert.ok(css.includes('#c7d7e7,#f2d58f,#c7d7e7'));
+ assert.ok(!css.includes('#6e243c,#c15561'));
+ assert.ok(css.includes('.meter-cursor.blind'));
+ assert.ok(css.includes('.meter-labels>.meter-ref'));
  assert.ok(lobby.includes("type:'pita-start'"));
  assert.ok(lobby.includes("room.phase==='pita'"));
 });
