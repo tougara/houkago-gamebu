@@ -116,3 +116,34 @@ test('リンクバースト：2人・盤面13x7・NEXT・操作ボタン確認�
  assert.equal(view.self.piece.x,oldX-1);
  assert.equal(view.stage,'playing');
 });
+
+test('ピタ止めのオフライン試遊で通常・かんたん、オフライン版10種類のメーター変化を比較できる',()=>{
+ const demo=build('pitadome-challenge').HoukagoOfflinePreview;
+ assert.equal(demo.snapshot().pita.difficulty,'normal');
+ demo.handle({type:'pita-difficulty',difficulty:'easy'});
+ assert.equal(demo.snapshot().pita.difficulty,'easy');
+ assert.equal(demo.snapshot().pita.profile.minValue,1);
+ demo.handle({type:'pita-difficulty',difficulty:'normal'});
+ const cases={
+  basic:p=>p.maxValue===100&&p.refPoint===50,
+  short:p=>p.barScale===.58,
+  long:p=>p.barScale===1,
+  blind:p=>p.blind===true,
+  fast:p=>p.speed>=118,
+  variable:p=>p.movement==='change',
+  reverse:p=>p.movement==='reverse',
+  reference:p=>p.refPoint===72,
+  '150':p=>p.maxValue===150,
+  '200':p=>p.maxValue===200
+ };
+ for(const [key,expected] of Object.entries(cases)){
+  assert.equal(demo.choosePitaVariant(key),true);
+  const p=demo.snapshot().pita;
+  assert.equal(p.stage,'playing');
+  assert.ok(expected(p.profile),key);
+  assert.equal(p.speed,p.profile.speed);
+ }
+ assert.equal(demo.choosePitaVariant('invalid'),false);
+ const script=text('offline-preview.js');
+ assert.ok(script.includes('data-demo-pita'));
+});
