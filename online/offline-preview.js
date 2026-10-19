@@ -33,12 +33,23 @@ const initial=Object.keys(labels[game])[0];
 const categories=['学校','日常','食べ物','遊び','もしも','趣味','家族','おでかけ'];
 const subjects=['japanese','math','science','social','english'];
 const emptyHand=()=>({japanese:2,math:3,science:2,social:2,english:3});
+const PITA_PREVIEW_PREP_MS=3*1120+1500; // オフライン2Pの3・2・1・START
+function drawPitaPreviewTarget(){
+ const easy=state.pitaDifficulty==='easy';
+ const max=easy?100:state.pitaVariant==='150'?150:state.pitaVariant==='200'?200:100;
+ const margin=Math.max(10,Math.round(max*.08));
+ const lo=easy?1:margin,hi=easy?100:max-margin;
+ const previous=state.pitaTarget;
+ const avoid=Number.isInteger(previous)&&previous>=lo&&previous<=hi&&hi>lo;
+ const drawn=lo+Math.floor(Math.random()*(hi-lo+1-(avoid?1:0)));
+ state.pitaTarget=avoid&&drawn>=previous?drawn+1:drawn;
+}
 let state={stage:initial,round:1,mode:'secret',role:'host',question:0,order:[...ids],
  shown:[],seen:false,topic:{category:'日常',q:'休みの日にしたいことは？',low:'まったくしたくない',high:'毎日でもしたい'},
  customTopics:[],results:[],answers:0,mySubmitted:false,submittedCount:0,complete:false,
  settings:{difficulty:'normal',roundCount:5,categories:[...categories]},wolfSettings:{
  source:'auto',mode:'reverse',duration:180,categories:['日常','食べ物','学校'],authorId:me},
- pitaSpeed:32,pitaDifficulty:'normal',pitaVariant:'basic',pitaStartedAt:Date.now()+2300,hand:emptyHand(),board:[],moves:0,selected:-1,
+ pitaSpeed:32,pitaDifficulty:'normal',pitaVariant:'basic',pitaTarget:50,pitaStartedAt:Date.now()+PITA_PREVIEW_PREP_MS,hand:emptyHand(),board:[],moves:0,selected:-1,
  incoming:3,score:0,opponentScore:1280,linkPiece:{a:'blue',b:'red',x:3,y:2,rot:1},
  linkBoard:null,opponentBoard:null};
 let connection=null,openSockets=new Set(),toolbar=null;
@@ -54,7 +65,7 @@ function reset(){
  state.stage=initial;state.round=1;state.question=0;state.order=[...ids];state.shown=[];
  state.seen=false;state.customTopics=[];state.results=[];state.answers=0;state.mySubmitted=false;
  state.submittedCount=0;state.complete=false;state.hand=emptyHand();state.board=[];
- state.moves=0;state.incoming=3;state.score=0;state.opponentScore=1280;state.pitaStartedAt=Date.now()+2300;state.pitaDifficulty='normal';state.pitaVariant='basic';
+ state.moves=0;state.incoming=3;state.score=0;state.opponentScore=1280;state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;state.pitaDifficulty='normal';state.pitaVariant='basic';state.pitaTarget=50;
  state.linkPiece={a:'blue',b:'red',x:3,y:2,rot:1};state.linkBoard=boardRows();
  state.opponentBoard=boardRows(true);state.role=role;state.mode=mode;
 }
@@ -113,14 +124,14 @@ function snapshot(){
   if(state.pitaVariant==='200'&&!easy){profile.maxValue=200;profile.refPoint=100;profile.gimmicks=['上限200']}
   const examples=members.map((m,i)=>({
    id:m.id,grade:['perfect','excellent','great','miss'][i%4],
-   value:[50,51,53,79][i%4],error:[0,1,3,29][i%4],
+   value:[state.pitaTarget,state.pitaTarget+1,state.pitaTarget+3,state.pitaTarget+29][i%4],error:[0,1,3,29][i%4],
    points:[100,95,80,0][i%4],combo:[2,3,1,0][i%4],
    special:i===0,triple:false,chargeReward:0,charge:120+i*45,
    heal:i===0?1:0,attack:i===0?2:0,damage:i===3?1:0,safe:15,
    lifeBefore:3,lifeAfter:i===3?2:3,eliminated:false,pressure:i%2,timedOut:false
   }));
   room.pita={
-   stage,round,maxRounds:25,target:state.pitaVariant==='150'?85:state.pitaVariant==='200'?120:50,speed:profile.speed,
+   stage,round,maxRounds:25,target:state.pitaTarget,speed:profile.speed,
    difficulty:state.pitaDifficulty,
    profile,
    initialMotion:{value:profile.minValue,dir:1,elapsed:0,legIndex:0,reversePhase:0,reverseBaseDir:1},
@@ -203,12 +214,15 @@ function emit(){
 }
 function choosePitaVariant(variant){
  if(game!=='pitadome-challenge'||!['basic','short','long','blind','fast','variable','reverse','reference','150','200'].includes(variant))return false;
- state.pitaVariant=variant;state.pitaStartedAt=Date.now()+2300;choose('playing');return true;
+ state.pitaVariant=variant;choose('playing');return true;
 }
 function choose(stage){
  if(!Object.hasOwn(labels[game],stage))return;
  state.stage=stage;state.mySubmitted=false;state.submittedCount=0;state.shown=[];
  state.seen=false;
+ if(game==='pitadome-challenge'&&stage==='playing'){
+  drawPitaPreviewTarget();state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;
+ }
  if(game==='kyokasho-tower'&&['roundResult','finished'].includes(stage)&&!state.board.length){
   state.board=[{level:0,x:0,subject:'japanese'},{level:0,x:1,subject:'math'},{level:1,x:0,subject:'japanese'}];
  }
@@ -251,11 +265,12 @@ function handle(data){
  }
  if(game==='pitadome-challenge'){
   if(type==='pita-difficulty'&&state.stage==='setup'&&['easy','normal'].includes(data.difficulty))state.pitaDifficulty=data.difficulty;
-  if(type==='pita-begin'){state.stage='playing';state.pitaStartedAt=Date.now()+2300}
+  if(type==='pita-begin'){state.stage='playing';drawPitaPreviewTarget();state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS}
   if(type==='pita-stop'||type==='pita-close'){state.stage='review';state.mySubmitted=true;state.submittedCount=ids.length}
   if(type==='pita-next'){
    state.stage=state.round>=5?'finished':'playing';state.round++;
-   state.pitaStartedAt=Date.now()+2300;
+   if(state.stage==='playing')drawPitaPreviewTarget();
+   state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;
    state.mySubmitted=false;state.submittedCount=0;
   }
  }
