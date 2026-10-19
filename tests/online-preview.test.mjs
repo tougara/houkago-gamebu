@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {PitadomeVersusRules as PitadomeRules} from '../worker/src/pita-versus-rules.js';
 const root=new URL('../online/',import.meta.url);
 const text=path=>readFileSync(new URL(path,root),'utf8');
 const slugs=[
@@ -11,7 +12,7 @@ const slugs=[
 const simulator=text('offline-preview.js');
 const escapeObject=obj=>JSON.parse(JSON.stringify(obj));
 function build(slug,search='?testPlay=1'){
- const window={WebSocket:class OriginalWebSocket{}};
+ const window={WebSocket:class OriginalWebSocket{},PitadomeVersusRules:PitadomeRules};
  const document={readyState:'loading',addEventListener(){}};
  const location={pathname:'/online/'+slug+'/',search};
  const ctx={window,document,location,URLSearchParams,queueMicrotask,Date,Math,Object,Array,JSON,Number,Set};
@@ -167,4 +168,49 @@ test('ピタ止め試遊もオフラインと同じカウントダウンで毎�
  d.handle({type:'pita-difficulty',difficulty:'easy'});
  d.choose('playing');
  assert.ok(d.snapshot().pita.target>=1&&d.snapshot().pita.target<=100);
+});
+
+test('試遊のSTOPはバーの実位置で採点し、外したSTOPをPERFECTにしない',()=>{
+ const demo=build('pitadome-challenge').HoukagoOfflinePreview;
+ demo.handle({type:'pita-begin'});
+ const start=demo.snapshot().pita;
+ let motion={...start.initialMotion},t=0,found=0,expected=null;
+ for(let ms=20;ms<=18000;ms+=20){
+  motion=PitadomeRules.advanceMotion(motion,.02,start.profile);
+  if(ms>=100&&Math.abs(Math.round(motion.value)-start.target)>start.safe+10){
+   found=ms;expected=PitadomeRules.evaluateStop(motion.value,start.target,{},start.safe);break;
+  }
+ }
+ assert.ok(found,'must find a time clearly away from the target');
+ assert.equal(expected.tier,'miss');
+ demo.handle({type:'pita-stop',elapsedMs:found});
+ const result=demo.snapshot().pita;
+ const mine=result.results.find(x=>x.id===demo.session.id);
+ assert.equal(result.stage,'review');
+ assert.equal(mine.grade,'miss');
+ assert.equal(mine.value,expected.value);
+ assert.equal(mine.error,expected.error);
+ assert.equal(mine.points,expected.points);
+ assert.equal(mine.lifeAfter,2);
+ assert.equal(result.members[0].lives,2);
+ assert.equal(result.demoSample,false);
+ assert.equal(demo.snapshot().pita.results[0].grade,'miss','result must be stable after render');
+});
+test('試遊のPERFECTは数値が本当に一致したSTOPでだけ出る',()=>{
+ const demo=build('pitadome-challenge').HoukagoOfflinePreview;
+ demo.choose('playing');
+ const view=demo.snapshot().pita;
+ let motion={...view.initialMotion},perfectTime=null;
+ for(let ms=20;ms<18000;ms+=20){
+  motion=PitadomeRules.advanceMotion(motion,.02,view.profile);
+  if(ms>=100&&Math.round(motion.value)===view.target){perfectTime=ms;break}
+ }
+ assert.ok(perfectTime,'normal movement must eventually cross target');
+ demo.handle({type:'pita-stop',elapsedMs:perfectTime});
+ const result=demo.snapshot().pita.results[0];
+ assert.equal(result.error,0);
+ assert.equal(result.grade,'perfect');
+ assert.equal(result.value,view.target);
+ assert.equal(result.special,true);
+ assert.equal(result.attack,2);
 });
