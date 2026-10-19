@@ -78,6 +78,9 @@ test('セーブを管理・削除する入口はホームと確認画面の両�
  assert.match(js,/全ゲームの続きのセーブを削除/);
  assert.match(css,/hg-resume-manager-item/);
  assert.match(home,/mountLatest/);
+ const list=get('games/index.html');
+ assert.match(list,/id="openSavedGames"/);
+ assert.match(list,/HoukagoResume\?\.manage/);
 });
 test('オンライン7作品すべてに退室ボタンと両方の戻る導線がある',()=>{
  const control=get('online/exit-control.js'),css=get('online/exit-control.css');
