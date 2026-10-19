@@ -417,7 +417,7 @@ function connect(){
   let packet;try{packet=JSON.parse(e.data)}catch{return}
   if(['welcome','room'].includes(packet.type)){
    room=packet.room;
-   window.dispatchEvent(new CustomEvent('houkago-online-room-state',{detail:room}));
+   window.dispatchEvent?.(new CustomEvent('houkago-online-room-state',{detail:room}));
    if(room.phase!=='nise'){moveLobby();return}
    render();
   }else if(packet.type==='left'){sessionStorage.removeItem(STORE);stopped=true;location.replace(exitToList?'../../games/':'../');}
