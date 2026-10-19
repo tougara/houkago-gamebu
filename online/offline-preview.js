@@ -201,6 +201,10 @@ function emit(){
  queueMicrotask(()=>{if(connection?.readyState===1)connection.onmessage?.({data:payload})});
  updateTools();
 }
+function choosePitaVariant(variant){
+ if(game!=='pitadome-challenge'||!['basic','short','long','blind','fast','variable','reverse','reference','150','200'].includes(variant))return false;
+ state.pitaVariant=variant;state.pitaStartedAt=Date.now()+2300;choose('playing');return true;
+}
 function choose(stage){
  if(!Object.hasOwn(labels[game],stage))return;
  state.stage=stage;state.mySubmitted=false;state.submittedCount=0;state.shown=[];
@@ -352,7 +356,7 @@ function tools(){
   if(b.dataset.demoStage){choose(b.dataset.demoStage);el.querySelector('details').open=false}
   else if(b.dataset.demoRole){state.role=b.dataset.demoRole;emit()}
   else if(b.dataset.demoMode){state.mode=b.dataset.demoMode;choose('setup')}
-  else if(b.dataset.demoPita){state.pitaVariant=b.dataset.demoPita;state.pitaStartedAt=Date.now()+2300;choose('playing');el.querySelector('details').open=false}
+  else if(b.dataset.demoPita){choosePitaVariant(b.dataset.demoPita);el.querySelector('details').open=false}
   else if(b.hasAttribute('data-demo-reset')){reset();emit()}
  });
  updateTools();
@@ -376,5 +380,5 @@ function updateTools(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tools,{once:true});
 else tools();
 window.HoukagoOfflinePreview=Object.freeze({session,get stage(){return state.stage},
- get game(){return game},snapshot,choose,handle,labels:labels[game]});
+ get game(){return game},snapshot,choose,choosePitaVariant,handle,labels:labels[game]});
 })();
