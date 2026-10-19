@@ -15,6 +15,7 @@ on:
       - 'tests/online-tower.test.mjs'
       - 'tests/online-link.test.mjs'
       - 'tests/online-preview.test.mjs'
+      - 'tests/game-exit-resume.test.mjs'
       - '.github/workflows/deploy-online-worker.yml'
 
 permissions:
