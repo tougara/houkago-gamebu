@@ -14,10 +14,18 @@ export function pitaMotionAt(profile,initial,elapsedMs){
  return m.value;
 }
 function beginRound(g){
- const previous=g.target;
- const profile=R.roundProfile((g.round*2)+1,'normal',randFloat,previous);
- g.round++;g.profile=profile;g.target=profile.target;g.speed=profile.speed;
- g.initialMotion=R.initialMotion(profile,randFloat);
+ const previous=g.targets||{};
+ const nextRound=g.round+1;
+ g.profiles={};g.motions={};g.targets={};
+ for(const id of g.memberIds){
+  const difficulty=g.difficulties[id]==='easy'?'easy':'normal';
+  const p=R.roundProfile((nextRound*2)-1,difficulty,randFloat,previous[id]??null);
+  g.profiles[id]=p;g.motions[id]=R.initialMotion(p,randFloat);g.targets[id]=p.target;
+ }
+ g.round=nextRound;
+ // 旧コードからの参照用。プレイヤーには必ず個別プロフィールを送る。
+ const first=g.memberIds[0];g.profile=g.profiles[first];g.initialMotion=g.motions[first];
+ g.target=g.targets[first];g.speed=g.profile.speed;
  g.pressure=Object.fromEntries(g.memberIds.map(id=>[id,Math.min(3,g.nextPressure[id]||0)]));
  g.nextPressure={};g.submissions={};g.results=[];
  g.startedAt=Date.now()+2300;g.deadline=g.startedAt+18000;
@@ -28,6 +36,8 @@ export function createPita(room){
  if(ids.length<2||ids.length>10)throw Error('2〜10人で遊んでね');
  return {stage:'setup',memberIds:ids,round:0,settings:{startingLives:3},
   lives:Object.fromEntries(ids.map(id=>[id,3])),
+  difficulties:Object.fromEntries(ids.map(id=>[id,'normal'])),
+  profiles:{},motions:{},targets:{},
   totals:Object.fromEntries(ids.map(id=>[id,{error:0,perfects:0,score:0}])),
   combos:Object.fromEntries(ids.map(id=>[id,0])),
   streaks:Object.fromEntries(ids.map(id=>[id,0])),
@@ -41,16 +51,20 @@ export function createPita(room){
 }
 function resolve(room){
  const g=room.pita,ids=active(g),rows=[];
- const base=R.baseSafe((g.round-1)*2+1,'normal');
  for(const id of ids){
   const s=g.submissions[id],time=s?.elapsedMs??18000;
-  const value=s?pitaMotionAt(g.profile,g.initialMotion,time):null;
-  const pressure=g.pressure[id]||0,safe=R.effectiveSafe(base,pressure);
+  const profile=g.profiles?.[id]||g.profile;
+  const motion=g.motions?.[id]||g.initialMotion;
+  const target=g.targets?.[id]??g.target;
+  const value=s?pitaMotionAt(profile,motion,time):null;
+  const difficulty=g.difficulties[id]==='easy'?'easy':'normal';
+  const baseSafe=R.baseSafe((g.round*2)-1,difficulty);
+  const pressure=g.pressure[id]||0,safe=R.effectiveSafe(baseSafe,pressure);
   const previous={combo:g.combos[id],greatStreak:g.streaks[id],
    charge:g.charges[id],quiet:g.quiet[id],mushinActive:g.mushin[id],
    score:g.totals[id].score};
   const evalResult=s&&time<18000?
-    R.evaluateStop(value,g.target,previous,safe):null;
+    R.evaluateStop(value,target,previous,safe):null;
   const attempt=evalResult||{
    value:null,error:null,tier:'miss',perfect:false,combo:0,greatStreak:0,
    points:0,special:false,triple:false,charge:g.charges[id],quiet:g.quiet[id],
@@ -65,7 +79,7 @@ function resolve(room){
   g.totals[id].score=attempt.total;
   g.totals[id].error+=(attempt.error??100);
   if(attempt.perfect)g.totals[id].perfects++;
-  rows.push({id,value:attempt.value,error:attempt.error,grade:attempt.tier,
+  rows.push({id,target,difficulty,value:attempt.value,error:attempt.error,grade:attempt.tier,
    points:attempt.points,combo:attempt.combo,streak:attempt.greatStreak,
    special:attempt.special,triple:attempt.triple,
    chargeReward:attempt.chargeReward,charge:attempt.charge,
@@ -94,6 +108,12 @@ export function pitaAction(room,id,data){
  // 旧オンライン進行中ルームは新しいオフライン準拠の盤面情報を持たない。
  // 自動移行で得点を壊さず、ホストの「対戦終了」操作を受けられる状態を保つ。
  if(g.stage!=='setup'&&!g.profile)return false;
+ if(data.type==='pita-difficulty'){
+  if(g.stage!=='setup'||!['normal','easy'].includes(data.difficulty))return false;
+  if(!g.difficulties)g.difficulties=Object.fromEntries(g.memberIds.map(pid=>[pid,'normal']));
+  if(g.difficulties[id]===data.difficulty)return false;
+  g.difficulties[id]=data.difficulty;return true;
+ }
  const host=id===room.hostId;
  if(data.type==='pita-begin'){
   if(!host||g.stage!=='setup')return false;beginRound(g);return true;
@@ -121,13 +141,18 @@ export function pitaView(room,id){
  const g=room.pita;if(!g)return null;
  const members=room.members.filter(m=>g.memberIds.includes(m.id)).map(m=>({
   id:m.id,name:m.name,icon:m.icon,lives:g.lives[m.id]??0,
+  difficulty:g.difficulties?.[m.id]||'normal',
   score:g.totals[m.id]?.score||0,charge:g.charges?.[m.id]||0,combo:g.combos?.[m.id]||0,
   streak:g.streaks?.[m.id]||0,perfects:g.totals[m.id]?.perfects||0,
   eliminated:(g.lives[m.id]??0)===0
  }));
- const base=R.baseSafe((g.round-1)*2+1,'normal');
+ const difficulty=g.difficulties?.[id]||'normal';
+ const profile=g.profiles?.[id]||g.profile;
+ const motion=g.motions?.[id]||g.initialMotion;
+ const target=g.targets?.[id]??g.target;
+ const base=R.baseSafe((g.round*2)-1,difficulty);
  return {stage:g.stage,round:g.round,maxRounds:PITA_MAX_ROUNDS,
-  target:g.target,speed:g.speed,profile:g.profile,initialMotion:g.initialMotion,
+  difficulty,target,speed:profile?.speed||g.speed,profile,initialMotion:motion,
   deadline:g.deadline,startedAt:g.startedAt,pressure:g.pressure[id]||0,
   baseSafe:base,safe:R.effectiveSafe(base,g.pressure[id]||0),
   mySubmitted:Object.hasOwn(g.submissions,id),
