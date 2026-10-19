@@ -194,7 +194,7 @@ function choose(stage){
 }
 function handle(data){
  const type=data?.type||'';
- if(type==='leave'||type.endsWith('-stop')||type==='pita-stop-game'||type==='link-stop'||type==='meter-stop'||type==='tower-stop'){
+ if(type==='leave'||(type.endsWith('-stop')&&type!=='pita-stop')||type==='pita-stop-game'||type==='link-stop'||type==='meter-stop'||type==='tower-stop'){
   reset();emit();return;
  }
  if(game==='minna-wa-docchi'){
