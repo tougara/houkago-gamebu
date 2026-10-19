@@ -91,6 +91,9 @@ function resolve(room){
 }
 export function pitaAction(room,id,data){
  const g=room.pita;if(!g||!g.memberIds.includes(id)||typeof data?.type!=='string')return false;
+ // 旧オンライン進行中ルームは新しいオフライン準拠の盤面情報を持たない。
+ // 自動移行で得点を壊さず、ホストの「対戦終了」操作を受けられる状態を保つ。
+ if(g.stage!=='setup'&&!g.profile)return false;
  const host=id===room.hostId;
  if(data.type==='pita-begin'){
   if(!host||g.stage!=='setup')return false;beginRound(g);return true;
@@ -118,8 +121,8 @@ export function pitaView(room,id){
  const g=room.pita;if(!g)return null;
  const members=room.members.filter(m=>g.memberIds.includes(m.id)).map(m=>({
   id:m.id,name:m.name,icon:m.icon,lives:g.lives[m.id]??0,
-  score:g.totals[m.id].score,charge:g.charges[m.id]||0,combo:g.combos[m.id]||0,
-  streak:g.streaks[m.id]||0,perfects:g.totals[m.id].perfects||0,
+  score:g.totals[m.id]?.score||0,charge:g.charges?.[m.id]||0,combo:g.combos?.[m.id]||0,
+  streak:g.streaks?.[m.id]||0,perfects:g.totals[m.id]?.perfects||0,
   eliminated:(g.lives[m.id]??0)===0
  }));
  const base=R.baseSafe((g.round-1)*2+1,'normal');
