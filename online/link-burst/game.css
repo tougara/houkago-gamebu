@@ -52,6 +52,157 @@
 .btn{width:100%;min-height:45px;margin-top:9px;border-radius:11px;border:1px solid #c3d5f2;background:#a9dcff;color:#10264a;font-weight:950}.btn.alt{background:#263c6d;color:#e9f3ff;border-color:#5979b3}.btn.danger{background:#632b48;color:white;border-color:#af4b77}
 .rules{font-size:12px;text-align:left;color:#c7d7f4;line-height:1.75;margin:8px auto;max-width:440px;padding-left:23px}
 .overlay-portrait{display:none}
-@media(orientation:portrait){.overlay-portrait{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#0b1433f5;padding:22px;text-align:center;font-size:24px;font-weight:1000}.overlay-portrait small{display:block;font-size:14px;margin-top:14px;color:#b8d5e9}}
+
 @media(max-height:345px){.topbar{height:22px}.game-root{height:calc(100% - 22px)}.controls{height:63px}.me-stats{width:45px;flex-basis:45px}.me-rail{width:40px;flex-basis:40px}.stat{padding:3px}.stat b{font-size:13px}.pair-box{padding:3px 1px}.side{gap:3px}}
 @media(min-width:850px){.match{grid-template-columns:minmax(0,68fr) minmax(0,32fr)}.controls{height:clamp(78px,20dvh,124px)}}
+
+/* Online LINK BURST: portrait-first SOLO-style controls and multiplayer mini-view.
+   The own 7x13 board keeps its exact aspect ratio at every screen size. */
+html,body{height:100%;overflow:hidden}
+.link-online{
+ --online-opp-width:clamp(83px,25vw,119px);
+ --online-score-width:clamp(37px,11vw,56px);
+ width:min(100%,540px);
+ height:100dvh;min-height:300px;
+ padding:max(4px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right))
+         max(6px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left));
+ background:
+  linear-gradient(180deg,rgba(7,13,33,.53),rgba(6,12,31,.72)),
+  url("../../link_burst_background_vertical.png") center/cover no-repeat,
+  #081229;
+ overflow:hidden;
+}
+.topbar{
+ height:clamp(31px,5.2dvh,41px);gap:4px;
+ font-size:clamp(9px,2.45vw,12px);line-height:1.2;
+}
+.topbar .back-link{padding:5px 2px;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+.topbar strong{min-width:0;text-align:center;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+.topbar .connection{font-size:clamp(9px,2.25vw,11px);flex:0 0 auto}
+.topbar .hk-exit-button{flex:0 0 auto;min-width:44px;min-height:30px;padding:5px 6px;font-size:10px}
+.game-root{height:calc(100% - clamp(31px,5.2dvh,41px));min-height:0}
+.match{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) var(--online-opp-width);
+ grid-template-rows:minmax(0,1fr) auto;
+ gap:6px 5px;
+ width:100%;height:100%;min-width:0;min-height:0;
+}
+.me-area{display:contents}
+.me-top{
+ grid-column:1;grid-row:1;
+ display:grid;grid-template-columns:var(--online-score-width) minmax(0,1fr);
+ align-items:start;justify-items:stretch;align-content:start;
+ gap:4px;min-width:0;min-height:0;height:100%;overflow:hidden;
+}
+.me-stats{
+ width:100%;min-width:0;max-width:100%;flex:initial;
+ align-self:start;display:flex;flex-direction:column;gap:5px;
+}
+.stat{border-radius:9px;padding:6px 2px;gap:2px}
+.stat small{font-size:clamp(8px,2vw,10px);line-height:1.1;overflow-wrap:anywhere}
+.stat b{font-size:clamp(15px,4.5vw,23px);overflow-wrap:anywhere}
+.me-board-wrap{
+ width:min(100%,36dvh);height:auto;max-width:100%;max-height:none;
+ aspect-ratio:7/13;min-width:0;
+ align-self:start;justify-self:center;
+ padding:3px;border-radius:10px;
+}
+.me-board-wrap .board,.opponent-board .board{
+ grid-template-columns:repeat(7,minmax(0,1fr));
+ grid-template-rows:repeat(13,minmax(0,1fr));
+}
+.me-label{max-width:calc(100% - 10px);overflow:hidden;text-overflow:ellipsis}
+.block{font-size:clamp(7px,2vw,14px)}
+.phase-banner{font-size:clamp(20px,6vw,34px);max-width:95%;overflow-wrap:anywhere;white-space:normal}
+.side{
+ grid-column:2;grid-row:1;align-self:stretch;
+ display:flex;flex-direction:column;gap:5px;
+ min-height:0;min-width:0;
+ padding:0 1px 0 0;
+ overflow-y:auto;overflow-x:hidden;
+ scrollbar-width:none;overscroll-behavior:contain;
+}
+.side::-webkit-scrollbar{display:none}
+.opponent-card{
+ flex:none;
+ border-radius:11px;padding:5px 4px;
+ display:grid;gap:4px;
+}
+.opponent-title{
+ display:flex;flex-direction:column;align-items:center;
+ gap:2px;min-width:0;font-size:clamp(9px,2.5vw,12px);
+ text-align:center;line-height:1.15;
+}
+.opponent-title strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opponent-title span{font-size:clamp(8px,2.1vw,10px)}
+.opponent-board{
+ width:min(100%,92px);height:auto;max-height:none;
+ aspect-ratio:7/13;
+ margin:1px auto;flex:none;padding:2px;
+ border-radius:6px;
+}
+.opponent-board .block{font-size:0;border-width:0;box-shadow:none}
+.side-detail{gap:3px}
+.side-metric{padding:4px 1px;border-radius:7px;min-width:0}
+.side-metric small{font-size:clamp(8px,1.9vw,10px);line-height:1.15}
+.side-metric b{font-size:clamp(13px,3.4vw,18px);line-height:1.15;overflow-wrap:anywhere}
+.side-state{font-size:clamp(9px,2.2vw,11px);min-height:0;line-height:1.35;overflow-wrap:anywhere}
+.me-rail{
+ flex:0 0 auto;min-width:0;max-width:100%;width:100%;
+ display:grid;grid-template-columns:1fr;gap:5px;
+}
+.pair-box{border-radius:9px;padding:5px 2px}
+.pair-box small{font-size:clamp(9px,2.3vw,11px)}
+.pair{margin:4px 0 1px;gap:3px}
+.pair i{width:clamp(17px,5vw,24px);height:clamp(17px,5vw,24px)}
+.jam-pending{border-radius:9px;padding:4px 2px}
+.jam-pending small{font-size:clamp(9px,2.1vw,10px)}
+.jam-pending b{font-size:clamp(15px,4vw,21px)}
+.match-status{flex:none}
+.match-status b{font-size:clamp(10px,2.5vw,13px)!important}
+#match-actions .btn{font-size:clamp(10px,2.5vw,12px);padding:5px 2px;min-height:40px;white-space:normal}
+.controls{
+ grid-column:1/-1;grid-row:2;
+ justify-self:center;align-self:end;
+ width:min(100%,430px);height:clamp(92px,18dvh,132px);
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+ grid-template-rows:1.3fr .7fr;
+ gap:5px;margin:0;padding:5px;
+ flex:none;
+ border-radius:15px;
+}
+.control{font-size:clamp(24px,7vw,37px);border-radius:12px}
+.control[data-key="left"]{grid-column:1/3;grid-row:1}
+.control[data-key="right"]{grid-column:3/5;grid-row:1}
+.control[data-key="rotate"]{grid-column:5/7;grid-row:1/3}
+.control[data-key="down"]{grid-column:2/4;grid-row:2}
+.dialog{padding:8px;min-height:0}
+.dialog-card{max-height:100%;overflow-y:auto;padding:clamp(12px,3.5vw,17px)}
+.dialog-card h1{font-size:clamp(21px,5.3vw,32px)}
+/* In offline testPlay, keep the stage switcher away from the bottom controls. */
+body:has(.link-online) .hog-demo-tools{
+ top:max(47px,env(safe-area-inset-top));bottom:auto;
+ width:min(220px,calc(100vw - 20px));
+}
+@media(max-width:355px){
+ .link-online{--online-opp-width:83px;--online-score-width:36px}
+ .match{column-gap:3px}
+ .me-top{gap:2px}
+ .stat small{font-size:8px}
+ .controls{height:clamp(84px,17dvh,119px);gap:4px}
+ .opponent-card{padding:4px 2px}
+}
+@media(max-height:580px){
+ .link-online{--online-opp-width:clamp(75px,23vw,103px)}
+ .topbar{height:29px}
+ .game-root{height:calc(100% - 29px)}
+ .controls{height:clamp(75px,17dvh,100px)}
+ .me-board-wrap{width:min(100%,33dvh)}
+ .side{gap:3px}
+ .pair-box{padding:3px 2px}
+}
+@media(orientation:landscape) and (max-height:520px){
+ .link-online{width:min(100%,550px)}
+ .me-board-wrap{width:min(100%,32dvh)}
+}
