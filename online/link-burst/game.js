@@ -49,7 +49,7 @@ function dialog(g){
  '<li>同じ色を4個以上そろえて消して連鎖</li>'+
  '<li>連鎖やCOMBOで相手へJAMを送り、届いたJAMは自分の連鎖で相殺</li>'+
  '<li>中央に新しいペアを出せなくなったらKO</li>'+
- '<li>横持ちで、自分の盤面を左・相手の盤面を右上に表示</li></ol>'+
+ '<li>縦持ちで、自分の盤面を大きく・右上に相手のミニ盤面を表示</li></ol>'+
  (host()?'<button class="btn" data-action="begin">3・2・1 スタート</button>':
  '<p>ホストのスタートを待ってね</p>')+
  '<button class="btn alt" data-action="return">ロビーへもどる</button></section></div>';
@@ -57,24 +57,26 @@ function dialog(g){
 }
 function shell(){
  return '<div class="match">'+
- '<section class="me-area" aria-label="自分のゲーム盤面"><div class="me-top">'+
- '<div class="me-stats"><div class="stat"><small>得点</small><b id="self-score">0</b></div>'+
- '<div class="stat"><small>LINK</small><b id="self-link">0</b></div>'+
- '<div class="stat"><small>送信JAM</small><b id="self-jam">0</b></div></div>'+
- '<div class="me-board-wrap"><div class="me-label" id="self-name">自分</div>'+
- '<div class="board" id="self-board"></div><div class="phase-banner" id="phase-banner" hidden></div></div>'+
- '<div class="me-rail"><div class="pair-box"><small>NEXT</small><div class="pair" id="self-next"></div></div>'+
- '<div class="pair-box"><small>NEXT 2</small><div class="pair" id="self-next2"></div></div>'+
- '<div class="jam-pending"><small>受信JAM</small><b id="self-incoming">0</b></div></div></div>'+
- controls()+'</section>'+
- '<aside class="side"><section class="opponent-card"><div class="opponent-title"><strong id="opponent-name">相手</strong><span id="opponent-state">接続中</span></div>'+
- '<div class="opponent-board"><div class="board" id="opponent-board"></div></div>'+
- '<div class="side-detail"><div class="side-metric"><small>相手JAM</small><b id="opponent-incoming">0</b></div>'+
- '<div class="side-metric"><small>相手スコア</small><b id="opponent-score">0</b></div></div>'+
- '<div class="side-state" id="opponent-notice"></div></section>'+
- '<div class="side-metric"><small>対戦ステータス</small><b id="match-state" style="font-size:14px">開始準備</b></div>'+
- '<div class="side-state" id="self-notice"></div>'+
- '<div id="match-actions"></div></aside></div>';
+  '<section class="me-area" aria-label="自分のゲーム盤面"><div class="me-top">'+
+  '<div class="me-stats"><div class="stat"><small>得点</small><b id="self-score">0</b></div>'+
+  '<div class="stat"><small>LINK</small><b id="self-link">0</b></div>'+
+  '<div class="stat"><small>送信JAM</small><b id="self-jam">0</b></div></div>'+
+  '<div class="me-board-wrap"><div class="me-label" id="self-name">自分</div>'+
+  '<div class="board" id="self-board"></div><div class="phase-banner" id="phase-banner" hidden></div></div>'+
+  '</div>'+controls()+'</section>'+
+  '<aside class="side" aria-label="対戦相手とNEXTの情報">'+
+  '<section class="opponent-card"><div class="opponent-title"><strong id="opponent-name">相手</strong><span id="opponent-state">接続中</span></div>'+
+  '<div class="opponent-board"><div class="board" id="opponent-board"></div></div>'+
+  '<div class="side-detail"><div class="side-metric"><small>相手JAM</small><b id="opponent-incoming">0</b></div>'+
+  '<div class="side-metric"><small>相手得点</small><b id="opponent-score">0</b></div></div>'+
+  '<div class="side-state" id="opponent-notice"></div></section>'+
+  '<div class="me-rail" aria-label="自分の次のブロックと受信JAM">'+
+  '<div class="pair-box"><small>NEXT</small><div class="pair" id="self-next"></div></div>'+
+  '<div class="pair-box"><small>NEXT 2</small><div class="pair" id="self-next2"></div></div>'+
+  '<div class="jam-pending"><small>受信JAM</small><b id="self-incoming">0</b></div></div>'+
+  '<div class="side-metric match-status"><small>対戦ステータス</small><b id="match-state">開始準備</b></div>'+
+  '<div class="side-state" id="self-notice"></div>'+
+  '<div id="match-actions"></div></aside></div>';
 }
 function value(id,val){const el=document.getElementById(id);if(el)el.textContent=String(val)}
 function blocks(p){
@@ -231,8 +233,5 @@ function connect(){
  socket.onerror=()=>{};
 }
 document.getElementById('back-lobby')?.addEventListener('click',e=>{if(game()?.stage==='playing'){e.preventDefault();exitGame()}});
-const rotatePrompt=document.createElement('div');
-rotatePrompt.className='overlay-portrait';rotatePrompt.innerHTML='<div>スマホを横向きにしてね<small>リンクバースト！オンラインは横画面対戦だよ</small></div>';
-document.body.append(rotatePrompt);
 connect();
 })();
