@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 import {linkEngine as E} from '../worker/src/link-engine.js';
 import {createLink,linkAction,advanceLink,linkView,interruptLink} from '../worker/src/link-game.js';
 import {OnlineRoom} from '../worker/src/index.js';
@@ -151,6 +152,87 @@ test('Online Link Burst fits the largest 7x13 board under a top score HUD on pho
  assert.ok(html.includes('game.js?v=20261020-layout4'));
  assert.ok(lobby.includes("type:'link-start'"));
  assert.ok(lobby.includes("room.phase==='link'"));
+});
+
+test('landing ghost setting persists and is shared by solo, 2P and online Link Burst',()=>{
+ const settings=readFileSync(new URL('../settings.js',import.meta.url),'utf8');
+ const solo=readFileSync(new URL('../games/link-burst/game.js',import.meta.url),'utf8');
+ const versus=readFileSync(new URL('../games/link-burst/versus/match.js',import.meta.url),'utf8');
+ const online=readFileSync(new URL('../online/link-burst/game.js',import.meta.url),'utf8');
+ const soloHtml=readFileSync(new URL('../games/link-burst/index.html',import.meta.url),'utf8');
+ const versusHtml=readFileSync(new URL('../games/link-burst/versus/play.html',import.meta.url),'utf8');
+ const onlineHtml=readFileSync(new URL('../online/link-burst/index.html',import.meta.url),'utf8');
+ assert.match(settings,/linkBurstGhost:true/);
+ assert.match(settings,/linkBurstGhost:s\.linkBurstGhost!==false/);
+ assert.match(settings,/リンクバースト！着地予測/);
+ assert.match(settings,/data-hg-toggle="linkBurstGhost"/);
+ const saved=new Map(),events=[];
+ const document={
+  readyState:'loading',
+  documentElement:{dataset:{}},
+  addEventListener(){},
+  querySelector(){return null}
+ };
+ const storage={getItem:k=>saved.has(k)?saved.get(k):null,
+  setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)};
+ const window={dispatchEvent:e=>events.push(e.type),addEventListener(){}};
+ const CustomEvent=class{constructor(type){this.type=type}};
+ runInNewContext(settings,{window,document,localStorage:storage,
+  navigator:{},CustomEvent,MutationObserver:class{},confirm:()=>true});
+ const api=window.HoukagoSettings;
+ assert.equal(api.load().linkBurstGhost,true);
+ api.save({linkBurstGhost:false});
+ assert.equal(api.load().linkBurstGhost,false);
+ assert.equal(document.documentElement.dataset.hgLinkBurstGhost,'off');
+ assert.equal(JSON.parse(storage.getItem(api.KEY)).linkBurstGhost,false);
+ api.save({motion:'reduced'});
+ assert.equal(api.load().linkBurstGhost,false,'unrelated settings preserve ghost OFF');
+ api.reset();
+ assert.equal(api.load().linkBurstGhost,true);
+ assert.ok(events.includes('houkago-settings-change'));
+ assert.match(solo,/settingsApi\?\.load\?\.\(\)\.linkBurstGhost===false/);
+ assert.match(solo,/houkago-settings-change/);
+ assert.match(versus,/settingsApi\?\.load\?\.\(\)\.linkBurstGhost===false\?new Map\(\):engine\.ghost\(st\)/);
+ assert.match(versus,/match\.boardSignatures=\['',''\];draw\(true\)/);
+ assert.match(online,/window\.HoukagoSettings\?\.load\?\.\(\)\.linkBurstGhost!==false/);
+ assert.match(online,/houkago-settings-change/);
+ assert.match(soloHtml,/settings\.js\?v=20261020-link-ghost1/);
+ assert.match(versusHtml,/settings\.js\?v=20261020-link-ghost1/);
+ assert.match(onlineHtml,/settings\.js\?v=20261020-link-ghost1/);
+ assert.match(onlineHtml,/data-hg-settings-open/);
+ assert.match(onlineHtml,/settings\.css/);
+});
+test('online win/lose/draw plays KO impact, glows the final board and reveals result actions',()=>{
+ const html=readFileSync(new URL('../online/link-burst/index.html',import.meta.url),'utf8');
+ const game=readFileSync(new URL('../online/link-burst/game.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/link-burst/game.css',import.meta.url),'utf8');
+ assert.doesNotThrow(()=>new Function(game));
+ assert.match(game,/class="link-finale"/);
+ assert.match(game,/class="link-finale-flash"/);
+ assert.match(game,/class="link-finale-ring"/);
+ assert.match(game,/class="link-finale-sparks"/);
+ assert.match(game,/class="link-finale-impact"/);
+ assert.match(game,/function updateFinale\(g\)/);
+ assert.match(game,/g\.stage!=='finished'/);
+ assert.match(game,/const draw=g\.winners\.length===0,won=g\.winners\.includes\(g\.meId\)/);
+ assert.match(game,/value\('finale-headline',draw\?'DRAW':won\?'WIN!':'LOSE\.\.\.'\)/);
+ assert.match(game,/if\(finaleKey===key\)return/);
+ assert.match(game,/finaleTimer=setTimeout/);
+ assert.match(game,/reduced\?350:2100/);
+ assert.match(game,/class="link-final-primary"/);
+ assert.match(game,/data-action="finale-view"/);
+ assert.match(game,/data-action="finale-show"/);
+ assert.match(game,/if\(actions\)actions\.innerHTML='';/);
+ assert.match(css,/\.link-finale\{[\s\S]*?position:fixed;inset:0/);
+ assert.match(css,/\.link-finale-ring\{/);
+ assert.match(css,/\.link-finale-sparks i\{/);
+ assert.match(css,/@keyframes lb-online-final-ko/);
+ assert.match(css,/\.link-finale\[data-result="lose"\] \.link-finale-title strong/);
+ assert.match(css,/\.link-finale\[data-result="draw"\] \.link-finale-title strong/);
+ assert.match(css,/\.link-finale-actions\{/);
+ assert.match(css,/html\[data-hg-motion="reduced"\]/);
+ assert.match(html,/game\.css\?v=20261020-finale1/);
+ assert.match(html,/game\.js\?v=20261020-finale1/);
 });
 test('online room prevents third player, wrong host start, and cleans up after stop',async()=>{
  const state=new Map(),sockets=[];
