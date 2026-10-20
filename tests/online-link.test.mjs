@@ -89,31 +89,63 @@ test('server game outcome keeps current boards; simultaneous knockout produces d
  assert.deepEqual(linkView(t,'p1').winners,['p1']);
  assert.equal(linkView(t,'p0').self.over,true);
 });
-test('browser client syntax and portrait-first solo-controller / tiny opponent layout',()=>{
+test('Online Link Burst adopts exact offline solo visual system on phone, tablet and PC',()=>{
  const game=readFileSync(new URL('../online/link-burst/game.js',import.meta.url),'utf8');
  const css=readFileSync(new URL('../online/link-burst/game.css',import.meta.url),'utf8');
  const html=readFileSync(new URL('../online/link-burst/index.html',import.meta.url),'utf8');
+ const soloCss=readFileSync(new URL('../games/link-burst/game.css',import.meta.url),'utf8');
  const lobby=readFileSync(new URL('../online/lobby.js',import.meta.url),'utf8');
  assert.doesNotThrow(()=>new Function(game));
  assert.ok(game.includes('data-action="begin">対戦開始</button>'));
  assert.ok(game.includes('data-action="resume">対戦再開</button>'));
  assert.ok(!game.includes('3・2・1 スタート'));
  assert.ok(!game.includes('3・2・1 で再開'));
-
- assert.ok(css.includes('.control[data-key="rotate"]{grid-column:5 / 7;grid-row:1 / 3'));
- assert.ok(css.includes('grid-template-rows:1.3fr .7fr'),'solo-style movement control arrangement');
- assert.match(css,/\.match\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) var\(--online-opp-width\)/);
- assert.match(css,/\.me-area\{display:contents\}/);
- assert.match(css,/\.me-top\{[\s\S]*?grid-column:1;grid-row:1/);
- assert.match(css,/\.side\{[\s\S]*?grid-column:2;grid-row:1/);
+ // Own playfield and player controls remain portrait first.
+ assert.match(css,/grid-template-columns:var\(--rail-left\) minmax\(0,1fr\) var\(--rail-right\)/);
+ assert.match(css,/\.me-area,\.me-top\{display:contents\}/);
+ assert.match(css,/\.left-rail\{[\s\S]*?grid-column:1;grid-row:1/);
+ assert.match(css,/\.me-board-wrap\{[\s\S]*?grid-column:2;grid-row:1/);
+ assert.match(css,/\.side\{[\s\S]*?grid-column:3;grid-row:1/);
  assert.match(css,/\.controls\{[\s\S]*?grid-column:1\/-1;grid-row:2/);
  assert.match(css,/\.opponent-board\{[\s\S]*?aspect-ratio:7\/13/);
  assert.match(css,/\.me-board-wrap\{[\s\S]*?aspect-ratio:7\/13/);
  assert.match(css,/background_vertical\.png/);
+ assert.match(css,/@media\(max-width:380px\)/);
+ assert.match(css,/@media\(max-height:520px\)/);
+ assert.match(css,/@media\(min-width:900px\)/);
+ // Offline playfield: subtle transparent cells, 7x13 with solo frame.
+ assert.match(css,/grid-template-columns:repeat\(7,minmax\(0,1fr\)\)/);
+ assert.match(css,/grid-template-rows:repeat\(13,minmax\(0,1fr\)\)/);
+ assert.match(css,/background:rgba\(103,146,204,.095\)/);
+ assert.match(css,/border:2px solid rgba\(126,224,255,.70\)/);
+ assert.match(soloCss,/background:rgba\(103,146,204,.095\)/);
+ assert.match(soloCss,/border:2px solid rgba\(126,224,255,.64\)/);
+ // Original offline console: navy keys, two-button top row, long drop & tall rotate.
+ assert.match(css,/background:linear-gradient\(158deg,#364b70/);
+ assert.match(css,/\.control\[data-key="left"\]\{grid-column:1;grid-row:1\}/);
+ assert.match(css,/\.control\[data-key="right"\]\{grid-column:2;grid-row:1\}/);
+ assert.match(css,/\.control\[data-key="down"\]\{[\s\S]*?grid-column:1\/3;grid-row:2/);
+ assert.match(css,/\.control\[data-key="rotate"\]\{[\s\S]*?grid-column:3;grid-row:1\/3/);
+ for(const label of ['LEFT','RIGHT','DROP','ROTATE'])assert.match(css,new RegExp('content:"'+label+'"'));
+ // NEXT is upper left and vertical, then English-only score labels.
+ for(const label of ['NEXT','NEXT 2','SCORE','MAX LINK','SEND JAM','RECEIVE JAM','BATTLE STATUS'])
+  assert.ok(game.includes(label),label);
+ for(const japanese of ['<small>得点</small>','<small>送信JAM</small>'])
+  assert.ok(!game.includes(japanese));
+ assert.ok(game.indexOf('class="me-rail"')<game.indexOf('class="me-stats"'));
+ assert.ok(game.indexOf('class="me-stats"')<game.indexOf('class="me-board-wrap"'));
+ assert.ok(game.indexOf('class="opponent-board"')<game.indexOf('class="right-summary"'));
+ assert.match(css,/\.pair\{display:flex;flex-direction:column/);
+ assert.match(game,/function pairPiece\(piece\)[\s\S]*symbols=/);
+ // Same full-screen, giant 3-2-1 treatment as offline solo.
+ assert.match(game,/class="lb-countdown-overlay"/);
+ assert.match(css,/\.lb-countdown-overlay\{[\s\S]*?position:fixed;inset:0/);
+ assert.match(css,/font-size:clamp\(104px,32vw,170px\)/);
+ assert.match(soloCss,/font-size:clamp\(104px,32vw,170px\)/);
+ assert.match(game,/g.countdown>500\?String\(Math.max\(1,Math.ceil\(\(g.countdown-500\)\/1000\)\)\):'START!'/);
  assert.doesNotMatch(game,/スマホを横向きにしてね|overlay-portrait/);
- assert.match(game,/縦持ちで、自分の盤面を大きく/);
- assert.ok(game.indexOf('class="opponent-board"')<game.indexOf('class="me-rail"'),
-  'tiny opponent must be above NEXT and received JAM');
+ assert.ok(html.includes('game.css?v=20261020-solo2'));
+ assert.ok(html.includes('game.js?v=20261020-solo2'));
  assert.ok(html.includes('../shared-ui.js'));
  assert.ok(lobby.includes("type:'link-start'"));
  assert.ok(lobby.includes("room.phase==='link'"));
