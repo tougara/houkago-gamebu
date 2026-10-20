@@ -269,3 +269,119 @@ button:focus-visible,a:focus-visible{outline:3px solid #8bdfff;outline-offset:2p
 @media(prefers-reduced-motion:reduce){
  .lb-countdown-number.pulse,.board .block.burst{animation:none!important}
 }
+
+/* Layout V2: top SCORE/MAX LINK/SEND JAM, larger left-field; NEXT above
+   the unchanged opponent thumbnail. Shared offline-solo control console stays. */
+.link-online{
+ --rail-right:clamp(86px,25vw,146px);
+ --topbar-h:clamp(31px,5.5dvh,43px);
+ --hud-h:clamp(52px,7.7dvh,71px);
+ width:min(100%,840px);
+}
+.topbar{height:var(--topbar-h)}
+.game-root{height:calc(100% - var(--topbar-h))}
+.match{
+ grid-template-columns:minmax(0,1fr) var(--rail-right);
+ grid-template-rows:minmax(0,1fr) auto;
+ gap:clamp(3px,1vw,8px);
+}
+.me-area{
+ display:block;grid-column:1;grid-row:1;
+ width:100%;height:100%;min-width:0;min-height:0;
+ overflow:hidden;
+}
+.me-top{
+ display:grid;grid-template-columns:minmax(0,1fr);
+ grid-template-rows:var(--hud-h) minmax(0,1fr);
+ gap:clamp(6px,1.2dvh,12px);
+ width:100%;height:100%;min-width:0;min-height:0;
+ align-items:start;justify-items:start;
+}
+.me-stats{
+ grid-column:1;grid-row:1;
+ width:100%;max-width:490px;height:var(--hud-h);
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:clamp(3px,.8vw,8px);
+ min-height:0;
+}
+.me-stats .stat{
+ min-height:0;height:100%;padding:4px 2px;gap:4px;
+ border-radius:clamp(9px,2vw,13px);
+}
+.me-stats .stat small{
+ font-size:clamp(8px,2.2vw,12px);
+ line-height:1.15;letter-spacing:.015em;
+}
+.me-stats .stat b{font-size:clamp(18px,5vw,29px);line-height:1.06}
+.me-board-wrap{
+ grid-column:1;grid-row:2;justify-self:start;align-self:start;
+ width:min(100%,265px);max-width:100%;max-height:100%;
+ margin:0;
+ aspect-ratio:7/13;
+ padding:clamp(3px,.8vw,6px);
+ border-radius:clamp(12px,3vw,18px);
+}
+.side{
+ grid-column:2;grid-row:1;
+ gap:clamp(4px,.7dvh,8px);
+ min-width:0;min-height:0;
+}
+.side .right-next{
+ flex:0 0 auto;
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ align-items:stretch;gap:3px;
+}
+.side .right-next .pair-box{
+ padding:5px 1px 5px;gap:3px;
+ min-width:0;border-radius:9px;
+}
+.side .right-next .pair-box small{font-size:clamp(7px,1.65vw,9px);letter-spacing:0}
+.side .right-next .pair{gap:3px;margin:0 auto}
+.side .right-next .pair i{
+ width:clamp(17px,2.8vw,29px);
+ height:clamp(17px,2.8vw,29px);
+ font-size:clamp(10px,1.7vw,15px);
+ border-radius:5px;
+}
+.opponent-card{flex:0 0 auto;padding:5px 3px;gap:4px}
+.opponent-board{width:min(100%,116px)}
+.right-summary{gap:4px}
+.jam-pending,.match-status{min-height:clamp(42px,6.5dvh,62px);padding:5px 2px}
+.side-detail{gap:3px}
+.side-metric{padding:4px 1px}
+.controls{grid-column:1/-1;grid-row:2}
+@media(max-width:380px){
+ .link-online{--rail-right:86px;--hud-h:52px}
+ .side .right-next .pair i{width:18px;height:18px}
+ .side .right-next .pair-box{padding:4px 0}
+ .me-stats .stat small{font-size:8px}
+ .opponent-board{width:min(100%,94px)}
+}
+@media(max-height:650px){
+ .link-online{--hud-h:49px}
+ .me-stats .stat{padding:3px 1px}
+ .side .right-next .pair-box{padding:3px 1px}
+ .side .right-next .pair i{width:18px;height:18px}
+ .side .right-next{gap:2px}
+ .opponent-board{width:min(100%,75px)}
+ .jam-pending,.match-status{min-height:40px;padding:3px 1px}
+ .side{gap:3px}
+}
+@media(max-height:520px){
+ .link-online{--topbar-h:28px;--hud-h:43px;--rail-right:clamp(75px,20vw,100px)}
+ .me-top{gap:4px}
+ .me-stats .stat small{font-size:7px}
+ .me-stats .stat b{font-size:16px}
+ .side .right-next .pair i{width:16px;height:16px}
+ .opponent-board{width:min(100%,61px)}
+ .opponent-card{padding:3px 2px}
+ .side-detail .side-metric small{font-size:7px}
+ .right-summary .side-metric small,.right-summary .jam-pending small{font-size:7px}
+}
+@media(min-width:800px){
+ .link-online{--rail-right:clamp(134px,18vw,165px)}
+ .me-stats{max-width:540px}
+ .opponent-board{width:min(100%,135px)}
+ .side .right-next .pair i{width:32px;height:32px;font-size:17px}
+ .side .right-next .pair-box small{font-size:11px}
+}
