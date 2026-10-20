@@ -95,7 +95,7 @@ function shell(){
  '<div class="link-finale-scores"><span>YOUR SCORE <b id="finale-self-score">0</b></span>'+
  '<span>RIVAL SCORE <b id="finale-opponent-score">0</b></span></div>'+
  '<div id="finale-buttons" class="link-finale-buttons"></div>'+
- '</div></div></div>';
+ '</div><button type="button" class="link-finale-reopen" data-action="finale-show">結果を見る</button></div></div>';
 }
 function value(id,val){const el=document.getElementById(id);if(el)el.textContent=String(val)}
 function blocks(p,withGhost=false){
