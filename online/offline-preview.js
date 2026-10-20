@@ -21,6 +21,8 @@ const baseMembers=[
 const members=game==='link-burst'?baseMembers.slice(0,2):game==='kyokasho-tower'?baseMembers.slice(0,3):baseMembers;
 const ids=members.map(m=>m.id);
 const me=ids[0],other=ids[1];
+// The Link Burst offline-VS engine is loaded only on its game page.
+const linkSimulator=game==='link-burst'?window.LinkBurstPreviewSimulator:null;
 const labels={
  'minna-wa-docchi':{setup:'モード・設定',preview:'お題確認',voting:'回答・投票',allAnswered:'全員回答完了',result:'結果発表',finished:'終了'},
  'word-wolf':{setup:'ゲーム設定',customInput:'お題入力',reveal:'秘密のお題',discussion:'話し合い',voting:'投票',voteComplete:'投票完了',runoffReady:'決選投票準備',reverse:'逆転チャンス',result:'結果発表'},
@@ -239,20 +241,10 @@ function snapshot(){
   };
  }
  if(game==='link-burst'){
-  const self={
-   board:[...state.linkBoard],piece:stage==='playing'?{...state.linkPiece}:null,
-   next:[{a:'yellow',b:'green'},{a:'red',b:'blue'}],
-   phase:stage==='playing'?'falling':'interturn',score:state.score,pieces:8,maxLink:3,
-   combo:0,link:3,burst:[],incoming:state.incoming,sent:4,countered:2,
-   notice:'',over:stage==='finished'&&state.role==='guest',elapsed:40
-  };
-  const opponent={...self,board:[...state.opponentBoard],piece:stage==='playing'?{a:'yellow',b:'green',x:3,y:3,rot:1}:null,
-   score:state.opponentScore,incoming:4,sent:6,notice:'',over:stage==='finished'&&state.role!=='guest'};
-  room.link={
-   stage,members:room.members,meId:me,opponentId:other,
-   countdown:stage==='countdown'?2500:0,sequence:state.moves,
-   self,opponent,winners:stage==='finished'?[me]:[],reason:'サンプル対戦終了'
-  };
+  const sim=linkSimulator?.snapshot();
+  if(sim)room.link={...sim,members:room.members,meId:me,opponentId:other};
+  else room.link={stage:'setup',members:room.members,meId:me,opponentId:other,
+   countdown:0,self:null,opponent:null,winners:[],reason:'オフライン対戦エンジンを読み込めません'};
  }
  return room;
 }
@@ -269,6 +261,10 @@ function choosePitaVariant(variant){
 function choose(stage){
  if(!Object.hasOwn(labels[game],stage))return;
  state.stage=stage;state.mySubmitted=false;state.submittedCount=0;state.shown=[];
+ if(game==='link-burst'&&linkSimulator){
+  linkSimulator.force(stage);
+  state.stage=linkSimulator.stage;
+ }
  state.seen=false;
  if(game==='pitadome-challenge'&&stage==='playing'){
   drawPitaPreviewTarget();state.pitaStartedAt=Date.now()+PITA_PREVIEW_PREP_MS;
@@ -357,16 +353,11 @@ function handle(data){
    else{state.round++;state.board=[];state.moves=0;state.hand=emptyHand();state.stage='roundIntro'}
   }
  }
- if(game==='link-burst'){
-  if(type==='link-begin'||type==='link-resume')state.stage='countdown';
-  if(type==='link-control'&&state.stage==='playing'&&data.pressed){
-   const p=state.linkPiece;
-   if(data.action==='left')p.x=Math.max(0,p.x-1);
-   if(data.action==='right')p.x=Math.min(6,p.x+1);
-   if(data.action==='rotate')p.rot=(p.rot+1)%4;
-   if(data.action==='down')p.y=Math.min(10,p.y+1);
-   state.moves++;state.score+=10;
-  }
+ if(game==='link-burst'&&linkSimulator){
+  if(type==='link-begin')linkSimulator.start();
+  if(type==='link-resume')linkSimulator.resume();
+  if(type==='link-control')linkSimulator.input(data.action,data.pressed);
+  state.stage=linkSimulator.stage;
  }
  emit();
 }
@@ -394,6 +385,23 @@ class DemoWebSocket{
  }
 }
 window.WebSocket=DemoWebSocket;
+// The real offline VS engine supplies local falling, rotation, clearing and JAM.
+// Rendering is still the actual online game.js; only its transport is mocked.
+if(linkSimulator&&typeof window.setInterval==='function'){
+ window.setInterval(()=>{
+  if(!linkSimulator.running||document.hidden)return;
+  linkSimulator.advance(100);
+  state.stage=linkSimulator.stage;
+  emit();
+ },100);
+}
+function stepLink(ms=50){
+ if(!linkSimulator)return false;
+ const changed=linkSimulator.advance(ms);
+ state.stage=linkSimulator.stage;
+ emit();
+ return changed;
+}
 function tools(){
  if(toolbar)return;
  const el=document.createElement('aside');el.className='hog-demo-tools';
@@ -424,7 +432,7 @@ function tools(){
   else if(b.dataset.demoRole){state.role=b.dataset.demoRole;emit()}
   else if(b.dataset.demoMode){state.mode=b.dataset.demoMode;choose('setup')}
   else if(b.dataset.demoPita){choosePitaVariant(b.dataset.demoPita);el.querySelector('details').open=false}
-  else if(b.hasAttribute('data-demo-reset')){reset();emit()}
+  else if(b.hasAttribute('data-demo-reset')){reset();linkSimulator?.force('setup');emit()}
  });
  updateTools();
 }
@@ -447,5 +455,5 @@ function updateTools(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tools,{once:true});
 else tools();
 window.HoukagoOfflinePreview=Object.freeze({session,get stage(){return state.stage},
- get game(){return game},snapshot,choose,choosePitaVariant,handle,labels:labels[game]});
+ get game(){return game},snapshot,choose,choosePitaVariant,stepLink,handle,labels:labels[game]});
 })();
