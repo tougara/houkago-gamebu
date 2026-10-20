@@ -385,3 +385,19 @@ button:focus-visible,a:focus-visible{outline:3px solid #8bdfff;outline-offset:2p
  .side .right-next .pair i{width:32px;height:32px;font-size:17px}
  .side .right-next .pair-box small{font-size:11px}
 }
+
+/* Trial-mode toolbar must never cover LEFT / RIGHT / DROP / ROTATE. */
+body:has(.link-online) .hog-demo-tools{
+ top:auto!important;
+ bottom:calc(clamp(112px,18dvh,148px) + max(6px,env(safe-area-inset-bottom)))!important;
+ width:min(180px,calc(100vw - 16px));
+ right:max(7px,env(safe-area-inset-right));
+}
+body:has(.link-online) .hog-demo-details:not([open]) summary{
+ padding:5px 7px;min-height:36px;
+}
+body:has(.link-online) .hog-demo-details:not([open]) summary strong{font-size:11px}
+body:has(.link-online) .hog-demo-details:not([open]) #hog-demo-status{font-size:9px}
+@media(max-height:520px){
+ body:has(.link-online) .hog-demo-tools{bottom:calc(99px + env(safe-area-inset-bottom))!important}
+}
