@@ -114,6 +114,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #8bdfff;outline-offset:2p
 .board .block.yellow{background:linear-gradient(145deg,#fff07a,#f2ae1d)}
 .board .block.green{background:linear-gradient(145deg,#7bea9a,#21a65c)}
 .board .block.jam{background:linear-gradient(145deg,#b8c6e1,#62799f)}
+.board .block.ghost{opacity:.24;filter:saturate(.6);box-shadow:none;border-color:rgba(255,255,255,.28)}
 .board .block.active{filter:saturate(1.16) brightness(1.10);box-shadow:inset 0 2px 7px rgba(255,255,255,.42),0 0 11px rgba(116,223,255,.50)}
 .board .block.burst{animation:lb-cell-burst .38s ease-in-out infinite alternate}
 @keyframes lb-cell-burst{to{filter:brightness(1.7);transform:scale(1.08)}}
