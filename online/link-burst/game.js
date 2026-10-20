@@ -56,18 +56,20 @@ function dialog(g){
  return null;
 }
 function shell(){
+ // Solo gameplay takes the entire left area; NEXT is compact above opponent.
+ // Keep every existing ID so networking, trial mode and render logic are unchanged.
  return '<div class="match">'+
  '<section class="me-area" aria-label="自分の盤面"><div class="me-top">'+
- '<aside class="left-rail" aria-label="NEXTとスコア">'+
- '<div class="me-rail"><div class="pair-box"><small>NEXT</small><div class="pair" id="self-next"></div></div>'+
- '<div class="pair-box"><small>NEXT 2</small><div class="pair" id="self-next2"></div></div></div>'+
- '<div class="me-stats">'+
+ '<div class="me-stats" aria-label="自分の対戦成績">'+
  '<div class="stat"><small>SCORE</small><b id="self-score">0</b></div>'+
  '<div class="stat link"><small>MAX LINK</small><b id="self-link">0</b></div>'+
- '<div class="stat"><small>SEND JAM</small><b id="self-jam">0</b></div></div></aside>'+
+ '<div class="stat"><small>SEND JAM</small><b id="self-jam">0</b></div></div>'+
  '<div class="me-board-wrap"><div class="me-label" id="self-name">自分</div>'+
  '<div class="board" id="self-board"></div><div class="phase-banner" id="phase-banner" hidden></div></div></section>'+
- '<aside class="side" aria-label="相手ミニ盤面と対戦情報">'+
+ '<aside class="side" aria-label="次のブロック・相手の対戦状況">'+
+ '<div class="me-rail right-next" aria-label="次に落ちるブロック">'+
+ '<div class="pair-box"><small>NEXT</small><div class="pair" id="self-next"></div></div>'+
+ '<div class="pair-box"><small>NEXT 2</small><div class="pair" id="self-next2"></div></div></div>'+
  '<section class="opponent-card"><div class="opponent-title"><strong id="opponent-name">相手</strong><span id="opponent-state">接続中</span></div>'+
  '<div class="opponent-board"><div class="board" id="opponent-board"></div></div>'+
  '<div class="side-detail"><div class="side-metric"><small>相手JAM</small><b id="opponent-incoming">0</b></div>'+
