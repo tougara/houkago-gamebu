@@ -47,40 +47,50 @@ function scores(g){
 }
 function board(g,editable=false){
  const data=new Map(g.board.map(p=>[p.level+','+p.x,p.subject]));
- const b=g.bottom;
- const options=editable&&selected?(g.choices?.[selected]||[]):[];
+ const b=g.bottom,options=editable&&selected?(g.choices?.[selected]||[]):[];
  const legal=new Set(options.map(p=>p.level+','+p.x));
- const isAvailable=options.length>0;
- let rows='';
  const maxLevel=Math.max(0,b.count-1);
+ // Every tier shares the same horizontal origin, even with new left/right
+ // candidates. The upper book is half a tile between its two supporters.
+ const extend=b.count>0&&b.count<8&&editable&&selected;
+ const origin=b.count?b.min-(extend?1:0):0;
+ const width=b.count?b.count+(extend?2:0):1;
+ const rows=[];
  for(let level=maxLevel;level>=0;level--){
   let min=b.count?b.min:0,max=b.count?b.max-level:0;
-  if(level===0&&b.count<8&&b.count){
-   if(editable&&selected){min--;max++}
-  }
-  let row='';
+  if(level===0&&extend){min--;max++}
+  if(max<min)continue;
+  let cells='';
   for(let x=min;x<=max;x++){
-   const key=level+','+x;
-   const sub=data.get(key),valid=legal.has(key),isPreview=pending&&pending.level===level&&pending.x===x;
-   if(sub)row+='<div class="tower-cell book"><img src="'+lookup[sub].image+'" alt="'+lookup[sub].name+'"></div>';
-   else if(isPreview&&selected)row+='<div class="tower-cell"><div class="slot preview"><img src="'+lookup[selected].image+'" alt="'+lookup[selected].name+'"></div></div>';
-   else if(valid)row+='<div class="tower-cell"><button class="slot" data-level="'+level+'" data-x="'+x+'" aria-label="'+lookup[selected].name+'をここに置く">＋</button></div>';
-   else row+='<div class="tower-cell"><div class="tower-empty"></div></div>';
+   const key=level+','+x,sub=data.get(key),valid=legal.has(key);
+   const isPreview=!!pending&&pending.level===level&&pending.x===x;
+   let element='<span class="tower-empty" aria-hidden="true"></span>';
+   if(sub){
+    element='<img class="tower-book" src="'+lookup[sub].image+'" alt="'+lookup[sub].name+'">';
+   }else if(isPreview&&selected){
+    element='<div class="slot preview"><img src="'+lookup[selected].image+'" alt="'+lookup[selected].name+'"><span>ここ</span></div>';
+   }else if(valid){
+    element='<button class="slot" type="button" data-level="'+level+'" data-x="'+x+'" aria-label="'+lookup[selected].name+'をここに置く"><span aria-hidden="true">＋</span></button>';
+   }
+   const kind=sub?' book':isPreview?' candidate-preview':valid?' candidate':'';
+   cells+='<div class="tower-cell'+kind+'" style="--offset:'+((x-origin)+(level/2))+'">'+element+'</div>';
   }
-  rows+='<div class="tower-row" data-level="'+level+'">'+row+'</div>';
+  rows.push('<div class="tower-row" data-level="'+level+'">'+cells+'</div>');
  }
- if(!b.count&&isAvailable){
-  rows='<div class="tower-row"><div class="tower-cell">'+
-   (pending?'<div class="slot preview"><img src="'+lookup[selected].image+'" alt="'+lookup[selected].name+'"></div>':
-   '<button class="slot" data-level="0" data-x="0" aria-label="最初の本をここへ置く">＋</button>')+
-   '</div></div>';
+ if(!b.count&&options.length){
+  rows.length=0;
+  rows.push('<div class="tower-row"><div class="tower-cell" style="--offset:0">'+
+   (pending&&selected?'<div class="slot preview"><img src="'+lookup[selected].image+'" alt="'+lookup[selected].name+'"><span>ここ</span></div>':
+   '<button class="slot" data-level="0" data-x="0" type="button" aria-label="最初の本をここに置く"><span aria-hidden="true">＋</span></button>')+
+   '</div></div>');
  }
- return '<section class="panel board-panel"><div class="board-head"><span>'+
- (selected&&editable?esc(lookup[selected].name)+'：光る場所を選んでね':'全員共通のタワー')+
- '</span><span>'+g.board.length+'冊</span></div>'+
- '<div class="tower-board">'+rows+'</div>'+
- '</section>';
+ return '<section class="panel board-panel"><div class="board-head"><strong>'+
+ (selected&&editable?esc(lookup[selected].name)+'を置く場所':'教科書タワー')+
+ '</strong><span>土台 '+b.count+' / 8冊</span></div>'+
+ '<div class="tower-board" data-cols="'+width+'" data-rows="'+rows.length+'" style="--tower-columns:'+width+';--tower-rows:'+rows.length+'">'+
+ '<div class="tower-stack">'+rows.join('')+'</div></div></section>';
 }
+
 function members(g){
  return '<div class="member-list">'+g.members.map(m=>
  '<div class="member'+(m.id===g.currentId?' current':'')+'">'+
