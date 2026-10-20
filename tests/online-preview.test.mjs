@@ -38,7 +38,7 @@ test('共通試遊は7作品の選択画面から開けて、各6作品の実際
   assert.ok(page.indexOf('offline-preview.js')<page.indexOf('game.js'),'mock must load first: '+slug);
   if(slug==='link-burst'){
    assert.match(page,/games\/link-burst\/versus\/engine\.js\?v=/);
-   assert.match(page,/link-burst\/preview-simulator\.js\?v=/);
+   assert.match(page,/\.\/preview-simulator\.js\?v=/);
    assert.ok(page.indexOf('versus/engine.js')<page.indexOf('preview-simulator.js'));
    assert.ok(page.indexOf('preview-simulator.js')<page.indexOf('offline-preview.js'));
    assert.doesNotThrow(()=>new Function(text('link-burst/preview-simulator.js')));
