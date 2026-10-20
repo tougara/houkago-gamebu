@@ -7,17 +7,20 @@
 <link rel="stylesheet" href="./game.css?v=20261020-layout5">
 <link rel="stylesheet" href="../offline-preview.css?v=20261019-common1">
 <link rel="stylesheet" href="../exit-control.css?v=20261019-exit1">
+<link rel="stylesheet" href="../../settings.css?v=20261020-link-ghost1">
 </head><body>
 <main id="link-online" class="link-online">
 <header class="topbar">
  <a href="../" id="back-lobby" class="back-link">← 部屋にもどる</a>
  <strong>LINK BURST! <span>ONLINE</span></strong>
  <span id="connection" class="connection">接続待ち</span>
+ <button type="button" class="link-settings-button" data-hg-settings-open aria-label="共通設定・着地予測" title="着地予測のON/OFF">⚙</button>
 </header>
 <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
 <div id="game-root" class="game-root"><div class="waiting">接続中…</div></div>
 </main>
 <script src="../config.js"></script>
+<script src="../../settings.js?v=20261020-link-ghost1"></script>
 <script src="../shared-ui.js?v=20261018-shared2"></script>
 <script src="../../games/link-burst/versus/engine.js?v=20261020-demo-physics2"></script>
 <script src="./preview-simulator.js?v=20261020-demo-physics2"></script>
