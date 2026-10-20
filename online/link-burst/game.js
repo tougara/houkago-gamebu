@@ -57,26 +57,29 @@ function dialog(g){
 }
 function shell(){
  return '<div class="match">'+
-  '<section class="me-area" aria-label="自分のゲーム盤面"><div class="me-top">'+
-  '<div class="me-stats"><div class="stat"><small>得点</small><b id="self-score">0</b></div>'+
-  '<div class="stat"><small>LINK</small><b id="self-link">0</b></div>'+
-  '<div class="stat"><small>送信JAM</small><b id="self-jam">0</b></div></div>'+
-  '<div class="me-board-wrap"><div class="me-label" id="self-name">自分</div>'+
-  '<div class="board" id="self-board"></div><div class="phase-banner" id="phase-banner" hidden></div></div>'+
-  '</div>'+controls()+'</section>'+
-  '<aside class="side" aria-label="対戦相手とNEXTの情報">'+
-  '<section class="opponent-card"><div class="opponent-title"><strong id="opponent-name">相手</strong><span id="opponent-state">接続中</span></div>'+
-  '<div class="opponent-board"><div class="board" id="opponent-board"></div></div>'+
-  '<div class="side-detail"><div class="side-metric"><small>相手JAM</small><b id="opponent-incoming">0</b></div>'+
-  '<div class="side-metric"><small>相手得点</small><b id="opponent-score">0</b></div></div>'+
-  '<div class="side-state" id="opponent-notice"></div></section>'+
-  '<div class="me-rail" aria-label="自分の次のブロックと受信JAM">'+
-  '<div class="pair-box"><small>NEXT</small><div class="pair" id="self-next"></div></div>'+
-  '<div class="pair-box"><small>NEXT 2</small><div class="pair" id="self-next2"></div></div>'+
-  '<div class="jam-pending"><small>受信JAM</small><b id="self-incoming">0</b></div></div>'+
-  '<div class="side-metric match-status"><small>対戦ステータス</small><b id="match-state">開始準備</b></div>'+
-  '<div class="side-state" id="self-notice"></div>'+
-  '<div id="match-actions"></div></aside></div>';
+ '<section class="me-area" aria-label="自分の盤面"><div class="me-top">'+
+ '<aside class="left-rail" aria-label="NEXTとスコア">'+
+ '<div class="me-rail"><div class="pair-box"><small>NEXT</small><div class="pair" id="self-next"></div></div>'+
+ '<div class="pair-box"><small>NEXT 2</small><div class="pair" id="self-next2"></div></div></div>'+
+ '<div class="me-stats">'+
+ '<div class="stat"><small>SCORE</small><b id="self-score">0</b></div>'+
+ '<div class="stat link"><small>MAX LINK</small><b id="self-link">0</b></div>'+
+ '<div class="stat"><small>SEND JAM</small><b id="self-jam">0</b></div></div></aside>'+
+ '<div class="me-board-wrap"><div class="me-label" id="self-name">自分</div>'+
+ '<div class="board" id="self-board"></div><div class="phase-banner" id="phase-banner" hidden></div></div></section>'+
+ '<aside class="side" aria-label="相手ミニ盤面と対戦情報">'+
+ '<section class="opponent-card"><div class="opponent-title"><strong id="opponent-name">相手</strong><span id="opponent-state">接続中</span></div>'+
+ '<div class="opponent-board"><div class="board" id="opponent-board"></div></div>'+
+ '<div class="side-detail"><div class="side-metric"><small>相手JAM</small><b id="opponent-incoming">0</b></div>'+
+ '<div class="side-metric"><small>相手得点</small><b id="opponent-score">0</b></div></div>'+
+ '<div class="side-state" id="opponent-notice"></div></section>'+
+ '<div class="right-summary"><div class="jam-pending"><small>RECEIVE JAM</small><b id="self-incoming">0</b></div>'+
+ '<div class="side-metric match-status"><small>BATTLE STATUS</small><b id="match-state">READY</b></div></div>'+
+ '<div class="side-state" id="self-notice"></div><div id="match-actions"></div></aside>'+
+ controls()+
+ '<div class="lb-countdown-overlay" id="countdown-overlay" role="status" aria-live="assertive" hidden>'+
+ '<strong class="lb-countdown-number" id="countdown-value">3</strong><span>READY?</span></div>'+
+ '</div>';
 }
 function value(id,val){const el=document.getElementById(id);if(el)el.textContent=String(val)}
 function blocks(p){
@@ -101,7 +104,9 @@ function blocks(p){
 }
 function pairPiece(piece){
  if(!piece)return '';
- return '<i class="'+esc(piece.a)+'"></i><i class="'+esc(piece.b)+'"></i>';
+ const symbols={blue:'○',red:'△',yellow:'★',green:'◇'};
+ return '<i class="'+esc(piece.a)+'">'+(symbols[piece.a]||'')+'</i>'+
+  '<i class="'+esc(piece.b)+'">'+(symbols[piece.b]||'')+'</i>';
 }
 function refresh(g){
  const self=g.self,opp=g.opponent;
@@ -121,10 +126,22 @@ function refresh(g){
  }
  const actions=document.getElementById('match-actions');
  const banner=document.getElementById('phase-banner');
+ const overlay=document.getElementById('countdown-overlay');
+ if(overlay){
+  const active=g.stage==='countdown';overlay.hidden=!active;
+  if(active){
+   const digit=g.countdown>500?String(Math.max(1,Math.ceil((g.countdown-500)/1000))):'START!';
+   const el=document.getElementById('countdown-value');
+   if(el&&el.textContent!==digit){
+    el.textContent=digit;el.classList.toggle('go',digit==='START!');
+    el.classList.remove('pulse');void el.offsetWidth;el.classList.add('pulse');
+   }
+  }
+ }
  if(g.stage==='countdown'){
-  value('match-state','開始まで '+Math.ceil(g.countdown/1000));
-  if(banner){banner.hidden=false;banner.textContent=g.countdown>500?Math.ceil(g.countdown/1000):'START!'}
-  if(actions)actions.innerHTML='<p class="side-state">全員同じ条件で開始</p>';
+  value('match-state','STARTING');
+  if(banner)banner.hidden=true;
+  if(actions)actions.innerHTML='';
  }else if(g.stage==='interrupted'){
   releaseAll();
   value('match-state','通信待ち');
