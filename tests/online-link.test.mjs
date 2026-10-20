@@ -148,8 +148,8 @@ test('Online Link Burst fits the largest 7x13 board under a top score HUD on pho
  assert.match(css,/font-size:clamp\(104px,32vw,170px\)/);
  assert.match(soloCss,/font-size:clamp\(104px,32vw,170px\)/);
  assert.doesNotMatch(game,/スマホを横向きにしてね|overlay-portrait/);
- assert.ok(html.includes('game.css?v=20261020-layout5'));
- assert.ok(html.includes('game.js?v=20261020-layout4'));
+ assert.ok(html.includes('game.css?v=20261020-finale1'));
+ assert.ok(html.includes('game.js?v=20261020-finale1'));
  assert.ok(lobby.includes("type:'link-start'"));
  assert.ok(lobby.includes("room.phase==='link'"));
 });
