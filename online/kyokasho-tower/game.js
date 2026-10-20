@@ -100,19 +100,25 @@ function members(g){
 }
 function hand(g,editable){
  if(!g.myHand)return '';
- const entries=subjects.map(s=>{
-  const count=g.myHand[s.key]||0,can=editable&&count>0&&(g.choices?.[s.key]||[]).length>0;
-  return '<button type="button" class="hand-book'+(can?' playable':'')+(selected===s.key?' selected':'')+
-   '" data-subject="'+s.key+'" '+(!can?'disabled':'')+' aria-pressed="'+String(selected===s.key)+'">'+
-   '<img src="'+s.image+'" alt="'+s.name+'"><span>'+s.name+'</span><b>×'+count+'</b></button>';
+ const entries=subjects.map(sub=>{
+  const count=g.myHand[sub.key]||0;
+  const can=editable&&count>0&&(g.choices?.[sub.key]||[]).length>0;
+  return '<button type="button" class="hand-book'+(can?' playable':'')+
+   (selected===sub.key?' selected':'')+'" data-subject="'+sub.key+'" '+(!can?'disabled':'')+
+   ' aria-pressed="'+String(selected===sub.key)+'">'+
+   '<img src="'+sub.image+'" alt="'+sub.name+'"><span>'+sub.name+'</span><b>×'+count+'</b></button>';
  }).join('');
- return '<section class="panel hand-panel"><h2>あなたの手札</h2>'+
- '<p class="hand-label">'+(editable?(selected?'選んだ教科書をタワーの光る場所に置こう':'置きたい教科書を押そう'):
- '自分の手札だけ表示中。ほかの人には教科ごとの枚数は見えないよ。')+'</p>'+
+ return '<section class="panel hand-panel'+(pending?' choosing-place':'')+'">'+
+ '<div class="hand-heading"><h2>あなたの手札</h2><small>'+
+ (pending?'置く場所を確認中':selected?'光る場所をタップ':'教科書を選ぼう')+'</small></div>'+
  '<div class="hand-grid">'+entries+'</div>'+
- (editable&&selected&&!pending?'<div class="actions">'+btn('教科書を選び直す','clear','outline')+'</div>':'')+
+ (editable&&pending&&selected?
+ '<div class="place-confirm"><p>'+esc(lookup[selected].name)+'をここに置く？</p>'+
+ '<div class="two">'+btn('選び直す','place-cancel')+
+ btn('ここに置く','place-ok','primary')+'</div></div>':'')+
  '</section>';
 }
+
 function setup(g){
  return '<section class="panel"><h1>みんなで教科書タワー！</h1>'+
  '<p class="hint center">2〜6人の順番対戦。手札は本人の端末だけ、タワーは全員にリアルタイムで見えるよ。</p>'+
@@ -145,21 +151,27 @@ function playedEvent(g){
  return '<div class="notice">'+pname(e.id)+'が'+(s?s.name:'教科書')+'を置いたよ'+(e.cleared?'（手札を使い切った！）':'')+'</div>';
 }
 function playing(g){
- const editable=g.myTurn;
- const turn=person(g.currentId);
- return '<div class="panel">'+status(g)+scores(g)+
- '<div class="turn-banner'+(editable?'':' wait')+'">'+
- (editable?'あなたの番！':'いまの手番')+'<strong>'+pname(g.currentId)+'</strong>'+
- '<span style="font-size:12px">残り '+turn.cards+'冊</span></div>'+
- playedEvent(g)+'</div>'+
- board(g,editable)+
- (editable?hand(g,true):hand(g,false))+
- (editable&&pending&&selected?'<div class="place-confirm"><p>'+esc(lookup[selected].name)+'を光っている場所に置く？</p>'+
- '<div class="two">'+btn('場所を選び直す','place-cancel')+
- btn('ここに置く','place-ok','primary')+'</div></div>':'')+
- (!editable?'<section class="panel"><p class="hint center">タワーの配置が決まると自動で次の人へ進むよ。<br>自分の番になったら手札の本が押せるようになるよ。</p></section>':'')+
- '<section class="panel"><h2>残り枚数とペナルティ</h2>'+members(g)+'</section>';
+ const editable=g.myTurn,turn=person(g.currentId);
+ const people=members(g);
+ const compactEvent=g.lastEvent?playedEvent(g):'';
+ const summary='<header class="tower-play-head">'+
+ '<div class="tower-round-label"><small>ROUND '+g.round+' / '+g.totalRounds+'</small>'+
+ '<strong>'+(editable?'あなたの番！':pname(g.currentId)+' の番')+'</strong>'+
+ '<span>残り '+turn.cards+'冊</span></div>'+
+ '<details class="tower-more"><summary>順位・詳細</summary><div class="tower-more-popover">'+
+ '<h3>現在のペナルティ</h3>'+people+
+ '<p class="hint">点数が少ない人ほど有利だよ。</p>'+compactEvent+
+ '<div class="top-stats"><span>配置 '+g.movesMade+'冊</span><span>土台 '+g.bottom.count+' / 8</span></div>'+
+ '</div></details></header>';
+ return '<div class="tower-play-screen'+(editable?' is-my-turn':' is-waiting')+'">'+
+ summary+board(g,editable)+
+ (editable?hand(g,true):
+ '<div class="tower-wait-footer"><strong>'+pname(g.currentId)+' が配置中</strong>'+
+ '<span>タワーが更新されたら自動で表示されるよ</span>'+
+ '<details><summary>自分の手札を見る</summary>'+hand(g,false)+'</details></div>')+
+ '</div>';
 }
+
 function result(g){
  return '<section class="panel">'+status(g)+'<h1>ラウンド結果</h1>'+
  '<p class="hint center">手札を置けなくなったら＋残り冊数。全部置けたら最大−2点！</p>'+
@@ -185,13 +197,34 @@ function finished(g){
  (host()?'<div class="actions">'+btn('ロビーに戻ってもう一戦','stop','primary')+'</div>':
  '<div class="notice">ホストがロビーに戻すのを待ってね</div>')+'</section>';
 }
+function fitTowerBoard(){
+ const panel=document.querySelector('.tower-play-screen .board-panel');
+ const board=panel?.querySelector('.tower-board');
+ if(!board)return;
+ const width=board.clientWidth;
+ const height=board.clientHeight;
+ const columns=Math.max(1,Number(board.dataset.cols)||1);
+ const rows=Math.max(1,Number(board.dataset.rows)||1);
+ if(width<20||height<20)return;
+ // A slot is always smaller than its parent tile; adapt to short phones and
+ // 8-tier towers while keeping room for up to 10 possible foundation spaces.
+ const tile=Math.max(14,Math.floor(Math.min(51,width/(columns+.20),height/(rows+.12))));
+ board.style.setProperty('--tile',tile+'px');
+}
+if(typeof ResizeObserver==='function'){
+ const observer=new ResizeObserver(fitTowerBoard);
+ observer.observe($('game-root'));
+}
+window.addEventListener('resize',fitTowerBoard);
 function render(){
  const g=game();if(!g){$('game-root').innerHTML='<section class="panel">ロビーへ戻ります…</section>';return}
  const stamp=g.round+':'+g.stage+':'+g.currentId+':'+g.movesMade;
  if(stamp!==turnStamp){selected=null;pending=null;turnStamp=stamp}
  if(!g.myTurn){selected=null;pending=null}
  if(selected&&!(g.choices?.[selected]||[]).length){selected=null;pending=null}
+ document.querySelector('.tower-online')?.setAttribute('data-stage',g.stage);
  $('game-root').innerHTML=({setup,intro:()=>intro(g),roundIntro:()=>intro(g),playing:()=>playing(g),roundResult:()=>result(g),finished:()=>finished(g)}[g.stage]||setup)(g);
+ fitTowerBoard();
 }
 $('game-root').addEventListener('click',event=>{
  const target=event.target.closest('button');if(!target)return;
@@ -233,7 +266,7 @@ function connect(){
  ui.connection('connection','connecting');
  const endpoint=base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+encodeURIComponent(session.token);
  const ws=new WebSocket(endpoint);socket=ws;
- ws.onopen=()=>{if(socket!==ws)return;retry=0;ui.connection('connection','connected');notice('オンライン接続中',true)};
+ ws.onopen=()=>{if(socket!==ws)return;retry=0;ui.connection('connection','connected');$('notice').hidden=true};
  ws.onmessage=event=>{
   if(socket!==ws)return;
   let message;try{message=JSON.parse(event.data)}catch{return}
