@@ -186,6 +186,24 @@ function refresh(g){
   if(actions)actions.innerHTML='';
  }
 }
+// Fit the 7x13 board into the space left by the SCORE row and bottom controls.
+// ResizeObserver also handles browser toolbar, tablet rotation and desktop resizing.
+function fitOwnBoard(){
+ const stage=root.querySelector('.me-top');
+ const stats=root.querySelector('.me-stats');
+ const board=root.querySelector('.me-board-wrap');
+ if(!stage||!stats||!board)return;
+ const gap=Number.parseFloat(getComputedStyle(stage).rowGap)||0;
+ const availableHeight=Math.max(0,stage.clientHeight-stats.offsetHeight-gap-3);
+ const availableWidth=Math.max(0,stage.clientWidth);
+ const size=Math.floor(Math.min(availableWidth,availableHeight*7/13));
+ if(size>=65&&board.style.width!==size+'px')board.style.width=size+'px';
+}
+if(typeof ResizeObserver==='function'){
+ const boardResizeObserver=new ResizeObserver(fitOwnBoard);
+ boardResizeObserver.observe(root);
+}
+addEventListener('resize',fitOwnBoard);
 function render(){
  const g=game();if(!g){root.innerHTML='<div class="waiting">部屋にもどります…</div>';return}
  const shellKey=g.stage==='setup'?'setup':'match';
@@ -193,7 +211,7 @@ function render(){
   releaseAll();lastShell=shellKey;
   root.innerHTML=g.stage==='setup'?dialog(g):shell();
  }
- if(shellKey==='match')refresh(g);
+ if(shellKey==='match'){fitOwnBoard();refresh(g)}
 }
 function input(action,pressed){
  const g=game();if(g?.stage!=='playing')return;
