@@ -115,6 +115,91 @@ test('web frontend routes, has offline visuals, and JS parses',()=>{
  assert.ok(lobby.includes("type:'tower-start'"));
  assert.ok(lobby.includes("room.phase==='tower'"));
 });
+
+test('online tower uses a single gameplay viewport with compact action-first flow',()=>{
+ const html=readFileSync(new URL('../online/kyokasho-tower/index.html',import.meta.url),'utf8');
+ const js=readFileSync(new URL('../online/kyokasho-tower/game.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/kyokasho-tower/game.css',import.meta.url),'utf8');
+ assert.doesNotThrow(()=>new Function(js));
+ assert.match(css,/\.tower-online\[data-stage="playing"\]\{[^}]*height:100dvh/);
+ assert.match(css,/\.tower-play-screen\{[^}]*grid-template-rows:auto minmax\(0,1fr\) auto/);
+ assert.match(css,/\.tower-play-screen \.board-panel\{[^}]*grid-template-rows:auto minmax\(0,1fr\)/);
+ assert.match(js,/class="tower-more"/);
+ assert.match(js,/順位・詳細/);
+ assert.match(js,/tower-more-popover/);
+ assert.match(js,/tower-wait-footer/);
+ assert.match(js,/fitTowerBoard\(\)/);
+ assert.match(js,/height\/\(rows\+\.12\)/);
+ assert.match(js,/\.setAttribute\('data-stage',g\.stage\)/);
+ assert.match(css,/body:has\(\.hog-demo-tools\) \.tower-online\[data-stage="playing"\]/);
+ assert.match(html,/game\.css\?v=20261020-compact2/);
+ assert.match(html,/game\.js\?v=20261020-compact2/);
+ assert.match(js,/tower-quick-rules/);
+ assert.match(js,/詳しいルールを見る/);
+});
+test('online board aligns every slot to the same x origin and shrinks targets inside a cell',()=>{
+ const js=readFileSync(new URL('../online/kyokasho-tower/game.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/kyokasho-tower/game.css',import.meta.url),'utf8');
+ const start=js.indexOf('function board(g,editable=false){');
+ const end=js.indexOf('\nfunction members(g)',start);
+ assert.ok(start>=0&&end>start);
+ const lookup={
+  japanese:{image:'j.png',name:'国語'},math:{image:'m.png',name:'算数'},
+  science:{image:'s.png',name:'理科'},social:{image:'h.png',name:'社会'},english:{image:'e.png',name:'英語'}
+ };
+ const makeBoard=new Function('g','selected','pending','lookup','esc',js.slice(start,end)+'return board(g,true);');
+ const sample={
+  bottom:{count:3,min:0,max:2},
+  board:[{level:0,x:0,subject:'math'},{level:0,x:1,subject:'social'},{level:0,x:2,subject:'english'}],
+  choices:{math:[{level:0,x:-1},{level:0,x:3},{level:1,x:0}]}
+ };
+ const markup=makeBoard(sample,'math',null,lookup,x=>x);
+ assert.match(markup,/--tower-columns:5/);
+ assert.match(markup,/class="tower-cell candidate" style="--offset:0"/);
+ assert.match(markup,/class="tower-cell candidate" style="--offset:4"/);
+ assert.match(markup,/class="tower-cell candidate" style="--offset:1\.5"/);
+ assert.equal((markup.match(/class="tower-cell book"/g)||[]).length,3);
+ assert.equal((markup.match(/class="slot"/g)||[]).length,3);
+ assert.match(css,/\.tower-cell\{[^}]*position:absolute/);
+ assert.match(css,/left:calc\(var\(--offset\) \* var\(--tile\)\)/);
+ assert.match(css,/\.tower-cell \.slot\{[^}]*width:calc\(var\(--tile\) - 6px\)/);
+ assert.match(css,/\.tower-cell\.book img\.tower-book,[^}]*width:calc\(var\(--tile\) - 2px\)/);
+ const preview=makeBoard(sample,'math',{level:1,x:0},lookup,x=>x);
+ assert.match(preview,/class="tower-cell candidate-preview" style="--offset:1\.5"/);
+ assert.match(preview,/class="slot preview"/);
+ const full={...sample,bottom:{count:8,min:0,max:7},
+  board:Array.from({length:8},(_,i)=>({level:0,x:i,subject:'math'})),
+  choices:{math:[{level:1,x:0}]}};
+ const fullMarkup=makeBoard(full,'math',null,lookup,x=>x);
+ assert.match(fullMarkup,/--tower-columns:8/);
+ assert.doesNotMatch(fullMarkup,/data-x="-1"/);
+ assert.doesNotMatch(fullMarkup,/data-x="8"/);
+ const empty=makeBoard({bottom:{count:0,min:0,max:-1},board:[],choices:{math:[{level:0,x:0}]}},'math',null,lookup,x=>x);
+ assert.match(empty,/--tower-columns:1/);
+ assert.match(empty,/data-level="0" data-x="0"/);
+});
+test('online play hides repetitive status panels, keeping personal actions and confidentiality',()=>{
+ const js=readFileSync(new URL('../online/kyokasho-tower/game.js',import.meta.url),'utf8');
+ const start=js.indexOf('function playing(g){'),end=js.indexOf('\nfunction result(g){',start);
+ assert.ok(start>=0&&end>start);
+ const play=new Function('g','person','pname','members','board','hand','playedEvent',js.slice(start,end)+'return playing(g);');
+ const data={myTurn:true,currentId:'p0',members:[{id:'p0',name:'本人',icon:'🐶',cards:8,score:0}],
+  round:1,totalRounds:3,bottom:{count:2},movesMade:2,lastEvent:{kind:'placed'}};
+ const render=editable=>play({...data,myTurn:editable},
+  ()=>data.members[0],()=> '🐶 本人',()=>'<div class="member-list">点数</div>',
+  ()=>'<section class="board-panel">タワー</section>',()=>'<section class="hand-panel">手札</section>',
+  ()=>'<div>前回の手番</div>');
+ const self=render(true);
+ assert.equal((self.match(/board-panel/g)||[]).length,1);
+ assert.equal((self.match(/hand-panel/g)||[]).length,1);
+ assert.match(self,/tower-play-screen is-my-turn/);
+ assert.match(self,/class="tower-more"/);
+ assert.ok(self.indexOf('board-panel')<self.indexOf('hand-panel'));
+ const waiting=render(false);
+ assert.match(waiting,/is-waiting/);
+ assert.match(waiting,/自分の手札を見る/);
+ assert.equal((waiting.match(/board-panel/g)||[]).length,1);
+});
 test('Worker routes actions and broadcasts only caller hand, rejects late joins, returns to lobby',async()=>{
  const state=new Map(),sockets=[];
  const storage={get:async key=>state.get(key),put:async(key,value)=>state.set(key,structuredClone(value)),
