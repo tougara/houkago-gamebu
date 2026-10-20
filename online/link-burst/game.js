@@ -6,6 +6,7 @@ const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const requested=new URLSearchParams(location.search).get('room')||'';
 const ui=window.HoukagoOnlineUI;
 let session=null,room=null,ws=null,retries=0,retryTimer=null,leaving=false,lastShell='',lastRound=0;
+let finaleKey='',finaleTimer=null;
 const held=new Set(),palette={1:['blue','○'],2:['red','△'],3:['yellow','★'],4:['green','◇'],5:['jam','J']};
 const rotation=[[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[-1,0]],[[0,0],[0,-1]]];
 try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
@@ -81,7 +82,20 @@ function shell(){
  controls()+
  '<div class="lb-countdown-overlay" id="countdown-overlay" role="status" aria-live="assertive" hidden>'+
  '<strong class="lb-countdown-number" id="countdown-value">3</strong><span>READY?</span></div>'+
- '</div>';
+ '<div class="link-finale" id="link-finale" data-result="win" role="region" aria-label="対戦終了・勝敗発表" hidden>'+
+ '<div class="link-finale-flash" aria-hidden="true"></div>'+
+ '<div class="link-finale-ring" aria-hidden="true"></div>'+
+ '<div class="link-finale-sparks" aria-hidden="true">'+
+ Array.from({length:22},(_,i)=>'<i style="--angle:'+(i*137.51)+'deg;--delay:'+(i%7*71)+'ms"></i>').join('')+'</div>'+
+ '<div class="link-finale-impact" aria-hidden="true">K.O.!</div>'+
+ '<div class="link-finale-title"><small>FINAL BATTLE</small><strong id="finale-headline">WIN!</strong></div>'+
+ '<div class="link-finale-actions" id="finale-actions" hidden>'+
+ '<small>BATTLE RESULT</small><h2 id="finale-result">YOU WIN</h2>'+
+ '<p id="finale-winner"></p>'+
+ '<div class="link-finale-scores"><span>YOUR SCORE <b id="finale-self-score">0</b></span>'+
+ '<span>RIVAL SCORE <b id="finale-opponent-score">0</b></span></div>'+
+ '<div id="finale-buttons" class="link-finale-buttons"></div>'+
+ '</div></div></div>';
 }
 function value(id,val){const el=document.getElementById(id);if(el)el.textContent=String(val)}
 function blocks(p,withGhost=false){
@@ -99,7 +113,7 @@ function blocks(p,withGhost=false){
  if(p.piece){const a=p.piece;rotation[a.rot].forEach(([dx,dy])=>active.add((a.y+dy)+':'+(a.x+dx)))}
  const ghosts=new Map();
  // Visual-only split-gravity landing ghost from the existing offline VS engine.
- if(withGhost&&p.piece&&p.phase==='falling'&&window.LinkBurstVersusEngine?.ghost){
+ if(withGhost&&window.HoukagoSettings?.load?.().linkBurstGhost!==false&&p.piece&&p.phase==='falling'&&window.LinkBurstVersusEngine?.ghost){
   const COLOR={1:'blue',2:'red',3:'yellow',4:'green',5:'jam'};
   const raw=[Array(7).fill(null),Array(7).fill(null),...rows.map(row=>[...row].map(ch=>COLOR[ch]||null))];
   try{
@@ -126,6 +140,49 @@ function pairPiece(piece){
  const symbols={blue:'○',red:'△',yellow:'★',green:'◇'};
  return '<i class="'+esc(piece.a)+'">'+(symbols[piece.a]||'')+'</i>'+
   '<i class="'+esc(piece.b)+'">'+(symbols[piece.b]||'')+'</i>';
+}
+function updateFinale(g){
+ const finale=document.getElementById('link-finale');
+ if(!finale)return;
+ if(g.stage!=='finished'){
+  if(finaleTimer!==null){clearTimeout(finaleTimer);finaleTimer=null}
+  finaleKey='';finale.hidden=true;finale.classList.remove('view-board','revealed');
+  root.classList.remove('link-online-finished');
+  return;
+ }
+ const draw=g.winners.length===0,won=g.winners.includes(g.meId);
+ const state=draw?'draw':won?'win':'lose';
+ const key=g.meId+'|'+state+'|'+g.winners.join(',');
+ finale.hidden=false;
+ finale.dataset.result=state;
+ root.classList.add('link-online-finished');
+ value('finale-headline',draw?'DRAW':won?'WIN!':'LOSE...');
+ value('finale-result',draw?'DRAW GAME':won?'VICTORY!':'DEFEAT');
+ const winner=g.winners[0];
+ const winnerName=winner?player(winner).name:null;
+ value('finale-winner',draw?'両者同時KO！':won?'あなたの勝利！':winnerName+' の勝利');
+ value('finale-self-score',g.self.score.toLocaleString('ja-JP'));
+ value('finale-opponent-score',g.opponent.score.toLocaleString('ja-JP'));
+ if(finaleKey===key)return;
+ finaleKey=key;
+ finale.classList.remove('revealed','view-board');
+ const bottom=document.getElementById('finale-actions');
+ if(bottom)bottom.hidden=true;
+ const buttons=document.getElementById('finale-buttons');
+ if(buttons)buttons.innerHTML=host()?
+  '<button class="link-final-primary" type="button" data-action="stop">ロビーへ戻ってもう一戦</button>'+
+  '<button type="button" data-action="finale-view">最終盤面を見る</button>':
+  '<button class="link-final-primary" type="button" data-action="return">部屋から退室</button>'+
+  '<button type="button" data-action="finale-view">最終盤面を見る</button>';
+ if(finaleTimer!==null)clearTimeout(finaleTimer);
+ const reduced=window.HoukagoSettings?.load?.().motion==='reduced'||
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ finaleTimer=setTimeout(()=>{
+  finaleTimer=null;
+  if(finale.hidden||finaleKey!==key)return;
+  finale.classList.add('revealed');
+  if(bottom)bottom.hidden=false;
+ },reduced?350:2100);
 }
 function refresh(g){
  const self=g.self,opp=g.opponent;
@@ -157,6 +214,7 @@ function refresh(g){
    }
   }
  }
+ updateFinale(g);
  if(g.stage==='countdown'){
   value('match-state','STARTING');
   if(banner)banner.hidden=true;
@@ -173,10 +231,7 @@ function refresh(g){
   const won=g.winners.includes(g.meId),draw=g.winners.length===0;
   value('match-state',draw?'DRAW':won?'YOU WIN':'YOU LOSE');
   if(banner){banner.hidden=false;banner.textContent=draw?'DRAW':won?'WIN!':'LOSE'}
-  if(actions)actions.innerHTML='<p class="side-state">'+esc(g.reason||'対戦終了')+'</p>'+
-   (host()?'<button class="btn" data-action="stop">もう一戦（ロビーへ）</button>':
-    '<p class="side-state">ホストがロビーに戻すのを待ってね</p>')+
-    '<button class="btn alt" data-action="return">部屋にもどる</button>';
+  if(actions)actions.innerHTML='';
  }else{
   value('match-state','JAM BATTLE');
   if(banner){
@@ -247,6 +302,8 @@ root.addEventListener('click',event=>{
   case 'resume':send('link-resume');break;
   case 'stop':if(confirm('対戦を終了してロビーへ戻す？'))send('link-stop');break;
   case 'return':exitGame();break;
+  case 'finale-view':document.getElementById('link-finale')?.classList.add('view-board');break;
+  case 'finale-show':document.getElementById('link-finale')?.classList.remove('view-board');break;
  }
 });
 const keyNames={a:'left',d:'right',s:'down','arrowleft':'left','arrowright':'right','arrowdown':'down',' ':'rotate','enter':'rotate','arrowup':'rotate'};
@@ -257,6 +314,7 @@ addEventListener('keydown',e=>{
  input(act,true);
 });
 addEventListener('keyup',e=>{const act=keyNames[e.key.toLowerCase()];if(act){e.preventDefault();input(act,false)}});
+window.addEventListener('houkago-settings-change',()=>{if(lastShell==='match'&&game())refresh(game())});
 addEventListener('blur',releaseAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll()});
 function connect(){
