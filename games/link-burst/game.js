@@ -715,7 +715,7 @@
   // Simulation uses a copy: gameplay board, scoring, timing and falling piece are untouched.
   function ghostLandingCells(){
     const ghost=new Map();
-    if(!state.piece||state.screen!=='play'||state.resolving||state.chainActive)return ghost;
+    if(settingsApi?.load?.().linkBurstGhost===false||!state.piece||state.screen!=='play'||state.resolving||state.chainActive)return ghost;
     const piece=state.piece;
     let landingY=piece.y;
     while(canPlace(piece,piece.x,landingY+1,piece.rot))landingY++;
@@ -1547,6 +1547,7 @@
     loadPlayer();
     render();
   });
+  window.addEventListener('houkago-settings-change',function(){if(state.screen==='play')drawBoard()});
   window.addEventListener('houkago-back-guard-open',function(){
     if(state.gameStarted&&state.screen==='play'&&!state.paused)pauseGame(true);
   });
