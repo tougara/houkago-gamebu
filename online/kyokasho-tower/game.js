@@ -120,30 +120,36 @@ function hand(g,editable){
 }
 
 function setup(g){
- return '<section class="panel"><h1>みんなで教科書タワー！</h1>'+
- '<p class="hint center">2〜6人の順番対戦。手札は本人の端末だけ、タワーは全員にリアルタイムで見えるよ。</p>'+
- '<ol class="rules"><li>36冊を全員に配る。5人なら最初から土台に1冊</li>'+
- '<li>自分の番になったら教科書を選び、置ける場所に配置</li>'+
- '<li>土台は最大<strong>8冊</strong>。上段は下の2冊のどちらかと同じ教科だけ置ける</li>'+
- '<li>置けなくなったら残り手札1冊につき<strong>＋1点</strong></li>'+
- '<li>手札を使い切れたら累積ペナルティから<strong>最大−2点</strong></li>'+
- '<li>人数と同じ回数のラウンドで、<strong>最もペナルティが少ない人</strong>の勝ち</li></ol>'+
- '<div class="notice">通話は別アプリで。配置や得点はゲーム内で自動共有！</div>'+
- (host()?'<div class="actions">'+btn('教科書を配る','begin','primary')+
+ return '<section class="panel tower-setup-panel"><h1>みんなで教科書タワー！</h1>'+
+ '<p class="hint center">順番に教科書を置こう。置けなくなったら残り冊数がペナルティ！</p>'+
+ '<div class="tower-quick-rules"><span>1. 本を選ぶ</span><span>2. 光る場所を選ぶ</span><span>3. ここに置く</span></div>'+
+ '<p class="hint center">ペナルティが少ない人の勝ち。タワーと点数は全員に共有されるよ。</p>'+
+ '<details class="tower-rule-details"><summary>詳しいルールを見る</summary><ol class="rules">'+
+ '<li>36冊を全員に配る。5人なら土台に最初から1冊</li>'+
+ '<li>教科書を選んで、光っている場所に置く</li>'+
+ '<li>土台は最大8冊。上段は下の2冊のどちらかと同じ教科だけ置ける</li>'+
+ '<li>置けなくなったら、残り手札1冊につき＋1点</li>'+
+ '<li>手札を使い切ると累積ペナルティから最大−2点</li>'+
+ '<li>人数と同じ数のラウンドを行い、最もペナルティが少ない人が優勝</li>'+
+ '</ol></details>'+
+ (host()?'<div class="actions">'+btn('教科書を配って始める','begin','primary')+
  btn('対戦を終了してロビーへ','stop','danger')+'</div>':
- '<div class="notice">ホストが始めるのを待ってね</div>')+
- '</section><section class="panel"><h2>参加メンバー</h2>'+members(g)+'</section>';
+ '<div class="notice">ホストのスタートを待ってね</div>')+
+ '<details class="tower-rule-details"><summary>参加メンバーを見る（'+g.members.length+'人）</summary>'+members(g)+'</details>'+
+ '</section>';
 }
 function intro(g){
  const five=g.members.length===5;
- return '<section class="panel">'+status(g)+'<h1>教科書を配ったよ！</h1>'+
- '<div class="turn-banner">今回のスタート<strong>'+pname(g.startId)+'</strong></div>'+
- (five?'<p class="hint center">5人プレイなので、タワーの土台に教科書を1冊置いてあるよ。</p>':'')+
- board(g)+hand(g,false)+
- (host()?'<div class="actions">'+btn('第'+g.round+'ラウンドを始める','round-start','primary')+'</div>':
- '<div class="notice">ホストのスタート操作を待ってね</div>')+
- '</section><section class="panel"><h2>現在のペナルティ</h2>'+scores(g)+'</section>';
+ return '<section class="panel tower-intro-panel">'+status(g)+
+ '<h1>ラウンドの準備完了！</h1>'+
+ '<div class="turn-banner">最初のプレイヤー<strong>'+pname(g.startId)+'</strong></div>'+
+ (five?'<p class="hint center">5人なので土台に最初から1冊あるよ。</p>':'')+
+ (host()?'<div class="actions">'+btn('ラウンドを始める','round-start','primary')+'</div>':
+ '<div class="notice">ホストのスタートを待ってね</div>')+
+ '</section>'+board(g)+
+ '<details class="panel tower-intro-hand"><summary>配られた自分の手札を見る</summary>'+hand(g,false)+'</details>';
 }
+
 function playedEvent(g){
  const e=g.lastEvent;if(!e)return '';
  if(e.kind==='stuck')return '<div class="notice">'+pname(e.id)+'：置ける本がないため残り'+e.remaining+'冊がペナルティ</div>';
