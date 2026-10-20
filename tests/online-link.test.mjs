@@ -117,6 +117,9 @@ test('Online Link Burst adopts exact offline solo visual system on phone, tablet
  assert.match(css,/grid-template-columns:repeat\(7,minmax\(0,1fr\)\)/);
  assert.match(css,/grid-template-rows:repeat\(13,minmax\(0,1fr\)\)/);
  assert.match(css,/background:rgba\(103,146,204,.095\)/);
+ assert.match(css,/\.board \.block\.ghost\{opacity:.24/);
+ assert.match(game,/LinkBurstVersusEngine\.ghost/);
+ assert.match(game,/blocks\(self,true\)/);
  assert.match(css,/border:2px solid rgba\(126,224,255,.70\)/);
  assert.match(soloCss,/background:rgba\(103,146,204,.095\)/);
  assert.match(soloCss,/border:2px solid rgba\(126,224,255,.64\)/);
@@ -144,8 +147,8 @@ test('Online Link Burst adopts exact offline solo visual system on phone, tablet
  assert.match(soloCss,/font-size:clamp\(104px,32vw,170px\)/);
  assert.match(game,/g.countdown>500\?String\(Math.max\(1,Math.ceil\(\(g.countdown-500\)\/1000\)\)\):'START!'/);
  assert.doesNotMatch(game,/スマホを横向きにしてね|overlay-portrait/);
- assert.ok(html.includes('game.css?v=20261020-solo2'));
- assert.ok(html.includes('game.js?v=20261020-solo2'));
+ assert.ok(html.includes('game.css?v=20261020-solo3'));
+ assert.ok(html.includes('game.js?v=20261020-solo3'));
  assert.ok(html.includes('../shared-ui.js'));
  assert.ok(lobby.includes("type:'link-start'"));
  assert.ok(lobby.includes("room.phase==='link'"));
