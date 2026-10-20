@@ -310,3 +310,32 @@ body:has(.tower-online[data-stage="playing"]) .hog-demo-tools{
 @media(prefers-reduced-motion:reduce){
  .tower-cell .slot{animation:none}
 }
+
+/* Setup uses concise 3-step directions; full rules and roster on demand. */
+.tower-setup-panel .tower-quick-rules{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:5px;margin:12px 0 8px;
+}
+.tower-quick-rules span{
+ display:grid;place-items:center;min-height:48px;
+ padding:5px 3px;border:1px solid #e9ce99;
+ border-radius:11px;background:#fff5db;color:#835422;
+ font-weight:950;font-size:clamp(10px,2.8vw,13px);text-align:center;
+}
+.tower-rule-details{margin-top:10px}
+.tower-rule-details>summary,.tower-intro-hand>summary{
+ cursor:pointer;list-style:none;display:flex;justify-content:center;align-items:center;
+ min-height:43px;padding:8px 10px;
+ border:1px solid #d8bc8a;border-radius:12px;
+ background:#fffdf8;color:#905b25;font-size:13px;font-weight:950;
+}
+.tower-rule-details>summary::-webkit-details-marker,
+.tower-intro-hand>summary::-webkit-details-marker{display:none}
+.tower-rule-details>summary::after,.tower-intro-hand>summary::after{content:" ▾"}
+.tower-rule-details[open]>summary::after,.tower-intro-hand[open]>summary::after{content:" ▴"}
+.tower-rule-details .rules{margin:7px 0 0}
+.tower-rule-details .member-list{margin-top:9px}
+.tower-intro-panel .turn-banner{padding:8px 10px;margin:7px 0}
+.tower-intro-panel .turn-banner strong{font-size:16px}
+.tower-intro-hand{padding:9px!important}
+.tower-intro-hand .hand-panel{margin-top:9px}
