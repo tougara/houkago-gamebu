@@ -82,7 +82,7 @@ function shell(){
  '</div>';
 }
 function value(id,val){const el=document.getElementById(id);if(el)el.textContent=String(val)}
-function blocks(p){
+function blocks(p,withGhost=false){
  if(!p)return '';
  const rows=p.board||[],display=rows.map(row=>[...row]);
  if(p.piece){
@@ -95,10 +95,27 @@ function blocks(p){
  }
  const active=new Set();
  if(p.piece){const a=p.piece;rotation[a.rot].forEach(([dx,dy])=>active.add((a.y+dy)+':'+(a.x+dx)))}
+ const ghosts=new Map();
+ // Visual-only split-gravity landing ghost from the existing offline VS engine.
+ if(withGhost&&p.piece&&p.phase==='falling'&&window.LinkBurstVersusEngine?.ghost){
+  const COLOR={1:'blue',2:'red',3:'yellow',4:'green',5:'jam'};
+  const raw=[Array(7).fill(null),Array(7).fill(null),...rows.map(row=>[...row].map(ch=>COLOR[ch]||null))];
+  try{
+   const land=window.LinkBurstVersusEngine.ghost({board:raw,phase:'falling',piece:{...p.piece,y:p.piece.y+2}});
+   for(const [key,color] of land){
+    const [y,x]=key.split(':').map(Number);
+    if(y>=2&&y<15&&x>=0&&x<7)ghosts.set((y-2)+':'+x,color);
+   }
+  }catch(_){}
+ }
+ const ghostCode={blue:'1',red:'2',yellow:'3',green:'4',jam:'5'};
  const burst=new Set((p.burst||[]).map(pos=>{const [y,x]=pos.split(':');return (Number(y)-2)+':'+x}));
  return display.map((row,y)=>row.map((ch,x)=>{
-  const color=palette[ch];return '<div class="block '+(color?color[0]:'')+
-  (active.has(y+':'+x)?' active':'')+(burst.has(y+':'+x)?' burst':'')+'">'+
+  const ghost=!palette[ch]&&ghosts.has(y+':'+x);
+  const color=palette[ch]||(ghost?palette[ghostCode[ghosts.get(y+':'+x)]]:null);
+  return '<div class="block '+(color?color[0]:'')+
+  (ghost?' ghost':'')+(active.has(y+':'+x)?' active':'')+
+  (burst.has(y+':'+x)?' burst':'')+'">'+
   (color?color[1]:'')+'</div>';
  }).join('')).join('');
 }
@@ -119,7 +136,7 @@ function refresh(g){
  value('self-notice',self.notice||'');value('opponent-notice',opp.notice||'');
  value('opponent-state',opp.over?'KO':opp.phase==='charge'||opp.phase==='burst'?'連鎖中':opp.phase==='falling'?'プレイ中':'');
  const sb=document.getElementById('self-board'),ob=document.getElementById('opponent-board');
- if(sb){const html=blocks(self);if(sb.innerHTML!==html)sb.innerHTML=html}
+ if(sb){const html=blocks(self,true);if(sb.innerHTML!==html)sb.innerHTML=html}
  if(ob){const html=blocks(opp);if(ob.innerHTML!==html)ob.innerHTML=html}
  for(const [id,pair] of [['self-next',self.next?.[0]],['self-next2',self.next?.[1]]]){
   const el=document.getElementById(id);if(el)el.innerHTML=pairPiece(pair);
