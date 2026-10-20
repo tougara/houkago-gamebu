@@ -108,6 +108,8 @@ test('Online Link Burst fits the largest 7x13 board under a top score HUD on pho
  assert.match(css,/\.controls\{grid-column:1\/-1;grid-row:2/);
  assert.match(css,/\.side \.right-next\{[\s\S]*?grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(css,/\.side \.right-next \.pair i\{[\s\S]*?height:clamp/);
+ assert.match(css,/body:has\(\.link-online\) \.hog-demo-tools\{/);
+ assert.match(css,/\.hog-demo-tools\{[\s\S]*?bottom:calc\(clamp\(112px,18dvh,148px\)/);
  assert.ok(game.indexOf('class="me-stats"')<game.indexOf('class="me-board-wrap"'));
  assert.ok(game.indexOf('class="right-next"')===-1); // Two-class selector in markup
  assert.ok(game.indexOf('class="me-rail right-next"')<game.indexOf('class="opponent-card"'));
@@ -145,7 +147,7 @@ test('Online Link Burst fits the largest 7x13 board under a top score HUD on pho
  assert.match(css,/font-size:clamp\(104px,32vw,170px\)/);
  assert.match(soloCss,/font-size:clamp\(104px,32vw,170px\)/);
  assert.doesNotMatch(game,/スマホを横向きにしてね|overlay-portrait/);
- assert.ok(html.includes('game.css?v=20261020-layout4'));
+ assert.ok(html.includes('game.css?v=20261020-layout5'));
  assert.ok(html.includes('game.js?v=20261020-layout4'));
  assert.ok(lobby.includes("type:'link-start'"));
  assert.ok(lobby.includes("room.phase==='link'"));
