@@ -5,6 +5,7 @@
  const playersApi=window.HoukagoPlayers;
  const SELECT_KEY='houkago_link_burst_versus_players_v1';
  const resumeApi=window.HoukagoResume;
+ const settingsApi=window.HoukagoSettings;
  const RESUME_ID='link-burst-versus';
  const MATCHUP_KEY='houkago_link_burst_versus_matchups_v1';
  if(!root||!engine)return;
@@ -157,7 +158,7 @@
    const st=match.games[i];
    const piece=st.piece;
    const signature=st.phase+'|'+st.link+'|'+st.board.map(function(r){return r.join(',')}).join(';')+
-      '|'+(piece?[piece.x,piece.y,piece.rot,piece.a,piece.b].join(','):'')+'|'+st.groups.length;
+      '|'+(piece?[piece.x,piece.y,piece.rot,piece.a,piece.b].join(','):'')+'|'+st.groups.length+'|'+(settingsApi?.load?.().linkBurstGhost!==false);
    if(force||match.boardSignatures[i]!==signature){
      match.boardSignatures[i]=signature;
      const visible=new Map();
@@ -167,7 +168,7 @@
      })())if(c.y>=engine.HIDDEN)visible.set(c.y+':'+c.x,c.color);
      const charged=new Set(st.phase==='charge'?st.groups.flat().map(function(v){return v.y+':'+v.x}):[]);
      const bursting=new Set(st.phase==='burst'?st.burstCells:[]);
-     const ghosts=engine.ghost(st);
+     const ghosts=settingsApi?.load?.().linkBurstGhost===false?new Map():engine.ghost(st);
      let html='';
      for(let row=engine.HIDDEN;row<engine.ROWS;row++)for(let x=0;x<engine.COLS;x++){
        const key=row+':'+x;
@@ -555,6 +556,7 @@ function newRound(clearSave=true){
    match.keys.delete(binding[0]);
    match.keyHeld.delete(binding[0]);
  });
+ window.addEventListener('houkago-settings-change',function(){match.boardSignatures=['',''];draw(true)});
  window.addEventListener('houkago-back-guard-open',function(){pause(true)});
  window.addEventListener('houkago-back-guard-save',persistMatch);
  window.addEventListener('pagehide',persistMatch);
