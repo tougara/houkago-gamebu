@@ -50,7 +50,7 @@ function dialog(g){
  '<li>連鎖やCOMBOで相手へJAMを送り、届いたJAMは自分の連鎖で相殺</li>'+
  '<li>中央に新しいペアを出せなくなったらKO</li>'+
  '<li>縦持ちで、自分の盤面を大きく・右上に相手のミニ盤面を表示</li></ol>'+
- (host()?'<button class="btn" data-action="begin">3・2・1 スタート</button>':
+ (host()?'<button class="btn" data-action="begin">対戦開始</button>':
  '<p>ホストのスタートを待ってね</p>')+
  '<button class="btn alt" data-action="return">ロビーへもどる</button></section></div>';
  return null;
@@ -130,7 +130,7 @@ function refresh(g){
   value('match-state','通信待ち');
   if(banner){banner.hidden=false;banner.textContent='PAUSE'}
   if(actions)actions.innerHTML='<p class="side-state">通信が切断されたため一時停止。両者が戻ってから再開。</p>'+
-   (host()?'<button class="btn" data-action="resume">3・2・1 で再開</button>':'')+
+   (host()?'<button class="btn" data-action="resume">対戦再開</button>':'')+
    '<button class="btn alt" data-action="return">対戦を終了・退出</button>';
  }else if(g.stage==='finished'){
   releaseAll();
