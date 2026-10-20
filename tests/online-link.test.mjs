@@ -95,6 +95,11 @@ test('browser client syntax and portrait-first solo-controller / tiny opponent l
  const html=readFileSync(new URL('../online/link-burst/index.html',import.meta.url),'utf8');
  const lobby=readFileSync(new URL('../online/lobby.js',import.meta.url),'utf8');
  assert.doesNotThrow(()=>new Function(game));
+ assert.ok(game.includes('data-action="begin">対戦開始</button>'));
+ assert.ok(game.includes('data-action="resume">対戦再開</button>'));
+ assert.ok(!game.includes('3・2・1 スタート'));
+ assert.ok(!game.includes('3・2・1 で再開'));
+
  assert.ok(css.includes('.control[data-key="rotate"]{grid-column:5 / 7;grid-row:1 / 3'));
  assert.ok(css.includes('grid-template-rows:1.3fr .7fr'),'solo-style movement control arrangement');
  assert.match(css,/\.match\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) var\(--online-opp-width\)/);
