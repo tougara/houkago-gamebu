@@ -16,6 +16,10 @@ function build(slug,search='?testPlay=1'){
  const document={readyState:'loading',addEventListener(){}};
  const location={pathname:'/online/'+slug+'/',search};
  const ctx={window,document,location,URLSearchParams,queueMicrotask,Date,Math,Object,Array,JSON,Number,Set};
+ if(slug==='link-burst'){
+  runInNewContext(text('../games/link-burst/versus/engine.js'),ctx);
+  runInNewContext(text('link-burst/preview-simulator.js'),ctx);
+ }
  runInNewContext(simulator,ctx);
  return window;
 }
@@ -32,6 +36,13 @@ test('共通試遊は7作品の選択画面から開けて、各6作品の実際
   assert.match(page,/offline-preview\.js\?v=/);
   assert.match(page,/offline-preview\.css\?v=/);
   assert.ok(page.indexOf('offline-preview.js')<page.indexOf('game.js'),'mock must load first: '+slug);
+  if(slug==='link-burst'){
+   assert.match(page,/games\/link-burst\/versus\/engine\.js\?v=/);
+   assert.match(page,/link-burst\/preview-simulator\.js\?v=/);
+   assert.ok(page.indexOf('versus/engine.js')<page.indexOf('preview-simulator.js'));
+   assert.ok(page.indexOf('preview-simulator.js')<page.indexOf('offline-preview.js'));
+   assert.doesNotThrow(()=>new Function(text('link-burst/preview-simulator.js')));
+  }
   assert.match(game,/window\.HoukagoOfflinePreview/);
   assert.doesNotThrow(()=>new Function(game));
  }
@@ -213,4 +224,54 @@ test('試遊のPERFECTは数値が本当に一致したSTOPでだけ出る',()=>
  assert.equal(result.value,view.target);
  assert.equal(result.special,true);
  assert.equal(result.attack,2);
+});
+
+test('リンクバーストの試遊は開始から3.5秒後に対戦操作へ移り、落下・左右・回転が動く',()=>{
+ const w=build('link-burst'),demo=w.HoukagoOfflinePreview;
+ const engine=w.LinkBurstPreviewSimulator;
+ assert.ok(engine,'offline VS engine adapter is loaded');
+ assert.equal(demo.snapshot().link.stage,'setup');
+ demo.handle({type:'link-begin'});
+ assert.equal(demo.snapshot().link.stage,'countdown');
+ for(let ms=0;ms<3500;ms+=100)demo.stepLink(100);
+ let snap=demo.snapshot().link;
+ assert.equal(snap.stage,'playing','countdown must advance automatically to playable state');
+ const initial=snap.self.piece;
+ assert.ok(initial,'a live pair should be present');
+ assert.equal(snap.self.board.length,13);
+ assert.equal(snap.opponent.board.length,13);
+ assert.equal(snap.self.next.length,2);
+ demo.handle({type:'link-control',action:'left',pressed:true});
+ snap=demo.snapshot().link;
+ assert.equal(snap.self.piece.x,initial.x-1);
+ demo.handle({type:'link-control',action:'left',pressed:false});
+ const prevRot=snap.self.piece.rot;
+ demo.handle({type:'link-control',action:'rotate',pressed:true});
+ snap=demo.snapshot().link;
+ assert.notEqual(snap.self.piece.rot,prevRot,'rotate button must rotate pair');
+ demo.handle({type:'link-control',action:'rotate',pressed:false});
+ const beforeY=snap.self.piece.y;
+ demo.handle({type:'link-control',action:'down',pressed:true});
+ for(let n=0;n<4;n++)demo.stepLink(100);
+ demo.handle({type:'link-control',action:'down',pressed:false});
+ snap=demo.snapshot().link;
+ assert.ok(snap.self.pieces>0||snap.self.piece.y>beforeY,'down input must advance the falling piece');
+ assert.ok(snap.opponent.piece.y>initial.y||snap.opponent.pieces>0,'opponent must also progress');
+});
+test('リンクバースト試遊の中断・再開・勝敗画面・リセットを全て操作できる',()=>{
+ const demo=build('link-burst').HoukagoOfflinePreview;
+ demo.choose('playing');
+ assert.equal(demo.snapshot().link.stage,'playing');
+ demo.choose('interrupted');
+ assert.equal(demo.snapshot().link.stage,'interrupted');
+ demo.handle({type:'link-resume'});
+ assert.equal(demo.snapshot().link.stage,'countdown');
+ for(let t=0;t<35;t++)demo.stepLink(100);
+ assert.equal(demo.snapshot().link.stage,'playing');
+ demo.choose('finished');
+ assert.equal(demo.snapshot().link.stage,'finished');
+ assert.deepEqual(escapeObject(demo.snapshot().link.winners),['demo-a']);
+ demo.choose('setup');
+ assert.equal(demo.snapshot().link.stage,'setup');
+ assert.equal(demo.snapshot().link.self.score,0);
 });
