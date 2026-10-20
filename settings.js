@@ -1,6 +1,6 @@
 (function(){
   const KEY='houkago_common_settings_v1';
-  const DEFAULTS={vibration:true,motion:'standard',keepAwake:false};
+  const DEFAULTS={vibration:true,motion:'standard',keepAwake:false,linkBurstGhost:true};
   let wakeLock=null;
 
   function normalize(raw){
@@ -8,7 +8,8 @@
     return {
       vibration:s.vibration!==false,
       motion:s.motion==='reduced'?'reduced':'standard',
-      keepAwake:s.keepAwake===true
+      keepAwake:s.keepAwake===true,
+      linkBurstGhost:s.linkBurstGhost!==false
     };
   }
   function load(){
@@ -20,6 +21,7 @@
     root.dataset.hgMotion=settings.motion;
     root.dataset.hgVibration=settings.vibration?'on':'off';
     root.dataset.hgKeepAwake=settings.keepAwake?'on':'off';
+    root.dataset.hgLinkBurstGhost=settings.linkBurstGhost?'on':'off';
   }
   function emit(settings){
     window.dispatchEvent(new CustomEvent('houkago-settings-change',{detail:settings}));
@@ -76,6 +78,10 @@
           '</div></section>'+
           '<section class="hg-setting-card"><div class="hg-setting-copy"><strong>画面演出</strong><span>光・揺れ・アニメーションが苦手なときは「ひかえめ」にできます。</span></div><div class="hg-setting-options">'+
             settingButton('標準','motion','standard',s.motion)+settingButton('ひかえめ','motion','reduced',s.motion)+
+          '</div></section>'+
+          '<section class="hg-setting-card"><div class="hg-setting-copy"><strong>リンクバースト！着地予測</strong><span>落ちるブロックの着地点を薄く表示します。1人用・2人対戦・オンライン・試遊で共通です。</span></div><div class="hg-setting-options">'+
+            '<button type="button" class="hg-setting-choice '+(s.linkBurstGhost?'selected':'')+'" data-hg-toggle="linkBurstGhost" data-hg-value="true" aria-pressed="'+s.linkBurstGhost+'">ON</button>'+
+            '<button type="button" class="hg-setting-choice '+(!s.linkBurstGhost?'selected':'')+'" data-hg-toggle="linkBurstGhost" data-hg-value="false" aria-pressed="'+(!s.linkBurstGhost)+'">OFF</button>'+
           '</div></section>'+
           '<section class="hg-setting-card"><div class="hg-setting-copy"><strong>画面スリープ防止</strong><span>プレイ中に画面が暗くなりにくくします。'+(wakeSupported?'':' この端末では非対応です。')+'</span></div><div class="hg-setting-options">'+
             '<button type="button" class="hg-setting-choice '+(s.keepAwake?'selected':'')+'" data-hg-toggle="keepAwake" data-hg-value="true" '+(wakeSupported?'':'disabled')+' aria-pressed="'+s.keepAwake+'">ON</button>'+
