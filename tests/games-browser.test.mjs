@@ -39,11 +39,11 @@ async function open(width=390,height=780){
  return {page,context,errors};
 }
 const visibleCards=p=>p.locator('.compact-card-wrap:not([hidden])');
-test('initial page shows exactly 8 real games with clear discovery and a compact featured card',async()=>{
+test('initial page shows exactly 9 real games with clear discovery and a compact featured card',async()=>{
  const {page,context,errors}=await open();
  try{
-  assert.equal(await page.locator('#gameCount').textContent(),'8');
-  assert.equal(await visibleCards(page).count(),8);
+  assert.equal(await page.locator('#gameCount').textContent(),'9');
+  assert.equal(await visibleCards(page).count(),9);
   assert.equal(await page.locator('.games-coming-section').count(),1);
   assert.equal(await page.locator('.coming-card').count(),0);
   const loc=await page.evaluate(()=>{
@@ -67,7 +67,7 @@ test('initial page shows exactly 8 real games with clear discovery and a compact
 test('1/2/3+ person filters count playable games correctly',async()=>{
  const {page,context}=await open();
  try{
-  for(const [filter,total] of [['1','2'],['2','5'],['3','6'],['all','8']]){
+  for(const [filter,total] of [['1','2'],['2','5'],['3','7'],['all','9']]){
    await page.locator('[data-player-filter="'+filter+'"]').click();
    assert.equal(await page.locator('#gameCount').textContent(),total,'filter '+filter);
    assert.equal(await visibleCards(page).count(),Number(total));
@@ -78,7 +78,7 @@ test('genre and game name search can be combined, cleared and restored',async()=
  const {page,context}=await open();
  try{
   await page.locator('[data-game-filter="推理"]').click();
-  assert.equal(await page.locator('#gameCount').textContent(),'2');
+  assert.equal(await page.locator('#gameCount').textContent(),'3');
   await page.locator('#gameSearch').fill('オオカミ');
   assert.equal(await page.locator('#gameCount').textContent(),'1');
   assert.equal(await visibleCards(page).first().locator('h2').textContent(),'ことばのオオカミ');
@@ -86,9 +86,20 @@ test('genre and game name search can be combined, cleared and restored',async()=
   assert.equal(await page.locator('#gameCount').textContent(),'0');
   assert.equal(await page.locator('#gamesNoResults').isVisible(),true);
   await page.locator('#gameSearchClear').click();
-  assert.equal(await page.locator('#gameCount').textContent(),'2');
+  assert.equal(await page.locator('#gameCount').textContent(),'3');
   await page.locator('[data-game-filter="all"]').click();
-  assert.equal(await page.locator('#gameCount').textContent(),'8');
+  assert.equal(await page.locator('#gameCount').textContent(),'9');
+ }finally{await context.close()}
+});
+test('Sabotage logo also works in featured recommendations',async()=>{
+ const {page,context,errors}=await open();
+ try{
+  const card=page.locator('.compact-card-wrap[data-game-id="sabotage"]');
+  assert.equal(await card.locator('img').count(),1);
+  await card.locator('.favorite-toggle').click();
+  assert.equal(await page.locator('.featured-copy strong').textContent(),'サボタージュ！');
+  assert.match(await page.locator('.featured-art img').getAttribute('src'),/sabotage-logo\\.svg/);
+  assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
 test('favorites can be saved, filtered and survive reload',async()=>{
