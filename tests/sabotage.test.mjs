@@ -100,8 +100,8 @@ test('オフラインとオンラインは同一ルールエンジンを使用',
  const offline=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
  const online=readFileSync(new URL('../online/sabotage/game.js',import.meta.url),'utf8');
  const worker=readFileSync(new URL('../worker/src/index.js',import.meta.url),'utf8');
- assert.match(offline,/from '\.\/engine\.js'/);
- assert.match(online,/from '\.\.\/\.\.\/games\/sabotage\/engine\.js'/);
+ assert.match(offline,/from '\.\/engine\.js(?:\?v=[^']+)?'/);
+ assert.match(online,/from '\.\.\/\.\.\/games\/sabotage\/engine\.js(?:\?v=[^']+)?'/);
  assert.match(worker,/from '\.\.\/\.\.\/games\/sabotage\/engine\.js'/);
  for(const path of ['games/sabotage/engine.js','games/sabotage/game.js','online/sabotage/game.js','worker/src/index.js']){
   execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
