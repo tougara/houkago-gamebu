@@ -204,6 +204,9 @@ test('Sabotage offline plays from common roster through first code reveal on a p
   await page.locator('[data-wire="0"]').click();
   page.once('dialog',d=>d.accept());
   await page.locator('[data-action="cut"]').click();
+  await page.locator('[data-reveal-stage="suspense"]').waitFor();
+  assert.equal(await page.locator('.sab-result').count(),0,'the code outcome must remain hidden during the ellipsis');
+  await page.locator('[data-reveal-stage="ready"]').waitFor();
   await page.locator('.sab-result').waitFor();
   assert.equal(await page.locator('.sab-result').count(),1);
   assert.deepEqual(errors,[]);
@@ -249,11 +252,16 @@ test('Sabotage online trial uses one device and keeps chat open between messages
   await page.locator('[data-wire="0"]').click();
   page.once('dialog',d=>d.accept());
   await page.locator('[data-action="cut"]').click();
+  await page.locator('[data-reveal-stage="suspense"]').waitFor();
+  assert.equal(await page.locator('.sab-result').count(),0,'the code outcome must remain hidden during the ellipsis');
+  await page.locator('[data-reveal-stage="ready"]').waitFor();
   await page.locator('.sab-result').waitFor();
   await page.locator('[data-action="next"]').click();
   // The random first code may already end the match, which is a valid result.
   if(await page.locator('[data-action="demo-turn"]').count()){
    await page.locator('[data-action="demo-turn"]').click();
+   await page.locator('[data-reveal-stage="suspense"]').waitFor();
+   await page.locator('[data-reveal-stage="ready"]').waitFor();
    await page.locator('.sab-result').waitFor();
   }else{
    assert.equal(await page.locator('.sab-role').count()>0,true,'the trial can end with an early error');
