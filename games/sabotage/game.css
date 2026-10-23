@@ -131,3 +131,9 @@ html[data-hg-motion="reduced"] .sab-badge-inner,html[data-hg-motion="reduced"] .
 .sab-play{row-gap:8px}
 .sab-play .sab-slot-legend{padding:0 2px;min-height:12px}
 @media(max-height:670px){.sab-play{row-gap:5px}.sab-slot-legend{font-size:10px}.sab-status-badges{gap:3px}}
+
+/* Grid track count accounts for the exposed-code legend, and the demo-only notice. */
+.sab-play{grid-template-rows:auto auto minmax(0,1fr) auto auto!important}
+.sab-play:has(.sab-trial-note){grid-template-rows:auto auto auto minmax(0,1fr) auto auto!important}
+.sab-play>.sab-roster{min-height:0;overflow:auto;overscroll-behavior:contain}
+.sab-play>.sab-slot-legend{min-height:14px}
