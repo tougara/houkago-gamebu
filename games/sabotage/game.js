@@ -1,7 +1,8 @@
-import {createSabotage,sabotageAction,sabotageView} from './engine.js';
+import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js';
+import {sabotageRevealBody} from './reveal-ui.js';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title';
+let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;
 function loadPlayers(){const d=api.load();players=d.players.slice(0,d.activeCount).map(p=>({id:p.id,name:p.name,icon:p.icon}))}
 function persist(){if(!g||g.stage==='finished')return;resume?.save?.(SAVE,{title:'サボタージュ！',path:'/games/sabotage/',summary:'ROUND '+g.round+' / 4'}, {g,peek,screen:'handoff',recorded})}
 function nav(){return '<nav class="sab-nav top-nav"><button type="button" class="nav-pill" data-nav="back">← もどる</button><span class="sab-mark">SABOTAGE!</span><button type="button" class="nav-pill" data-nav="home">ゲームをえらぶ</button></nav>'}
@@ -20,12 +21,19 @@ function secret(){const p=g.players[peek],v=sabotageView(g,p.id),c=v.myCounts;
 function roster(gv){return '<div class="sab-roster">'+gv.members.map(p=>'<button type="button" class="sab-player '+(gv.currentId===p.id?'active':'')+'" data-target="'+esc(p.id)+'" '+(p.id===gv.currentId?'disabled':'')+'><span class="meta"><span class="name">'+esc(p.icon)+' '+esc(p.name)+'</span><small>'+p.cards+'本</small></span><span class="sab-wires">'+Array.from({length:p.cards},()=>'<i class="sab-wire"></i>').join('')+'</span></button>').join('')+'</div>'}
 function playing(){const v=sabotageView(g,g.players[0].id),op=g.players.find(x=>x.id===v.currentId);return '<section class="sab-play"><section class="sab-panel"><div class="sab-status"><span>ROUND '+v.round+' / 4</span><span>解除 '+v.repaired+' / '+v.required+'</span></div><div class="sab-progress"><i style="width:'+(v.repaired/v.required*100)+'%"></i></div></section><div class="sab-current"><small>現在の選択者</small><strong>'+esc(op.icon)+' '+esc(op.name)+'</strong><small>残り '+(v.totalCuts-v.cuts)+' 回のコード選択</small></div>'+roster(v)+'<div class="sab-stack"><p class="sab-sub sab-center" style="margin:0">対象を選ぶとコードを拡大表示</p>'+rules()+btn('公開されたコードの履歴','history','secondary')+'</div></section>'}
 function picker(){const p=g.players.find(x=>x.id===target),c=p?.hand?.length||0;return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">SELECT CODE</p><h2>'+esc(p?.icon)+' '+esc(p?.name)+' のコード</h2><p class="sab-sub">どれを選んでも中身は分からない</p><div class="sab-grid">'+Array.from({length:c},(_,i)=>'<button class="sab-btn '+(wire===i?'selected':'')+'" type="button" data-wire="'+i+'">▥<br>#'+(i+1)+'</button>').join('')+'</div><div class="sab-actions" style="margin-top:18px">'+btn('このコードを公開する','cut','',wire<0)+btn('選び直す','cancel','secondary')+'</div></section>'}
-function reveal(){const x=g.lastCut,p=g.players.find(v=>v.id===x.targetId),out=x.type==='repair'?'DISARMED!':x.type==='error'?'BOMB!' :'しーん……';return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">CODE REVEAL / ROUND '+g.round+'</p><h2>'+esc(p.icon)+' '+esc(p.name)+' のコードを公開</h2><div class="sab-result '+x.type+'">'+out+'</div><p class="sab-sub">'+(x.type==='dummy'?'……何も起きなかった。':wireName[x.type]+' が見つかった！')+'</p><p class="sab-sub">解除 '+g.repaired+' / '+g.required+'</p>'+btn(g.pendingResult?'最終結果を見る':g.cuts===g.players.length?'次のラウンドへ':'次の選択へ','next')+'</section>'}
+function reveal(){
+ const x=g.lastCut,p=g.players.find(v=>v.id===x.targetId),phase=sabotageRevealPhase(x);
+ return '<section class="sab-panel sab-center sab-handoff sab-reveal-scene"><p class="sab-kicker">CODE REVEAL / ROUND '+g.round+'</p>'+
+ '<h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2>'+
+ sabotageRevealBody(x.type,phase.stage,g.repaired,g.required)+
+ (phase.stage==='ready'?btn(g.pendingResult?'最終結果を見る':g.cuts===g.players.length?'次のラウンドへ':'次の選択へ','next'):'<p class="sab-reveal-pause" aria-label="演出中">……</p>')+'</section>';
+}
 function history(){return '<section class="sab-panel"><h2>コード公開履歴</h2><p class="sab-sub">'+(g.history.length?g.history.map(x=>{const p=g.players.find(v=>v.id===x.targetId);return 'ROUND '+x.round+'：'+esc(p?.name)+' → '+wireName[x.type]}).join('<hr style="border-color:#44677b">'):'まだ公開されたコードはありません')+'</p></section>'+btn('ゲームにもどる','cancel','secondary')}
 function finish(){if(!recorded){recorded=true;const winners=g.players.filter(x=>x.role===g.winner).map(x=>x.id);api.recordGame?.({gameId:'sabotage',participants:g.players.map(x=>x.id),winners});resume?.clear?.(SAVE)}
  return '<section class="sab-panel sab-center"><p class="sab-kicker">MISSION COMPLETE</p><h1 class="sab-headline">'+(g.winner==='crew'?'MISSION CLEAR':g.winner==='impostor'?'SYSTEM DOWN':'JACKAL WIN')+'</h1><div class="sab-role '+g.winner+'">'+winnerName[g.winner]+' 勝利！</div><p class="sab-sub">'+(g.winner==='crew'?'解除コードをすべて発見！':g.winner==='impostor'?'解除阻止に成功！':'誰にも決着させず最終ラウンド終了！')+'</p></section><section class="sab-panel"><h3>全員の正体</h3>'+g.players.map(p=>'<p>'+esc(p.icon)+' '+esc(p.name)+'：<b class="sab-role '+p.role+'" style="font-size:14px">'+roleName[p.role]+'</b></p>').join('')+'</section><div class="sab-actions">'+btn('同じメンバーでもう一戦','again')+btn('メンバー変更','members','secondary')+btn('ゲームをえらぶ','home','secondary')+'</div>'}
 function render(){
  if(!app)return;
+ clearTimeout(revealTimer);revealTimer=null;
  const active=!!g&&g.stage!=='finished';window.HoukagoBackGuard?.setActive(active);
  if(g?.stage==='finished'&&screen!=='result')screen='result';
  let html=nav();
@@ -42,6 +50,10 @@ function render(){
  else if(g?.stage==='briefing'){screen='handoff';peek=0;secretOpen=false;html+=handoff()}
  else html+=title();
  app.innerHTML=html;
+ if(g?.stage==='reveal'&&screen==='play'){
+  const phase=sabotageRevealPhase(g.lastCut);
+  if(phase.waitMs>0)revealTimer=setTimeout(()=>{if(g?.stage==='reveal'&&screen==='play')render()},Math.ceil(phase.waitMs)+30);
+ }
 }
 function begin(){loadPlayers();if(players.length<4){screen='members';return render()}g=createSabotage(players);peek=0;screen='handoff';recorded=false;persist();render()}
 function advance(){sabotageAction(g,g.currentId,{type:'sabotage-next'});if(g.stage==='briefing'){screen='handoff';peek=0}else if(g.stage==='finished')screen='result';else screen='play';persist();render()}
