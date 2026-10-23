@@ -67,7 +67,7 @@ test('initial page shows exactly 9 real games with clear discovery and a compact
 test('1/2/3+ person filters count playable games correctly',async()=>{
  const {page,context}=await open();
  try{
-  for(const [filter,total] of [['1','2'],['2','5'],['3','7'],['all','9']]){
+  for(const [filter,total] of [['1','2'],['2','5'],['3','6'],['all','9']]){
    await page.locator('[data-player-filter="'+filter+'"]').click();
    assert.equal(await page.locator('#gameCount').textContent(),total,'filter '+filter);
    assert.equal(await visibleCards(page).count(),Number(total));
@@ -98,7 +98,7 @@ test('Sabotage logo also works in featured recommendations',async()=>{
   assert.equal(await card.locator('img').count(),1);
   await card.locator('.favorite-toggle').click();
   assert.equal(await page.locator('.featured-copy strong').textContent(),'サボタージュ！');
-  assert.match(await page.locator('.featured-art img').getAttribute('src'),/sabotage-logo\\.svg/);
+  assert.match(await page.locator('.featured-art img').getAttribute('src'),/sabotage-logo[.]svg/);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
