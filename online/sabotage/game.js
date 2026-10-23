@@ -1,0 +1,116 @@
+import {createSabotage,sabotageView,sabotageAction} from '../../games/sabotage/engine.js';
+const $=id=>document.getElementById(id),root=$('game-root'),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
+const q=new URLSearchParams(location.search),demo=q.get('testPlay')==='1';
+const STORE='houkago-online-session-v1';let session=null,room=null,ws=null,retry=0,closed=false,secretOpen=false,panel='',target='',wire=-1,lastPhase='',demoGame=null,demoSelf='';
+const demoPeople=[{id:'demo1',name:'あなた',icon:'🐱'},{id:'demo2',name:'ゆい',icon:'🐶'},{id:'demo3',name:'けん',icon:'🦊'},{id:'demo4',name:'みお',icon:'🐧'}];
+if(!demo){try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
+ if(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session.token)||!/^https:\/\/[a-z0-9.-]+$/i.test(base)||q.get('room')&&q.get('room')!==session.code){location.replace('../');}
+}else{
+ demoGame=createSabotage(demoPeople);demoSelf='demo1';session={id:demoSelf,code:'DEMO',token:''};
+ room={phase:'sabotage',hostId:'demo1',members:demoPeople,sabotage:sabotageView(demoGame,demoSelf)};
+}
+const nRole={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
+const nWire={repair:'修復コード',error:'致命的エラー',dummy:'ダミー'};
+const quick=['修復コードがある！','エラーがあるかも','誰を信じよう？','この人のコードを選んで','別の人にしよう','ちょっと待って！','怪しいと思う','信じる！'];
+const person=id=>room?.members?.find(x=>x.id===id)||{name:'不明',icon:'？'};
+const data=()=>room?.sabotage;
+const me=()=>demo?demoSelf:session?.id;
+const host=()=>demo||room?.hostId===session?.id;
+const btn=(s,key,style='',disabled=false)=>'<button type="button" class="sab-btn '+style+'" data-action="'+key+'" '+(disabled?'disabled':'')+'>'+esc(s)+'</button>';
+function notify(s){$('notice').hidden=!s;if(s)$('notice').textContent=s}
+function send(type,args={}){
+ if(demo){
+  const ok=sabotageAction(demoGame,demoSelf,{type,...args});
+  if(ok){
+   if(type==='sabotage-seen'){const next=demoGame.players.find(p=>!p.seen);demoSelf=next?.id||demoGame.currentId}
+   else if(type==='sabotage-cut')demoSelf=demoGame.currentId;
+   if(demoGame.stage==='playing')demoSelf=demoGame.currentId;
+   room.sabotage=sabotageView(demoGame,demoSelf);
+   room.members=demoPeople;
+   panel='';target='';wire=-1;secretOpen=false;render();
+  }
+  return ok;
+ }
+ if(!ws||ws.readyState!==WebSocket.OPEN){notify('通信が切れています。再接続します。');return false}
+ ws.send(JSON.stringify({type,...args}));return true;
+}
+function status(d){return '<section class="sab-panel"><div class="sab-status"><span>ROUND '+d.round+' / 4</span><span>修復 '+d.repaired+' / '+d.required+'</span></div><div class="sab-progress"><i style="width:'+Math.round(d.repaired/d.required*100)+'%"></i></div></section>'}
+function rules(){return '<details class="sab-more"><summary>遊び方・勝利条件</summary><div class="sab-more-content">自分の役職とコードの内訳を確認し、他の人のコードを1本選びます。選ばれた人が次の選択者。全修復でクルーメイト勝利、致命的エラーでインポスター勝利。4ラウンド終了ならジャッカルがいればジャッカル、いなければインポスター勝利。自分のコードは選べません。嘘の申告は自由です。</div></details>'}
+function briefing(d){
+ const count=d.myCounts||{repair:0,error:0,dummy:0};
+ if(d.mySeen)return '<section class="sab-panel sab-center sab-brief"><h2>秘密の確認が完了</h2><p class="sab-sub">全員の確認が終わるまで待機中</p><strong>'+d.seenCount+' / '+d.members.length+'人</strong></section>'+rules();
+ return '<section class="sab-panel sab-center sab-brief"><p class="sab-kicker">ROUND '+d.round+' · SECRET</p><h2>あなたの秘密情報</h2><p class="sab-sub">この端末の持ち主だけが見てね</p>'+
+ (secretOpen?((d.round===1?'<div class="sab-role '+d.myRole+'">'+nRole[d.myRole]+'</div>':'')+
+ '<p class="sab-sub">コードは位置不明。内訳だけ覚えよう。</p><div class="sab-counts"><div><strong>'+count.repair+'</strong><small>修復</small></div><div><strong>'+count.error+'</strong><small>エラー</small></div><div><strong>'+count.dummy+'</strong><small>ダミー</small></div></div>'+btn('覚えた・確認完了','seen')):btn('秘密を表示','show'))+
+ '<p class="sab-sub">'+d.seenCount+' / '+d.members.length+'人が確認済み</p></section>'+rules();
+}
+function roster(d){return '<div class="sab-roster">'+d.members.map(p=>'<button type="button" class="sab-player '+(d.currentId===p.id?'active':'')+'" data-target="'+esc(p.id)+'" '+(d.currentId!==me()||p.id===d.currentId?'disabled':'')+'><span class="meta"><span class="name">'+esc(p.icon)+' '+esc(p.name)+'</span><small>'+p.cards+'本</small></span><span class="sab-wires">'+Array.from({length:p.cards},()=>'<i class="sab-wire"></i>').join('')+'</span></button>').join('')+'</div>'}
+function playing(d){const turn=person(d.currentId),own=d.currentId===me();
+ return '<section class="sab-play">'+status(d)+'<div class="sab-current"><small>現在の選択者</small><strong>'+esc(turn.icon)+' '+esc(turn.name)+'</strong><small>残り '+(d.totalCuts-d.cuts)+' 回 / '+(own?'相手を選んでください':'コード公開を待機中')+'</small></div>'+roster(d)+'<div class="sab-stack"><div class="sab-online-help">'+btn('通信チャット','chat','secondary')+btn('公開履歴','history','secondary')+'</div>'+rules()+'</div></section>';
+}
+function picker(d){const p=d.members.find(x=>x.id===target),len=p?.cards||0;
+ return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE SELECT</p><h2>'+esc(p?.icon)+' '+esc(p?.name)+' のコード</h2><p class="sab-sub">どれも種類は不明。番号を選んで確定。</p><div class="sab-grid">'+Array.from({length:len},(_,i)=>'<button type="button" class="sab-btn '+(wire===i?'selected':'')+'" data-wire="'+i+'">▥<br>#'+(i+1)+'</button>').join('')+'</div><div class="sab-actions" style="margin-top:16px">'+btn('このコードを公開する','cut','',wire<0)+btn('選び直す','cancel','secondary')+'</div></section>';
+}
+function reveal(d){const x=d.lastCut,p=person(x.targetId),t=x.type;
+ return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE REVEAL</p><h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2><div class="sab-result '+t+'">'+(t==='repair'?'REPAIRED!':t==='error'?'SYSTEM ERROR!':'EMPTY CODE')+'</div><p class="sab-sub">'+nWire[t]+'を公開しました</p><p class="sab-sub">修復 '+d.repaired+' / '+d.required+'</p>'+
+ (host()?btn('次へ進む','next'): '<p class="sab-sub">ホストが次へ進むまで待ってね</p>')+'</section>';
+}
+function chat(d){return '<section class="sab-panel sab-wait"><h2>通信チャット</h2><p class="sab-sub">通話は別アプリ。ここでは決まったメッセージを送れるよ。</p><div class="sab-chat-messages">'+(d.chat?.length?d.chat.slice(-8).map(x=>'<div class="sab-chat-line"><strong>'+esc(person(x.id).name)+'</strong> '+esc(x.text)+'</div>').join(''):'<p class="sab-sub">まだ発言はありません</p>')+'</div><div class="sab-quick-grid" style="margin-top:12px">'+quick.map((x,i)=>'<button class="sab-btn secondary" type="button" data-chat="'+i+'">'+esc(x)+'</button>').join('')+'</div><div style="margin-top:12px">'+btn('盤面へ戻る','cancel')+'</div></section>'}
+function history(d){return '<section class="sab-panel sab-wait"><h2>公開履歴</h2><div class="sab-chat-messages">'+(d.history.length?d.history.map(x=>'<div class="sab-chat-line">R'+x.round+'：'+esc(person(x.targetId).name)+' → '+nWire[x.type]+'</div>').join(''):'<p>まだありません</p>')+'</div></section>'+btn('盤面へ戻る','cancel')}
+function result(d){return '<section class="sab-panel sab-center"><p class="sab-kicker">MISSION COMPLETE</p><h1 class="sab-headline">'+(d.winner==='crew'?'MISSION CLEAR':d.winner==='impostor'?'SYSTEM DOWN':'JACKAL WIN')+'</h1><div class="sab-role '+d.winner+'">'+nRole[d.winner]+' 勝利！</div><p class="sab-sub">'+(d.members.find(m=>m.id===me())?.role===d.winner?'あなたの勝利！':'勝利陣営が決まりました')+'</p></section><section class="sab-panel sab-victory-list"><h3>全員の役職</h3>'+d.members.map(p=>'<p>'+esc(p.icon)+' '+esc(p.name)+'：<b class="sab-role '+p.role+'" style="font-size:14px">'+nRole[p.role]+'</b></p>').join('')+'</section>'+(host()?btn('部屋に戻って再戦','stop'): '<p class="sab-sub sab-center">ホストがロビーへ戻すまで待機</p>')+btn('公開されたコードの履歴','history','secondary')};
+function render(){
+ if(!room?.sabotage)return;const d=data();if(!d)return;
+ const phase=d.round+':'+d.stage;if(lastPhase!==phase){secretOpen=false;panel='';target='';wire=-1;lastPhase=phase}
+ let h='';
+ if(d.stage==='briefing')h=briefing(d);
+ else if(d.stage==='playing'){h=panel==='chat'?chat(d):panel==='history'?history(d):target?picker(d):playing(d)}
+ else if(d.stage==='reveal')h=reveal(d);
+ else if(d.stage==='finished')h=panel==='history'?history(d):result(d);
+ root.innerHTML=h;
+}
+root.addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b||!data())return;const d=data();
+ if(b.dataset.target!==undefined){if(d.stage!=='playing'||d.currentId!==me()||b.dataset.target===d.currentId)return;target=b.dataset.target;wire=-1;panel='';render();return}
+ if(b.dataset.wire!==undefined){wire=Number(b.dataset.wire);render();return}
+ if(b.dataset.chat!==undefined){send('sabotage-chat',{key:Number(b.dataset.chat)});return}
+ switch(b.dataset.action){
+ case 'show':secretOpen=true;render();break;
+ case 'seen':send('sabotage-seen');secretOpen=false;break;
+ case 'cut':if(wire<0||!target||!confirm('このコードを公開する？取り消しはできません。'))return;send('sabotage-cut',{targetId:target,index:wire});target='';wire=-1;break;
+ case 'cancel':panel='';target='';wire=-1;render();break;
+ case 'chat':panel='chat';render();break;
+ case 'history':panel='history';render();break;
+ case 'next':send('sabotage-next');break;
+ case 'stop':if(confirm('ゲームを終えて全員でロビーへ戻る？'))send('sabotage-stop');break;
+ }
+});
+function lobby(clear=false){closed=true;if(clear)sessionStorage.removeItem(STORE);if(ws){ws.onclose=null;ws.close();ws=null}location.replace('../'+(!clear&&session.code!=='DEMO'?'?room='+encodeURIComponent(session.code):''))}
+function connect(){
+ if(demo||closed)return;
+ const current=new WebSocket(base.replace(/^http/,'ws')+'/api/rooms/'+session.code+'/ws?token='+encodeURIComponent(session.token));ws=current;
+ $('connection').textContent='接続中';
+ current.onopen=()=>{if(ws!==current)return;retry=0;$('connection').textContent='接続中';notify('')};
+ current.onmessage=e=>{
+  if(current!==ws)return;let msg;try{msg=JSON.parse(e.data)}catch{return}
+  if(msg.type==='room'||msg.type==='welcome'){
+   room=msg.room;
+   window.dispatchEvent(new CustomEvent('houkago-online-room-state',{detail:room}));
+   if(room.phase!=='sabotage'){lobby();return}
+   $('connection').textContent='オンライン';notify('');render();
+  }else if(msg.type==='left')lobby(true);
+  else if(msg.type==='error')notify(msg.error||'通信エラー');
+ };
+ current.onclose=event=>{
+  if(ws!==current||closed)return;ws=null;$('connection').textContent='再接続中';
+  if([4000,4002,4003].includes(event.code)){lobby(true);return}
+  retry=Math.min(7,retry+1);setTimeout(connect,Math.min(1500*2**(retry-1),15000));
+ };
+}
+$('back-lobby').addEventListener('click',e=>{e.preventDefault();
+ if(demo){location.href='../preview/';return}
+ if(!confirm(host()?'ゲームを終了して全員でロビーへ戻る？':'部屋から退出する？'))return;
+ if(host()){send('sabotage-stop');return}
+ send('leave');closed=true;setTimeout(()=>lobby(true),400);
+});
+if(demo){$('connection').textContent='試遊';render()}else connect();
