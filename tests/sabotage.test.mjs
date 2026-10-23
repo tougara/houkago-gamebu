@@ -112,9 +112,11 @@ test('オフライン・オンラインで解除／爆弾の表示名を統一',
   const source=readFileSync(new URL('../'+path,import.meta.url),'utf8');
   assert.match(source,/解除コード/);
   assert.match(source,/爆弾（BOMB）/);
-  assert.match(source,/'BOMB!'/);
+  assert.match(source,/sabotageRevealBody/);
   assert.doesNotMatch(source,/致命的エラー|SYSTEM ERROR!|REPAIRED!/);
  }
+ const visual=readFileSync(new URL('../games/sabotage/reveal-ui.js',import.meta.url),'utf8');
+ assert.match(visual,/'BOMB!'/);
  const engine=readFileSync(new URL('../games/sabotage/engine.js',import.meta.url),'utf8');
  assert.match(engine,/解除コードがある！/);
  assert.match(engine,/爆弾があるかも/);
@@ -125,10 +127,12 @@ test('オフライン・オンラインの空振り表示は「しーん……�
   const source=readFileSync(new URL('../'+path,import.meta.url),'utf8');
   assert.match(source,/dummy:'しーん……'/);
   assert.match(source,/<small>しーん……<\/small>/);
-  assert.match(source,/何も起きなかった/);
+  assert.match(source,/sabotageRevealBody/);
   assert.doesNotMatch(source,/EMPTY CODE|dummy:'ダミー'|<small>ダミー<\/small>/);
   execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
  }
+ const visual=readFileSync(new URL('../games/sabotage/reveal-ui.js',import.meta.url),'utf8');
+ assert.match(visual,/何も起きなかった/);
  const g=createSabotage(members(5));
  assert.equal(g.players.flatMap(p=>p.hand).filter(x=>x==='dummy').length,19);
 });
