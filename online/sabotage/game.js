@@ -1,5 +1,6 @@
 import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js';
 import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js';
+import {sabotageBadges,sabotageSlots,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js';
 const $=id=>document.getElementById(id),root=$('game-root'),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const q=new URLSearchParams(location.search),demo=q.get('testPlay')==='1';
@@ -25,9 +26,9 @@ function send(type,args={}){
   const ok=sabotageAction(demoGame,demoSelf,{type,...args});
   if(ok){
    // Trial mode always represents ONE player's own device. Simulate other devices silently.
-   if(type==='sabotage-seen'){
+   if(type==='sabotage-seen'||type==='sabotage-role-seen'){
     for(const p of demoGame.players){
-     if(p.id!==demoSelf&&!p.seen)sabotageAction(demoGame,p.id,{type:'sabotage-seen'});
+     if(p.id!==demoSelf)sabotageAction(demoGame,p.id,{type});
     }
    }
    room.sabotage=sabotageView(demoGame,demoSelf);
@@ -45,30 +46,53 @@ function simulateOtherDevice(){
  const operator=demoGame.currentId;
  const target=demoGame.players.find(p=>p.id===demoSelf&&p.hand.length)||demoGame.players.find(p=>p.id!==operator&&p.hand.length);
  if(!target||target.id===operator)return;
- const index=Math.floor(Math.random()*target.hand.length);
+ const available=(target.slots||[]).map((slot,i)=>slot.state==='closed'?i:-1).filter(i=>i>=0);
+ const index=available[Math.floor(Math.random()*available.length)];
+ if(index===undefined)return;
  if(sabotageAction(demoGame,operator,{type:'sabotage-cut',targetId:target.id,index})){
   room.sabotage=sabotageView(demoGame,demoSelf);
   render();
  }
 }
-function status(d){return '<section class="sab-panel"><div class="sab-status"><span>ROUND '+d.round+' / 4</span><span>解除 '+d.repaired+' / '+d.required+'</span></div><div class="sab-progress"><i style="width:'+Math.round(d.repaired/d.required*100)+'%"></i></div></section>'}
+function status(d){
+ return '<section class="sab-panel sab-status-panel"><div class="sab-status">'+
+ '<strong class="sab-round">ROUND '+d.round+' <span>/ 4</span></strong><span>解除 '+d.repaired+' / '+d.required+'</span></div>'+
+ sabotageBadges(d.required,d.repaired)+'</section>';
+}
 function rules(){return '<details class="sab-more"><summary>遊び方・勝利条件</summary><div class="sab-more-content">自分の役職とコードの内訳を確認し、他の人のコードを1本選びます。選ばれた人が次の選択者。全解除でクルーメイト勝利、爆弾を選ぶとインポスター勝利。4ラウンド終了ならジャッカルがいればジャッカル、いなければインポスター勝利。自分のコードは選べません。嘘の申告は自由です。</div></details>'}
 function briefing(d){
- const count=d.myCounts||{repair:0,error:0,dummy:0};
- if(d.mySeen)return '<section class="sab-panel sab-center sab-brief"><h2>秘密の確認が完了</h2><p class="sab-sub">全員の確認が終わるまで待機中</p><strong>'+d.seenCount+' / '+d.members.length+'人</strong></section>'+rules();
- return '<section class="sab-panel sab-center sab-brief"><p class="sab-kicker">ROUND '+d.round+' · SECRET</p><h2>あなたの秘密情報</h2><p class="sab-sub">'+(demo?'試遊：あなたの端末だけに表示中':'自分の端末だけに表示中')+'</p>'+
- (secretOpen?((d.round===1?'<div class="sab-role '+d.myRole+'">'+nRole[d.myRole]+'</div>':'')+
- '<p class="sab-sub">コードは位置不明。内訳だけ覚えよう。</p><div class="sab-counts"><div><strong>'+count.repair+'</strong><small>解除</small></div><div><strong>'+count.error+'</strong><small>爆弾</small></div><div><strong>'+count.dummy+'</strong><small>しーん……</small></div></div>'+btn('覚えた・確認完了','seen')):btn('秘密を表示','show'))+
+ const roleStage=d.stage==='roles',count=d.myCounts||{repair:0,error:0,dummy:0};
+ if(d.mySeen)return '<section class="sab-panel sab-center sab-brief"><p class="sab-kicker">'+(roleStage?'ROLE REVEAL':'ROUND '+d.round+' / 4')+'</p>'+
+ '<h2>秘密の確認が完了</h2><p class="sab-sub">ほかの人の確認を待機中</p><strong>'+d.seenCount+' / '+d.members.length+'人</strong></section>'+rules();
+ return '<section class="sab-panel sab-center sab-brief"><p class="sab-kicker">'+(roleStage?'ROLE REVEAL':'ROUND '+d.round+' / 4 · SECRET')+'</p>'+
+ '<h2>'+(roleStage?'あなたの役職':'あなたのコード内訳')+'</h2>'+
+ '<p class="sab-sub">この端末の持ち主だけが確認できます</p>'+
+ (secretOpen?((roleStage?sabotageRoleCard(d.myRole):sabotageRoleCard(d.myRole,count))+
+ '<p class="sab-sub">確認したら秘密を隠そう</p>'+btn(roleStage?'役職を確認した':'内訳を覚えた・確認完了','seen')):btn(roleStage?'自分の役職を見る':'自分の内訳を見る','show'))+
  '<p class="sab-sub">'+d.seenCount+' / '+d.members.length+'人が確認済み</p></section>'+rules();
 }
-function roster(d){return '<div class="sab-roster">'+d.members.map(p=>'<button type="button" class="sab-player '+(d.currentId===p.id?'active':'')+'" data-target="'+esc(p.id)+'" '+(d.currentId!==me()||p.id===d.currentId?'disabled':'')+'><span class="meta"><span class="name">'+esc(p.icon)+' '+esc(p.name)+'</span><small>'+p.cards+'本</small></span><span class="sab-wires">'+Array.from({length:p.cards},()=>'<i class="sab-wire"></i>').join('')+'</span></button>').join('')+'</div>'}
-function playing(d){const turn=person(d.currentId),own=d.currentId===me();
- return '<section class="sab-play">'+status(d)+(demo?'<p class="sab-trial-note">あなたの端末を試遊中（ほかの3人は仮想参加者）</p>':'')+'<div class="sab-current"><small>現在の選択者</small><strong>'+esc(turn.icon)+' '+esc(turn.name)+'</strong><small>残り '+(d.totalCuts-d.cuts)+' 回 / '+(own?'あなたの番：相手を選ぼう':'ほかのプレイヤーの操作を待機中')+'</small></div>'+roster(d)+'<div class="sab-stack">'+
- (demo&&!own?'<div class="sab-demo-other">'+btn('ほかの端末の操作を再現','demo-turn','secondary')+'</div>':'')+
- '<div class="sab-online-help">'+btn('通信チャット','chat','secondary')+btn('公開履歴','history','secondary')+'</div>'+rules()+'</div></section>';
+function roster(d){
+ return '<div class="sab-roster">'+d.members.map(p=>
+ '<button type="button" class="sab-player '+(d.currentId===p.id?'active':'')+'" data-target="'+esc(p.id)+'" '+(d.currentId!==me()||p.id===d.currentId?'disabled':'')+'>'+
+ '<span class="meta"><span class="name">'+esc(p.icon)+' '+esc(p.name)+'</span><small>残り'+p.cards+'本</small></span>'+
+ sabotageSlots(p.slots)+'</button>').join('')+'</div>';
 }
-function picker(d){const p=d.members.find(x=>x.id===target),len=p?.cards||0;
- return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE SELECT</p><h2>'+esc(p?.icon)+' '+esc(p?.name)+' のコード</h2><p class="sab-sub">どれも種類は不明。番号を選んで確定。</p><div class="sab-grid">'+Array.from({length:len},(_,i)=>'<button type="button" class="sab-btn '+(wire===i?'selected':'')+'" data-wire="'+i+'">▥<br>#'+(i+1)+'</button>').join('')+'</div><div class="sab-actions" style="margin-top:16px">'+btn('このコードを公開する','cut','',wire<0)+btn('選び直す','cancel','secondary')+'</div></section>';
+function playing(d){
+ const turn=person(d.currentId),own=d.currentId===me();
+ return '<section class="sab-play">'+status(d)+(demo?'<p class="sab-trial-note">あなたの端末を試遊中（ほかの3人は仮想参加者）</p>':'')+
+ '<div class="sab-current"><small>現在の選択者</small><strong>'+esc(turn.icon)+' '+esc(turn.name)+'</strong>'+
+ '<small>残り '+(d.totalCuts-d.cuts)+' 回 / '+(own?'あなたの番：相手を選ぼう':'ほかのプレイヤーの操作を待機中')+'</small></div>'+
+ roster(d)+'<div class="sab-stack">'+
+ (demo&&!own?'<div class="sab-demo-other">'+btn('ほかの端末の操作を再現','demo-turn','secondary')+'</div>':'')+
+ '<div class="sab-online-help">'+btn('自分の秘密','private','secondary')+btn('通信チャット','chat','secondary')+btn('公開履歴','history','secondary')+'</div>'+rules()+'</div></section>';
+}
+function picker(d){
+ const p=d.members.find(x=>x.id===target);
+ return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE SELECT</p>'+
+ '<h2>'+esc(p?.icon)+' '+esc(p?.name)+' のコード</h2><p class="sab-sub">公開された位置は表向きのまま残るよ。</p>'+
+ sabotageSlots(p?.slots,true,wire)+
+ '<div class="sab-actions" style="margin-top:16px">'+btn('このコードを公開する','cut','',wire<0)+
+ btn('自分の役職・内訳を確認','private','secondary')+btn('選び直す','cancel','secondary')+'</div></section>';
 }
 function reveal(d){
  const x=d.lastCut,p=person(x.targetId),phase=sabotageRevealPhase(x);
@@ -91,7 +115,21 @@ function updateChatLog(d){
  return true;
 }
 function history(d){return '<section class="sab-panel sab-wait"><h2>公開履歴</h2><div class="sab-chat-messages">'+(d.history.length?d.history.map(x=>'<div class="sab-chat-line">R'+x.round+'：'+esc(person(x.targetId).name)+' → '+nWire[x.type]+'</div>').join(''):'<p>まだありません</p>')+'</div></section>'+btn('盤面へ戻る','cancel')}
-function result(d){return '<section class="sab-panel sab-center"><p class="sab-kicker">MISSION COMPLETE</p><h1 class="sab-headline">'+(d.winner==='crew'?'MISSION CLEAR':d.winner==='impostor'?'SYSTEM DOWN':'JACKAL WIN')+'</h1><div class="sab-role '+d.winner+'">'+nRole[d.winner]+' 勝利！</div><p class="sab-sub">'+(d.members.find(m=>m.id===me())?.role===d.winner?'あなたの勝利！':'勝利陣営が決まりました')+'</p></section><section class="sab-panel sab-victory-list"><h3>全員の役職</h3>'+d.members.map(p=>'<p>'+esc(p.icon)+' '+esc(p.name)+'：<b class="sab-role '+p.role+'" style="font-size:14px">'+nRole[p.role]+'</b></p>').join('')+'</section>'+(host()?btn('部屋に戻って再戦','stop'): '<p class="sab-sub sab-center">ホストがロビーへ戻すまで待機</p>')+btn('公開されたコードの履歴','history','secondary')};
+function result(d){
+ return sabotageVictory(d.winner,d.myRole)+
+ '<section class="sab-panel sab-victory-list"><h3>全員の正体</h3>'+
+ d.members.map(p=>'<p>'+esc(p.icon)+' '+esc(p.name)+'：<b class="sab-role '+p.role+'" style="font-size:14px">'+nRole[p.role]+'</b></p>').join('')+
+ '</section>'+(host()?btn('部屋に戻って再戦','stop'):'<p class="sab-sub sab-center">ホストがロビーへ戻すまで待機</p>')+
+ btn('公開されたコードの履歴','history','secondary');
+}
+function privatePeek(d){
+ const node=document.createElement('div');node.className='sab-private-overlay';node.setAttribute('role','dialog');node.setAttribute('aria-modal','true');
+ node.innerHTML='<section class="sab-panel sab-center"><h2>あなただけの秘密</h2>'+sabotageRoleCard(d.myRole,d.myCounts)+
+ '<p class="sab-sub">今のラウンドの未公開コード内訳</p>'+
+ '<button class="sab-btn" type="button" data-private-close>秘密を隠す</button></section>';
+ node.addEventListener('click',e=>{if(e.target===node||e.target.closest('[data-private-close]'))node.remove()});
+ document.body.appendChild(node);node.querySelector('button')?.focus();
+}
 function render(){
  if(!room?.sabotage)return;const d=data();if(!d)return;
  const phase=d.round+':'+d.stage;
@@ -99,7 +137,7 @@ function render(){
  else if(panel==='chat'&&d.stage==='playing'&&updateChatLog(d))return;
  clearTimeout(revealTimer);revealTimer=null;
  let h='';
- if(d.stage==='briefing')h=briefing(d);
+ if(d.stage==='briefing'||d.stage==='roles')h=briefing(d);
  else if(d.stage==='playing'){h=panel==='chat'?chat(d):panel==='history'?history(d):target?picker(d):playing(d)}
  else if(d.stage==='reveal')h=reveal(d);
  else if(d.stage==='finished')h=panel==='history'?history(d):result(d);
@@ -110,14 +148,21 @@ function render(){
  }
 }
 root.addEventListener('click',e=>{
- const b=e.target.closest('button');if(!b||!data())return;const d=data();
+ const b=e.target.closest('button');if(!b||!data())return;
+ if(b.dataset.confirmCancel!==undefined){b.closest('.sab-confirm-overlay')?.remove();return}
+ if(b.dataset.confirmOk!==undefined){b.closest('.sab-confirm-overlay')?.remove();b.dataset.action='confirm-cut'}
+ const d=data();
  if(b.dataset.target!==undefined){if(d.stage!=='playing'||d.currentId!==me()||b.dataset.target===d.currentId)return;target=b.dataset.target;wire=-1;panel='';render();return}
  if(b.dataset.wire!==undefined){wire=Number(b.dataset.wire);render();return}
  if(b.dataset.chat!==undefined){send('sabotage-chat',{key:Number(b.dataset.chat)});return}
  switch(b.dataset.action){
  case 'show':secretOpen=true;render();break;
- case 'seen':send('sabotage-seen');secretOpen=false;break;
- case 'cut':if(wire<0||!target||!confirm('このコードを公開する？取り消しはできません。'))return;send('sabotage-cut',{targetId:target,index:wire});target='';wire=-1;break;
+ case 'seen':send(d.stage==='roles'?'sabotage-role-seen':'sabotage-seen');secretOpen=false;break;
+ case 'cut':if(wire<0||!target)return;
+  if(d.members.find(x=>x.id===target)?.slots?.[wire]?.state!=='closed')return;
+  root.insertAdjacentHTML('beforeend',sabotageCutConfirm(person(target).name,wire));break;
+ case 'confirm-cut':send('sabotage-cut',{targetId:target,index:wire});target='';wire=-1;break;
+ case 'private':privatePeek(d);break;
  case 'cancel':panel='';target='';wire=-1;render();break;
  case 'chat':panel='chat';render();break;
  case 'history':panel='history';render();break;
