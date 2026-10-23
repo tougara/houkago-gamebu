@@ -10,7 +10,8 @@
     'gesture-battle': 'ジェスチャーでお題を伝えて盛り上がろう',
     'pitadome-challenge': 'タイミングを見極めてピタッと止めよう',
     'link-burst': '同じ色をつなげて爽快な連鎖を決めよう',
-    'word-wolf': '同じ話をしているはずなのに、誰かのお題だけ違う！'
+    'word-wolf': '同じ話をしているはずなのに、誰かのお題だけ違う！',
+    'sabotage': '宇宙船で修復コードを探す三つ巴の心理戦'
   };
 
   const cardById = new Map();
