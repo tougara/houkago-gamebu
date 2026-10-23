@@ -209,21 +209,50 @@ test('Sabotage offline plays from common roster through first code reveal on a p
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
-test('Sabotage online trial completes private acknowledgements and reveals a code',async()=>{
- const {page,context,errors}=await open(390,780);
+test('Sabotage online trial uses one device and keeps chat open between messages',async()=>{
+ const {page,context,errors}=await open(345,680);
  try{
   await page.goto(base+'/online/sabotage/?testPlay=1',{waitUntil:'load'});
   await page.locator('[data-action="show"]').waitFor();
-  for(let i=0;i<4;i++){
-   await page.locator('[data-action="show"]').click();
-   assert.equal(await page.locator('.sab-counts').count(),1);
-   await page.locator('[data-action="seen"]').click();
-  }
+  await page.locator('[data-action="show"]').click();
+  assert.equal(await page.locator('.sab-counts').count(),1);
+  await page.locator('[data-action="seen"]').click();
   await page.locator('.sab-play').waitFor();
+  // The other devices acknowledge automatically. Trial never exposes their roles.
+  assert.equal(await page.locator('.sab-role').count(),0);
+  assert.equal(await page.locator('.sab-trial-note').count(),1);
+  assert.equal(await page.locator('.sab-player[data-target]:not([disabled])').count(),3);
+  await page.locator('[data-action="chat"]').click();
+  const panel=page.locator('[data-chat-view]');
+  await panel.waitFor();
+  await panel.locator('[data-chat="0"]').click();
+  await page.locator('[data-chat-log] .sab-chat-line').waitFor();
+  assert.equal(await panel.count(),1,'sending a message must not close the chat');
+  assert.equal(await panel.locator('[data-chat="0"]').count(),1,'quick-reply buttons must stay mounted');
+  await panel.locator('[data-chat="1"]').click();
+  assert.equal(await panel.count(),1,'subsequent taps should keep chat open');
+  const layout=await page.evaluate(()=>{
+   const nav=document.querySelector('.sab-nav'),items=[...nav.children].filter(x=>x.getBoundingClientRect().width>0);
+   const root=document.querySelector('.sab-online-root').getBoundingClientRect();
+   const chat=document.querySelector('[data-chat-view]').getBoundingClientRect();
+   const quick=document.querySelector('.sab-quick-grid').getBoundingClientRect();
+   return{navRows:Math.max(...items.map(x=>x.getBoundingClientRect().top))-Math.min(...items.map(x=>x.getBoundingClientRect().top)),
+    clipped:chat.bottom-root.bottom,quickClipped:quick.bottom-chat.bottom,
+    widthOverflow:document.documentElement.scrollWidth-innerWidth};
+  });
+  assert.ok(layout.navRows<12,'toolbar should fit on one row');
+  assert.ok(layout.clipped<=2,'chat fits inside game area');
+  assert.ok(layout.quickClipped<=2,'reply buttons remain inside chat');
+  assert.ok(layout.widthOverflow<=2,'no horizontal page overflow');
+  await panel.locator('[data-action="cancel"]').click();
   await page.locator('.sab-player[data-target]:not([disabled])').first().click();
   await page.locator('[data-wire="0"]').click();
   page.once('dialog',d=>d.accept());
   await page.locator('[data-action="cut"]').click();
+  await page.locator('.sab-result').waitFor();
+  await page.locator('[data-action="next"]').click();
+  await page.locator('[data-action="demo-turn"]').waitFor();
+  await page.locator('[data-action="demo-turn"]').click();
   await page.locator('.sab-result').waitFor();
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
