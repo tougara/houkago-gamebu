@@ -25,13 +25,21 @@ export function createSabotage(members){
  const n=members.length,c=SABOTAGE_COUNTS[n];if(!c)throw Error('4〜10人');
  const roles=sabotageRoles(n);
  const g={stage:'briefing',round:1,cuts:0,required:c.repair,repaired:0,
-  currentId:members[pick(n)].id,lastCut:null,pendingResult:null,winner:null,history:[],
+  currentId:members[pick(n)].id,lastCut:null,pendingResult:null,winner:null,history:[],chat:[],chatAt:{},
   players:members.map((m,i)=>({id:m.id,name:m.name,icon:m.icon,role:roles[i],hand:[],seen:false}))};
  distribute(g,[...Array(c.repair).fill('repair'),'error',...Array(5*n-c.repair-1).fill('dummy')]);
  return g;
 }
 export function sabotageAction(g,id,data){
  if(!g||!g.players.some(p=>p.id===id)||!data)return false;
+ if(data.type==='sabotage-chat'){
+  if(g.stage!=='playing'||!Number.isInteger(data.key))return false;
+  const presets=['修復コードがある！','エラーがあるかも','誰を信じよう？','この人のコードを選んで','別の人にしよう','ちょっと待って！','怪しいと思う','信じる！'];
+  if(data.key<0||data.key>=presets.length)return false;
+  const now=Date.now();if(now-(g.chatAt[id]||0)<1200)return false;
+  g.chatAt[id]=now;g.chat.push({id,text:presets[data.key]});
+  g.chat=g.chat.slice(-20);return true;
+ }
  if(data.type==='sabotage-seen'){
   if(g.stage!=='briefing')return false;
   const p=g.players.find(x=>x.id===id);if(p.seen)return false;
@@ -73,7 +81,7 @@ export function sabotageView(g,id){
  const counts={repair:count(p.hand,'repair'),error:count(p.hand,'error'),dummy:count(p.hand,'dummy')};
  return {stage:g.stage,round:g.round,rounds:4,cuts:g.cuts,totalCuts:g.players.length,
   required:g.required,repaired:g.repaired,currentId:g.currentId,lastCut:g.lastCut,
-  winner:g.winner,history:g.history.slice(-18),
+  winner:g.winner,history:g.history.slice(-18),chat:g.chat||[],
   seenCount:g.players.filter(x=>x.seen).length,mySeen:p.seen,
   myRole:finished||hidden?p.role:null,myCounts:hidden?counts:null,
   members:g.players.map(x=>({id:x.id,name:x.name,icon:x.icon,cards:x.hand.length,
