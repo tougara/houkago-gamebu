@@ -121,3 +121,13 @@ html[data-hg-motion="reduced"] .sab-closed-code,html[data-hg-motion="reduced"] .
 @media(max-height:680px){.sab-status-panel{padding:8px 10px!important}.sab-status-badges{margin-top:5px}.sab-badge{height:26px}.sab-victory{min-height:35dvh;padding:14px}.sab-victory-emblem{width:75px;height:75px;font-size:46px}.sab-victory-heading{font-size:27px}.sab-victory-winner{font-size:21px}}
 @media(prefers-reduced-motion:reduce){.sab-badge-inner,.sab-badge.just-cleared .sab-badge-inner,.sab-hold-button.is-holding .sab-hold-progress,.sab-victory-rays,.sab-victory-particles i,.sab-victory-emblem,.sab-victory-heading,.sab-victory-winner{animation:none!important;transition:none!important}}
 html[data-hg-motion="reduced"] .sab-badge-inner,html[data-hg-motion="reduced"] .sab-badge.just-cleared .sab-badge-inner,html[data-hg-motion="reduced"] .sab-victory-rays,html[data-hg-motion="reduced"] .sab-victory-particles i,html[data-hg-motion="reduced"] .sab-victory-emblem,html[data-hg-motion="reduced"] .sab-victory-heading,html[data-hg-motion="reduced"] .sab-victory-winner{animation:none!important;transition:none!important}
+
+
+.sab-slot-legend{display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:clamp(5px,3vw,18px);font-size:clamp(10px,2.7vw,12px);font-weight:900;line-height:1.15;color:#d7e5ee}
+.sab-slot-legend span{white-space:nowrap}
+.sab-slot-legend .repair{color:#80fff0}
+.sab-slot-legend .error{color:#ff9caa}
+.sab-slot-legend .dummy{color:#cad2e2}
+.sab-play{row-gap:8px}
+.sab-play .sab-slot-legend{padding:0 2px;min-height:12px}
+@media(max-height:670px){.sab-play{row-gap:5px}.sab-slot-legend{font-size:10px}.sab-status-badges{gap:3px}}
