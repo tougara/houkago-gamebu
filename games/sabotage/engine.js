@@ -30,7 +30,7 @@ export const sabotageRoles=n=>{
 function distribute(g,deck){
  const shuffled=shuffle(deck),n=g.players.length,each=shuffled.length/n;
  if(!Number.isInteger(each))throw Error('配線配布枚数が不正');
- g.players.forEach((p,i)=>{p.hand=shuffled.slice(i*each,(i+1)*each);p.seen=false});
+ g.players.forEach((p,i)=>{p.hand=shuffled.slice(i*each,(i+1)*each);p.slots=Array.from({length:5},(_,index)=>index<each?{state:'closed'}:{state:'inactive'});p.seen=false});
  g.stage='briefing';g.cuts=0;g.lastCut=null;
 }
 export function createSabotage(members){
@@ -38,8 +38,9 @@ export function createSabotage(members){
  const roles=sabotageRoles(n);
  const g={stage:'briefing',round:1,cuts:0,required:c.repair,repaired:0,
   currentId:members[pick(n)].id,lastCut:null,pendingResult:null,winner:null,history:[],chat:[],chatAt:{},
-  players:members.map((m,i)=>({id:m.id,name:m.name,icon:m.icon,role:roles[i],hand:[],seen:false}))};
+  players:members.map((m,i)=>({id:m.id,name:m.name,icon:m.icon,role:roles[i],hand:[],slots:[],seen:false,roleSeen:false}))};
  distribute(g,[...Array(c.repair).fill('repair'),'error',...Array(5*n-c.repair-1).fill('dummy')]);
+ g.stage='roles';
  return g;
 }
 export function sabotageAction(g,id,data){
@@ -52,6 +53,13 @@ export function sabotageAction(g,id,data){
   g.chatAt[id]=now;g.chat.push({id,text:presets[data.key]});
   g.chat=g.chat.slice(-20);return true;
  }
+ if(data.type==='sabotage-role-seen'){
+  if(g.stage!=='roles')return false;
+  const p=g.players.find(x=>x.id===id);if(p.roleSeen)return false;
+  p.roleSeen=true;
+  if(g.players.every(x=>x.roleSeen))g.stage='briefing';
+  return true;
+ }
  if(data.type==='sabotage-seen'){
   if(g.stage!=='briefing')return false;
   const p=g.players.find(x=>x.id===id);if(p.seen)return false;
@@ -62,8 +70,12 @@ export function sabotageAction(g,id,data){
  if(data.type==='sabotage-cut'){
   if(g.stage!=='playing'||id!==g.currentId||typeof data.targetId!=='string'||!Number.isInteger(data.index))return false;
   const p=g.players.find(x=>x.id===data.targetId);
-  if(!p||p.id===id||data.index<0||data.index>=p.hand.length)return false;
-  const [type]=p.hand.splice(data.index,1);g.cuts++;
+  if(!p||p.id===id||data.index<0||data.index>=5)return false;
+  if(!p.slots||p.slots[data.index]?.state!=='closed')return false;
+  const remainingIndex=p.slots.slice(0,data.index).filter(x=>x.state==='closed').length;
+  const [type]=p.hand.splice(remainingIndex,1);
+  p.slots[data.index]={state:'opened',type};
+  g.cuts++;
   if(type==='repair')g.repaired++;
   g.lastCut={type,by:id,targetId:p.id,round:g.round,number:g.cuts,startedAt:Date.now(),suspenseMs:sabotageSuspenseMs()};
   g.history.push(g.lastCut);
@@ -89,14 +101,16 @@ export function sabotageView(g,id){
  if(!g)return null;
  const p=g.players.find(x=>x.id===id);
  if(!p)return null;
- const hidden=g.stage==='briefing',finished=g.stage==='finished';
+ const hidden=g.stage==='briefing'||g.stage==='roles',finished=g.stage==='finished';
  const counts={repair:count(p.hand,'repair'),error:count(p.hand,'error'),dummy:count(p.hand,'dummy')};
  return {stage:g.stage,round:g.round,rounds:4,cuts:g.cuts,totalCuts:g.players.length,
   required:g.required,repaired:g.repaired,currentId:g.currentId,lastCut:g.lastCut,
   winner:g.winner,history:g.history.slice(-18),chat:g.chat||[],
-  seenCount:g.players.filter(x=>x.seen).length,mySeen:p.seen,
-  myRole:finished||hidden?p.role:null,myCounts:hidden?counts:null,
+  seenCount:g.players.filter(x=>g.stage==='roles'?x.roleSeen:x.seen).length,mySeen:g.stage==='roles'?p.roleSeen:p.seen,
+  myRole:p.role,myCounts:counts,
   members:g.players.map(x=>({id:x.id,name:x.name,icon:x.icon,cards:x.hand.length,
-    seen:x.seen,...(finished?{role:x.role}:{} )})),
+    seen:g.stage==='roles'?x.roleSeen:x.seen,
+    slots:(x.slots||[]).map(slot=>slot.state==='opened'?{state:'opened',type:slot.type}:{state:slot.state}),
+    ...(finished?{role:x.role}:{} )})),
   ...(finished?{allHistory:g.history,hasJackal:g.players.some(x=>x.role==='jackal')}: {})};
 }
