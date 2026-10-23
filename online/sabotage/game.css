@@ -21,3 +21,14 @@
 .sab-online-root .sab-trial-note{margin:0;padding:5px 8px;text-align:center;font-size:11px;color:#a9eaf1;background:#184055;border-radius:8px}
 @media(max-width:365px){.sab-online .sab-nav{gap:3px;padding-left:0;padding-right:0}.sab-online .sab-nav>a{font-size:11px;padding:7px 4px}.sab-online .sab-nav .hk-exit-button{font-size:10px;padding:5px 4px}.sab-online .sab-nav .hg-settings-nav-btn{width:33px;min-width:33px}.sab-online-root .sab-chat-head h2{font-size:18px}}
 @media(max-height:640px){.sab-online-root .sab-chat-panel{gap:6px;padding:10px}.sab-online-root .sab-chat-messages{min-height:40px}.sab-online-root .sab-quick-grid{max-height:42dvh}.sab-online-root .sab-quick-grid .sab-btn{min-height:38px;padding:5px 3px}}
+
+
+/* Specific exception: global settings.css forces every .top-nav to a 3-column
+   !important grid. Sabotage has five nav elements; keep it a single row. */
+.sab-online>.sab-nav.top-nav{display:flex!important;grid-template-columns:none!important;align-items:center!important;justify-content:space-between!important;gap:4px!important;flex-wrap:nowrap!important}
+.sab-online>.sab-nav.top-nav>a{display:inline-flex;align-items:center;justify-content:center;height:36px;min-height:36px;white-space:nowrap;flex:0 0 auto;padding:5px 6px}
+.sab-online>.sab-nav.top-nav>.sab-mark{display:flex;align-items:center;justify-content:center;height:36px;min-height:36px;overflow:hidden;font-size:clamp(11px,3vw,16px)}
+.sab-online>.sab-nav.top-nav>.connection{display:flex;align-items:center;justify-content:center;min-height:36px;height:36px;white-space:nowrap}
+.sab-online>.sab-nav.top-nav>.hk-exit-button{display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;height:36px!important;min-height:36px!important;max-height:36px!important;padding:5px 6px!important;font-size:11px!important;border-radius:10px!important;white-space:nowrap!important}
+.sab-online>.sab-nav.top-nav>.hg-settings-nav-btn{display:flex!important;align-items:center!important;justify-content:center!important;position:static!important;inset:auto!important;flex:0 0 auto!important;width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;max-height:36px!important;font-size:17px!important;padding:0!important}
+@media(max-width:365px){.sab-online>.sab-nav.top-nav{gap:2px!important}.sab-online>.sab-nav.top-nav>a{padding:4px}.sab-online>.sab-nav.top-nav>.hg-settings-nav-btn{width:33px!important;min-width:33px!important;max-width:33px!important}}
