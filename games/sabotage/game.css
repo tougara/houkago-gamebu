@@ -50,3 +50,74 @@ body:has(.sab-play) .sab-app .sab-play>.sab-roster{min-height:0;overflow:auto;ov
 @media(max-height:650px){.sab-reveal-scene{min-height:310px;gap:5px}.sab-tension,.sab-reveal-visual{min-height:170px;gap:6px}.sab-closed-code,.sab-outcome-card{min-height:104px}.sab-outcome-symbol{width:43px;height:43px;font-size:27px}}
 @media(prefers-reduced-motion:reduce){.sab-closed-code,.sab-wait-dots i,.sab-outcome-card,.sab-bomb-banner,.sab-reveal-visual.error:before,.sab-reveal-visual.error .sab-outcome-symbol{animation:none!important}}
 html[data-hg-motion="reduced"] .sab-closed-code,html[data-hg-motion="reduced"] .sab-wait-dots i,html[data-hg-motion="reduced"] .sab-outcome-card,html[data-hg-motion="reduced"] .sab-bomb-banner,html[data-hg-motion="reduced"] .sab-reveal-visual.error:before,html[data-hg-motion="reduced"] .sab-reveal-visual.error .sab-outcome-symbol{animation:none!important}
+
+
+/* --- Sabotage v2: five fixed slots, badges, privacy and victory --- */
+.sab-status-panel{padding:10px 12px!important;flex:0 0 auto;min-width:0}
+.sab-status-panel .sab-status{align-items:center}
+.sab-round{font-size:clamp(20px,5.5vw,29px);letter-spacing:.06em;color:#f7fdff;line-height:1.05;text-shadow:0 0 12px #77e4f488}
+.sab-round span{font-size:.7em;color:#a8d8ed}
+.sab-status-badges{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,1fr));gap:5px;margin-top:9px;grid-auto-flow:column}
+.sab-status-badges:has(.sab-badge:nth-child(4):last-child){--n:4}
+.sab-status-badges:has(.sab-badge:nth-child(5):last-child){--n:5}
+.sab-status-badges:has(.sab-badge:nth-child(6):last-child){--n:6}
+.sab-status-badges:has(.sab-badge:nth-child(7):last-child){--n:7}
+.sab-badge{display:block;min-width:0;height:clamp(27px,7vw,39px);perspective:350px}
+.sab-badge-inner{display:block;width:100%;height:100%;position:relative;transition:transform .65s cubic-bezier(.23,.95,.37,1);transform-style:preserve-3d}
+.sab-badge-front,.sab-badge-back{position:absolute;inset:0;display:grid;place-items:center;border-radius:9px;border:1.5px solid #66839b;backface-visibility:hidden;font-weight:1000;font-size:clamp(16px,4.8vw,23px)}
+.sab-badge-front{background:linear-gradient(145deg,#304b65,#1e354b);color:#a6bfce}
+.sab-badge-back{transform:rotateY(180deg);background:linear-gradient(140deg,#23bfbe,#136e8e);border-color:#79fff0;color:#ecfffc;box-shadow:0 0 12px #4beddf70}
+.sab-badge.is-cleared .sab-badge-inner{transform:rotateY(180deg)}
+.sab-badge.just-cleared .sab-badge-inner{animation:sab-badge-turn .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sab-badge-turn{from{transform:rotateY(0) scale(.83)}65%{transform:rotateY(195deg) scale(1.12)}to{transform:rotateY(180deg) scale(1)}}
+.sab-roster .sab-wires{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin-top:2px}
+.sab-roster .sab-wire{height:clamp(17px,4vw,24px);min-width:0;display:flex;align-items:center;justify-content:center;border:1px solid #76a7c1;background:linear-gradient(#487e99,#345c78);border-radius:5px;box-shadow:inset 0 -2px #214b61;color:#ebfeff;font-weight:1000;font-style:normal;padding:0;line-height:1}
+.sab-roster .sab-wire-symbol{font-size:clamp(10px,3.2vw,15px)}
+.sab-roster .sab-slot-opened{background:#253c56;box-shadow:0 0 6px #0007;border-width:1.5px}
+.sab-slot-opened.sab-slot-repair{border-color:#77ffe2!important;background:#147c89!important;color:#f5fffa!important}
+.sab-slot-opened.sab-slot-error{border-color:#ff8a96!important;background:#8b304b!important;color:#fff!important}
+.sab-slot-opened.sab-slot-dummy{border-color:#9eacbd!important;background:#46566b!important;color:#fff!important}
+.sab-roster .sab-slot-inactive{border:1px dashed #415870;background:transparent;color:#64798b;box-shadow:none}
+.sab-slot-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:16px 0 6px}
+.sab-slot-grid .sab-slot-pick{min-width:0;min-height:clamp(76px,19vw,108px);padding:6px 2px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;background:linear-gradient(165deg,#24516b,#203a53);color:#e9fcff;border:2px solid #6f9bb2;box-shadow:inset 0 -4px #132d43}
+.sab-slot-grid .sab-slot-pick.selected{border:3px solid #75f8ec!important;background:linear-gradient(145deg,#176780,#123f60);box-shadow:0 0 15px #69f1e65c}
+.sab-slot-grid .sab-slot-pick:disabled{opacity:.75;cursor:not-allowed}
+.sab-slot-grid .sab-wire-symbol{font-size:clamp(25px,7.2vw,38px);font-weight:1000}
+.sab-slot-grid .sab-slot-pick small{font-size:clamp(9px,2.5vw,12px);line-height:1.2;word-break:keep-all}
+.sab-slot-grid .sab-slot-inactive{background:#132b3e;color:#607c92;border-style:dashed}
+.sab-slot-grid .sab-slot-opened{opacity:1!important}
+.sab-role-goal{color:#e4f6fc;font-size:clamp(13px,3.6vw,17px);line-height:1.55;font-weight:800;background:#203d54;border:1px solid #5a7d94;padding:10px;border-radius:12px;margin:12px 0}
+.sab-secret-content .sab-role{margin-top:12px}
+.sab-hold-button{position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;min-height:60px;width:min(360px,100%);margin:6px auto}
+.sab-hold-progress{position:absolute;bottom:0;left:0;height:5px;background:#fffdc4;width:0}
+.sab-hold-button.is-holding .sab-hold-progress{animation:sab-hold-progress .65s linear forwards}
+@keyframes sab-hold-progress{to{width:100%}}
+.sab-private-trigger{min-height:42px!important;font-size:clamp(12px,3.1vw,15px)!important;touch-action:none;user-select:none;-webkit-user-select:none}
+.sab-private-review,.sab-private-overlay,.sab-confirm-overlay{position:fixed;inset:0;z-index:10000;display:flex;justify-content:center;align-items:center;background:rgba(3,14,28,.94);padding:18px;overflow:auto}
+.sab-private-review .sab-panel,.sab-private-overlay .sab-panel{width:min(430px,100%);max-height:90dvh;overflow:auto}
+.sab-private-overlay .sab-panel .sab-btn{width:100%;margin-top:8px}
+.sab-confirm-card{width:min(430px,100%);padding:22px 18px;border-radius:20px;border:2px solid #67d9e8;background:linear-gradient(160deg,#1b3b54,#10253d);box-shadow:0 0 36px #51cfe644;text-align:center}
+.sab-confirm-card h2{font-size:clamp(21px,6vw,29px);margin:10px 0}
+.sab-confirm-target{font-weight:900;font-size:19px;color:#9af0f0}
+.sab-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:19px}
+.sab-confirm-actions .sab-btn{min-width:0;font-size:14px}
+.sab-victory{position:relative;isolation:isolate;overflow:hidden;flex:0 0 auto;min-height:min(52dvh,420px);border-radius:21px;border:2px solid var(--win-color,#7debe1);background:radial-gradient(circle at 50% 44%,var(--win-halo,#1b7891) 0%,transparent 56%),linear-gradient(155deg,#132f49,#08192f);box-shadow:0 0 24px var(--win-shadow,#28e4da62),inset 0 0 35px #0005;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:25px 12px;text-align:center}
+.sab-win-crew{--win-color:#78fff0;--win-halo:#0c718c;--win-shadow:#34dcd96b}
+.sab-win-impostor{--win-color:#ff8396;--win-halo:#8b264e;--win-shadow:#f942747d}
+.sab-win-jackal{--win-color:#d59aff;--win-halo:#642988;--win-shadow:#aa6bfa69}
+.sab-victory-rays{position:absolute;z-index:-1;width:125%;height:150%;background:repeating-conic-gradient(from 0deg,transparent 0deg 18deg,var(--win-shadow) 19deg 21deg,transparent 24deg 40deg);opacity:.24;animation:sab-win-spin 25s linear infinite}
+.sab-victory-particles{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.sab-victory-particles i{position:absolute;left:calc(8% + (var(--p)*31px) % 82%);top:calc(12% + (var(--p)*37px) % 70%);width:6px;height:13px;background:var(--win-color);border-radius:2px;opacity:.7;transform:rotate(calc(var(--p)*23deg));animation:sab-win-float 1.7s ease-in-out infinite alternate;animation-delay:calc(var(--p)*-0.13s)}
+.sab-victory-top{letter-spacing:.2em;color:#d4f0fb;font-size:11px;font-weight:1000}
+.sab-victory-emblem{width:clamp(78px,23vw,112px);height:clamp(78px,23vw,112px);border-radius:50%;display:grid;place-items:center;border:4px double #fff;background:radial-gradient(circle,#ffffff40,transparent 68%),var(--win-halo);font-weight:1000;font-size:clamp(45px,14vw,66px);box-shadow:0 0 45px var(--win-shadow);animation:sab-win-entrance .9s cubic-bezier(.2,.8,.2,1) both}
+.sab-victory-heading{font-size:clamp(28px,8vw,48px);line-height:1.05;letter-spacing:.06em;color:#fff;text-shadow:0 0 23px var(--win-color);margin:8px 0 0;animation:sab-win-entrance .85s .15s both}
+.sab-victory-winner{font-size:clamp(22px,6.4vw,35px);color:var(--win-color);margin:0;animation:sab-win-entrance .85s .32s both}
+.sab-victory-personal{background:var(--win-color);padding:6px 22px;border-radius:50px;color:#091a2a;letter-spacing:.12em;font-weight:1000}
+.sab-victory-summary{color:#d8f0fb;line-height:1.4;font-size:clamp(13px,3.8vw,17px);margin:4px 0 0}
+.sab-final-roster,.sab-victory-list{max-height:26dvh;overflow:auto}
+@keyframes sab-win-spin{to{transform:rotate(360deg)}}
+@keyframes sab-win-float{to{transform:translateY(-21px) rotate(30deg);opacity:.15}}
+@keyframes sab-win-entrance{from{opacity:0;transform:scale(.5) translateY(25px)}70%{opacity:1;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
+@media(max-height:680px){.sab-status-panel{padding:8px 10px!important}.sab-status-badges{margin-top:5px}.sab-badge{height:26px}.sab-victory{min-height:35dvh;padding:14px}.sab-victory-emblem{width:75px;height:75px;font-size:46px}.sab-victory-heading{font-size:27px}.sab-victory-winner{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.sab-badge-inner,.sab-badge.just-cleared .sab-badge-inner,.sab-hold-button.is-holding .sab-hold-progress,.sab-victory-rays,.sab-victory-particles i,.sab-victory-emblem,.sab-victory-heading,.sab-victory-winner{animation:none!important;transition:none!important}}
+html[data-hg-motion="reduced"] .sab-badge-inner,html[data-hg-motion="reduced"] .sab-badge.just-cleared .sab-badge-inner,html[data-hg-motion="reduced"] .sab-victory-rays,html[data-hg-motion="reduced"] .sab-victory-particles i,html[data-hg-motion="reduced"] .sab-victory-emblem,html[data-hg-motion="reduced"] .sab-victory-heading,html[data-hg-motion="reduced"] .sab-victory-winner{animation:none!important;transition:none!important}
