@@ -6,3 +6,47 @@ body:has(.sab-play) .sab-app .sab-play>.sab-roster{min-height:0;overflow:auto;ov
 @media(max-width:370px){body:has(.sab-play) .sab-app{padding-left:8px;padding-right:8px}.sab-player .name{font-size:12px}}
 
 @keyframes sab-arrive{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes sab-alert{0%,100%{text-shadow:0 0 6px #ff6a86}50%{text-shadow:0 0 25px #ff6a86,0 0 46px #ff325d}}@keyframes sab-clear{0%{filter:brightness(1)}60%{filter:brightness(1.8)}100%{filter:brightness(1)}}.sab-result{animation:sab-arrive .42s ease-out both}.sab-result.error{animation:sab-arrive .45s ease-out,sab-alert .7s ease-in-out 2}.sab-result.repair{animation:sab-arrive .42s ease-out,sab-clear .8s ease-in-out}.sab-headline{animation:sab-arrive .5s ease-out both}html[data-hg-motion='reduced'] .sab-result,html[data-hg-motion='reduced'] .sab-headline{animation:none}
+
+
+/* Suspenseful reveal: the concealed wait has identical timing for every code type. */
+.sab-reveal-scene{position:relative;isolation:isolate;overflow:hidden;width:100%;max-width:720px;min-height:min(440px,70dvh);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px}
+.sab-reveal-scene h2{font-size:clamp(17px,4.8vw,26px);margin:4px 0 10px;overflow-wrap:anywhere}
+.sab-reveal-scene>.sab-btn{max-width:340px;width:100%;flex:0 0 auto}
+.sab-reveal-pause{color:#89a7b9;font-size:13px;letter-spacing:.5em;margin:8px 0;min-height:47px;display:flex;align-items:center}
+.sab-tension,.sab-reveal-visual{width:100%;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+.sab-closed-code,.sab-outcome-card{width:min(265px,82%);min-height:122px;border-radius:18px;border:2px solid #6795b2;background:linear-gradient(145deg,#254a63,#112b41);box-shadow:0 15px 30px #0006,inset 0 0 18px #67dcef17;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden}
+.sab-closed-code{animation:sab-code-hover 1.6s ease-in-out infinite alternate}
+.sab-closed-code>span{font-size:clamp(50px,13vw,85px);font-weight:1000;color:#d9f6ff;text-shadow:0 0 16px #66dcff}
+.sab-tension-label{font-size:clamp(15px,4vw,19px);font-weight:900;color:#bedcec;letter-spacing:.16em;margin:3px 0 0}
+.sab-wait-dots{display:flex;gap:13px;justify-content:center;align-items:center;min-height:18px}
+.sab-wait-dots i{display:block;width:9px;height:9px;border-radius:50%;background:#7fe5ed;animation:sab-wait-beat .85s infinite ease-in-out}
+.sab-wait-dots i:nth-child(2){animation-delay:.16s}.sab-wait-dots i:nth-child(3){animation-delay:.32s}
+.sab-wait-ellipsis{font-size:clamp(27px,7vw,41px);letter-spacing:.21em;color:#d6eaf7;font-weight:800;line-height:1;margin:0}
+.sab-tension-hint{color:#b2c9d9;font-size:12px;margin:0}
+.sab-outcome-card{gap:6px;animation:sab-card-unseal .62s cubic-bezier(.25,.8,.22,1) both}
+.sab-outcome-symbol{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:33px;font-weight:1000;background:#20445e;color:#c7f4fa}
+.sab-outcome-card .sab-result{margin:0;font-size:clamp(25px,7.1vw,39px);line-height:1.18;animation:none}
+.sab-outcome-caption{font-size:clamp(14px,4vw,18px);color:#e7f4ff;font-weight:800;margin:3px 0 0}
+.sab-remaining{font-weight:900;font-size:clamp(17px,4.5vw,25px);color:#6ef1e9;margin:0}
+.sab-remaining strong{font-size:1.4em}
+.sab-reveal-visual.repair .sab-outcome-card{border-color:#6cf1e6;background:linear-gradient(150deg,#134b60,#14334e);box-shadow:0 0 25px #30e6e766,0 12px 25px #0007}
+.sab-reveal-visual.repair .sab-outcome-symbol{background:#168e9b;color:#e5fffe}
+.sab-reveal-visual.dummy .sab-outcome-card{background:linear-gradient(150deg,#293a4f,#1c2b3f);border-color:#536d84;box-shadow:0 12px 20px #0005}
+.sab-reveal-visual.dummy .sab-outcome-symbol{color:#adbfce;background:#394f63}
+.sab-quiet-text{color:#aabac9;font-weight:600;font-size:14px}
+.sab-reveal-visual.error:before{content:"";position:absolute;inset:-25%;z-index:-1;pointer-events:none;background:radial-gradient(circle,#ec395034 0,transparent 58%);animation:sab-bomb-glow 1.05s ease-in-out infinite alternate}
+.sab-reveal-visual.error .sab-outcome-card{background:linear-gradient(145deg,#6b2939,#241e3a);border-color:#ff7c8d;box-shadow:0 0 32px #ec375b80,0 12px 25px #0009}
+.sab-reveal-visual.error .sab-outcome-symbol{background:#e84c61;color:#fff;animation:sab-bomb-symbol .4s 3 alternate}
+.sab-reveal-visual.error .sab-result{color:#fff;font-size:clamp(35px,10vw,53px);text-shadow:0 0 20px #ff637f}
+.sab-bomb-banner{font-size:13px;color:#ffb0bb;font-weight:1000;letter-spacing:.27em;animation:sab-emergency-flash .65s 4}
+.sab-bomb-hold{color:#ff9cab;letter-spacing:.15em;font-size:12px;font-weight:900}
+.sab-danger-text{color:#ff9bab}
+@keyframes sab-code-hover{from{transform:translateY(0)}to{transform:translateY(-5px);box-shadow:0 18px 35px #0008,0 0 20px #75bada22}}
+@keyframes sab-wait-beat{0%,70%,100%{opacity:.32;transform:scale(.75)}35%{opacity:1;transform:scale(1.25)}}
+@keyframes sab-card-unseal{0%{opacity:.2;transform:perspective(650px) rotateY(-90deg) scale(.9)}70%{opacity:1;transform:perspective(650px) rotateY(9deg) scale(1.06)}100%{opacity:1;transform:perspective(650px) rotateY(0) scale(1)}}
+@keyframes sab-bomb-glow{from{opacity:.3;transform:scale(.9)}to{opacity:1;transform:scale(1.16)}}
+@keyframes sab-bomb-symbol{from{transform:scale(.93)}to{transform:scale(1.1)}}
+@keyframes sab-emergency-flash{0%,100%{opacity:1}50%{opacity:.52}}
+@media(max-height:650px){.sab-reveal-scene{min-height:310px;gap:5px}.sab-tension,.sab-reveal-visual{min-height:170px;gap:6px}.sab-closed-code,.sab-outcome-card{min-height:104px}.sab-outcome-symbol{width:43px;height:43px;font-size:27px}}
+@media(prefers-reduced-motion:reduce){.sab-closed-code,.sab-wait-dots i,.sab-outcome-card,.sab-bomb-banner,.sab-reveal-visual.error:before,.sab-reveal-visual.error .sab-outcome-symbol{animation:none!important}}
+html[data-hg-motion="reduced"] .sab-closed-code,html[data-hg-motion="reduced"] .sab-wait-dots i,html[data-hg-motion="reduced"] .sab-outcome-card,html[data-hg-motion="reduced"] .sab-bomb-banner,html[data-hg-motion="reduced"] .sab-reveal-visual.error:before,html[data-hg-motion="reduced"] .sab-reveal-visual.error .sab-outcome-symbol{animation:none!important}
