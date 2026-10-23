@@ -7,6 +7,8 @@ on:
       - main
     paths:
       - 'worker/**'
+      - 'games/sabotage/engine.js'
+      - 'tests/sabotage.test.mjs'
       - 'tests/online-worker.test.mjs'
       - 'tests/online-nise.test.mjs'
       - 'tests/online-word-wolf.test.mjs'
