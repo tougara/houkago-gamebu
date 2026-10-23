@@ -1,8 +1,9 @@
-import {createSabotage,sabotageView,sabotageAction} from '../../games/sabotage/engine.js';
+import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js';
+import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js';
 const $=id=>document.getElementById(id),root=$('game-root'),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const q=new URLSearchParams(location.search),demo=q.get('testPlay')==='1';
-const STORE='houkago-online-session-v1';let session=null,room=null,ws=null,retry=0,closed=false,secretOpen=false,panel='',target='',wire=-1,lastPhase='',demoGame=null,demoSelf='';
+const STORE='houkago-online-session-v1';let session=null,room=null,ws=null,retry=0,closed=false,secretOpen=false,panel='',target='',wire=-1,lastPhase='',demoGame=null,demoSelf='',revealTimer=null;
 const demoPeople=[{id:'demo1',name:'あなた',icon:'🐱'},{id:'demo2',name:'ゆい',icon:'🐶'},{id:'demo3',name:'けん',icon:'🦊'},{id:'demo4',name:'みお',icon:'🐧'}];
 if(!demo){try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
  if(!session||!/^[A-Z2-9]{8}$/.test(session.code)||!/^[a-f0-9]{64}$/.test(session.token)||!/^https:\/\/[a-z0-9.-]+$/i.test(base)||q.get('room')&&q.get('room')!==session.code){location.replace('../');}
@@ -69,9 +70,16 @@ function playing(d){const turn=person(d.currentId),own=d.currentId===me();
 function picker(d){const p=d.members.find(x=>x.id===target),len=p?.cards||0;
  return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE SELECT</p><h2>'+esc(p?.icon)+' '+esc(p?.name)+' のコード</h2><p class="sab-sub">どれも種類は不明。番号を選んで確定。</p><div class="sab-grid">'+Array.from({length:len},(_,i)=>'<button type="button" class="sab-btn '+(wire===i?'selected':'')+'" data-wire="'+i+'">▥<br>#'+(i+1)+'</button>').join('')+'</div><div class="sab-actions" style="margin-top:16px">'+btn('このコードを公開する','cut','',wire<0)+btn('選び直す','cancel','secondary')+'</div></section>';
 }
-function reveal(d){const x=d.lastCut,p=person(x.targetId),t=x.type;
- return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE REVEAL</p><h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2><div class="sab-result '+t+'">'+(t==='repair'?'DISARMED!':t==='error'?'BOMB!' :'しーん……')+'</div><p class="sab-sub">'+(t==='dummy'?'……何も起きなかった。':nWire[t]+'を公開しました')+'</p><p class="sab-sub">解除 '+d.repaired+' / '+d.required+'</p>'+
- (host()?btn('次へ進む','next'): '<p class="sab-sub">ホストが次へ進むまで待ってね</p>')+'</section>';
+function reveal(d){
+ const x=d.lastCut,p=person(x.targetId),phase=sabotageRevealPhase(x);
+ return '<section class="sab-panel sab-center sab-wait sab-reveal-scene">'+
+  '<p class="sab-kicker">CODE REVEAL / ROUND '+d.round+'</p>'+
+  '<h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2>'+
+  sabotageRevealBody(x.type,phase.stage,d.repaired,d.required)+
+  (phase.stage==='ready'?
+   (host()?btn(d.winner?'最終結果を見る':'次へ進む','next'):'<p class="sab-sub">ホストが次へ進むまで待ってね</p>'):
+   '<p class="sab-reveal-pause" aria-label="演出中">……</p>')+
+  '</section>';
 }
 function chatLines(d){return d.chat?.length?d.chat.slice(-12).map(x=>'<div class="sab-chat-line"><strong>'+esc(person(x.id).name)+'</strong> '+esc(x.text)+'</div>').join(''):'<p class="sab-sub">まだ発言はありません</p>'}
 function chat(d){return '<section class="sab-panel sab-chat-panel" data-chat-view><div class="sab-chat-head"><div><h2>通信チャット</h2><p>タップして発言。通話は別アプリ。</p></div>'+btn('閉じる','cancel','secondary')+'</div><div class="sab-chat-messages" data-chat-log role="log" aria-live="polite">'+chatLines(d)+'</div><div class="sab-quick-grid">'+quick.map((x,i)=>'<button class="sab-btn secondary" type="button" data-chat="'+i+'">'+esc(x)+'</button>').join('')+'</div></section>'}
@@ -89,12 +97,17 @@ function render(){
  const phase=d.round+':'+d.stage;
  if(lastPhase!==phase){secretOpen=false;panel='';target='';wire=-1;lastPhase=phase}
  else if(panel==='chat'&&d.stage==='playing'&&updateChatLog(d))return;
+ clearTimeout(revealTimer);revealTimer=null;
  let h='';
  if(d.stage==='briefing')h=briefing(d);
  else if(d.stage==='playing'){h=panel==='chat'?chat(d):panel==='history'?history(d):target?picker(d):playing(d)}
  else if(d.stage==='reveal')h=reveal(d);
  else if(d.stage==='finished')h=panel==='history'?history(d):result(d);
  root.innerHTML=h;
+ if(d.stage==='reveal'){
+  const phase=sabotageRevealPhase(d.lastCut);
+  if(phase.waitMs>0)revealTimer=setTimeout(()=>{if(data()?.stage==='reveal'&&data()?.lastCut?.startedAt===d.lastCut?.startedAt)render()},Math.ceil(phase.waitMs)+30);
+ }
 }
 root.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b||!data())return;const d=data();
