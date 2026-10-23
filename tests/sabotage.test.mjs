@@ -48,16 +48,19 @@ test('配線公開は現在の選択者が他人に一度だけ行える',()=>{
 });
 test('ラウンド移行後は全員同数に再配布し直前の対象者から開始',()=>{
  const g=createSabotage(members(9));revealAll(g);
- // 残り1回の公開に設定。直前に選ばれた対象が次ラウンドの最初の選択者。
- g.cuts=8;
- const {target,index}=cut(g);const id=g.currentId;
- target.hand[index]='dummy';
- assert.equal(sabotageAction(g,id,{type:'sabotage-cut',targetId:target.id,index}),true);
- assert.equal(g.stage,'reveal');
- assert.equal(sabotageAction(g,id,{type:'sabotage-next'}),true);
+ let lastTarget=null;
+ for(let turn=0;turn<9;turn++){
+  const {target,index}=cut(g),id=g.currentId;
+  // 正常な手番進行を9回繰り返す。コードは毎回実際に除去する。
+  if(target.hand[index]!=='dummy')target.hand[index]='dummy';
+  assert.equal(sabotageAction(g,id,{type:'sabotage-cut',targetId:target.id,index}),true);
+  assert.equal(g.stage,'reveal');
+  lastTarget=target.id;
+  assert.equal(sabotageAction(g,id,{type:'sabotage-next'}),true);
+ }
  assert.equal(g.round,2);
  assert.equal(g.stage,'briefing');
- assert.equal(g.currentId,target.id);
+ assert.equal(g.currentId,lastTarget);
  assert.ok(g.players.every(p=>p.hand.length===4&&!p.seen));
  revealAll(g);assert.equal(g.stage,'playing');
 });
