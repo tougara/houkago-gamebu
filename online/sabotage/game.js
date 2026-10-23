@@ -11,7 +11,7 @@ if(!demo){try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
  room={phase:'sabotage',hostId:'demo1',members:demoPeople,sabotage:sabotageView(demoGame,demoSelf)};
 }
 const nRole={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
-const nWire={repair:'解除コード',error:'爆弾（BOMB）',dummy:'ダミー'};
+const nWire={repair:'解除コード',error:'爆弾（BOMB）',dummy:'しーん……'};
 const quick=['解除コードがある！','爆弾があるかも','誰を信じよう？','この人のコードを選んで','別の人にしよう','ちょっと待って！','怪しいと思う','信じる！'];
 const person=id=>room?.members?.find(x=>x.id===id)||{name:'不明',icon:'？'};
 const data=()=>room?.sabotage;
@@ -57,7 +57,7 @@ function briefing(d){
  if(d.mySeen)return '<section class="sab-panel sab-center sab-brief"><h2>秘密の確認が完了</h2><p class="sab-sub">全員の確認が終わるまで待機中</p><strong>'+d.seenCount+' / '+d.members.length+'人</strong></section>'+rules();
  return '<section class="sab-panel sab-center sab-brief"><p class="sab-kicker">ROUND '+d.round+' · SECRET</p><h2>あなたの秘密情報</h2><p class="sab-sub">'+(demo?'試遊：あなたの端末だけに表示中':'自分の端末だけに表示中')+'</p>'+
  (secretOpen?((d.round===1?'<div class="sab-role '+d.myRole+'">'+nRole[d.myRole]+'</div>':'')+
- '<p class="sab-sub">コードは位置不明。内訳だけ覚えよう。</p><div class="sab-counts"><div><strong>'+count.repair+'</strong><small>解除</small></div><div><strong>'+count.error+'</strong><small>爆弾</small></div><div><strong>'+count.dummy+'</strong><small>ダミー</small></div></div>'+btn('覚えた・確認完了','seen')):btn('秘密を表示','show'))+
+ '<p class="sab-sub">コードは位置不明。内訳だけ覚えよう。</p><div class="sab-counts"><div><strong>'+count.repair+'</strong><small>解除</small></div><div><strong>'+count.error+'</strong><small>爆弾</small></div><div><strong>'+count.dummy+'</strong><small>しーん……</small></div></div>'+btn('覚えた・確認完了','seen')):btn('秘密を表示','show'))+
  '<p class="sab-sub">'+d.seenCount+' / '+d.members.length+'人が確認済み</p></section>'+rules();
 }
 function roster(d){return '<div class="sab-roster">'+d.members.map(p=>'<button type="button" class="sab-player '+(d.currentId===p.id?'active':'')+'" data-target="'+esc(p.id)+'" '+(d.currentId!==me()||p.id===d.currentId?'disabled':'')+'><span class="meta"><span class="name">'+esc(p.icon)+' '+esc(p.name)+'</span><small>'+p.cards+'本</small></span><span class="sab-wires">'+Array.from({length:p.cards},()=>'<i class="sab-wire"></i>').join('')+'</span></button>').join('')+'</div>'}
@@ -70,7 +70,7 @@ function picker(d){const p=d.members.find(x=>x.id===target),len=p?.cards||0;
  return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE SELECT</p><h2>'+esc(p?.icon)+' '+esc(p?.name)+' のコード</h2><p class="sab-sub">どれも種類は不明。番号を選んで確定。</p><div class="sab-grid">'+Array.from({length:len},(_,i)=>'<button type="button" class="sab-btn '+(wire===i?'selected':'')+'" data-wire="'+i+'">▥<br>#'+(i+1)+'</button>').join('')+'</div><div class="sab-actions" style="margin-top:16px">'+btn('このコードを公開する','cut','',wire<0)+btn('選び直す','cancel','secondary')+'</div></section>';
 }
 function reveal(d){const x=d.lastCut,p=person(x.targetId),t=x.type;
- return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE REVEAL</p><h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2><div class="sab-result '+t+'">'+(t==='repair'?'DISARMED!':t==='error'?'BOMB!':'EMPTY CODE')+'</div><p class="sab-sub">'+nWire[t]+'を公開しました</p><p class="sab-sub">解除 '+d.repaired+' / '+d.required+'</p>'+
+ return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE REVEAL</p><h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2><div class="sab-result '+t+'">'+(t==='repair'?'DISARMED!':t==='error'?'BOMB!' :'しーん……')+'</div><p class="sab-sub">'+(t==='dummy'?'……何も起きなかった。':nWire[t]+'を公開しました')+</p><p class="sab-sub">解除 '+d.repaired+' / '+d.required+'</p>'+
  (host()?btn('次へ進む','next'): '<p class="sab-sub">ホストが次へ進むまで待ってね</p>')+'</section>';
 }
 function chatLines(d){return d.chat?.length?d.chat.slice(-12).map(x=>'<div class="sab-chat-line"><strong>'+esc(person(x.id).name)+'</strong> '+esc(x.text)+'</div>').join(''):'<p class="sab-sub">まだ発言はありません</p>'}
