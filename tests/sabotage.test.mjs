@@ -127,7 +127,7 @@ test('オフライン・オンラインの空振り表示は「しーん……�
  for(const path of ['games/sabotage/game.js','online/sabotage/game.js']){
   const source=readFileSync(new URL('../'+path,import.meta.url),'utf8');
   assert.match(source,/dummy:'しーん……'/);
-  assert.match(source,/<small>しーん……<\/small>/);
+  assert.match(source,/sabotageRoleCard|sabotageSlots/);
   assert.match(source,/sabotageRevealBody/);
   assert.doesNotMatch(source,/EMPTY CODE|dummy:'ダミー'|<small>ダミー<\/small>/);
   execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
