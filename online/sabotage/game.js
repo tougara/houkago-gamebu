@@ -55,14 +55,14 @@ function rules(){return '<details class="sab-more"><summary>遊び方・勝利�
 function briefing(d){
  const count=d.myCounts||{repair:0,error:0,dummy:0};
  if(d.mySeen)return '<section class="sab-panel sab-center sab-brief"><h2>秘密の確認が完了</h2><p class="sab-sub">全員の確認が終わるまで待機中</p><strong>'+d.seenCount+' / '+d.members.length+'人</strong></section>'+rules();
- return '<section class="sab-panel sab-center sab-brief"><p class="sab-kicker">ROUND '+d.round+' · SECRET</p><h2>あなたの秘密情報</h2><p class="sab-sub">この端末の持ち主だけが見てね</p>'+
+ return '<section class="sab-panel sab-center sab-brief"><p class="sab-kicker">ROUND '+d.round+' · SECRET</p><h2>あなたの秘密情報</h2><p class="sab-sub">'+(demo?'試遊：あなたの端末だけに表示中':'自分の端末だけに表示中')+'</p>'+
  (secretOpen?((d.round===1?'<div class="sab-role '+d.myRole+'">'+nRole[d.myRole]+'</div>':'')+
  '<p class="sab-sub">コードは位置不明。内訳だけ覚えよう。</p><div class="sab-counts"><div><strong>'+count.repair+'</strong><small>修復</small></div><div><strong>'+count.error+'</strong><small>エラー</small></div><div><strong>'+count.dummy+'</strong><small>ダミー</small></div></div>'+btn('覚えた・確認完了','seen')):btn('秘密を表示','show'))+
  '<p class="sab-sub">'+d.seenCount+' / '+d.members.length+'人が確認済み</p></section>'+rules();
 }
 function roster(d){return '<div class="sab-roster">'+d.members.map(p=>'<button type="button" class="sab-player '+(d.currentId===p.id?'active':'')+'" data-target="'+esc(p.id)+'" '+(d.currentId!==me()||p.id===d.currentId?'disabled':'')+'><span class="meta"><span class="name">'+esc(p.icon)+' '+esc(p.name)+'</span><small>'+p.cards+'本</small></span><span class="sab-wires">'+Array.from({length:p.cards},()=>'<i class="sab-wire"></i>').join('')+'</span></button>').join('')+'</div>'}
 function playing(d){const turn=person(d.currentId),own=d.currentId===me();
- return '<section class="sab-play">'+status(d)+'<div class="sab-current"><small>現在の選択者</small><strong>'+esc(turn.icon)+' '+esc(turn.name)+'</strong><small>残り '+(d.totalCuts-d.cuts)+' 回 / '+(own?'あなたの番：相手を選ぼう':'ほかのプレイヤーの操作を待機中')+'</small></div>'+roster(d)+'<div class="sab-stack">'+
+ return '<section class="sab-play">'+status(d)+(demo?'<p class="sab-trial-note">あなたの端末を試遊中（ほかの3人は仮想参加者）</p>':'')+'<div class="sab-current"><small>現在の選択者</small><strong>'+esc(turn.icon)+' '+esc(turn.name)+'</strong><small>残り '+(d.totalCuts-d.cuts)+' 回 / '+(own?'あなたの番：相手を選ぼう':'ほかのプレイヤーの操作を待機中')+'</small></div>'+roster(d)+'<div class="sab-stack">'+
  (demo&&!own?'<div class="sab-demo-other">'+btn('ほかの端末の操作を再現','demo-turn','secondary')+'</div>':'')+
  '<div class="sab-online-help">'+btn('通信チャット','chat','secondary')+btn('公開履歴','history','secondary')+'</div>'+rules()+'</div></section>';
 }
