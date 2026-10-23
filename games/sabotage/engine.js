@@ -34,7 +34,7 @@ export function sabotageAction(g,id,data){
  if(!g||!g.players.some(p=>p.id===id)||!data)return false;
  if(data.type==='sabotage-chat'){
   if(g.stage!=='playing'||!Number.isInteger(data.key))return false;
-  const presets=['修復コードがある！','エラーがあるかも','誰を信じよう？','この人のコードを選んで','別の人にしよう','ちょっと待って！','怪しいと思う','信じる！'];
+  const presets=['解除コードがある！','爆弾があるかも','誰を信じよう？','この人のコードを選んで','別の人にしよう','ちょっと待って！','怪しいと思う','信じる！'];
   if(data.key<0||data.key>=presets.length)return false;
   const now=Date.now();if(now-(g.chatAt[id]||0)<1200)return false;
   g.chatAt[id]=now;g.chat.push({id,text:presets[data.key]});
