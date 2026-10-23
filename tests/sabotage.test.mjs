@@ -105,3 +105,16 @@ test('オフラインとオンラインは同一ルールエンジンを使用',
   execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
  }
 });
+
+test('オフライン・オンラインで解除／爆弾の表示名を統一',()=>{
+ for(const path of ['games/sabotage/game.js','online/sabotage/game.js']){
+  const source=readFileSync(new URL('../'+path,import.meta.url),'utf8');
+  assert.match(source,/解除コード/);
+  assert.match(source,/爆弾（BOMB）/);
+  assert.match(source,/'BOMB!'/);
+  assert.doesNotMatch(source,/致命的エラー|SYSTEM ERROR!|REPAIRED!/);
+ }
+ const engine=readFileSync(new URL('../games/sabotage/engine.js',import.meta.url),'utf8');
+ assert.match(engine,/解除コードがある！/);
+ assert.match(engine,/爆弾があるかも/);
+});
