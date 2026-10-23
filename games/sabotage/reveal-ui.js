@@ -1,4 +1,4 @@
-import {sabotageBadges} from './visuals.js';
+import {sabotageBadges} from './visuals.js?v=20261024-sabui2';
 /* Shared presentation for offline, live online, and online trial. Never show outcome before suspense expires. */
 export function sabotageRevealBody(type,stage,repaired,required){
  if(stage==='suspense'){
