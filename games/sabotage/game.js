@@ -1,6 +1,6 @@
 import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js';
 import {sabotageRevealBody} from './reveal-ui.js';
-import {sabotageBadges,sabotageSlots,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal} from './visuals.js';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal} from './visuals.js';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;
@@ -35,7 +35,7 @@ function playing(){
  '<strong class="sab-round">ROUND '+v.round+' <span>/ 4</span></strong><span>解除 '+v.repaired+' / '+v.required+'</span></div>'+
  sabotageBadges(v.required,v.repaired)+'</section>'+
  '<div class="sab-current"><small>現在の選択者</small><strong>'+esc(op.icon)+' '+esc(op.name)+'</strong><small>残り '+(v.totalCuts-v.cuts)+' 回のコード選択</small></div>'+
- roster(v)+'<div class="sab-stack"><button type="button" class="sab-btn secondary sab-private-trigger" data-hold="review">選択者の秘密を長押しで確認</button>'+
+ roster(v)+sabotageSlotLegend()+'<div class="sab-stack"><button type="button" class="sab-btn secondary sab-private-trigger" data-hold="review">選択者の秘密を長押しで確認</button>'+
  rules()+btn('公開されたコードの履歴','history','secondary')+'</div></section>';
 }
 function picker(){
