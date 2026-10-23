@@ -7,7 +7,7 @@ const names={
  'minna-wa-docchi':'みんなはどっち？','kyokasho-tower':'教科書タワー',
  'kankaku-meter':'感覚メーター','pitadome-challenge':'ピタ止めチャレンジ',
  'link-burst':'リンクバースト！','nise-transfer-student':'ニセ転校生を探せ！',
- 'gesture-battle':'ジェスチャーバトル','word-wolf':'ことばのオオカミ'
+ 'gesture-battle':'ジェスチャーバトル','word-wolf':'ことばのオオカミ','sabotage':'サボタージュ！'
 };
 const STORE='houkago-online-session-v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
@@ -80,9 +80,9 @@ $('join').addEventListener('click',async()=>{
 const send=command=>{if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(command))};
 function draw(){
  if(!room)return;
- if((room.phase==='secret'||room.phase==='nise'||room.phase==='wolf'||room.phase==='pita'||room.phase==='meter'||room.phase==='tower'||room.phase==='link')&&session?.code){
+ if((room.phase==='secret'||room.phase==='nise'||room.phase==='wolf'||room.phase==='pita'||room.phase==='meter'||room.phase==='tower'||room.phase==='link'||room.phase==='sabotage')&&session?.code){
    stopSocket();
-   const page=room.phase==='nise'?'nise-transfer-student':room.phase==='wolf'?'word-wolf':room.phase==='pita'?'pitadome-challenge':room.phase==='meter'?'kankaku-meter':room.phase==='tower'?'kyokasho-tower':room.phase==='link'?'link-burst':'minna-wa-docchi';
+   const page=room.phase==='sabotage'?'sabotage':room.phase==='nise'?'nise-transfer-student':room.phase==='wolf'?'word-wolf':room.phase==='pita'?'pitadome-challenge':room.phase==='meter'?'kankaku-meter':room.phase==='tower'?'kyokasho-tower':room.phase==='link'?'link-burst':'minna-wa-docchi';
    location.replace('./'+page+'/?room='+encodeURIComponent(session.code));
    return;
  }
@@ -96,8 +96,8 @@ function draw(){
  $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
  $('ready').disabled=ws?.readyState!==WebSocket.OPEN;
  const hostStart=$('start-secret');
- const supported=['minna-wa-docchi','nise-transfer-student','word-wolf','pitadome-challenge','kankaku-meter','kyokasho-tower','link-burst'].includes(room.gameId);
- const minimum=['nise-transfer-student','word-wolf'].includes(room.gameId)?3:2;
+ const supported=['minna-wa-docchi','nise-transfer-student','word-wolf','pitadome-challenge','kankaku-meter','kyokasho-tower','link-burst','sabotage'].includes(room.gameId);
+ const minimum=['nise-transfer-student','word-wolf'].includes(room.gameId)?3:room.gameId==='sabotage'?4:2;
  const tooMany=(room.gameId==='kyokasho-tower'&&room.members.length>6)||(room.gameId==='link-burst'&&room.members.length>2);
  hostStart.hidden=!host||!supported;
  hostStart.textContent=(names[room.gameId]||room.gameId)+' の画面へ進む';
@@ -148,7 +148,12 @@ function connect(){
 }
 $('start-secret').addEventListener('click',async()=>{
  if(room?.phase!=='lobby'||!room.allReady)return;
- if(room.gameId==='nise-transfer-student'&&room.members.length>=3){
+ if(room.gameId==='sabotage'&&room.members.length>=4){
+  try{const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
+    if(!health.ok||health.version<10){notice('サボタージュ！のサーバー更新待ちだよ。');return}
+  }catch{notice('通信サーバーに接続できないよ。');return}
+  send({type:'sabotage-start'});
+ }else if(room.gameId==='nise-transfer-student'&&room.members.length>=3){
   // Pagesの更新が先行しても、旧Workerで開始不能な部屋に閉じ込めない。
   try{
    const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
