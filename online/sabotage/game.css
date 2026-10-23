@@ -1,1 +1,23 @@
 .sab-online{height:100dvh;overflow:hidden}.sab-online-root{min-height:0;flex:1;display:flex;flex-direction:column;gap:9px}.sab-online-root>.sab-panel{min-height:0}.sab-online-root>.sab-play{min-height:0}.sab-online-root .sab-play>.sab-roster{overflow:auto;scrollbar-width:thin}.sab-online-root .sab-more-content{max-height:28dvh}.sab-online .sab-panel{box-shadow:none}.sab-online .sab-chat-messages{display:flex;flex-direction:column;gap:7px;max-height:45dvh;overflow-y:auto}.sab-online .sab-chat-line{background:#213c52;border-radius:10px;padding:8px 10px;font-size:13px}.sab-online .sab-chat-line strong{color:#94eaf1}.sab-online .sab-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sab-online .sab-quick-grid button{min-height:44px}.sab-online .sab-chat-preview{max-height:20dvh;overflow-y:auto}.sab-online .sab-online-help{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.sab-online .sab-wait{margin:auto 0}.sab-online .sab-brief{margin:auto 0}.sab-online .sab-victory-list{max-height:42dvh;overflow:auto}.sab-online .sab-brief .sab-counts{margin:15px 0}.sab-online .sab-chat-button{min-width:0}.sab-online .sab-online-nav-extra{display:flex;justify-content:center;gap:10px}.sab-online .sab-more{padding:8px}.sab-online .sab-panel[hidden]{display:none!important}body:has(.hog-demo-tools) .sab-online{padding-bottom:calc(62px + env(safe-area-inset-bottom))}@media(max-height:650px){.sab-online{gap:7px;padding-top:6px;padding-bottom:7px}.sab-online-root{gap:6px}.sab-online-root .sab-player{padding:6px}.sab-online-root .sab-current{padding:6px}}
+
+/* Chat remains mounted and usable: only the message log scrolls. */
+.sab-online-root .sab-chat-panel{flex:1;min-height:0;display:flex;flex-direction:column;gap:9px;overflow:hidden;margin:0;padding:13px}
+.sab-online-root .sab-chat-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex:0 0 auto}
+.sab-online-root .sab-chat-head h2{font-size:20px;line-height:1.25;margin:0 0 3px}
+.sab-online-root .sab-chat-head p{margin:0;color:#b9d1df;font-size:11px;line-height:1.35}
+.sab-online-root .sab-chat-head .sab-btn{width:auto;flex:0 0 auto;min-height:39px;padding:7px 12px;font-size:12px}
+.sab-online-root .sab-chat-messages{flex:1 1 auto;min-height:66px;max-height:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:4px 2px}
+.sab-online-root .sab-quick-grid{flex:0 1 auto;min-height:0;max-height:46dvh;overflow-y:auto;overscroll-behavior:contain;align-content:start;gap:7px;scrollbar-width:thin}
+.sab-online-root .sab-quick-grid .sab-btn{min-height:43px;padding:7px 5px;font-size:12px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+.sab-online-root .sab-chat-line{padding:7px 8px;font-size:12px;line-height:1.45}
+.sab-online .sab-nav{flex:0 0 auto;flex-wrap:nowrap;gap:5px;padding:6px 4px;min-width:0}
+.sab-online .sab-nav>a{flex:0 0 auto;min-width:0;white-space:nowrap;padding:9px 7px;font-size:12px}
+.sab-online .sab-nav>.sab-mark{flex:1 1 auto;min-width:0;font-size:clamp(12px,3.4vw,17px);white-space:nowrap;letter-spacing:.015em;text-align:center}
+.sab-online .sab-nav>.connection{flex:0 0 auto;white-space:nowrap;padding:4px 2px;font-size:10px}
+.sab-online .sab-nav .hk-exit-button{flex:0 0 auto;min-width:0;padding:7px 5px;font-size:11px}
+.sab-online .sab-nav .hg-settings-nav-btn{flex:0 0 auto;min-width:34px;width:36px;min-height:36px;padding:3px}
+.sab-online-root .sab-demo-other{flex:0 0 auto}
+.sab-online-root .sab-demo-other .sab-btn{width:100%;min-height:39px;font-size:12px}
+.sab-online-root .sab-trial-note{margin:0;padding:5px 8px;text-align:center;font-size:11px;color:#a9eaf1;background:#184055;border-radius:8px}
+@media(max-width:365px){.sab-online .sab-nav{gap:3px;padding-left:0;padding-right:0}.sab-online .sab-nav>a{font-size:11px;padding:7px 4px}.sab-online .sab-nav .hk-exit-button{font-size:10px;padding:5px 4px}.sab-online .sab-nav .hg-settings-nav-btn{width:33px;min-width:33px}.sab-online-root .sab-chat-head h2{font-size:18px}}
+@media(max-height:640px){.sab-online-root .sab-chat-panel{gap:6px;padding:10px}.sab-online-root .sab-chat-messages{min-height:40px}.sab-online-root .sab-quick-grid{max-height:42dvh}.sab-online-root .sab-quick-grid .sab-btn{min-height:38px;padding:5px 3px}}
