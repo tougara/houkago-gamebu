@@ -251,9 +251,13 @@ test('Sabotage online trial uses one device and keeps chat open between messages
   await page.locator('[data-action="cut"]').click();
   await page.locator('.sab-result').waitFor();
   await page.locator('[data-action="next"]').click();
-  await page.locator('[data-action="demo-turn"]').waitFor();
-  await page.locator('[data-action="demo-turn"]').click();
-  await page.locator('.sab-result').waitFor();
+  // The random first code may already end the match, which is a valid result.
+  if(await page.locator('[data-action="demo-turn"]').count()){
+   await page.locator('[data-action="demo-turn"]').click();
+   await page.locator('.sab-result').waitFor();
+  }else{
+   assert.equal(await page.locator('.sab-role').count()>0,true,'the trial can end with an early error');
+  }
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
