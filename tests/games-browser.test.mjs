@@ -185,3 +185,46 @@ test('Nise and Docchi logos fit their artwork; wolf logo is deliberately enlarge
   }finally{await context.close()}
  }
 });
+
+test('Sabotage offline plays from common roster through first code reveal on a phone',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
+  await page.locator('[data-action="members"]').click();
+  assert.equal(await page.locator('.shared-player-editor').count(),1);
+  await page.locator('[data-members-done]').click();
+  for(let i=0;i<4;i++){
+   await page.locator('[data-action="peek"]').click();
+   assert.equal(await page.locator('.sab-counts').count(),1);
+   await page.locator('[data-action="seen"]').click();
+  }
+  await page.locator('.sab-play').waitFor();
+  assert.equal(await page.locator('.sab-player').count(),4);
+  await page.locator('.sab-player[data-target]:not([disabled])').first().click();
+  await page.locator('[data-wire="0"]').click();
+  page.once('dialog',d=>d.accept());
+  await page.locator('[data-action="cut"]').click();
+  await page.locator('.sab-result').waitFor();
+  assert.equal(await page.locator('.sab-result').count(),1);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('Sabotage online trial completes private acknowledgements and reveals a code',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.goto(base+'/online/sabotage/?testPlay=1',{waitUntil:'load'});
+  await page.locator('[data-action="show"]').waitFor();
+  for(let i=0;i<4;i++){
+   await page.locator('[data-action="show"]').click();
+   assert.equal(await page.locator('.sab-counts').count(),1);
+   await page.locator('[data-action="seen"]').click();
+  }
+  await page.locator('.sab-play').waitFor();
+  await page.locator('.sab-player[data-target]:not([disabled])').first().click();
+  await page.locator('[data-wire="0"]').click();
+  page.once('dialog',d=>d.accept());
+  await page.locator('[data-action="cut"]').click();
+  await page.locator('.sab-result').waitFor();
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
