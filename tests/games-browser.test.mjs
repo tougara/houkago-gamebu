@@ -211,6 +211,9 @@ test('Sabotage offline long-press role, then code, and preserve five visible slo
    await page.locator('[data-action="seen"]').click();
   }
   await page.locator('.sab-play').waitFor();
+  const positions=await page.evaluate(()=>{const play=document.querySelector('.sab-play').getBoundingClientRect(),roster=document.querySelector('.sab-roster').getBoundingClientRect(),legend=document.querySelector('.sab-slot-legend').getBoundingClientRect();return{rosterBottom:roster.bottom,legendTop:legend.top,legendBottom:legend.bottom,playBottom:play.bottom}});
+  assert.ok(positions.legendTop>=positions.rosterBottom-3,'legend must not overlap player cards');
+  assert.ok(positions.legendBottom<=positions.playBottom+3,'legend must fit inside the playing screen');
   assert.equal(await page.locator('.sab-player').count(),4);
   assert.equal(await page.locator('.sab-badge').count(),4);
   for(const card of await page.locator('.sab-player').all())assert.equal(await card.locator('.sab-wire').count(),5);
@@ -241,6 +244,9 @@ test('Sabotage online trial has role-first, private peek, five slots and game co
   assert.equal(await page.locator('.sab-counts').count(),1);
   await page.locator('[data-action="seen"]').click();
   await page.locator('.sab-play').waitFor();
+  const positions=await page.evaluate(()=>{const play=document.querySelector('.sab-play').getBoundingClientRect(),roster=document.querySelector('.sab-roster').getBoundingClientRect(),legend=document.querySelector('.sab-slot-legend').getBoundingClientRect();return{rosterBottom:roster.bottom,legendTop:legend.top,legendBottom:legend.bottom,playBottom:play.bottom}});
+  assert.ok(positions.legendTop>=positions.rosterBottom-3,'legend must not overlap player cards');
+  assert.ok(positions.legendBottom<=positions.playBottom+3,'legend must fit inside the playing screen');
   assert.equal(await page.locator('.sab-player').count(),4);
   assert.equal(await page.locator('.sab-badge').count(),4);
   for(const card of await page.locator('.sab-player').all())assert.equal(await card.locator('.sab-wire').count(),5);
