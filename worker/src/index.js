@@ -7,6 +7,7 @@ import {createPita,pitaView,pitaAction} from './pita-engine.js';
 import {createMeter,meterView,meterAction} from './meter-engine.js';
 import {createTower,towerView,towerAction} from './tower-engine.js';
 import {createLink,linkView,linkAction,advanceLink,interruptLink} from './link-game.js';
+import {createSabotage,sabotageAction,sabotageView} from '../../games/sabotage/engine.js';
 const TTL=2*60*60*1000, MAX=10;
 const ROUND_OPTIONS=[3,5,7,10], DEFAULT_ROUNDS=5;
 const CATEGORIES=[...new Set(SECRET_QUESTIONS.map(q=>q.category))];
@@ -18,7 +19,7 @@ const defaultCategoriesFor=mode=>mode==='battle'?[...BATTLE_CATEGORIES]:[...DEFA
 const ALPHABET='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 const CODE=/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 const TOKEN=/^[a-f0-9]{64}$/;
-const GAMES=new Set(['minna-wa-docchi','kyokasho-tower','kankaku-meter','pitadome-challenge','link-burst','nise-transfer-student','gesture-battle','word-wolf']);
+const GAMES=new Set(['minna-wa-docchi','kyokasho-tower','kankaku-meter','pitadome-challenge','link-burst','nise-transfer-student','gesture-battle','word-wolf','sabotage']);
 const ICONS=new Set(['🐶','🐱','🐰','🐼','🦊','🐸','🐧','🐯','🐨','🐵','🦁','🐹','🦍','🦄','👻']);
 const response=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store',...headers}});
 const err=(text,status=400)=>response({ok:false,error:text},status);
@@ -59,7 +60,7 @@ const secretView=room=>{
  };
 };
 const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,
-  expiresAt:room.expiresAt,phase:room.link?'link':room.tower?'tower':room.meter?'meter':room.pita?'pita':room.wolf?'wolf':room.nise?'nise':room.secret?'secret':'lobby',secret:secretView(room),
+  expiresAt:room.expiresAt,phase:room.sabotage?'sabotage':room.link?'link':room.tower?'tower':room.meter?'meter':room.pita?'pita':room.wolf?'wolf':room.nise?'nise':room.secret?'secret':'lobby',secret:secretView(room),
   maxPlayers:MAX,members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
 const cors=origin=>({'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'Content-Type'});
 async function readBody(request){
@@ -78,7 +79,7 @@ export default {
     const url=new URL(request.url),origin=request.headers.get('Origin');
     const allowed=[env.ALLOWED_ORIGIN,'http://localhost:8788','http://127.0.0.1:8788'].filter(Boolean);
     if(request.method==='GET'&&url.pathname==='/api/health')
-      return response({ok:true,mode:'lobby-secret-nise-wolf-pita-meter-tower-link',version:9},200,allowed.includes(origin)?cors(origin):{});
+      return response({ok:true,mode:'lobby-secret-nise-wolf-pita-meter-tower-link-sabotage',version:10},200,allowed.includes(origin)?cors(origin):{});
     if(!allowed.includes(origin))return err('許可されていないアクセスです',403);
     const headers=cors(origin),reply=(data,status=200)=>response(data,status,headers);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -214,7 +215,7 @@ export class OnlineRoom{
     const room=this.snapshot();
     for(const ws of this.sockets()){
       const id=ws.deserializeAttachment()?.id;
-      this.send(ws,{type:'room',room:{...room,nise:niseView(this.room,id),wolf:wolfView(this.room,id),pita:pitaView(this.room,id),meter:meterView(this.room,id),tower:towerView(this.room,id),link:linkView(this.room,id)},voted:!!this.room.secret?.votes?.[id],
+      this.send(ws,{type:'room',room:{...room,nise:niseView(this.room,id),wolf:wolfView(this.room,id),pita:pitaView(this.room,id),meter:meterView(this.room,id),tower:towerView(this.room,id),link:linkView(this.room,id),sabotage:sabotageView(this.room.sabotage,id)},voted:!!this.room.secret?.votes?.[id],
         myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
           (this.room.secret.votes?.[id]||null):null,
         predicted:!!this.room.secret?.predictions?.[id]});
@@ -281,7 +282,7 @@ export class OnlineRoom{
     if(body.mode==='stop'){
       if(me.id!==this.room.hostId)return err('対戦の終了はホスト専用です',403);
       this.stopLinkLoop();
-      for(const phase of ['secret','nise','wolf','pita','meter','tower','link'])this.room[phase]=null;
+      for(const phase of ['secret','nise','wolf','pita','meter','tower','link','sabotage'])this.room[phase]=null;
       for(const member of this.room.members)member.ready=false;
       await this.saveAndBroadcast();
       return response({ok:true,mode:'stop'});
@@ -299,7 +300,7 @@ export class OnlineRoom{
     const [client,server]=Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({id:player.id});
-    this.send(server,{type:'welcome',selfId:player.id,room:{...this.snapshot(),nise:niseView(this.room,player.id),wolf:wolfView(this.room,player.id),pita:pitaView(this.room,player.id),meter:meterView(this.room,player.id),tower:towerView(this.room,player.id),link:linkView(this.room,player.id)},
+    this.send(server,{type:'welcome',selfId:player.id,room:{...this.snapshot(),nise:niseView(this.room,player.id),wolf:wolfView(this.room,player.id),pita:pitaView(this.room,player.id),meter:meterView(this.room,player.id),tower:towerView(this.room,player.id),link:linkView(this.room,player.id),sabotage:sabotageView(this.room.sabotage,player.id)},
       voted:!!this.room.secret?.votes?.[player.id],
       myChoice:this.room.secret?.mode==='battle'&&this.room.secret?.stage==='voting'?
         (this.room.secret.votes?.[player.id]||null):null,
@@ -316,15 +317,34 @@ export class OnlineRoom{
     if(this.room?.link)this.startLinkLoop();
     if(!player)return void ws.close(4003,'unauthorized');
     if(data.type==='ready'){
-      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link||typeof data.ready!=='boolean')return;
+      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link||this.room.sabotage||typeof data.ready!=='boolean')return;
       player.ready=data.ready;await this.ctx.storage.put('room',this.room);this.broadcast();return;
     }
     if(data.type==='game'){
-      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link||this.room.hostId!==id||!GAMES.has(data.gameId))return;
+      if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link||this.room.sabotage||this.room.hostId!==id||!GAMES.has(data.gameId))return;
       if(data.gameId==='link-burst'&&this.room.members.length!==2)return;
       this.room.gameId=data.gameId;
       for(const m of this.room.members)m.ready=false;
       await this.ctx.storage.put('room',this.room);this.broadcast();return;
+    }
+    if(data.type==='sabotage-start'){
+      if(this.room.sabotage||this.room.link||this.room.tower||this.room.meter||this.room.pita||
+         this.room.wolf||this.room.nise||this.room.secret||this.room.gameId!=='sabotage'||
+         id!==this.room.hostId||this.room.members.length<4||this.room.members.length>10||!this.snapshot().allReady)return;
+      this.room.sabotage=createSabotage(this.room.members);
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type==='sabotage-stop'){
+      if(!this.room.sabotage||id!==this.room.hostId)return;
+      this.room.sabotage=null;
+      for(const member of this.room.members)member.ready=false;
+      await this.saveAndBroadcast();return;
+    }
+    if(data.type?.startsWith('sabotage-')){
+      const g=this.room.sabotage;if(!g)return;
+      if(data.type==='sabotage-next'&&id!==this.room.hostId)return;
+      if(sabotageAction(g,id,data))await this.saveAndBroadcast();
+      return;
     }
     if(data.type==='nise-stop'){
       if(!this.room.nise||id!==this.room.hostId)return;
@@ -550,6 +570,10 @@ export class OnlineRoom{
     if(!this.room||!this.room.members.some(m=>m.id===id))return;
     this.room.members=this.room.members.filter(m=>m.id!==id);
     if(this.room.hostId===id)this.room.hostId=this.room.members[0]?.id||null;
+    if(this.room.sabotage){
+      this.room.sabotage=null;
+      for(const member of this.room.members)member.ready=false;
+    }
     if(this.room.wolf){
       // お題配布・投票中の退出では秘密情報を保持せずロビーへ戻す。
       this.room.wolf=null;
