@@ -8,6 +8,18 @@ export const SABOTAGE_COUNTS={
 const pick=n=>{const x=new Uint32Array(1);const limit=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(x)}while(x[0]>=limit);return x[0]%n};
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=pick(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const count=(a,k)=>a.filter(x=>x===k).length;
+// Suspense is independent of hidden type, so timing doesn't identify a BOMB.
+export const sabotageSuspenseMs=()=>pick(5)===0?3150+pick(500):1550+pick(850);
+export const sabotageHoldMs=type=>type==='error'?3300:type==='repair'?1800:1300;
+export function sabotageRevealPhase(cut,now=Date.now()){
+ if(!cut||!Number.isFinite(cut.startedAt)||!Number.isFinite(cut.suspenseMs))
+  return {stage:'ready',waitMs:0};
+ const revealAt=cut.startedAt+cut.suspenseMs;
+ const readyAt=revealAt+sabotageHoldMs(cut.type);
+ if(now<revealAt)return {stage:'suspense',waitMs:revealAt-now};
+ if(now<readyAt)return {stage:'result',waitMs:readyAt-now};
+ return {stage:'ready',waitMs:0};
+}
 export const sabotageRoles=n=>{
  const c=SABOTAGE_COUNTS[n];if(!c)throw Error('人数は4〜10人');
  const pool=[...Array(c.crew).fill('crew'),...Array(c.impostor).fill('impostor'),'jackal'];
@@ -53,7 +65,7 @@ export function sabotageAction(g,id,data){
   if(!p||p.id===id||data.index<0||data.index>=p.hand.length)return false;
   const [type]=p.hand.splice(data.index,1);g.cuts++;
   if(type==='repair')g.repaired++;
-  g.lastCut={type,by:id,targetId:p.id,round:g.round,number:g.cuts};
+  g.lastCut={type,by:id,targetId:p.id,round:g.round,number:g.cuts,startedAt:Date.now(),suspenseMs:sabotageSuspenseMs()};
   g.history.push(g.lastCut);
   if(type==='error')g.pendingResult='impostor';
   else if(g.repaired===g.required)g.pendingResult='crew';
@@ -62,7 +74,7 @@ export function sabotageAction(g,id,data){
   g.currentId=p.id;g.stage='reveal';return true;
  }
  if(data.type==='sabotage-next'){
-  if(g.stage!=='reveal')return false;
+  if(g.stage!=='reveal'||sabotageRevealPhase(g.lastCut).stage!=='ready')return false;
   if(g.pendingResult){g.winner=g.pendingResult;g.stage='finished';return true}
   if(g.cuts===g.players.length){
    const deck=g.players.flatMap(p=>p.hand);
