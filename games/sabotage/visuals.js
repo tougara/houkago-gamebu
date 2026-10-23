@@ -14,6 +14,9 @@ export function sabotageRoleCard(role,counts=null){
  '<div class="sab-role-goal">'+escapeText(sabotageRoleGoal[role])+'</div>'+
  (c?'<div class="sab-counts"><div><strong>'+c.repair+'</strong><small>解除</small></div><div><strong>'+c.error+'</strong><small>BOMB</small></div><div><strong>'+c.dummy+'</strong><small>しーん……</small></div></div>':'')+'</div>';
 }
+export function sabotageSlotLegend(){
+ return '<div class="sab-slot-legend" aria-label="公開済みコードの凡例"><span class="repair">✓ 解除</span><span class="error">! BOMB</span><span class="dummy">… しーん</span></div>';
+}
 export function sabotageBadges(required,repaired,animate=false){
  return '<div class="sab-status-badges" aria-label="解除 '+repaired+' / '+required+'">'+
  Array.from({length:required},(_,i)=>{
@@ -46,7 +49,7 @@ export function sabotageVictory(winner,myRole=null){
  const summary={crew:'宇宙船の全コード解除に成功！',impostor:'BOMBが起動、解除阻止に成功！',jackal:'最後まで正体を隠し、時間切れを勝ち取った！'}[winner];
  return '<section class="sab-victory sab-win-'+winner+'" aria-label="'+name+'の勝利">'+
  '<div class="sab-victory-rays" aria-hidden="true"></div><div class="sab-victory-particles" aria-hidden="true">'+
- Array.from({length:18},(_,i)=>'<i style="--p:'+i+'"></i>').join('')+'</div>'+
+ Array.from({length:18},(_,i)=>'<i style="--p:'+i+';left:'+(8+i*4.5)+'%;top:'+(12+((i*7)%19)*3.7)+'%;animation-delay:'+(-i*.13)+'s;transform:rotate('+(i*23)+'deg)"></i>').join('')+'</div>'+
  '<p class="sab-victory-top">GAME OVER · FINAL RESULT</p>'+
  '<div class="sab-victory-emblem" aria-hidden="true">'+symbol+'</div>'+
  '<h1 class="sab-victory-heading">'+heading+'</h1>'+
