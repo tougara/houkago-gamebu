@@ -6,7 +6,7 @@ import {createSabotage,sabotageAction,sabotageView,sabotageRoles,SABOTAGE_COUNTS
 const members=n=>Array.from({length:n},(_,i)=>({id:'p'+i,name:'参加者'+i,icon:'🐶'}));
 const revealAll=g=>{for(const p of g.players)assert.equal(sabotageAction(g,p.id,{type:'sabotage-seen'}),true);assert.equal(g.stage,'playing')};
 const cut=g=>{const target=g.players.find(p=>p.id!==g.currentId&&p.hand.length);assert.ok(target);const i=target.hand.indexOf('dummy');const index=i>=0?i:0;return {target,index}};
-const advance=g=>{if(g.lastCut)g.lastCut.startedAt=Date.now()-10000;return advance(g)};
+const advance=g=>{if(g.lastCut)g.lastCut.startedAt=Date.now()-10000;return sabotageAction(g,g.currentId,{type:'sabotage-next'})};
 test('4〜10人の人数別コード・陣営候補・秘匿表示',()=>{
  for(let n=4;n<=10;n++){
   const c=SABOTAGE_COUNTS[n];assert.ok(c);
