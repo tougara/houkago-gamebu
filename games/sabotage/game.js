@@ -4,7 +4,7 @@ const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','
 let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title';
 function loadPlayers(){const d=api.load();players=d.players.slice(0,d.activeCount).map(p=>({id:p.id,name:p.name,icon:p.icon}))}
 function persist(){if(!g||g.stage==='finished')return;resume?.save?.(SAVE,{title:'サボタージュ！',path:'/games/sabotage/',summary:'ROUND '+g.round+' / 4'}, {g,peek,screen:'handoff',recorded})}
-function nav(){return '<nav class="sab-nav"><button type="button" data-nav="back">← もどる</button><span class="sab-mark">SABOTAGE!</span><button type="button" data-nav="home">ゲームをえらぶ</button></nav>'}
+function nav(){return '<nav class="sab-nav top-nav"><button type="button" class="nav-pill" data-nav="back">← もどる</button><span class="sab-mark">SABOTAGE!</span><button type="button" class="nav-pill" data-nav="home">ゲームをえらぶ</button></nav>'}
 const btn=(s,a,cls='',disabled=false)=>'<button type="button" class="sab-btn '+cls+'" data-action="'+a+'" '+(disabled?'disabled':'')+'>'+esc(s)+'</button>';
 const roleName={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
 const wireName={repair:'修復コード',error:'致命的エラー',dummy:'ダミー'};
@@ -48,7 +48,9 @@ function advance(){sabotageAction(g,g.currentId,{type:'sabotage-next'});if(g.sta
 function exit(){if(g&&g.stage!=='finished'&&!confirm('ゲームを中断して戻る？ 続きは保存されます。'))return;persist();location.href='../'}
 app.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
- if(b.dataset.nav){if(b.dataset.nav==='home')return exit();if(screen==='title')return exit();if(g&&g.stage!=='finished'){persist();if(!confirm('進行中のゲームです。ゲーム一覧に戻る？（続きは保存されます）'))return;return exit()}screen=screen==='members'?'title':'title';render();return}
+ if(b.dataset.memberCount!==undefined){api.setActiveCount(Number(b.dataset.memberCount));loadPlayers();render();return}
+ if(b.dataset.memberIcon!==undefined){api.setPlayer(Number(b.dataset.memberIcon),{icon:b.dataset.icon});loadPlayers();render();return}
+ if(b.dataset.nav){if(b.dataset.nav==='home')return exit();if(screen==='title')return exit();if(g&&g.stage!=='finished'){persist();if(!confirm('進行中のゲームです。ゲーム一覧に戻る？（続きは保存されます）'))return;location.href='../';return}screen=screen==='members'?'title':'title';render();return}
  if(b.dataset.target&&g?.stage==='playing'){target=b.dataset.target;if(target===g.currentId)return;wire=-1;screen='select';render();return}
  if(b.dataset.wire!==undefined){wire=Number(b.dataset.wire);render();return}
  switch(b.dataset.action){
@@ -67,6 +69,7 @@ app.addEventListener('click',e=>{
  }
 });
 app.addEventListener('click',e=>{if(e.target.closest('[data-members-done]')){e.preventDefault();loadPlayers();begin()}});
+app.addEventListener('change',e=>{const el=e.target;if(el.matches('[data-member-name]')){api.setPlayer(Number(el.dataset.memberName),{name:el.value});loadPlayers();render()}});
 window.addEventListener('houkago-player-selection-changed',()=>{if(screen==='members'){loadPlayers();render()}});
 window.addEventListener('pagehide',persist);window.addEventListener('houkago-back-guard-save',persist);
 function restore(saved){if(!saved?.g)return;g=saved.g;peek=Number(saved.peek)||0;recorded=!!saved.recorded;screen=g.stage==='finished'?'result':g.stage==='briefing'?'handoff':'play';render()}
