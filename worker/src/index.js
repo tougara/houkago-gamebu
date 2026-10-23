@@ -191,7 +191,7 @@ export class OnlineRoom{
   }
   async join(request){
     if(!this.active())return err('部屋が見つからないか期限切れです',404);
-    if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link)return err('ゲーム中は新しく参加できません。終了後に試してね',409);
+    if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link||this.room.sabotage)return err('ゲーム中は新しく参加できません。終了後に試してね',409);
     if(this.room.gameId==='link-burst'&&this.room.members.length>=2)return err('リンクバースト！は2人専用です',409);
     if(this.room.members.length>=MAX)return err('満員です',409);
     const {name,icon}=await request.json();
@@ -555,7 +555,7 @@ export class OnlineRoom{
     if(data.type==='room-stop'){
       if(id!==this.room.hostId)return;
       this.stopLinkLoop();
-      for(const phase of ['secret','nise','wolf','pita','meter','tower','link'])
+      for(const phase of ['secret','nise','wolf','pita','meter','tower','link','sabotage'])
         this.room[phase]=null;
       for(const member of this.room.members)member.ready=false;
       await this.saveAndBroadcast();return;
