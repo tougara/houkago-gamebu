@@ -1,6 +1,6 @@
 import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js';
 import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js';
-import {sabotageBadges,sabotageSlots,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js';
 const $=id=>document.getElementById(id),root=$('game-root'),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const q=new URLSearchParams(location.search),demo=q.get('testPlay')==='1';
@@ -82,7 +82,7 @@ function playing(d){
  return '<section class="sab-play">'+status(d)+(demo?'<p class="sab-trial-note">あなたの端末を試遊中（ほかの3人は仮想参加者）</p>':'')+
  '<div class="sab-current"><small>現在の選択者</small><strong>'+esc(turn.icon)+' '+esc(turn.name)+'</strong>'+
  '<small>残り '+(d.totalCuts-d.cuts)+' 回 / '+(own?'あなたの番：相手を選ぼう':'ほかのプレイヤーの操作を待機中')+'</small></div>'+
- roster(d)+'<div class="sab-stack">'+
+ roster(d)+sabotageSlotLegend()+'<div class="sab-stack">'+
  (demo&&!own?'<div class="sab-demo-other">'+btn('ほかの端末の操作を再現','demo-turn','secondary')+'</div>':'')+
  '<div class="sab-online-help">'+btn('自分の秘密','private','secondary')+btn('通信チャット','chat','secondary')+btn('公開履歴','history','secondary')+'</div>'+rules()+'</div></section>';
 }
