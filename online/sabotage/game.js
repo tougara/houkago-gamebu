@@ -70,7 +70,7 @@ function picker(d){const p=d.members.find(x=>x.id===target),len=p?.cards||0;
  return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE SELECT</p><h2>'+esc(p?.icon)+' '+esc(p?.name)+' のコード</h2><p class="sab-sub">どれも種類は不明。番号を選んで確定。</p><div class="sab-grid">'+Array.from({length:len},(_,i)=>'<button type="button" class="sab-btn '+(wire===i?'selected':'')+'" data-wire="'+i+'">▥<br>#'+(i+1)+'</button>').join('')+'</div><div class="sab-actions" style="margin-top:16px">'+btn('このコードを公開する','cut','',wire<0)+btn('選び直す','cancel','secondary')+'</div></section>';
 }
 function reveal(d){const x=d.lastCut,p=person(x.targetId),t=x.type;
- return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE REVEAL</p><h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2><div class="sab-result '+t+'">'+(t==='repair'?'DISARMED!':t==='error'?'BOMB!' :'しーん……')+'</div><p class="sab-sub">'+(t==='dummy'?'……何も起きなかった。':nWire[t]+'を公開しました')+</p><p class="sab-sub">解除 '+d.repaired+' / '+d.required+'</p>'+
+ return '<section class="sab-panel sab-center sab-wait"><p class="sab-kicker">CODE REVEAL</p><h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2><div class="sab-result '+t+'">'+(t==='repair'?'DISARMED!':t==='error'?'BOMB!' :'しーん……')+'</div><p class="sab-sub">'+(t==='dummy'?'……何も起きなかった。':nWire[t]+'を公開しました')+'</p><p class="sab-sub">解除 '+d.repaired+' / '+d.required+'</p>'+
  (host()?btn('次へ進む','next'): '<p class="sab-sub">ホストが次へ進むまで待ってね</p>')+'</section>';
 }
 function chatLines(d){return d.chat?.length?d.chat.slice(-12).map(x=>'<div class="sab-chat-line"><strong>'+esc(person(x.id).name)+'</strong> '+esc(x.text)+'</div>').join(''):'<p class="sab-sub">まだ発言はありません</p>'}
