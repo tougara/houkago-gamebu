@@ -4,7 +4,7 @@ export const sabotageRoleName={crew:'クルーメイト',impostor:'インポス�
 export const sabotageRoleGoal={
  crew:'解除コードをすべて見つければ勝利！',
  impostor:'BOMBを公開させれば勝利。ジャッカル不在なら時間切れでも勝利。',
- jackal:'解除成功もBOMBも起こさず、4ラウンドを終わらせれば単独勝利！'
+ jackal:'全解除もBOMB公開も起こさず、4ラウンドを終わらせれば単独勝利！'
 };
 export const sabotageWireLabel={repair:'解除',error:'BOMB',dummy:'しーん……'};
 export function sabotageRoleCard(role,counts=null){
@@ -46,7 +46,7 @@ export function sabotageVictory(winner,myRole=null){
  const name=sabotageRoleName[winner],win=winner===myRole;
  const heading={crew:'MISSION CLEAR!',impostor:'SABOTAGE!',jackal:'JACKAL VICTORY!'}[winner];
  const symbol={crew:'✓',impostor:'!',jackal:'◆'}[winner];
- const summary={crew:'宇宙船の全コード解除に成功！',impostor:'BOMBが起動、解除阻止に成功！',jackal:'最後まで正体を隠し、時間切れを勝ち取った！'}[winner];
+ const summary={crew:'宇宙船の全コード解除に成功！',impostor:'BOMBが起動、解除阻止に成功！',jackal:'全解除もBOMB公開も起こさず、4ラウンドが終了！'}[winner];
  return '<section class="sab-victory sab-win-'+winner+'" aria-label="'+name+'の勝利">'+
  '<div class="sab-victory-rays" aria-hidden="true"></div><div class="sab-victory-particles" aria-hidden="true">'+
  Array.from({length:18},(_,i)=>'<i style="--p:'+i+';left:'+(8+i*4.5)+'%;top:'+(12+((i*7)%19)*3.7)+'%;animation-delay:'+(-i*.13)+'s;transform:rotate('+(i*23)+'deg)"></i>').join('')+'</div>'+
