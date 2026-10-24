@@ -119,7 +119,7 @@ function result(d){
  return sabotageVictory(d.winner,d.myRole)+
  '<section class="sab-panel sab-victory-list"><h3>全員の正体</h3>'+
  d.members.map(p=>'<p>'+esc(p.icon)+' '+esc(p.name)+'：<b class="sab-role '+p.role+'" style="font-size:14px">'+nRole[p.role]+'</b></p>').join('')+
- '</section>'+(host()?btn('部屋に戻って再戦','stop'):'<p class="sab-sub sab-center">ホストがロビーへ戻すまで待機</p>')+
+ '</section>'+(demo?btn('もう一度試遊する','demo-restart'):(host()?btn('部屋に戻って再戦','stop'):'<p class="sab-sub sab-center">ホストがロビーへ戻すまで待機</p>'))+
  btn('公開されたコードの履歴','history','secondary');
 }
 function privatePeek(d){
@@ -168,6 +168,7 @@ root.addEventListener('click',e=>{
  case 'history':panel='history';render();break;
  case 'demo-turn':simulateOtherDevice();break;
  case 'next':send('sabotage-next');break;
+ case 'demo-restart':if(!demo)return;demoGame=createSabotage(demoPeople);demoGame.currentId=demoSelf;room.sabotage=sabotageView(demoGame,demoSelf);lastPhase='';panel='';target='';wire=-1;secretOpen=false;render();break;
  case 'stop':if(confirm('ゲームを終えて全員でロビーへ戻る？'))send('sabotage-stop');break;
  }
 });
