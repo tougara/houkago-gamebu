@@ -187,6 +187,29 @@ test('Nise and Docchi logos fit their artwork; wolf logo is deliberately enlarge
 });
 
 
+test('Sabotage uploaded artwork loads on offline and online pages',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
+  assert.match(await page.evaluate(()=>getComputedStyle(document.body).backgroundImage),/sabotage_background[.]png/);
+  const title=page.locator('.sab-title-art');
+  await title.evaluate(image=>image.decode());
+  assert.equal(await title.evaluate(image=>image.naturalWidth>0),true);
+  const cardFiles=['sabotage_card_repair.png','sabotage_card_bomb.png','sabotage_card_no_response.png'];
+  for(const filename of cardFiles){
+   const loaded=await page.evaluate(async file=>{
+    const img=new Image();img.src='/'+file;await img.decode();return img.naturalWidth>0;
+   },filename);
+   assert.equal(loaded,true,filename+' failed to decode');
+  }
+  await page.goto(base+'/online/sabotage/?testPlay=1',{waitUntil:'load'});
+  assert.match(await page.evaluate(()=>getComputedStyle(document.body).backgroundImage),/sabotage_background[.]png/);
+  const navLogo=page.locator('.sab-nav-logo');
+  await navLogo.evaluate(image=>image.decode());
+  assert.equal(await navLogo.evaluate(image=>image.naturalWidth>0),true);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
 test('Sabotage offline long-press role, then code, and preserve five visible slots',async()=>{
  const {page,context,errors}=await open(390,780);
  try{
