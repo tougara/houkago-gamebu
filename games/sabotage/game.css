@@ -149,7 +149,7 @@ body{background-color:#08162c;background-image:linear-gradient(180deg,rgba(3,12,
 .sab-count-tile .sab-count-art{width:min(72%,85px);height:clamp(54px,17vw,104px);object-fit:contain;flex:none}
 .sab-count-tile strong{line-height:1.05}
 .sab-roster .sab-wire,.sab-slot-grid .sab-slot-pick{position:relative;isolation:isolate;overflow:hidden}
-.sab-slot-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none;opacity:.90;z-index:-1}
+.sab-slot-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none;opacity:.90;z-index:0}
 .sab-roster .sab-slot-opened .sab-wire-symbol,.sab-slot-grid .sab-slot-opened .sab-wire-symbol{position:relative;color:#fff;z-index:1;text-shadow:0 1px 5px #001528,0 0 6px #001528}
 .sab-slot-grid .sab-slot-opened small{position:relative;z-index:1;color:#fff;text-shadow:0 1px 5px #001528,0 0 5px #001528}
 .sab-slot-grid .sab-slot-opened .sab-slot-art{opacity:.73}
