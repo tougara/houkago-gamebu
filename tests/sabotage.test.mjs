@@ -138,6 +138,16 @@ test('オフライン・オンラインの空振り表示は「しーん……�
  assert.equal(g.players.flatMap(p=>p.hand).filter(x=>x==='dummy').length,19);
 });
 
+test('空振りは解除・BOMBと区別して「しーん……」で表示する',()=>{
+ const visual=readFileSync(new URL('../games/sabotage/visuals.js',import.meta.url),'utf8');
+ const reveal=readFileSync(new URL('../games/sabotage/reveal-ui.js',import.meta.url),'utf8');
+ assert.match(visual,/dummy:'しーん……'/);
+ assert.match(visual,/… しーん……/);
+ assert.match(reveal,/bomb\?'BOMB!':'しーん……'/);
+ assert.match(reveal,/何も起きなかった……/);
+ for(const path of ['games/sabotage/visuals.js','games/sabotage/reveal-ui.js'])
+  execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
+});
 test('公開前は結果を伏せ、ランダムな「……」の後に3種類をめくる',()=>{
  const cut={type:'dummy',startedAt:1000,suspenseMs:2050};
  assert.deepEqual(sabotageRevealPhase(cut,1000),{stage:'suspense',waitMs:2050});
