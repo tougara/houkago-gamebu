@@ -15,7 +15,7 @@ export function sabotageRoleCard(role,counts=null){
  (c?'<div class="sab-counts"><div><strong>'+c.repair+'</strong><small>解除</small></div><div><strong>'+c.error+'</strong><small>BOMB</small></div><div><strong>'+c.dummy+'</strong><small>しーん……</small></div></div>':'')+'</div>';
 }
 export function sabotageSlotLegend(){
- return '<div class="sab-slot-legend" aria-label="公開済みコードの凡例"><span class="repair">✓ 解除</span><span class="error">! BOMB</span><span class="dummy">… しーん</span></div>';
+ return '<div class="sab-slot-legend" aria-label="公開済みコードの凡例"><span class="repair">✓ 解除</span><span class="error">! BOMB</span><span class="dummy">… しーん……</span></div>';
 }
 export function sabotageBadges(required,repaired,animate=false){
  return '<div class="sab-status-badges" aria-label="解除 '+repaired+' / '+required+'">'+
