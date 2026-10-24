@@ -110,6 +110,6 @@ test('shared stylesheet and script cache tags are refreshed in every game that l
  for(const path of paths){
   const html=readFileSync(new URL(path,import.meta.url),'utf8');
   assert.match(html,/player-editor\.css\?v=20261016-compact1/);
-  assert.match(html,/player-registry\.js\?v=20261016-compact1/);
+  assert.match(html,path==='../index.html' ? /player-registry\.js\?v=20261024-sabtitle1/ : /player-registry\.js\?v=20261016-compact1/);
  }
 });
