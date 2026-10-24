@@ -1,6 +1,6 @@
-import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js?v=20261024-sabui3';
-import {sabotageRevealBody} from './reveal-ui.js?v=20261024-sabui3';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal} from './visuals.js?v=20261024-sabui3';
+import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js?v=20261024-noreaction1';
+import {sabotageRevealBody} from './reveal-ui.js?v=20261024-noreaction1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal} from './visuals.js?v=20261024-noreaction1';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;
@@ -9,7 +9,7 @@ function persist(){if(!g||g.stage==='finished')return;resume?.save?.(SAVE,{title
 function nav(){return '<nav class="sab-nav top-nav"><button type="button" class="nav-pill" data-nav="back">← もどる</button><span class="sab-mark">SABOTAGE!</span><button type="button" class="nav-pill" data-nav="home">ゲームをえらぶ</button></nav>'}
 const btn=(s,a,cls='',disabled=false)=>'<button type="button" class="sab-btn '+cls+'" data-action="'+a+'" '+(disabled?'disabled':'')+'>'+esc(s)+'</button>';
 const roleName={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
-const wireName={repair:'解除コード',error:'爆弾（BOMB）',dummy:'しーん……'};
+const wireName={repair:'解除コード',error:'爆弾（BOMB）',dummy:'反応なし'};
 const winnerName={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
 function rules(){return '<details class="sab-more" '+(screen==='rules'?'open':'')+'><summary>あそびかた・勝利条件</summary><div class="sab-more-content"><ol><li>秘密の役職と、手持ちコードの種類・枚数を確認。どの位置に何があるかは本人も分かりません。</li><li>話し合って、自分以外の人のコードを1本選択。選ばれた人が次の番です。</li><li>解除コードをすべて見つけるとクルーメイトの勝利。爆弾を選ぶとインポスターの勝利。</li><li>各ラウンド人数分だけ選択したら、残りを混ぜて再配布。4ラウンド終了まで決着しなければジャッカルがいる場合はジャッカル、いなければインポスターの勝利です。</li></ol><p>嘘の申告や自由な会話はOK。特殊能力・投票・脱落はありません。</p></div></details>'}
 function title(){return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">EMERGENCY! / SPACE MYSTERY</p><h1 class="sab-headline">サボタージュ！</h1><p class="sab-sub">修理するか、妨害するか、最後まで隠れ続けるか。<br>誰を信じてコードを選ぶ？</p><p class="sab-sub">4〜10人・スマホ1台・4ラウンド</p></section><div class="sab-actions">'+btn('ゲームをはじめる','members')+btn('あそびかた','rules','secondary')+'</div>'}

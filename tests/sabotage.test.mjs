@@ -123,10 +123,10 @@ test('オフライン・オンラインで解除／爆弾の表示名を統一',
  assert.match(engine,/爆弾があるかも/);
 });
 
-test('オフライン・オンラインの空振り表示は「しーん……」、内部配線処理はdummyのまま',()=>{
+test('オフライン・オンラインの空振り表示は「反応なし」、内部配線処理はdummyのまま',()=>{
  for(const path of ['games/sabotage/game.js','online/sabotage/game.js']){
   const source=readFileSync(new URL('../'+path,import.meta.url),'utf8');
-  assert.match(source,/dummy:'しーん……'/);
+  assert.match(source,/dummy:'反応なし'/);
   assert.match(source,/sabotageRoleCard|sabotageSlots/);
   assert.match(source,/sabotageRevealBody/);
   assert.doesNotMatch(source,/EMPTY CODE|dummy:'ダミー'|<small>ダミー<\/small>/);
@@ -138,12 +138,12 @@ test('オフライン・オンラインの空振り表示は「しーん……�
  assert.equal(g.players.flatMap(p=>p.hand).filter(x=>x==='dummy').length,19);
 });
 
-test('空振りは解除・BOMBと区別して「しーん……」で表示する',()=>{
+test('空振りは解除・BOMBと区別して「反応なし」で表示する',()=>{
  const visual=readFileSync(new URL('../games/sabotage/visuals.js',import.meta.url),'utf8');
  const reveal=readFileSync(new URL('../games/sabotage/reveal-ui.js',import.meta.url),'utf8');
- assert.match(visual,/dummy:'しーん……'/);
- assert.match(visual,/… しーん……/);
- assert.match(reveal,/bomb\?'BOMB!':'しーん……'/);
+ assert.match(visual,/dummy:'反応なし'/);
+ assert.match(visual,/— 反応なし/);
+ assert.match(reveal,/bomb\?'BOMB!':'反応なし'/);
  assert.match(reveal,/何も起きなかった……/);
  for(const path of ['games/sabotage/visuals.js','games/sabotage/reveal-ui.js'])
   execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
@@ -176,7 +176,7 @@ test('解除・しーん・BOMBの3結果は共通演出を使用',()=>{
  const script=readFileSync(new URL('../games/sabotage/reveal-ui.js',import.meta.url),'utf8');
  assert.match(script,/data-reveal-stage="suspense"/);
  assert.match(script,/解除成功！/);
- assert.match(script,/しーん……/);
+ assert.match(script,/反応なし/);
  assert.match(script,/BOMB!/);
  const offline=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
  const online=readFileSync(new URL('../online/sabotage/game.js',import.meta.url),'utf8');

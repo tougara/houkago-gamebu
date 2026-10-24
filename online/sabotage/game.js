@@ -1,6 +1,6 @@
-import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js?v=20261024-sabui3';
-import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js?v=20261024-sabui3';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js?v=20261024-sabui3';
+import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js?v=20261024-noreaction1';
+import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js?v=20261024-noreaction1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js?v=20261024-noreaction1';
 const $=id=>document.getElementById(id),root=$('game-root'),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const q=new URLSearchParams(location.search),demo=q.get('testPlay')==='1';
@@ -13,7 +13,7 @@ if(!demo){try{session=JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{}
  room={phase:'sabotage',hostId:'demo1',members:demoPeople,sabotage:sabotageView(demoGame,demoSelf)};
 }
 const nRole={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
-const nWire={repair:'解除コード',error:'爆弾（BOMB）',dummy:'しーん……'};
+const nWire={repair:'解除コード',error:'爆弾（BOMB）',dummy:'反応なし'};
 const quick=['解除コードがある！','爆弾があるかも','誰を信じよう？','この人のコードを選んで','別の人にしよう','ちょっと待って！','怪しいと思う','信じる！'];
 const person=id=>room?.members?.find(x=>x.id===id)||{name:'不明',icon:'？'};
 const data=()=>room?.sabotage;

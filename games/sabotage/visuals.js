@@ -6,16 +6,16 @@ export const sabotageRoleGoal={
  impostor:'BOMBを公開させれば勝利。ジャッカル不在なら時間切れでも勝利。',
  jackal:'全解除もBOMB公開も起こさず、4ラウンドを終わらせれば単独勝利！'
 };
-export const sabotageWireLabel={repair:'解除',error:'BOMB',dummy:'しーん……'};
+export const sabotageWireLabel={repair:'解除',error:'BOMB',dummy:'反応なし'};
 export function sabotageRoleCard(role,counts=null){
  const c=counts;
  return '<div class="sab-secret-content"><p class="sab-kicker">YOUR SECRET</p>'+
  '<div class="sab-role '+escapeText(role)+'">'+escapeText(sabotageRoleName[role])+'</div>'+
  '<div class="sab-role-goal">'+escapeText(sabotageRoleGoal[role])+'</div>'+
- (c?'<div class="sab-counts"><div><strong>'+c.repair+'</strong><small>解除</small></div><div><strong>'+c.error+'</strong><small>BOMB</small></div><div><strong>'+c.dummy+'</strong><small>しーん……</small></div></div>':'')+'</div>';
+ (c?'<div class="sab-counts"><div><strong>'+c.repair+'</strong><small>解除</small></div><div><strong>'+c.error+'</strong><small>BOMB</small></div><div><strong>'+c.dummy+'</strong><small>反応なし</small></div></div>':'')+'</div>';
 }
 export function sabotageSlotLegend(){
- return '<div class="sab-slot-legend" aria-label="公開済みコードの凡例"><span class="repair">✓ 解除</span><span class="error">! BOMB</span><span class="dummy">… しーん……</span></div>';
+ return '<div class="sab-slot-legend" aria-label="公開済みコードの凡例"><span class="repair">✓ 解除</span><span class="error">! BOMB</span><span class="dummy">— 反応なし</span></div>';
 }
 export function sabotageBadges(required,repaired,animate=false){
  return '<div class="sab-status-badges" aria-label="解除 '+repaired+' / '+required+'">'+
@@ -25,7 +25,7 @@ export function sabotageBadges(required,repaired,animate=false){
    '<span class="sab-badge-inner"><span class="sab-badge-front">?</span><span class="sab-badge-back">✓</span></span></span>';
  }).join('')+'</div>';
 }
-const typeIcon={repair:'✓',error:'!',dummy:'…'};
+const typeIcon={repair:'✓',error:'!',dummy:'—'};
 export function sabotageSlots(slots,selectable=false,selected=-1){
  const items=Array.isArray(slots)&&slots.length?slots:Array.from({length:5},()=>({state:'closed'}));
  return '<div class="'+(selectable?'sab-slot-grid':'sab-wires')+'" aria-label="コード5枠">'+
