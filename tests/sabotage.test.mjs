@@ -228,3 +228,14 @@ test('5枠表示・解除バッジ・秘密再確認・勝利演出は両モー�
  for(const path of ['games/sabotage/engine.js','games/sabotage/visuals.js','games/sabotage/game.js','online/sabotage/game.js','games/sabotage/reveal-ui.js'])
   execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
 });
+
+test('ジャッカル勝利条件の表示とオンライン試遊の再戦操作',()=>{
+ const visual=readFileSync(new URL('../games/sabotage/visuals.js',import.meta.url),'utf8');
+ const online=readFileSync(new URL('../online/sabotage/game.js',import.meta.url),'utf8');
+ assert.match(visual,/全解除もBOMB公開も起こさず、4ラウンドを終わらせれば単独勝利/);
+ assert.doesNotMatch(visual,/解除成功もBOMBも起こさず/);
+ assert.match(online,/case 'demo-restart'/);
+ assert.match(online,/もう一度試遊する/);
+ assert.match(online,/demoGame=createSabotage\(demoPeople\)/);
+ execFileSync(process.execPath,['--check',new URL('../online/sabotage/game.js',import.meta.url).pathname],{stdio:'pipe'});
+});
