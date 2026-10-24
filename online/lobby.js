@@ -7,7 +7,7 @@ const names={
  'minna-wa-docchi':'みんなはどっち？','kyokasho-tower':'教科書タワー',
  'kankaku-meter':'感覚メーター','pitadome-challenge':'ピタ止めチャレンジ',
  'link-burst':'リンクバースト！','nise-transfer-student':'ニセ転校生を探せ！',
- 'gesture-battle':'ジェスチャーバトル','word-wolf':'ことばのオオカミ','sabotage':'サボタージュ！'
+ 'gesture-battle':'ジェスチャーバトル','word-wolf':'ことばのオオカミ','sabotage':'サボタージュ'
 };
 const STORE='houkago-online-session-v1';
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
@@ -150,7 +150,7 @@ $('start-secret').addEventListener('click',async()=>{
  if(room?.phase!=='lobby'||!room.allReady)return;
  if(room.gameId==='sabotage'&&room.members.length>=4){
   try{const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
-    if(!health.ok||health.version<10){notice('サボタージュ！のサーバー更新待ちだよ。');return}
+    if(!health.ok||health.version<10){notice('サボタージュのサーバー更新待ちだよ。');return}
   }catch{notice('通信サーバーに接続できないよ。');return}
   send({type:'sabotage-start'});
  }else if(room.gameId==='nise-transfer-student'&&room.members.length>=3){

@@ -15,7 +15,7 @@
  const names={
    site:'サイト共通',nise:'ニセ転校生を探せ！',docchi:'みんなはどっち？',
    meter:'感覚メーター',tower:'教科書タワー',
-   gesture:'ジェスチャーバトル',pita:'ピタ止めチャレンジ',link:'リンクバースト！',wolf:'ことばのオオカミ',sabotage:'サボタージュ！'
+   gesture:'ジェスチャーバトル',pita:'ピタ止めチャレンジ',link:'リンクバースト！',wolf:'ことばのオオカミ',sabotage:'サボタージュ'
  };
  const order=['site','nise','docchi','meter','tower','gesture','pita','link','wolf','sabotage'];
  const data=records.slice().filter(x=>x&&x.date&&x.datetime&&x.title).sort((a,b)=>Date.parse(b.datetime)-Date.parse(a.datetime));
