@@ -98,7 +98,7 @@ test('Sabotage logo also works in featured recommendations',async()=>{
   assert.equal(await card.locator('img').count(),1);
   await card.locator('.favorite-toggle').click();
   assert.equal(await page.locator('.featured-copy strong').textContent(),'サボタージュ');
-  assert.match(await page.locator('.featured-art img').getAttribute('src'),/sabotage-logo[.]svg/);
+  assert.match(await page.locator('.featured-art img').getAttribute('src'),/sabotage_logo[.]png/);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
