@@ -137,3 +137,24 @@ html[data-hg-motion="reduced"] .sab-badge-inner,html[data-hg-motion="reduced"] .
 .sab-play:has(.sab-trial-note){grid-template-rows:auto auto auto minmax(0,1fr) auto auto!important}
 .sab-play>.sab-roster{min-height:0;overflow:auto;overscroll-behavior:contain}
 .sab-play>.sab-slot-legend{min-height:14px}
+
+/* Shared Sabotage artwork: both offline and online import this stylesheet. */
+body{background-color:#08162c;background-image:linear-gradient(180deg,rgba(3,12,27,.62),rgba(3,12,27,.82)),url('../../sabotage_background.png?v=20261024-sabassets1');background-position:center center;background-size:cover;background-repeat:no-repeat;background-attachment:fixed}
+.sab-brand-logo{display:block;width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 3px 8px #020c1b70)}
+.sab-mark{display:flex;justify-content:center;align-items:center;flex:0 1 auto;min-width:0}
+.sab-nav-logo{width:clamp(95px,31vw,195px);max-height:44px}
+.sab-title-logo{display:flex;align-items:center;justify-content:center;margin:8px auto 14px;width:100%;max-width:620px}
+.sab-title-art{max-width:100%;max-height:min(31dvh,220px)}
+.sab-count-tile{min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden}
+.sab-count-tile .sab-count-art{width:min(72%,85px);height:clamp(54px,17vw,104px);object-fit:contain;flex:none}
+.sab-count-tile strong{line-height:1.05}
+.sab-roster .sab-wire,.sab-slot-grid .sab-slot-pick{position:relative;isolation:isolate;overflow:hidden}
+.sab-slot-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none;opacity:.90;z-index:-1}
+.sab-roster .sab-slot-opened .sab-wire-symbol,.sab-slot-grid .sab-slot-opened .sab-wire-symbol{position:relative;color:#fff;z-index:1;text-shadow:0 1px 5px #001528,0 0 6px #001528}
+.sab-slot-grid .sab-slot-opened small{position:relative;z-index:1;color:#fff;text-shadow:0 1px 5px #001528,0 0 5px #001528}
+.sab-slot-grid .sab-slot-opened .sab-slot-art{opacity:.73}
+.sab-reveal-visual .sab-outcome-card{width:min(43vw,190px);height:auto;aspect-ratio:2/3;min-height:0;padding:0;border:0!important;border-radius:12px;background:transparent!important;box-shadow:none!important;overflow:visible}
+.sab-reveal-visual .sab-outcome-art{width:100%;height:100%;max-height:min(36dvh,285px);object-fit:contain;border-radius:10px;filter:drop-shadow(0 7px 14px #0009)}
+.sab-reveal-visual.error .sab-outcome-art{filter:drop-shadow(0 0 14px #f0445999) drop-shadow(0 7px 14px #000b)}
+@media(max-height:660px){.sab-reveal-visual .sab-outcome-card{width:min(32vw,133px)}.sab-count-tile .sab-count-art{height:clamp(48px,13vw,75px)}.sab-title-art{max-height:22dvh}}
+@media(max-width:350px){.sab-nav-logo{width:clamp(74px,27vw,108px)}.sab-roster .sab-wire-symbol{font-size:11px}}

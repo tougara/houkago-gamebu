@@ -7,12 +7,22 @@ export const sabotageRoleGoal={
  jackal:'全解除もBOMB公開も起こさず、4ラウンドを終わらせれば単独勝利！'
 };
 export const sabotageWireLabel={repair:'解除',error:'BOMB',dummy:'反応なし'};
+/* One visual asset map for offline, live online, and the local online trial. */
+export const sabotageCardPath={repair:'../../sabotage_card_repair.png',error:'../../sabotage_card_bomb.png',dummy:'../../sabotage_card_no_response.png'};
+export function sabotageCardArtwork(type,alt='',extraClass=''){
+ const src=sabotageCardPath[type];
+ if(!src)return '';
+ return '<img class="sab-card-art '+extraClass+'" src="'+src+'?v=20261024-sabassets1" alt="'+escapeText(alt)+'" decoding="async" loading="eager">';
+}
+export function sabotageBrandLogo(extraClass=''){
+ return '<img class="sab-brand-logo '+extraClass+'" src="../../sabotage_logo.png?v=20261024-sabassets1" alt="サボタージュ" decoding="async">';
+}
 export function sabotageRoleCard(role,counts=null){
  const c=counts;
  return '<div class="sab-secret-content"><p class="sab-kicker">YOUR SECRET</p>'+
  '<div class="sab-role '+escapeText(role)+'">'+escapeText(sabotageRoleName[role])+'</div>'+
  '<div class="sab-role-goal">'+escapeText(sabotageRoleGoal[role])+'</div>'+
- (c?'<div class="sab-counts"><div><strong>'+c.repair+'</strong><small>解除</small></div><div><strong>'+c.error+'</strong><small>BOMB</small></div><div><strong>'+c.dummy+'</strong><small>反応なし</small></div></div>':'')+'</div>';
+ (c?'<div class="sab-counts">'+['repair','error','dummy'].map(type=>'<div class="sab-count-tile sab-count-'+type+'">'+sabotageCardArtwork(type,'','sab-count-art')+'<strong>'+Number(c[type]||0)+'</strong><small>'+escapeText(sabotageWireLabel[type])+'</small></div>').join('')+'</div>':'')+'</div>';
 }
 export function sabotageSlotLegend(){
  return '<div class="sab-slot-legend" aria-label="公開済みコードの凡例"><span class="repair">✓ 解除</span><span class="error">! BOMB</span><span class="dummy">— 反応なし</span></div>';
@@ -35,11 +45,12 @@ export function sabotageSlots(slots,selectable=false,selected=-1){
   const symbol=opened?typeIcon[item.type]:(state==='inactive'?'—':selectable?'▥':'');
   const label=opened?sabotageWireLabel[item.type]:(active?'未公開':'配布なし');
   const className='sab-wire sab-slot-'+state+(opened?' sab-slot-'+item.type:'')+(selected===i?' selected':'');
+  const art=opened?sabotageCardArtwork(item.type,'','sab-slot-art'):'';
   if(selectable){
    return '<button type="button" data-wire="'+i+'" class="sab-btn sab-slot-pick '+className+'" '+(!active?'disabled':'')+' aria-label="コード'+(i+1)+' '+label+'">'+
-    '<span class="sab-wire-symbol">'+symbol+'</span><small>'+ (opened?escapeText(label):'#'+(i+1))+'</small></button>';
+    art+'<span class="sab-wire-symbol">'+symbol+'</span><small>'+ (opened?escapeText(label):'#'+(i+1))+'</small></button>';
   }
-  return '<span class="'+className+'" title="コード'+(i+1)+' '+label+'"><span class="sab-wire-symbol">'+symbol+'</span></span>';
+  return '<span class="'+className+'" role="img" aria-label="コード'+(i+1)+' '+label+'" title="コード'+(i+1)+' '+label+'">'+art+'<span class="sab-wire-symbol" aria-hidden="true">'+symbol+'</span></span>';
  }).join('')+'</div>';
 }
 export function sabotageVictory(winner,myRole=null){

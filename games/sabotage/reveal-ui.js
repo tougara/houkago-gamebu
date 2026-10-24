@@ -1,4 +1,4 @@
-import {sabotageBadges} from './visuals.js?v=20261024-noreaction1';
+import {sabotageBadges,sabotageCardArtwork} from './visuals.js?v=20261024-sabassets1';
 /* Shared presentation for offline, live online, and online trial. Never show outcome before suspense expires. */
 export function sabotageRevealBody(type,stage,repaired,required){
  if(stage==='suspense'){
@@ -17,8 +17,7 @@ export function sabotageRevealBody(type,stage,repaired,required){
    bomb?'<p class="sab-remaining sab-danger-text">サボタージュ成功！</p>':'<p class="sab-remaining sab-quiet-text">次のコードへ進もう</p>';
  return '<div class="sab-reveal-visual '+type+'" data-reveal-stage="'+stage+'" role="status">'+
   (bomb?'<div class="sab-bomb-banner">EMERGENCY!</div>':'')+
-  '<div class="sab-outcome-card"><span class="sab-outcome-symbol" aria-hidden="true">'+
-  (repair?'✓':bomb?'!':'—')+'</span><div class="sab-result '+type+'">'+title+'</div></div>'+
+  '<div class="sab-outcome-card">'+sabotageCardArtwork(type,title,'sab-outcome-art')+'</div>'+
   '<p class="sab-outcome-caption">'+caption+'</p>'+progress+
   (repair?sabotageBadges(required,repaired,stage==='result'): '')+
   (bomb?'<div class="sab-bomb-hold">WARNING · SYSTEM DOWN</div>':'')+'</div>';

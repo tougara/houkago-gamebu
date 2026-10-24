@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,statSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createSabotage,sabotageAction,sabotageView,sabotageRoles,SABOTAGE_COUNTS,sabotageRevealPhase,sabotageHoldMs} from '../games/sabotage/engine.js';
 const members=n=>Array.from({length:n},(_,i)=>({id:'p'+i,name:'参加者'+i,icon:'🐶'}));
@@ -238,4 +238,32 @@ test('ジャッカル勝利条件の表示とオンライン試遊の再戦操�
  assert.match(online,/もう一度試遊する/);
  assert.match(online,/demoGame=createSabotage\(demoPeople\)/);
  execFileSync(process.execPath,['--check',new URL('../online/sabotage/game.js',import.meta.url).pathname],{stdio:'pipe'});
+});
+
+test('サボタージュ画像5点を両モードの共通UIに接続し秘匿状態は維持',()=>{
+ const assets=['sabotage_logo.png','sabotage_background.png','sabotage_card_repair.png','sabotage_card_bomb.png','sabotage_card_no_response.png'];
+ for(const f of assets)assert.ok(statSync(new URL('../'+f,import.meta.url)).size>10000,f+' must exist in repo root');
+ const visual=readFileSync(new URL('../games/sabotage/visuals.js',import.meta.url),'utf8');
+ const reveal=readFileSync(new URL('../games/sabotage/reveal-ui.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../games/sabotage/game.css',import.meta.url),'utf8');
+ const offline=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
+ const online=readFileSync(new URL('../online/sabotage/game.js',import.meta.url),'utf8');
+ const onlineHtml=readFileSync(new URL('../online/sabotage/index.html',import.meta.url),'utf8');
+ const listing=readFileSync(new URL('../games/index.html',import.meta.url),'utf8');
+ assert.match(visual,/export function sabotageCardArtwork/);
+ assert.match(visual,/export function sabotageBrandLogo/);
+ for(const file of assets.filter(f=>f.includes('card_')))assert.ok(visual.includes(file));
+ assert.match(visual,/const art=opened\?sabotageCardArtwork/);
+ assert.match(visual,/sabotageCardArtwork\(type,'','sab-count-art'\)/);
+ assert.match(reveal,/sabotageCardArtwork\(type,title,'sab-outcome-art'\)/);
+ assert.match(css,/sabotage_background\.png/);
+ assert.match(offline,/sabotageBrandLogo\('sab-title-art'\)/);
+ assert.match(onlineHtml,/sabotage_logo\.png/);
+ assert.match(listing,/sabotage_logo\.png/);
+ assert.match(offline,/sabotageRevealBody/);
+ assert.match(online,/sabotageRevealBody/);
+ const game=createSabotage(members(4));const publicView=sabotageView(game,game.players[0].id);
+ assert.ok(publicView.members.every(p=>p.slots.every(s=>s.state!=='opened'&&!('type' in s))));
+ for(const file of ['games/sabotage/visuals.js','games/sabotage/reveal-ui.js','games/sabotage/game.js','online/sabotage/game.js'])
+  execFileSync(process.execPath,['--check',new URL('../'+file,import.meta.url).pathname],{stdio:'pipe'});
 });

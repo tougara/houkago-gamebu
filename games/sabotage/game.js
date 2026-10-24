@@ -1,18 +1,18 @@
-import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js?v=20261024-sabtitle1';
-import {sabotageRevealBody} from './reveal-ui.js?v=20261024-sabtitle1';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal} from './visuals.js?v=20261024-sabtitle1';
+import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js?v=20261024-sabassets1';
+import {sabotageRevealBody} from './reveal-ui.js?v=20261024-sabassets1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo} from './visuals.js?v=20261024-sabassets1';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;
 function loadPlayers(){const d=api.load();players=d.players.slice(0,d.activeCount).map(p=>({id:p.id,name:p.name,icon:p.icon}))}
 function persist(){if(!g||g.stage==='finished')return;resume?.save?.(SAVE,{title:'サボタージュ',path:'/games/sabotage/',summary:'ROUND '+g.round+' / 4'}, {g,peek,screen:'handoff',recorded})}
-function nav(){return '<nav class="sab-nav top-nav"><button type="button" class="nav-pill" data-nav="back">← もどる</button><span class="sab-mark">SABOTAGE</span><button type="button" class="nav-pill" data-nav="home">ゲームをえらぶ</button></nav>'}
+function nav(){return '<nav class="sab-nav top-nav"><button type="button" class="nav-pill" data-nav="back">← もどる</button><span class="sab-mark">'+sabotageBrandLogo('sab-nav-logo')+'</span><button type="button" class="nav-pill" data-nav="home">ゲームをえらぶ</button></nav>'}
 const btn=(s,a,cls='',disabled=false)=>'<button type="button" class="sab-btn '+cls+'" data-action="'+a+'" '+(disabled?'disabled':'')+'>'+esc(s)+'</button>';
 const roleName={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
 const wireName={repair:'解除コード',error:'爆弾（BOMB）',dummy:'反応なし'};
 const winnerName={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
 function rules(){return '<details class="sab-more" '+(screen==='rules'?'open':'')+'><summary>あそびかた・勝利条件</summary><div class="sab-more-content"><ol><li>秘密の役職と、手持ちコードの種類・枚数を確認。どの位置に何があるかは本人も分かりません。</li><li>話し合って、自分以外の人のコードを1本選択。選ばれた人が次の番です。</li><li>解除コードをすべて見つけるとクルーメイトの勝利。爆弾を選ぶとインポスターの勝利。</li><li>各ラウンド人数分だけ選択したら、残りを混ぜて再配布。4ラウンド終了まで決着しなければジャッカルがいる場合はジャッカル、いなければインポスターの勝利です。</li></ol><p>嘘の申告や自由な会話はOK。特殊能力・投票・脱落はありません。</p></div></details>'}
-function title(){return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">EMERGENCY! / SPACE MYSTERY</p><h1 class="sab-headline">サボタージュ</h1><p class="sab-sub">修理するか、妨害するか、最後まで隠れ続けるか。<br>誰を信じてコードを選ぶ？</p><p class="sab-sub">4〜10人・スマホ1台・4ラウンド</p></section><div class="sab-actions">'+btn('ゲームをはじめる','members')+btn('あそびかた','rules','secondary')+'</div>'}
+function title(){return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">EMERGENCY! / SPACE MYSTERY</p><h1 class="sab-headline sab-title-logo">'+sabotageBrandLogo('sab-title-art')+'</h1><p class="sab-sub">修理するか、妨害するか、最後まで隠れ続けるか。<br>誰を信じてコードを選ぶ？</p><p class="sab-sub">4〜10人・スマホ1台・4ラウンド</p></section><div class="sab-actions">'+btn('ゲームをはじめる','members')+btn('あそびかた','rules','secondary')+'</div>'}
 function members(){return api.renderEditor({min:4,max:10,count:Math.max(4,players.length),title:'参加メンバー',subtitle:'いつものメンバーから4〜10人を選ぼう',doneLabel:'このメンバーでゲーム開始'})}
 function handoff(){const p=g?.players[peek];if(!p)return '';return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">'+(g.stage==='roles'?'ROLE REVEAL':'ROUND '+g.round+' / 4 · SECRET')+'</p><h2>'+esc(p.icon)+' '+esc(p.name)+' にスマホを渡してね</h2><p class="sab-sub">本人だけが秘密を確認。ほかの人は見ないでね。</p><button type="button" class="sab-btn sab-hold-button" data-hold="briefing">長押しで秘密を確認<span class="sab-hold-progress"></span></button></section>'}
 function secret(){
