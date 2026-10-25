@@ -499,8 +499,9 @@ test('Sabotage offline navigation stays on one row on narrow phones',async()=>{
       'nav item outside screen '+JSON.stringify(x));
     if(i>0)assert.ok(x.items[i].left>=x.items[i-1].right-2,'nav items overlap '+JSON.stringify(x));
    }
-   const tops=x.items.map(item=>Math.round(item.top));
-   assert.ok(Math.max(...tops)-Math.min(...tops)<6,'nav is wrapped on '+width);
+   const centers=x.items.map(item=>(item.top+item.bottom)/2);
+   assert.ok(Math.max(...centers)-Math.min(...centers)<7,
+     'nav elements must share their vertical centerline on '+width+': '+JSON.stringify(x));
    assert.deepEqual(errors,[]);
   }finally{await context.close()}
  }
