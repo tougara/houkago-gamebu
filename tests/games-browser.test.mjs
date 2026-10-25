@@ -342,3 +342,142 @@ test('Sabotage online trial has role-first, private peek, five slots and game co
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+
+// PC-specific regression coverage: offline and online use separate navs but the
+// same Sabotage card/role components. Keep game content inside its centered pane.
+async function sabotageDesktopGeometry(page,stage){
+ const info=await page.evaluate(()=>{
+  const rect=node=>{
+   if(!node)return null;
+   const {left,right,top,bottom,width,height}=node.getBoundingClientRect();
+   return {left,right,top,bottom,width,height};
+  };
+  const app=document.querySelector('.sab-app');
+  const nav=document.querySelector('.sab-nav');
+  const root=document.querySelector('.sab-online-root');
+  const visible=[...document.querySelectorAll('.sab-nav > *')]
+   .filter(el=>getComputedStyle(el).display!=='none')
+   .map(rect);
+  const panel=document.querySelector('.sab-online-root > .sab-brief')||
+    document.querySelector('.sab-app > .sab-panel')||
+    document.querySelector('.sab-play')||
+    document.querySelector('.sab-online-root > .sab-play');
+  const help=document.querySelector('.sab-online-root > .sab-more');
+  const confirm=document.querySelector('[data-action="seen"]');
+  const roster=document.querySelector('.sab-roster');
+  const legend=document.querySelector('.sab-slot-legend');
+  const appR=rect(app),navR=rect(nav);
+  return {
+   vw:innerWidth,vh:innerHeight,
+   horizontalOverflow:document.documentElement.scrollWidth-innerWidth,
+   app:appR,nav:navR,navItems:visible,
+   panel:rect(panel),help:rect(help),confirm:rect(confirm),
+   roster:rect(roster),legend:rect(legend),
+   rootScroll:root?{scrollHeight:root.scrollHeight,clientHeight:root.clientHeight}:null
+  };
+ });
+ const prefix=stage+' '+info.vw+'x'+info.vh;
+ assert.ok(info.horizontalOverflow<=2,prefix+' horizontal overflow '+JSON.stringify(info));
+ assert.ok(info.app.left>=-2&&info.app.right<=info.vw+2,prefix+' app leaves viewport');
+ assert.ok(info.app.width<=752,prefix+' game pane should stay centered and <=750px');
+ assert.ok(Math.abs((info.app.left+info.app.right)/2-info.vw/2)<4,prefix+' app should be centered');
+ assert.ok(info.nav.left>=info.app.left-2&&info.nav.right<=info.app.right+2,prefix+' nav outside pane');
+ for(const x of info.navItems){
+  assert.ok(x.left>=info.nav.left-2&&x.right<=info.nav.right+2,prefix+' nav item overflows');
+ }
+ for(let i=1;i<info.navItems.length;i++){
+  assert.ok(info.navItems[i].left>=info.navItems[i-1].right-4,prefix+' nav buttons overlap');
+ }
+ if(info.help&&info.panel)
+  assert.ok(info.help.top>=info.panel.bottom-2,prefix+' help overlaps secret panel '+JSON.stringify(info));
+ if(info.confirm&&info.help)
+  assert.ok(info.help.top>=info.confirm.bottom-1,prefix+' help overlaps confirmation button');
+ if(info.legend&&info.roster){
+  assert.ok(info.legend.top>=info.roster.bottom-3,prefix+' legend overlaps roster');
+  const container=await page.evaluate(()=>document.querySelector('.sab-play').getBoundingClientRect().bottom);
+  assert.ok(info.legend.bottom<=container+3,prefix+' legend leaves play container');
+ }
+ console.log('PC_SABOTAGE_LAYOUT '+prefix+' '+JSON.stringify({
+  pane:Math.round(info.app.width),nav:Math.round(info.nav.width),
+  panelHeight:Math.round(info.panel?.height||0),
+  helpBelow:info.help&&info.panel?Math.round(info.help.top-info.panel.bottom):null,
+  horizontalOverflow:info.horizontalOverflow,
+  rootScroll:info.rootScroll
+ }));
+}
+test('Sabotage desktop layout audit: offline setup, secret cards, roster and code selection',async()=>{
+ for(const [width,height] of [[1024,768],[1366,768],[1920,1080]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
+   await sabotageDesktopGeometry(page,'offline/title');
+   const logo=page.locator('.sab-title-art');
+   await logo.evaluate(image=>image.decode());
+   await page.locator('[data-action="members"]').click();
+   await sabotageDesktopGeometry(page,'offline/members');
+   await page.locator('[data-members-done]').click();
+   await page.locator('.sab-settings').waitFor();
+   await sabotageDesktopGeometry(page,'offline/settings');
+   await page.locator('[data-action="start"]').click();
+   const hold=async()=>{
+    const button=page.locator('[data-hold="briefing"]');
+    await button.dispatchEvent('pointerdown',{pointerId:1,pointerType:'mouse',isPrimary:true});
+    await page.waitForTimeout(720);
+    await page.locator('[data-action="seen"]').waitFor();
+    await page.evaluate(()=>dispatchEvent(new PointerEvent('pointerup',{pointerId:1,pointerType:'mouse'})));
+   };
+   await hold();
+   await sabotageDesktopGeometry(page,'offline/role');
+   await page.locator('.sab-role-art-large').evaluate(image=>image.decode());
+   await page.locator('[data-action="seen"]').click();
+   for(let i=1;i<4;i++){await hold();await page.locator('[data-action="seen"]').click()}
+   await hold();
+   await sabotageDesktopGeometry(page,'offline/code-secret');
+   await page.locator('[data-action="seen"]').click();
+   for(let i=1;i<4;i++){await hold();await page.locator('[data-action="seen"]').click()}
+   await page.locator('.sab-play').waitFor();
+   await sabotageDesktopGeometry(page,'offline/board');
+   await page.locator('.sab-player[data-target]:not([disabled])').first().click();
+   await sabotageDesktopGeometry(page,'offline/code-selection');
+   assert.equal(await page.locator('[data-wire]').count(),5);
+   await page.locator('[data-wire="0"]').click();
+   await page.locator('[data-action="cut"]').click();
+   assert.ok(await page.locator('[data-confirm-ok]').isVisible());
+   assert.deepEqual(errors,[],'offline browser errors at '+width);
+  }finally{await context.close()}
+ }
+});
+test('Sabotage desktop layout audit: online role, code, board, chat and selection',async()=>{
+ for(const [width,height] of [[1024,768],[1366,768],[1920,1080]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+'/online/sabotage/?testPlay=1',{waitUntil:'load'});
+   await sabotageDesktopGeometry(page,'online/role-hidden');
+   await page.locator('[data-action="show"]').click();
+   await sabotageDesktopGeometry(page,'online/role');
+   await page.locator('.sab-role-art-large').evaluate(image=>image.decode());
+   await page.locator('[data-action="seen"]').click();
+   await page.locator('[data-action="show"]').click();
+   await sabotageDesktopGeometry(page,'online/code-secret');
+   await page.locator('[data-action="seen"]').scrollIntoViewIfNeeded();
+   await page.locator('[data-action="seen"]').click();
+   await page.locator('.sab-play').waitFor();
+   await sabotageDesktopGeometry(page,'online/board');
+   await page.locator('[data-action="chat"]').click();
+   await sabotageDesktopGeometry(page,'online/chat');
+   const quick=page.locator('.sab-quick-grid [data-chat]');
+   assert.equal(await quick.count(),8);
+   const sizes=await quick.evaluateAll(els=>els.map(el=>el.getBoundingClientRect().width));
+   assert.ok(sizes.every(x=>x>80),'desktop chat quick buttons must fit');
+   await page.locator('[data-action="cancel"]').click();
+   await page.locator('.sab-player[data-target]:not([disabled])').first().click();
+   await sabotageDesktopGeometry(page,'online/code-selection');
+   assert.equal(await page.locator('[data-wire]').count(),5);
+   await page.locator('[data-wire="0"]').click();
+   await page.locator('[data-action="cut"]').click();
+   assert.ok(await page.locator('[data-confirm-ok]').isVisible());
+   assert.deepEqual(errors,[],'online browser errors at '+width);
+  }finally{await context.close()}
+ }
+});
