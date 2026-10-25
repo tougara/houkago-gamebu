@@ -420,8 +420,9 @@ test('オフラインの決着後タイマーは render 内で毎回登録され
  assert.ok(start>=0&&end>start);
  const renderBlock=code.slice(start,end);
  assert.match(renderBlock,/if\(g\?\.stage==='finished'&&screen==='result'\)/);
- assert.match(renderBlock,/if\(finale.active\)revealTimer=setTimeout/);
- assert.match(renderBlock,/Math.ceil\(finale.waitMs\)\+30/);
+ assert.match(renderBlock,/if\(finale.active\)\s*\{/);
+ assert.match(renderBlock,/revealTimer=setTimeout/);
+ assert.match(renderBlock,/Math.ceil\(waitMs\)\+30/);
  assert.match(renderBlock,/clearTimeout\(revealTimer\)/);
  assert.doesNotMatch(code.slice(end,end+120),/sabotageFinalePhase/);
  const css=readFileSync(new URL('../games/sabotage/game.css',import.meta.url),'utf8');
