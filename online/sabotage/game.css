@@ -36,3 +36,25 @@
 /* Keep live play's five-item navigation compact while using the same brand artwork. */
 .sab-online>.sab-nav.top-nav>.sab-mark{min-width:0;overflow:hidden}
 .sab-online>.sab-nav.top-nav>.sab-mark>.sab-nav-logo{width:100%;max-width:125px;max-height:34px;object-fit:contain}
+
+/* Secret role/code screens may grow taller than a phone viewport. Keep
+   the confirmation button in normal document flow; the guide comes AFTER it.
+   Scroll only the gameplay content while the navigation remains visible. */
+.sab-online-root:has(>.sab-brief){
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  align-content:start;
+  padding-bottom:max(10px,env(safe-area-inset-bottom));
+  scrollbar-width:thin;
+}
+.sab-online-root:has(>.sab-brief)>.sab-brief{
+  flex:0 0 auto;
+  min-height:max-content;
+  margin:0;
+}
+.sab-online-root:has(>.sab-brief)>.sab-more{
+  flex:0 0 auto;
+  margin:0;
+}

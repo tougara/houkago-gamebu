@@ -266,6 +266,37 @@ test('Sabotage offline long-press role, then code, and preserve five visible slo
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+test('Sabotage online code-secret confirmation never sits behind help panel on small phones',async()=>{
+ for(const [width,height] of [[345,680],[390,700]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+'/online/sabotage/?testPlay=1',{waitUntil:'load'});
+   await page.locator('[data-action="show"]').click();
+   await page.locator('[data-action="seen"]').click();
+   await page.locator('[data-action="show"]').click();
+   const before=await page.evaluate(()=>{
+    const panel=document.querySelector('.sab-brief'),rules=document.querySelector('.sab-online-root>.sab-more');
+    const root=document.querySelector('.sab-online-root');
+    const p=panel.getBoundingClientRect(),r=rules.getBoundingClientRect();
+    return {panelBottom:p.bottom,rulesTop:r.top,overflow:getComputedStyle(root).overflowY,
+      scrollHeight:root.scrollHeight,clientHeight:root.clientHeight};
+   });
+   assert.ok(before.rulesTop>=before.panelBottom-1,
+    'the help panel must remain below the entire secret panel: '+JSON.stringify(before));
+   assert.equal(before.overflow,'auto');
+   await page.locator('[data-action="seen"]').scrollIntoViewIfNeeded();
+   const overlap=await page.evaluate(()=>{
+    const button=document.querySelector('[data-action="seen"]').getBoundingClientRect();
+    const help=document.querySelector('.sab-online-root>.sab-more').getBoundingClientRect();
+    return Math.max(0,Math.min(button.bottom,help.bottom)-Math.max(button.top,help.top));
+   });
+   assert.equal(overlap,0,'help must not cover the confirmation button');
+   await page.locator('[data-action="seen"]').click();
+   await page.locator('.sab-play').waitFor();
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
 test('Sabotage online trial has role-first, private peek, five slots and game confirmation',async()=>{
  const {page,context,errors}=await open(345,680);
  try{
