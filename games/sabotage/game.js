@@ -1,6 +1,6 @@
-import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js?v=20261024-sabassets1';
-import {sabotageRevealBody} from './reveal-ui.js?v=20261024-sabassets1';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo} from './visuals.js?v=20261024-sabassets1';
+import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js?v=20261025-sabrole1';
+import {sabotageRevealBody} from './reveal-ui.js?v=20261025-sabrole1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo} from './visuals.js?v=20261025-sabrole1';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;

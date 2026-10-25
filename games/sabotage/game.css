@@ -158,3 +158,23 @@ body{background-color:#08162c;background-image:linear-gradient(180deg,rgba(3,12,
 .sab-reveal-visual.error .sab-outcome-art{filter:drop-shadow(0 0 14px #f0445999) drop-shadow(0 7px 14px #000b)}
 @media(max-height:660px){.sab-reveal-visual .sab-outcome-card{width:min(32vw,133px)}.sab-count-tile .sab-count-art{height:clamp(48px,13vw,75px)}.sab-title-art{max-height:22dvh}}
 @media(max-width:350px){.sab-nav-logo{width:clamp(74px,27vw,108px)}.sab-roster .sab-wire-symbol{font-size:11px}}
+
+/* Shared original role cards: main reveal and compact round/secret review. */
+.sab-role-portrait{display:flex;justify-content:center;align-items:center;margin:9px auto 8px}
+.sab-role-art{display:block;height:auto;object-fit:contain;flex:none}
+.sab-role-art-large{width:auto;max-width:100%;height:min(38dvh,275px);max-height:275px;border-radius:10px;box-shadow:0 8px 24px #0007}
+.sab-role-visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.sab-role-inline{display:flex;justify-content:center;align-items:center;gap:12px;margin:4px auto 2px;min-height:64px}
+.sab-role-inline .sab-role{margin:0;font-size:clamp(23px,6.2vw,34px)}
+.sab-role-art-mini{width:44px;height:65px;border-radius:5px;box-shadow:0 3px 10px #0006}
+.sab-secret-with-counts>.sab-kicker{margin:2px 0}
+.sab-secret-role-only .sab-role-goal{margin:8px auto 4px;max-width:440px}
+.sab-secret-with-counts .sab-role-goal{margin:8px 0}
+.sab-secret-role-only,.sab-secret-with-counts{min-width:0}
+@media(max-height:720px){
+ .sab-role-art-large{height:min(32dvh,215px)}
+ .sab-role-art-mini{width:37px;height:55px}
+ .sab-role-inline{min-height:55px}
+ .sab-secret-role-only .sab-role-goal{padding:8px}
+}
+@media(max-height:600px){.sab-role-art-large{height:min(28dvh,165px)}.sab-role-portrait{margin:3px auto}}

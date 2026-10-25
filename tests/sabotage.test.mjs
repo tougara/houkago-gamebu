@@ -267,3 +267,28 @@ test('サボタージュ画像5点を両モードの共通UIに接続し秘匿�
  for(const file of ['games/sabotage/visuals.js','games/sabotage/reveal-ui.js','games/sabotage/game.js','online/sabotage/game.js'])
   execFileSync(process.execPath,['--check',new URL('../'+file,import.meta.url).pathname],{stdio:'pipe'});
 });
+
+test('役職カード3枚をオフライン・オンライン共通の役職表示に接続',async()=>{
+ const {sabotageRoleCard,sabotageRoleImagePath}=await import('../games/sabotage/visuals.js');
+ const names={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
+ for(const role of Object.keys(names)){
+  const filename='sabotage_role_'+(role==='crew'?'crewmate':role)+'.png';
+  assert.ok(statSync(new URL('../'+filename,import.meta.url)).size>10000,filename+' should exist');
+  assert.ok(sabotageRoleImagePath[role]?.endsWith(filename));
+  const revealed=sabotageRoleCard(role);
+  assert.match(revealed,new RegExp(filename.replaceAll('.','\\.')));
+  assert.match(revealed,/sab-role-art-large/);
+  assert.ok(revealed.includes('sab-role-goal'));
+  assert.doesNotMatch(revealed,/sab-counts/);
+  const counts=sabotageRoleCard(role,{repair:1,error:1,dummy:3});
+  assert.match(counts,/sab-role-art-mini/);
+  assert.match(counts,/sab-counts/);
+ }
+ const offline=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
+ const online=readFileSync(new URL('../online/sabotage/game.js',import.meta.url),'utf8');
+ assert.match(offline,/sabotageRoleCard\(p.role,roles\?null:v.myCounts\)/);
+ assert.match(online,/roleStage\?sabotageRoleCard\(d.myRole\)/);
+ const css=readFileSync(new URL('../games/sabotage/game.css',import.meta.url),'utf8');
+ assert.match(css,/sab-role-art-large/);
+ assert.match(css,/sab-role-art-mini/);
+});

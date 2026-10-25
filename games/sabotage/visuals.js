@@ -17,11 +17,23 @@ export function sabotageCardArtwork(type,alt='',extraClass=''){
 export function sabotageBrandLogo(extraClass=''){
  return '<img class="sab-brand-logo '+extraClass+'" src="../../sabotage_logo.png?v=20261024-sabassets1" alt="サボタージュ" decoding="async">';
 }
+/* Role illustrations remain private until each player opens their own briefing. */
+export const sabotageRoleImagePath={
+ crew:'../../sabotage_role_crewmate.png',
+ impostor:'../../sabotage_role_impostor.png',
+ jackal:'../../sabotage_role_jackal.png'
+};
+export function sabotageRoleArtwork(role,small=false){
+ const src=sabotageRoleImagePath[role],name=sabotageRoleName[role];
+ if(!src||!name)return '';
+ return '<img class="sab-role-art '+(small?'sab-role-art-mini':'sab-role-art-large')+'" src="'+src+'?v=20261025-sabrole1" alt="'+(small?'':escapeText(name)+'の役職カード')+'" decoding="async" loading="eager">';
+}
 export function sabotageRoleCard(role,counts=null){
- const c=counts;
- return '<div class="sab-secret-content"><p class="sab-kicker">YOUR SECRET</p>'+
- '<div class="sab-role '+escapeText(role)+'">'+escapeText(sabotageRoleName[role])+'</div>'+
- '<div class="sab-role-goal">'+escapeText(sabotageRoleGoal[role])+'</div>'+
+ const c=counts,name=sabotageRoleName[role]||'役職不明';
+ return '<div class="sab-secret-content '+(c?'sab-secret-with-counts':'sab-secret-role-only')+'"><p class="sab-kicker">YOUR SECRET</p>'+
+ (c?'<div class="sab-role-inline">'+sabotageRoleArtwork(role,true)+'<div class="sab-role '+escapeText(role)+'">'+escapeText(name)+'</div></div>':
+ '<div class="sab-role-portrait">'+sabotageRoleArtwork(role)+'</div><span class="sab-role sab-role-visually-hidden">'+escapeText(name)+'</span>')+
+ '<div class="sab-role-goal">'+escapeText(sabotageRoleGoal[role]||'')+'</div>'+
  (c?'<div class="sab-counts">'+['repair','error','dummy'].map(type=>'<div class="sab-count-tile sab-count-'+type+'">'+sabotageCardArtwork(type,'','sab-count-art')+'<strong>'+Number(c[type]||0)+'</strong><small>'+escapeText(sabotageWireLabel[type])+'</small></div>').join('')+'</div>':'')+'</div>';
 }
 export function sabotageSlotLegend(){

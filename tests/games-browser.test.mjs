@@ -226,6 +226,10 @@ test('Sabotage offline long-press role, then code, and preserve five visible slo
   for(let i=0;i<4;i++){
    await hold();
    assert.equal(await page.locator('.sab-role-goal').count(),1);
+   const portrait=page.locator('.sab-role-art-large');
+   assert.equal(await portrait.count(),1);
+   await portrait.evaluate(img=>img.decode());
+   assert.equal(await portrait.evaluate(img=>img.naturalWidth>0),true);
    await page.locator('[data-action="seen"]').click();
   }
   for(let i=0;i<4;i++){
@@ -262,6 +266,9 @@ test('Sabotage online trial has role-first, private peek, five slots and game co
   await page.goto(base+'/online/sabotage/?testPlay=1',{waitUntil:'load'});
   await page.locator('[data-action="show"]').click();
   assert.equal(await page.locator('.sab-role-goal').count(),1);
+  const portrait=page.locator('.sab-role-art-large');
+  await portrait.evaluate(img=>img.decode());
+  assert.equal(await portrait.evaluate(img=>img.naturalWidth>0),true);
   await page.locator('[data-action="seen"]').click();
   await page.locator('[data-action="show"]').click();
   assert.equal(await page.locator('.sab-counts').count(),1);
