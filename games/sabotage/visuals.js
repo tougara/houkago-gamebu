@@ -28,6 +28,32 @@ export function sabotageRoleArtwork(role,small=false){
  if(!src||!name)return '';
  return '<img class="sab-role-art '+(small?'sab-role-art-mini':'sab-role-art-large')+'" src="'+src+'?v=20261025-sabrole1" alt="'+(small?'':escapeText(name)+'の役職カード')+'" decoding="async" loading="eager">';
 }
+import {sabotageChangeSettings} from './engine.js?v=20261025-sabroles1';
+/* One setting panel is used by offline setup and the host/guests online lobby. */
+export function sabotageSettingsPanel(n,settings,editable=true){
+ const total=settings.crew+settings.impostor+Number(settings.jackal);
+ const control=(role,direction)=>{
+  const can=!!sabotageChangeSettings(n,settings,role,direction);
+  return editable?'<button type="button" class="sab-setting-step" data-sab-setting="'+role+'" data-value="'+direction+'" aria-label="'+escapeText(sabotageRoleName[role])+(direction>0?'を増やす':'を減らす')+'" '+(can?'':'disabled')+'>'+(direction>0?'+':'−')+'</button>':'';
+ };
+ const line=role=>{
+  const count=settings[role];
+  return '<div class="sab-setting-line"><span class="sab-setting-label sab-setting-'+role+'">'+escapeText(sabotageRoleName[role])+'</span><div class="sab-setting-value">'+control(role,-1)+'<strong>'+count+'枚</strong>'+control(role,1)+'</div></div>';
+ };
+ const toggle=(key,label,checked,desc)=>{
+  const next=key==='extra'?(checked?0:1):!checked;
+  const enabled=!!sabotageChangeSettings(n,settings,key,next);
+  return '<div class="sab-setting-toggle"><div><strong>'+label+'</strong><small>'+desc+'</small></div>'+
+   (editable?'<button type="button" data-sab-setting="'+key+'" data-value="'+String(next)+'" aria-pressed="'+String(checked)+'" '+(enabled?'':'disabled')+' class="sab-setting-switch '+(checked?'is-on':'')+'">'+(checked?'ON':'OFF')+'</button>':
+   '<span class="sab-setting-readonly">'+(checked?'ON':'OFF')+'</span>')+'</div>';
+ };
+ return '<section class="sab-settings" aria-label="サボタージュ役職設定"><div class="sab-settings-top"><h2>役職の設定</h2><span>'+n+'人 / 候補'+total+'枚</span></div>'+
+ '<p class="sab-settings-description">候補の役職カードを混ぜて、全員に1枚ずつ配ります。</p>'+
+ line('crew')+line('impostor')+
+ toggle('jackal','ジャッカルを追加',settings.jackal,'ONにするとクルーを1枚減らします')+
+ toggle('extra','余りカード1枚',Boolean(settings.extra),'1枚余らせると陣営人数が確定しません')+
+ '<p class="sab-settings-note">配布 '+n+'枚 / 非公開で除外 '+settings.extra+'枚。'+(settings.jackal?'ジャッカルも配られない場合があります。':'ジャッカルなし。')+'</p></section>';
+}
 export function sabotageRoleCard(role,counts=null){
  const c=counts,name=sabotageRoleName[role]||'役職不明';
  return '<div class="sab-secret-content '+(c?'sab-secret-with-counts':'sab-secret-role-only')+'"><p class="sab-kicker">YOUR SECRET</p>'+
