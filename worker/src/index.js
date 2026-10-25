@@ -7,7 +7,7 @@ import {createPita,pitaView,pitaAction} from './pita-engine.js';
 import {createMeter,meterView,meterAction} from './meter-engine.js';
 import {createTower,towerView,towerAction} from './tower-engine.js';
 import {createLink,linkView,linkAction,advanceLink,interruptLink} from './link-game.js';
-import {createSabotage,sabotageAction,sabotageView} from '../../games/sabotage/engine.js';
+import {createSabotage,sabotageAction,sabotageView,sabotageDefaultSettings,sabotageValidateSettings} from '../../games/sabotage/engine.js';
 const TTL=2*60*60*1000, MAX=10;
 const ROUND_OPTIONS=[3,5,7,10], DEFAULT_ROUNDS=5;
 const CATEGORIES=[...new Set(SECRET_QUESTIONS.map(q=>q.category))];
@@ -59,9 +59,18 @@ const secretView=room=>{
    scores:g.mode==='battle'&&['result','finished'].includes(g.stage)?g.scores:null
  };
 };
+const sabotageRoomSettings=room=>{
+ if(room.gameId!=='sabotage'||room.members.length<4||room.members.length>10)return null;
+ const saved=room.sabotageRoleSettings;
+ if(saved?.n===room.members.length){
+  try{return sabotageValidateSettings(room.members.length,saved)}catch{}
+ }
+ return sabotageDefaultSettings(room.members.length);
+};
 const view=room=>({code:room.code,gameId:room.gameId,hostId:room.hostId,
   expiresAt:room.expiresAt,phase:room.sabotage?'sabotage':room.link?'link':room.tower?'tower':room.meter?'meter':room.pita?'pita':room.wolf?'wolf':room.nise?'nise':room.secret?'secret':'lobby',secret:secretView(room),
-  maxPlayers:MAX,members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
+  maxPlayers:MAX,sabotageSettings:sabotageRoomSettings(room),
+  members:room.members.map(({id,name,icon,ready})=>({id,name,icon,ready}))});
 const cors=origin=>({'access-control-allow-origin':origin,'vary':'Origin','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'Content-Type'});
 async function readBody(request){
   if(Number(request.headers.get('content-length'))>1024)return null;
@@ -79,7 +88,7 @@ export default {
     const url=new URL(request.url),origin=request.headers.get('Origin');
     const allowed=[env.ALLOWED_ORIGIN,'http://localhost:8788','http://127.0.0.1:8788'].filter(Boolean);
     if(request.method==='GET'&&url.pathname==='/api/health')
-      return response({ok:true,mode:'lobby-secret-nise-wolf-pita-meter-tower-link-sabotage',version:10},200,allowed.includes(origin)?cors(origin):{});
+      return response({ok:true,mode:'lobby-secret-nise-wolf-pita-meter-tower-link-sabotage',version:11},200,allowed.includes(origin)?cors(origin):{});
     if(!allowed.includes(origin))return err('許可されていないアクセスです',403);
     const headers=cors(origin),reply=(data,status=200)=>response(data,status,headers);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -198,6 +207,7 @@ export class OnlineRoom{
     if(!safeName(name))return err('名前が必要です',400);
     const token=randomToken(),id=crypto.randomUUID();
     this.room.members.push({id,name:safeName(name),icon:ICONS.has(icon)?icon:'🎮',ready:false,tokenHash:await digest(token)});
+    this.room.sabotageRoleSettings=null; // A new player changes the valid role-deck count.
     await this.ctx.storage.put('room',this.room);this.broadcast();
     return response({ok:true,code:this.room.code,id,token,room:view(this.room)},201);
   }
@@ -324,14 +334,24 @@ export class OnlineRoom{
       if(this.room.secret||this.room.nise||this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link||this.room.sabotage||this.room.hostId!==id||!GAMES.has(data.gameId))return;
       if(data.gameId==='link-burst'&&this.room.members.length!==2)return;
       this.room.gameId=data.gameId;
+      this.room.sabotageRoleSettings=null;
       for(const m of this.room.members)m.ready=false;
       await this.ctx.storage.put('room',this.room);this.broadcast();return;
+    }
+    if(data.type==='sabotage-settings'){
+      if(id!==this.room.hostId||this.room.gameId!=='sabotage'||this.room.members.length<4||
+         this.room.members.length>10||this.room.sabotage||this.room.secret||this.room.nise||
+         this.room.wolf||this.room.pita||this.room.meter||this.room.tower||this.room.link)return;
+      let cfg;try{cfg=sabotageValidateSettings(this.room.members.length,data.settings)}catch{return}
+      this.room.sabotageRoleSettings={n:this.room.members.length,...cfg};
+      for(const m of this.room.members)m.ready=false;
+      await this.saveAndBroadcast();return;
     }
     if(data.type==='sabotage-start'){
       if(this.room.sabotage||this.room.link||this.room.tower||this.room.meter||this.room.pita||
          this.room.wolf||this.room.nise||this.room.secret||this.room.gameId!=='sabotage'||
          id!==this.room.hostId||this.room.members.length<4||this.room.members.length>10||!this.snapshot().allReady)return;
-      this.room.sabotage=createSabotage(this.room.members);
+      this.room.sabotage=createSabotage(this.room.members,sabotageRoomSettings(this.room));
       await this.saveAndBroadcast();return;
     }
     if(data.type==='sabotage-stop'){
@@ -569,6 +589,7 @@ export class OnlineRoom{
   async removeMember(id){
     if(!this.room||!this.room.members.some(m=>m.id===id))return;
     this.room.members=this.room.members.filter(m=>m.id!==id);
+    this.room.sabotageRoleSettings=null;
     if(this.room.hostId===id)this.room.hostId=this.room.members[0]?.id||null;
     if(this.room.sabotage){
       this.room.sabotage=null;
