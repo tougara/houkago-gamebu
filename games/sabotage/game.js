@@ -1,9 +1,9 @@
-import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase} from './engine.js?v=20261025-sabrole1';
+import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase,sabotageDefaultSettings,sabotageChangeSettings} from './engine.js?v=20261025-sabroles1';
 import {sabotageRevealBody} from './reveal-ui.js?v=20261025-sabrole1';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo} from './visuals.js?v=20261025-sabrole1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo,sabotageSettingsPanel} from './visuals.js?v=20261025-sabroles1';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let g=null,screen='title',players=[],peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;
+let g=null,screen='title',players=[],roleSettings=null,peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;
 function loadPlayers(){const d=api.load();players=d.players.slice(0,d.activeCount).map(p=>({id:p.id,name:p.name,icon:p.icon}))}
 function persist(){if(!g||g.stage==='finished')return;resume?.save?.(SAVE,{title:'サボタージュ',path:'/games/sabotage/',summary:'ROUND '+g.round+' / 4'}, {g,peek,screen:'handoff',recorded})}
 function nav(){return '<nav class="sab-nav top-nav"><button type="button" class="nav-pill" data-nav="back">← もどる</button><span class="sab-mark">'+sabotageBrandLogo('sab-nav-logo')+'</span><button type="button" class="nav-pill" data-nav="home">ゲームをえらぶ</button></nav>'}
@@ -13,7 +13,15 @@ const wireName={repair:'解除コード',error:'爆弾（BOMB）',dummy:'反応�
 const winnerName={crew:'クルーメイト',impostor:'インポスター',jackal:'ジャッカル'};
 function rules(){return '<details class="sab-more" '+(screen==='rules'?'open':'')+'><summary>あそびかた・勝利条件</summary><div class="sab-more-content"><ol><li>秘密の役職と、手持ちコードの種類・枚数を確認。どの位置に何があるかは本人も分かりません。</li><li>話し合って、自分以外の人のコードを1本選択。選ばれた人が次の番です。</li><li>解除コードをすべて見つけるとクルーメイトの勝利。爆弾を選ぶとインポスターの勝利。</li><li>各ラウンド人数分だけ選択したら、残りを混ぜて再配布。4ラウンド終了まで決着しなければジャッカルがいる場合はジャッカル、いなければインポスターの勝利です。</li></ol><p>嘘の申告や自由な会話はOK。特殊能力・投票・脱落はありません。</p></div></details>'}
 function title(){return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">EMERGENCY! / SPACE MYSTERY</p><h1 class="sab-headline sab-title-logo">'+sabotageBrandLogo('sab-title-art')+'</h1><p class="sab-sub">修理するか、妨害するか、最後まで隠れ続けるか。<br>誰を信じてコードを選ぶ？</p><p class="sab-sub">4〜10人・スマホ1台・4ラウンド</p></section><div class="sab-actions">'+btn('ゲームをはじめる','members')+btn('あそびかた','rules','secondary')+'</div>'}
-function members(){return api.renderEditor({min:4,max:10,count:Math.max(4,players.length),title:'参加メンバー',subtitle:'いつものメンバーから4〜10人を選ぼう',doneLabel:'このメンバーでゲーム開始'})}
+function members(){return api.renderEditor({min:4,max:10,count:Math.max(4,players.length),title:'参加メンバー',subtitle:'いつものメンバーから4〜10人を選ぼう',doneLabel:'役職の設定へ進む'})}
+function setup(){
+ const n=players.length;
+ if(n<4||n>10)return members();
+ const settings=roleSettings||sabotageDefaultSettings(n);
+ return '<section class="sab-panel sab-setup-panel"><p class="sab-kicker sab-center">GAME SETUP / '+n+' PLAYERS</p>'+
+ sabotageSettingsPanel(n,settings)+
+ '<div class="sab-setup-actions">'+btn('この設定でゲーム開始','start')+btn('メンバーを変更する','members','secondary')+'</div></section>';
+}
 function handoff(){const p=g?.players[peek];if(!p)return '';return '<section class="sab-panel sab-center sab-handoff"><p class="sab-kicker">'+(g.stage==='roles'?'ROLE REVEAL':'ROUND '+g.round+' / 4 · SECRET')+'</p><h2>'+esc(p.icon)+' '+esc(p.name)+' にスマホを渡してね</h2><p class="sab-sub">本人だけが秘密を確認。ほかの人は見ないでね。</p><button type="button" class="sab-btn sab-hold-button" data-hold="briefing">長押しで秘密を確認<span class="sab-hold-progress"></span></button></section>'}
 function secret(){
  const p=g.players[peek],v=sabotageView(g,p.id),roles=g.stage==='roles';
@@ -70,6 +78,7 @@ function render(){
  let html=nav();
  if(screen==='title')html+=title();
  else if(screen==='members')html+=members();
+ else if(screen==='setup')html+=setup();
  else if(screen==='rules')html+='<section class="sab-panel"><h2>あそびかた</h2>'+rules()+'</section>'+btn('もどる','title','secondary');
  else if(screen==='handoff')html+=handoff();
  else if(screen==='secret')html+=secret();
@@ -86,7 +95,7 @@ function render(){
   if(phase.waitMs>0)revealTimer=setTimeout(()=>{if(g?.stage==='reveal'&&screen==='play')render()},Math.ceil(phase.waitMs)+30);
  }
 }
-function begin(){loadPlayers();if(players.length<4){screen='members';return render()}g=createSabotage(players);peek=0;screen='handoff';recorded=false;persist();render()}
+function begin(){loadPlayers();if(players.length<4){screen='members';return render()}roleSettings=roleSettings||sabotageDefaultSettings(players.length);g=createSabotage(players,roleSettings);peek=0;screen='handoff';recorded=false;persist();render()}
 function advance(){sabotageAction(g,g.currentId,{type:'sabotage-next'});if(g.stage==='briefing'){screen='handoff';peek=0}else if(g.stage==='finished')screen='result';else screen='play';persist();render()}
 let holdTimer=null,holdElement=null,reviewing=false;
 function clearHold(){if(holdTimer!==null)clearTimeout(holdTimer);holdTimer=null;if(holdElement){holdElement.classList.remove('is-holding');holdElement=null}
@@ -111,6 +120,13 @@ app.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
  if(b.dataset.confirmCancel!==undefined){b.closest('.sab-confirm-overlay')?.remove();return}
  if(b.dataset.confirmOk!==undefined){b.closest('.sab-confirm-overlay')?.remove();b.dataset.action='confirm-cut'}
+ if(b.dataset.sabSetting!==undefined&&screen==='setup'){
+  const action=b.dataset.sabSetting;
+  const value=action==='jackal'?b.dataset.value==='true':Number(b.dataset.value);
+  const next=sabotageChangeSettings(players.length,roleSettings,action,value);
+  if(next){roleSettings=next;render()}
+  return;
+ }
  if(b.dataset.memberCount!==undefined){api.setActiveCount(Number(b.dataset.memberCount));loadPlayers();render();return}
  if(b.dataset.memberIcon!==undefined){api.setPlayer(Number(b.dataset.memberIcon),{icon:b.dataset.icon});loadPlayers();render();return}
  if(b.dataset.nav){if(b.dataset.nav==='home')return exit();if(screen==='title')return exit();if(g&&g.stage!=='finished'){persist();if(!confirm('進行中のゲームです。ゲーム一覧に戻る？（続きは保存されます）'))return;location.href='../';return}screen=screen==='members'?'title':'title';render();return}
@@ -118,6 +134,7 @@ app.addEventListener('click',e=>{
  if(b.dataset.wire!==undefined){wire=Number(b.dataset.wire);render();return}
  switch(b.dataset.action){
  case 'members':loadPlayers();screen='members';render();break;
+ case 'start':if(screen==='setup')begin();break;
  case 'rules':screen='rules';render();break;
  case 'title':screen='title';render();break;
  case 'peek':break;
@@ -138,9 +155,9 @@ app.addEventListener('click',e=>{
  case 'home':exit();break;
  }
 });
-app.addEventListener('click',e=>{if(e.target.closest('[data-members-done]')){e.preventDefault();loadPlayers();begin()}});
+app.addEventListener('click',e=>{if(e.target.closest('[data-members-done]')){e.preventDefault();loadPlayers();roleSettings=sabotageDefaultSettings(players.length);screen='setup';render()}});
 app.addEventListener('change',e=>{const el=e.target;if(el.matches('[data-member-name]')){api.setPlayer(Number(el.dataset.memberName),{name:el.value});loadPlayers();render()}});
 window.addEventListener('houkago-player-selection-changed',()=>{if(screen==='members'){loadPlayers();render()}});
 window.addEventListener('pagehide',persist);window.addEventListener('houkago-back-guard-save',persist);
-function restore(saved){if(!saved?.g)return;g=saved.g;peek=Number(saved.peek)||0;recorded=!!saved.recorded;screen=g.stage==='finished'?'result':(g.stage==='briefing'||g.stage==='roles')?'handoff':'play';render()}
+function restore(saved){if(!saved?.g)return;g=saved.g;roleSettings=g.roleSettings||sabotageDefaultSettings(g.players.length);peek=Number(saved.peek)||0;recorded=!!saved.recorded;screen=g.stage==='finished'?'result':(g.stage==='briefing'||g.stage==='roles')?'handoff':'play';render()}
 loadPlayers();render();resume?.offer?.({gameId:SAVE,onResume:restore,onNew:()=>{g=null;screen='title';render()}});
