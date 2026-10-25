@@ -388,3 +388,27 @@ test('決着カットインは勝者公開より先、3種類の演出はオフ�
  for(const p of ['games/sabotage/finale-ui.js','games/sabotage/game.js','online/sabotage/game.js'])
   execFileSync(process.execPath,['--check',new URL('../'+p,import.meta.url).pathname],{stdio:'pipe'});
 });
+
+test('未公開コードは共通のグレー裏面、公開されたコードは対応する表面',async()=>{
+ const {sabotageSlots,sabotageCardBackArtwork,sabotageCardBackPath}=await import('../games/sabotage/visuals.js');
+ const {sabotageRevealBody}=await import('../games/sabotage/reveal-ui.js');
+ assert.equal(sabotageCardBackPath,'../../sabotage_card_back.png');
+ assert.ok(statSync(new URL('../sabotage_card_back.png',import.meta.url)).size>100000);
+ const slots=[{state:'closed'},{state:'closed'},{state:'opened',type:'repair'},{state:'opened',type:'error'},{state:'inactive'}];
+ for(const selectable of [true,false]){
+  const html=sabotageSlots(slots,selectable);
+  assert.equal(html.split('sabotage_card_back.png').length-1,2);
+  assert.equal(html.split('sab-slot-back-art').length-1,2);
+  assert.match(html,/sabotage_card_repair.png/);
+  assert.match(html,/sabotage_card_bomb.png/);
+  assert.match(html,/配布なし/);
+ }
+ const concealed=sabotageRevealBody('error','suspense',0,4);
+ assert.match(concealed,/sabotage_card_back.png/);
+ assert.doesNotMatch(concealed,/sabotage_card_bomb.png|BOMB!/);
+ for(const type of ['repair','error','dummy'])
+  assert.doesNotMatch(sabotageRevealBody(type,'ready',1,4),/sabotage_card_back.png/);
+ assert.match(sabotageCardBackArtwork('demo'),/aria-hidden="true"/);
+ for(const file of ['games/sabotage/visuals.js','games/sabotage/reveal-ui.js'])
+  execFileSync(process.execPath,['--check',new URL('../'+file,import.meta.url).pathname],{stdio:'pipe'});
+});

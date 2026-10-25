@@ -1,9 +1,9 @@
-import {sabotageBadges,sabotageCardArtwork} from './visuals.js?v=20261024-sabassets1';
+import {sabotageBadges,sabotageCardArtwork,sabotageCardBackArtwork} from './visuals.js?v=20261025-sabback1';
 /* Shared presentation for offline, live online, and online trial. Never show outcome before suspense expires. */
 export function sabotageRevealBody(type,stage,repaired,required){
  if(stage==='suspense'){
   return '<div class="sab-tension" data-reveal-stage="suspense" role="status">'+
-   '<div class="sab-closed-code" aria-hidden="true"><span>?</span></div>'+
+   '<div class="sab-closed-code" aria-hidden="true">'+sabotageCardBackArtwork('sab-reveal-back-art')+'</div>'+
    '<p class="sab-tension-label">コードを確認中</p>'+
    '<div class="sab-wait-dots" aria-hidden="true"><i></i><i></i><i></i></div>'+
    '<p class="sab-wait-ellipsis">……</p>'+

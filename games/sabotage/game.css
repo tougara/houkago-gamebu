@@ -223,3 +223,18 @@ body{background-color:#08162c;background-image:linear-gradient(180deg,rgba(3,12,
  }
  .sab-app:not(.sab-online)>.sab-nav.top-nav .sab-nav-logo{width:clamp(75px,25vw,108px)}
 }
+
+/* Shared neutral code back in all unrevealed slots and the suspense card. */
+.sab-slot-closed{border-color:#97a2b2!important;background:#222a36!important}
+.sab-slot-closed .sab-slot-back-art{width:100%;height:100%;object-fit:cover;object-position:center;opacity:.92;filter:grayscale(.22)}
+.sab-slot-grid .sab-slot-closed{box-shadow:inset 0 0 0 1px #838e9d,0 2px 6px #0007}
+.sab-slot-grid .sab-slot-closed.selected{border-color:#75f8ec!important;box-shadow:0 0 14px #69f1e68a}
+.sab-slot-grid .sab-slot-closed small{position:relative;z-index:2;min-width:32px;padding:3px 5px;border-radius:6px;background:#101b2cdd;color:#f9fdff;text-shadow:0 1px 3px #000;font-weight:950}
+.sab-roster .sab-slot-closed{border-color:#9ba4ae!important}
+.sab-roster .sab-slot-closed .sab-slot-back-art{opacity:.88}
+.sab-reveal-scene .sab-closed-code{
+ width:min(43vw,190px);height:auto;aspect-ratio:2/3;min-height:0;
+ border:0;border-radius:12px;background:transparent;box-shadow:0 12px 24px #0008;overflow:hidden;
+}
+.sab-reveal-scene .sab-reveal-back-art{display:block;width:100%;height:100%;object-fit:contain}
+@media(max-height:660px){.sab-reveal-scene .sab-closed-code{width:min(32vw,133px)}}

@@ -9,6 +9,11 @@ export const sabotageRoleGoal={
 export const sabotageWireLabel={repair:'解除',error:'BOMB',dummy:'反応なし'};
 /* One visual asset map for offline, live online, and the local online trial. */
 export const sabotageCardPath={repair:'../../sabotage_card_repair.png',error:'../../sabotage_card_bomb.png',dummy:'../../sabotage_card_no_response.png'};
+/* All hidden code types share exactly the same neutral card back. */
+export const sabotageCardBackPath='../../sabotage_card_back.png';
+export function sabotageCardBackArtwork(extraClass=''){
+ return '<img class="sab-card-art sab-card-back-art '+extraClass+'" src="'+sabotageCardBackPath+'?v=20261025-sabback1" alt="" aria-hidden="true" decoding="async" loading="eager">';
+}
 export function sabotageCardArtwork(type,alt='',extraClass=''){
  const src=sabotageCardPath[type];
  if(!src)return '';
@@ -80,10 +85,10 @@ export function sabotageSlots(slots,selectable=false,selected=-1){
  Array.from({length:5},(_,i)=>{
   const item=items[i]||{state:'inactive'},state=item.state||'closed';
   const opened=state==='opened',active=state==='closed';
-  const symbol=opened?typeIcon[item.type]:(state==='inactive'?'—':selectable?'▥':'');
+  const symbol=opened?typeIcon[item.type]:(state==='inactive'?'—':'');
   const label=opened?sabotageWireLabel[item.type]:(active?'未公開':'配布なし');
   const className='sab-wire sab-slot-'+state+(opened?' sab-slot-'+item.type:'')+(selected===i?' selected':'');
-  const art=opened?sabotageCardArtwork(item.type,'','sab-slot-art'):'';
+  const art=opened?sabotageCardArtwork(item.type,'','sab-slot-art'):(active?sabotageCardBackArtwork('sab-slot-art sab-slot-back-art'):'');
   if(selectable){
    return '<button type="button" data-wire="'+i+'" class="sab-btn sab-slot-pick '+className+'" '+(!active?'disabled':'')+' aria-label="コード'+(i+1)+' '+label+'">'+
     art+'<span class="sab-wire-symbol">'+symbol+'</span><small>'+ (opened?escapeText(label):'#'+(i+1))+'</small></button>';

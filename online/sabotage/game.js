@@ -1,7 +1,7 @@
 import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js?v=20261025-sabfinale1';
-import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js?v=20261025-sabfinale1';
+import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js?v=20261025-sabback1';
 import {sabotageFinaleBody,sabotageFinalePhase} from '../../games/sabotage/finale-ui.js?v=20261025-sabfinale1';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js?v=20261025-sabfinale1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js?v=20261025-sabback1';
 const $=id=>document.getElementById(id),root=$('game-root'),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const q=new URLSearchParams(location.search),demo=q.get('testPlay')==='1';
