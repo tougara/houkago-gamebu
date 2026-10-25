@@ -506,3 +506,47 @@ test('Sabotage offline navigation stays on one row on narrow phones',async()=>{
   }finally{await context.close()}
  }
 });
+
+test('Sabotage bomb, repair and time-out finales fit phone and PC in both modes',async()=>{
+ for(const [route,width,height] of [
+  ['/games/sabotage/',390,780],['/online/sabotage/?testPlay=1',390,780],
+  ['/games/sabotage/',1366,768],['/online/sabotage/?testPlay=1',1366,768]
+ ]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+route,{waitUntil:'load'});
+   const audit=await page.evaluate(async()=>{
+    const mod=await import('/games/sabotage/finale-ui.js');
+    const parent=document.querySelector('.sab-online-root')||document.querySelector('.sab-app');
+    const infos=[];
+    for(const [winner,cutType,kind] of [['impostor','error','bomb'],['crew','repair','crew'],['jackal','dummy','timeout']]){
+     const scene=document.createElement('div');
+     scene.className='sab-finale-browser-test';
+     scene.style.cssText='width:100%;min-height:0;display:flex;flex-direction:column';
+     scene.innerHTML=mod.sabotageFinaleBody(winner,{type:cutType});
+     parent.appendChild(scene);
+     const frame=scene.querySelector('.sab-finale');
+     const image=scene.querySelector('.sab-finale-card-img');
+     await image.decode();
+     const pane=document.querySelector('.sab-app').getBoundingClientRect();
+     const rect=frame.getBoundingClientRect();
+     infos.push({kind,loaded:image.naturalWidth>0,frame:rect.width,pane:pane.width,
+       overflow:document.documentElement.scrollWidth-innerWidth,
+       centered:Math.abs(rect.left+rect.width/2-(pane.left+pane.width/2))<3,
+       visibleTitle:!!scene.querySelector('.sab-finale-heading')?.textContent,
+       onlyOneCard:scene.querySelectorAll('.sab-finale-card-img').length===1});
+     scene.remove();
+    }
+    return infos;
+   });
+   for(const x of audit){
+    assert.ok(x.loaded,'artwork missing for '+x.kind+' at '+route);
+    assert.ok(x.frame<=x.pane+2,'finale exceeds width at '+route);
+    assert.ok(x.centered,'finale not centered '+x.kind);
+    assert.ok(x.overflow<=2,'finale causes horizontal scroll '+route);
+    assert.ok(x.visibleTitle&&x.onlyOneCard,'finale card or heading is missing');
+   }
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
