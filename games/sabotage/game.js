@@ -1,5 +1,5 @@
 import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase,sabotageDefaultSettings,sabotageChangeSettings} from './engine.js?v=20261025-sabroles1';
-import {sabotageRevealBody} from './reveal-ui.js?v=20261025-sabrole1';
+import {sabotageRevealBody} from './reveal-ui.js?v=20261025-sabroles1';
 import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo,sabotageSettingsPanel} from './visuals.js?v=20261025-sabroles1';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

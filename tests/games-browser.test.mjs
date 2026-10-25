@@ -216,6 +216,12 @@ test('Sabotage offline long-press role, then code, and preserve five visible slo
   await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
   await page.locator('[data-action="members"]').click();
   await page.locator('[data-members-done]').click();
+  await page.locator('.sab-settings').waitFor();
+  assert.match(await page.locator('.sab-settings').textContent(),/候補5枚/);
+  await page.locator('[data-sab-setting="jackal"]').click();
+  assert.equal(await page.locator('[data-sab-setting="jackal"]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-sab-setting="jackal"]').click();
+  await page.locator('[data-action="start"]').click();
   async function hold(){
    const b=page.locator('[data-hold="briefing"]');
    await b.dispatchEvent('pointerdown',{pointerId:1,pointerType:'touch',isPrimary:true});

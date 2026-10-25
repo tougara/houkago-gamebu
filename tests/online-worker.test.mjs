@@ -533,3 +533,37 @@ test('ニセ転校生オンライン: 役職秘匿・3人以上の開始・休�
  assert.equal(st.obj.snapshot().phase,'lobby');
  assert.equal(st.obj.room.nise,null);
 });
+
+test('サボタージュの役職設定はホスト専用で人数変更時は自動リセット',async()=>{
+ const st=new Stub();
+ const hostCreated=await (await st.fetch(req('/create',{code:'ABCD2345',name:'Host',gameId:'sabotage'}))).json();
+ const peers=[];
+ for(let i=0;i<3;i++)peers.push(await (await st.fetch(req('/join',{name:'Friend'+i}))).json());
+ const sockets=[sock(hostCreated.id),...peers.map(p=>sock(p.id))];
+ st.sockets.push(...sockets);
+ const before=st.obj.snapshot();
+ assert.deepEqual(before.sabotageSettings,{crew:3,impostor:2,jackal:false,extra:1});
+ const custom={crew:2,impostor:2,jackal:true,extra:1};
+ await st.obj.webSocketMessage(sockets[1],JSON.stringify({type:'sabotage-settings',settings:custom}));
+ assert.deepEqual(st.obj.snapshot().sabotageSettings,before.sabotageSettings,'guest cannot modify setup');
+ await st.obj.webSocketMessage(sockets[0],JSON.stringify({type:'sabotage-settings',settings:{crew:0,impostor:4,jackal:true,extra:1}}));
+ assert.deepEqual(st.obj.snapshot().sabotageSettings,before.sabotageSettings,'invalid setup is blocked');
+ for(const s of sockets)await st.obj.webSocketMessage(s,JSON.stringify({type:'ready',ready:true}));
+ assert.equal(st.obj.snapshot().allReady,true);
+ await st.obj.webSocketMessage(sockets[0],JSON.stringify({type:'sabotage-settings',settings:custom}));
+ assert.deepEqual(st.obj.snapshot().sabotageSettings,custom);
+ assert.equal(st.obj.snapshot().allReady,false,'config change resets readiness');
+ for(const s of sockets)await st.obj.webSocketMessage(s,JSON.stringify({type:'ready',ready:true}));
+ await st.obj.webSocketMessage(sockets[1],JSON.stringify({type:'sabotage-start'}));
+ assert.equal(st.obj.room.sabotage,undefined,'guest cannot start');
+ await st.obj.webSocketMessage(sockets[0],JSON.stringify({type:'sabotage-start'}));
+ assert.equal(st.obj.snapshot().phase,'sabotage');
+ assert.deepEqual(st.obj.room.sabotage.roleSettings,custom);
+ assert.equal(st.obj.room.sabotage.players.length,4);
+ assert.ok(st.obj.room.sabotage.players.every(x=>['crew','impostor','jackal'].includes(x.role)));
+ assert.ok(st.obj.snapshot().members.every(x=>!('role' in x)));
+ await st.obj.webSocketMessage(sockets[0],JSON.stringify({type:'sabotage-stop'}));
+ const newcomer=await (await st.fetch(req('/join',{name:'Newcomer'}))).json();
+ assert.ok(newcomer.id);
+ assert.deepEqual(st.obj.snapshot().sabotageSettings,{crew:3,impostor:2,jackal:false,extra:0},'5 players gets the default role pool');
+});

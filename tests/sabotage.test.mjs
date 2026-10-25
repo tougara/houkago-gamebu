@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,statSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
-import {createSabotage,sabotageAction,sabotageView,sabotageRoles,SABOTAGE_COUNTS,sabotageRevealPhase,sabotageHoldMs} from '../games/sabotage/engine.js';
+import {createSabotage,sabotageAction,sabotageView,sabotageRoles,SABOTAGE_COUNTS,sabotageRevealPhase,sabotageHoldMs,sabotageDefaultSettings,sabotageValidateSettings,sabotageChangeSettings} from '../games/sabotage/engine.js';
 const members=n=>Array.from({length:n},(_,i)=>({id:'p'+i,name:'参加者'+i,icon:'🐶'}));
 const revealAll=g=>{if(g.stage==='roles'){for(const p of g.players)assert.equal(sabotageAction(g,p.id,{type:'sabotage-role-seen'}),true);assert.equal(g.stage,'briefing')}for(const p of g.players)assert.equal(sabotageAction(g,p.id,{type:'sabotage-seen'}),true);assert.equal(g.stage,'playing')};
 const cut=g=>{const target=g.players.find(p=>p.id!==g.currentId&&p.hand.length);assert.ok(target);const desired=Math.max(0,target.hand.indexOf('dummy'));let remaining=0,index=0;for(let i=0;i<5;i++)if(target.slots[i].state==='closed'){if(remaining===desired){index=i;break}remaining++}return {target,index}};
@@ -291,4 +291,69 @@ test('役職カード3枚をオフライン・オンライン共通の役職表�
  const css=readFileSync(new URL('../games/sabotage/game.css',import.meta.url),'utf8');
  assert.match(css,/sab-role-art-large/);
  assert.match(css,/sab-role-art-mini/);
+});
+
+test('タイムボムを参考にした4〜10人用役職プールと余りカード',()=>{
+ const expected={4:[3,2,1],5:[3,2,0],6:[4,2,0],7:[5,3,1],8:[5,3,0],9:[7,3,1],10:[8,3,1]};
+ for(let n=4;n<=10;n++){
+  const [crew,impostor,extra]=expected[n],settings=sabotageDefaultSettings(n);
+  assert.deepEqual(settings,{crew,impostor,jackal:false,extra});
+  assert.equal(crew+impostor,n+extra);
+  const on=sabotageChangeSettings(n,settings,'jackal',true);
+  assert.deepEqual(on,{crew:crew-1,impostor,jackal:true,extra});
+  assert.equal(on.crew+on.impostor+Number(on.jackal),n+extra);
+  assert.deepEqual(sabotageChangeSettings(n,on,'jackal',false),settings);
+  const game=createSabotage(members(n),settings);
+  assert.equal(game.players.length,n);
+  assert.equal(game.players.filter(p=>p.role==='jackal').length,0);
+  assert.deepEqual(game.roleSettings,settings);
+  assert.equal(sabotageRoles(n,settings).length,n);
+  const roleView=sabotageView(game,game.players[0].id);
+  assert.ok(roleView.members.every(p=>!('role' in p)));
+ }
+ assert.deepEqual(sabotageChangeSettings(10,sabotageDefaultSettings(10),'jackal',true),{crew:7,impostor:3,jackal:true,extra:1});
+});
+test('役職候補枚数編集・余りカード切替・不正値ブロック',()=>{
+ let c=sabotageDefaultSettings(7);
+ assert.deepEqual(sabotageChangeSettings(7,c,'impostor',-1),{crew:6,impostor:2,jackal:false,extra:1});
+ c=sabotageChangeSettings(7,c,'extra',0);
+ assert.deepEqual(c,{crew:4,impostor:3,jackal:false,extra:0});
+ assert.deepEqual(sabotageChangeSettings(7,c,'extra',1),sabotageDefaultSettings(7));
+ c=sabotageChangeSettings(7,c,'crew',1);
+ assert.deepEqual(c,{crew:5,impostor:2,jackal:false,extra:0});
+ assert.equal(sabotageChangeSettings(7,c,'crew',100),null);
+ assert.throws(()=>sabotageValidateSettings(7,{crew:7,impostor:0,jackal:false,extra:0}));
+ assert.throws(()=>sabotageValidateSettings(7,{crew:3,impostor:3,jackal:false,extra:0}));
+ assert.throws(()=>sabotageValidateSettings(7,{crew:3.2,impostor:3,jackal:true,extra:0}));
+ assert.throws(()=>sabotageValidateSettings(7,{crew:4,impostor:3,jackal:false,extra:2}));
+ assert.equal(sabotageChangeSettings(4,{crew:2,impostor:2,jackal:true,extra:1},'crew',-1),null);
+ for(let i=0;i<100;i++){
+  const game=createSabotage(members(10),{crew:7,impostor:3,jackal:true,extra:1});
+  assert.equal(game.players.length,10);
+  assert.ok(game.players.filter(p=>p.role==='crew').length>=6);
+  assert.ok(game.players.filter(p=>p.role==='impostor').length>=2);
+  assert.ok(game.players.filter(p=>p.role==='jackal').length<=1);
+ }
+});
+test('共通役職設定UIは候補枚数だけ表示し配布結果を含まない',async()=>{
+ const {sabotageSettingsPanel}=await import('../games/sabotage/visuals.js');
+ const cfg=sabotageChangeSettings(10,sabotageDefaultSettings(10),'jackal',true);
+ const html=sabotageSettingsPanel(10,cfg);
+ assert.match(html,/候補11枚/);
+ assert.match(html,/ジャッカルを追加/);
+ assert.match(html,/data-sab-setting="crew"/);
+ assert.match(html,/data-sab-setting="impostor"/);
+ assert.match(html,/data-sab-setting="jackal"/);
+ assert.match(html,/data-sab-setting="extra"/);
+ assert.match(html,/配布 10枚/);
+ const readonly=sabotageSettingsPanel(10,cfg,false);
+ assert.doesNotMatch(readonly,/data-sab-setting=/);
+ const offline=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
+ const lobby=readFileSync(new URL('../online/lobby.js',import.meta.url),'utf8');
+ const worker=readFileSync(new URL('../worker/src/index.js',import.meta.url),'utf8');
+ assert.match(offline,/sabotageSettingsPanel\(n,settings\)/);
+ assert.match(lobby,/sabotageSettingsPanel\(room.members.length,room.sabotageSettings/);
+ assert.match(worker,/sabotageValidateSettings\(this.room.members.length,data.settings\)/);
+ for(const path of ['games/sabotage/game.js','online/lobby.js','games/sabotage/engine.js','games/sabotage/visuals.js','worker/src/index.js'])
+  execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
 });
