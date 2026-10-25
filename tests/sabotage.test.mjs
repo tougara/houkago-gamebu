@@ -412,3 +412,19 @@ test('未公開コードは共通のグレー裏面、公開されたコード�
  for(const file of ['games/sabotage/visuals.js','games/sabotage/reveal-ui.js'])
   execFileSync(process.execPath,['--check',new URL('../'+file,import.meta.url).pathname],{stdio:'pipe'});
 });
+
+test('オフラインの決着後タイマーは render 内で毎回登録される',()=>{
+ const code=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
+ const start=code.indexOf('function render(){');
+ const end=code.indexOf('\nfunction begin(){',start);
+ assert.ok(start>=0&&end>start);
+ const renderBlock=code.slice(start,end);
+ assert.match(renderBlock,/if\(g\?\.stage==='finished'&&screen==='result'\)/);
+ assert.match(renderBlock,/if\(finale.active\)revealTimer=setTimeout/);
+ assert.match(renderBlock,/Math.ceil\(finale.waitMs\)\+30/);
+ assert.match(renderBlock,/clearTimeout\(revealTimer\)/);
+ assert.doesNotMatch(code.slice(end,end+120),/sabotageFinalePhase/);
+ const css=readFileSync(new URL('../games/sabotage/game.css',import.meta.url),'utf8');
+ assert.match(css,/\.sab-reveal-visual\.repair \.sab-status-badges/);
+ assert.match(css,/\.sab-badge\.is-cleared \.sab-badge-front/);
+});

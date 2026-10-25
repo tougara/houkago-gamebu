@@ -96,10 +96,11 @@ function render(){
   if(phase.waitMs>0)revealTimer=setTimeout(()=>{if(g?.stage==='reveal'&&screen==='play')render()},Math.ceil(phase.waitMs)+30);
   else if(g.pendingResult)revealTimer=setTimeout(()=>{if(g?.stage==='reveal'&&screen==='play')advance()},1600);
  }
-}
-if(g?.stage==='finished'&&screen==='result'){
- const finale=sabotageFinalePhase(g.finishedAt);
- if(finale.active)revealTimer=setTimeout(()=>{if(g?.stage==='finished'&&screen==='result')render()},Math.ceil(finale.waitMs)+30);
+ // The finale timer MUST live inside render(): this state is reached only after play.
+ if(g?.stage==='finished'&&screen==='result'){
+  const finale=sabotageFinalePhase(g.finishedAt);
+  if(finale.active)revealTimer=setTimeout(()=>{if(g?.stage==='finished'&&screen==='result')render()},Math.ceil(finale.waitMs)+30);
+ }
 }
 function begin(){loadPlayers();if(players.length<4){screen='members';return render()}roleSettings=roleSettings||sabotageDefaultSettings(players.length);g=createSabotage(players,roleSettings);peek=0;screen='handoff';recorded=false;persist();render()}
 function advance(){sabotageAction(g,g.currentId,{type:'sabotage-next'});if(g.stage==='briefing'){screen='handoff';peek=0}else if(g.stage==='finished')screen='result';else screen='play';persist();render()}

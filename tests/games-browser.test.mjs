@@ -562,3 +562,63 @@ test('Sabotage bomb, repair and time-out finales fit phone and PC in both modes'
   }finally{await context.close()}
  }
 });
+
+
+test('Sabotage cleared-code progress badges are legible on mobile and desktop',async()=>{
+ for(const [width,height] of [[345,680],[390,780],[1366,768]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
+   const badges=await page.evaluate(async()=>{
+    const {sabotageRevealBody}=await import('/games/sabotage/reveal-ui.js');
+    const node=document.createElement('section');
+    node.className='sab-panel sab-reveal-scene';
+    node.innerHTML=sabotageRevealBody('repair','ready',2,4);
+    document.querySelector('.sab-app').appendChild(node);
+    const r=node.getBoundingClientRect(),items=[...node.querySelectorAll('.sab-badge')].map(x=>{
+     const b=x.getBoundingClientRect();
+     return {left:b.left,right:b.right,width:b.width,height:b.height,
+       visibleText:x.querySelector('.is-unused')?.textContent||x.textContent.trim(),
+       front:getComputedStyle(x.querySelector('.sab-badge-front')).display,
+       back:getComputedStyle(x.querySelector('.sab-badge-back')).display,
+       innerTransform:getComputedStyle(x.querySelector('.sab-badge-inner')).transform};
+    });
+    node.remove();return {panel:r.width,items};
+   });
+   assert.equal(badges.items.length,4);
+   assert.ok(badges.items.every(item=>item.width>=20&&item.height>=26),JSON.stringify(badges));
+   for(let i=1;i<badges.items.length;i++)
+    assert.ok(badges.items[i].left>=badges.items[i-1].right-1,'overlapping progress badges');
+   assert.ok(badges.items.slice(0,2).every(x=>x.front==='none'&&x.back!=='none'),'cleared badges should show only a tick');
+   assert.ok(badges.items.slice(2).every(x=>x.back==='none'&&x.front!=='none'),'unopened badges should show only a question mark');
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
+
+test('Sabotage offline cinematic BOMB and crew result always advance to winner screen',async()=>{
+ for(const winner of ['impostor','crew','jackal']){
+  const {page,context,errors}=await open(390,780);
+  try{
+   await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
+   await page.evaluate(async winner=>{
+    const {createSabotage}=await import('/games/sabotage/engine.js');
+    const members=[{id:'a',name:'A',icon:'🐱'},{id:'b',name:'B',icon:'🐶'},
+      {id:'c',name:'C',icon:'🐧'},{id:'d',name:'D',icon:'🦊'}];
+    const g=createSabotage(members);
+    g.stage='finished';g.winner=winner;g.lastCut={type:winner==='impostor'?'error':winner==='crew'?'repair':'dummy'};
+    g.finishedAt=Date.now();
+    window.HoukagoResume.save('sabotage',{title:'サボタージュ',path:'/games/sabotage/',summary:'Finale test'},{
+      g,peek:0,screen:'handoff',recorded:false
+    });
+   },winner);
+   await page.reload({waitUntil:'load'});
+   await page.locator('[data-hg-resume-continue]').click();
+   await page.locator('.sab-finale').waitFor();
+   assert.equal(await page.locator('.sab-victory').count(),0,'winner must appear only after the cut-in');
+   await page.locator('.sab-victory').waitFor({timeout:6500});
+   assert.match(await page.locator('.sab-victory-winner').innerText(),/勝利！/);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});

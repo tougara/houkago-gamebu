@@ -238,3 +238,34 @@ body{background-color:#08162c;background-image:linear-gradient(180deg,rgba(3,12,
 }
 .sab-reveal-scene .sab-reveal-back-art{display:block;width:100%;height:100%;object-fit:contain}
 @media(max-height:660px){.sab-reveal-scene .sab-closed-code{width:min(32vw,133px)}}
+
+/* Result progress fix: the parent is a centered flex column, so auto-size grids
+   shrink into illegible slivers. Show stable, evenly-spaced 2D progress chips here. */
+.sab-reveal-visual.repair .sab-status-badges{
+ display:flex;justify-content:center;align-items:center;gap:7px;
+ width:min(100%,300px);max-width:100%;margin:7px auto 0;
+ grid-template-columns:none;grid-auto-flow:initial;
+}
+.sab-reveal-visual.repair .sab-status-badges .sab-badge{
+ flex:1 1 0;max-width:37px;min-width:20px;height:30px;perspective:none;
+}
+.sab-reveal-visual.repair .sab-status-badges .sab-badge-inner,
+.sab-reveal-visual.repair .sab-status-badges .sab-badge.just-cleared .sab-badge-inner{
+ transform:none!important;transform-style:flat;animation:none!important;transition:none!important;
+}
+.sab-reveal-visual.repair .sab-status-badges .sab-badge-front,
+.sab-reveal-visual.repair .sab-status-badges .sab-badge-back{
+ transform:none;backface-visibility:visible;border-radius:6px;font-size:17px;
+}
+.sab-reveal-visual.repair .sab-status-badges .sab-badge.is-cleared .sab-badge-front,
+.sab-reveal-visual.repair .sab-status-badges .sab-badge.is-locked .sab-badge-back{display:none}
+.sab-reveal-visual.repair .sab-status-badges .sab-badge.just-cleared{
+ animation:sab-result-progress-glow .65s ease-out 1;
+}
+@keyframes sab-result-progress-glow{
+ 0%{filter:brightness(1)}40%{filter:brightness(1.6) drop-shadow(0 0 8px #79ffe0)}100%{filter:brightness(1)}
+}
+@media(max-width:350px){
+ .sab-reveal-visual.repair .sab-status-badges{gap:4px;width:min(100%,250px)}
+ .sab-reveal-visual.repair .sab-status-badges .sab-badge{height:27px;min-width:18px}
+}
