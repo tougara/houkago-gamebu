@@ -376,6 +376,7 @@ test('決着カットインは勝者公開より先、3種類の演出はオフ�
  assert.deepEqual(sabotageFinalePhase(5000,5000+sabotageFinaleMs),{active:false,waitMs:0});
  assert.deepEqual(sabotageFinalePhase(null,5000),{active:false,waitMs:0});
  const game=createSabotage(members(4));revealAll(game);
+ game.currentId=game.players.find(p=>!p.hand.includes('error')).id;
  const target=game.players.find(p=>p.id!==game.currentId&&p.hand.includes('error'));
  const index=target.hand.indexOf('error');
  assert.ok(sabotageAction(game,game.currentId,{type:'sabotage-cut',targetId:target.id,index}));
