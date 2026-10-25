@@ -67,6 +67,7 @@ function distribute(g,deck){
  if(!Number.isInteger(each))throw Error('配線配布枚数が不正');
  g.players.forEach((p,i)=>{p.hand=shuffled.slice(i*each,(i+1)*each);p.slots=Array.from({length:5},(_,index)=>index<each?{state:'closed'}:{state:'inactive'});p.seen=false});
  g.stage='briefing';g.cuts=0;g.lastCut=null;
+ g.roundIntroAt=g.round>1?Date.now():null; // Same reveal time for all connected devices.
 }
 export function createSabotage(members,settings=null){
  const n=members.length,c=SABOTAGE_COUNTS[n];if(!c)throw Error('4〜10人');
@@ -141,7 +142,9 @@ export function sabotageView(g,id){
  const counts={repair:count(p.hand,'repair'),error:count(p.hand,'error'),dummy:count(p.hand,'dummy')};
  return {stage:g.stage,round:g.round,rounds:4,cuts:g.cuts,totalCuts:g.players.length,
   required:g.required,repaired:g.repaired,currentId:g.currentId,lastCut:g.lastCut,
-  winner:g.winner,finishedAt:finished?(g.finishedAt||null):null,history:g.history.slice(-18),chat:g.chat||[],
+  winner:g.winner,finishedAt:finished?(g.finishedAt||null):null,
+   roundIntroAt:g.stage==='briefing'&&g.round>1?(g.roundIntroAt||null):null,
+   history:g.history.slice(-18),chat:g.chat||[],
   seenCount:g.players.filter(x=>g.stage==='roles'?x.roleSeen:x.seen).length,mySeen:g.stage==='roles'?p.roleSeen:p.seen,
   myRole:p.role,myCounts:counts,
   members:g.players.map(x=>({id:x.id,name:x.name,icon:x.icon,cards:x.hand.length,
