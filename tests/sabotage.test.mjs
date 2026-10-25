@@ -428,3 +428,64 @@ test('オフラインの決着後タイマーは render 内で毎回登録され
  assert.match(css,/\.sab-reveal-visual\.repair \.sab-status-badges/);
  assert.match(css,/\.sab-badge\.is-cleared \.sab-badge-front/);
 });
+
+test('ラウンド移行時は共有された再配布時刻が先に見え、役職やコード内訳は露出しない',async()=>{
+ const {sabotageRoundIntroPhase,sabotageRoundIntroBody,sabotageRoundIntroMs}=await import('../games/sabotage/transition-ui.js');
+ const g=createSabotage(members(4));revealAll(g);
+ const view1=sabotageView(g,g.players[0].id);
+ assert.equal(view1.roundIntroAt,null,'first round has no transition');
+ for(let turn=0;turn<4;turn++){
+  const {target,index}=cut(g);
+  const ix=target.slots.slice(0,index).filter(s=>s.state==='closed').length;
+  target.hand[ix]='dummy';
+  assert.ok(sabotageAction(g,g.currentId,{type:'sabotage-cut',targetId:target.id,index}));
+  assert.ok(advance(g));
+ }
+ assert.equal(g.stage,'briefing');
+ assert.equal(g.round,2);
+ assert.ok(Number.isFinite(g.roundIntroAt));
+ const view=sabotageView(g,g.players[0].id);
+ assert.equal(view.roundIntroAt,g.roundIntroAt);
+ assert.ok(view.members.every(p=>!('role' in p)));
+ assert.deepEqual(sabotageRoundIntroPhase(2,g.roundIntroAt,g.roundIntroAt),{active:true,waitMs:sabotageRoundIntroMs});
+ assert.deepEqual(sabotageRoundIntroPhase(2,g.roundIntroAt,g.roundIntroAt+sabotageRoundIntroMs),{active:false,waitMs:0});
+ assert.deepEqual(sabotageRoundIntroPhase(1,g.roundIntroAt,g.roundIntroAt),{active:false,waitMs:0});
+ const html=sabotageRoundIntroBody(2);
+ assert.match(html,/ROUND 2/);assert.match(html,/CODES RESHUFFLED/);
+ assert.match(html,/シャッフル・再配布/);
+ assert.doesNotMatch(html,/myCounts|impostor|repairCount|BOMB/);
+ for(const path of ['games/sabotage/transition-ui.js','games/sabotage/game.js','online/sabotage/game.js'])
+  execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
+ const offline=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
+ const online=readFileSync(new URL('../online/sabotage/game.js',import.meta.url),'utf8');
+ assert.match(offline,/sabotageRoundIntroPhase\(g\.round,g\.roundIntroAt\)/);
+ assert.match(online,/sabotageRoundIntroPhase\(d\.round,d\.roundIntroAt\)/);
+});
+test('BOMBは警報→爆弾カード確定→勝利画面の順で時刻同期する',async()=>{
+ const {sabotageBombFinalePhase,sabotageBombWarningMs,sabotageFinaleMs,
+        sabotageFinaleBody}=await import('../games/sabotage/finale-ui.js');
+ const start=10000;
+ assert.equal(sabotageBombFinalePhase(start,start).step,'alert');
+ assert.deepEqual(sabotageBombFinalePhase(start,start),{step:'alert',waitMs:sabotageBombWarningMs});
+ assert.equal(sabotageBombFinalePhase(start,start+sabotageBombWarningMs).step,'card');
+ assert.deepEqual(sabotageBombFinalePhase(start,start+sabotageFinaleMs),{step:'card',waitMs:0});
+ const alert=sabotageFinaleBody('impostor',{type:'error'},'alert');
+ const card=sabotageFinaleBody('impostor',{type:'error'},'card');
+ assert.match(alert,/data-finale-step="alert"/);
+ assert.match(alert,/CRITICAL ALERT/);
+ assert.match(alert,/sab-finale-warning/);
+ assert.doesNotMatch(alert,/class="sab-finale-heading"|sab-finale-card-label|YOU WIN!/);
+ assert.match(card,/data-finale-step="card"/);
+ assert.match(card,/class="sab-finale-heading">BOMB!/);
+ assert.match(card,/爆弾（BOMB）/);
+ assert.doesNotMatch(card,/YOU WIN!/);
+ const crew=sabotageFinaleBody('crew',{type:'repair'});
+ assert.match(crew,/ALL CLEAR!/);
+ const offline=readFileSync(new URL('../games/sabotage/game.js',import.meta.url),'utf8');
+ const online=readFileSync(new URL('../online/sabotage/game.js',import.meta.url),'utf8');
+ for(const s of [offline,online]){
+  assert.match(s,/sabotageBombFinalePhase/);
+  assert.match(s,/sabotageFinaleBody/);
+  assert.match(s,/Math\.min\(finale\.waitMs,bomb\.waitMs\|\|finale\.waitMs\)/);
+ }
+});

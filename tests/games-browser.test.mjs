@@ -622,3 +622,92 @@ test('Sabotage offline cinematic BOMB and crew result always advance to winner s
   }finally{await context.close()}
  }
 });
+
+
+test('Sabotage round cut-in appears before offline secret handoff, then disappears automatically',async()=>{
+ for(const [width,height] of [[390,780],[1366,768]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
+   await page.evaluate(async()=>{
+    const {createSabotage}=await import('/games/sabotage/engine.js');
+    const members=[{id:'a',name:'A',icon:'🐱'},{id:'b',name:'B',icon:'🐶'},
+      {id:'c',name:'C',icon:'🐧'},{id:'d',name:'D',icon:'🦊'}];
+    const g=createSabotage(members);
+    g.stage='briefing';g.round=2;g.roundIntroAt=Date.now();
+    window.HoukagoResume.save('sabotage',{title:'サボタージュ',path:'/games/sabotage/',summary:'Round intro test'},{
+     g,peek:0,screen:'handoff',recorded:false
+    });
+   });
+   await page.reload({waitUntil:'load'});
+   await page.locator('[data-hg-resume-continue]').click();
+   const intro=page.locator('[data-round-intro="2"]');
+   await intro.waitFor();
+   assert.match(await intro.textContent(),/ROUND 2/);
+   assert.equal(await page.locator('[data-hold="briefing"]').count(),0,'no secret handoff button during reshuffle');
+   await page.locator('[data-hold="briefing"]').waitFor({timeout:4000});
+   assert.equal(await intro.count(),0);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
+test('Sabotage round transitions render responsive identical shared cut-in in offline and online',async()=>{
+ for(const route of ['/games/sabotage/','/online/sabotage/?testPlay=1']){
+  for(const [width,height] of [[345,680],[1366,768]]){
+   const {page,context,errors}=await open(width,height);
+   try{
+    await page.goto(base+route,{waitUntil:'load'});
+    const geom=await page.evaluate(async()=>{
+     const {sabotageRoundIntroBody}=await import('/games/sabotage/transition-ui.js');
+     const parent=document.querySelector('.sab-online-root')||document.querySelector('.sab-app');
+     const box=document.createElement('div');
+     box.style.cssText='display:flex;width:100%;min-height:0;flex-direction:column';
+     box.innerHTML=sabotageRoundIntroBody(3);
+     parent.appendChild(box);
+     const r=box.querySelector('.sab-round-intro').getBoundingClientRect();
+     const p=document.querySelector('.sab-app').getBoundingClientRect();
+     box.remove();
+     return {width:r.width,pane:p.width,overflow:document.documentElement.scrollWidth-innerWidth};
+    });
+    assert.ok(geom.width<=geom.pane+2&&geom.overflow<=2,JSON.stringify(geom));
+    assert.deepEqual(errors,[]);
+   }finally{await context.close()}
+  }
+ }
+});
+test('Sabotage BOMB cut-in explicitly shows alert then card label then winner result',async()=>{
+ for(const route of ['/games/sabotage/','/online/sabotage/?testPlay=1']){
+  const {page,context,errors}=await open(390,780);
+  try{
+   await page.goto(base+route,{waitUntil:'load'});
+   const result=await page.evaluate(async()=>{
+    const {sabotageFinaleBody,sabotageBombFinalePhase,sabotageBombWarningMs}=await import('/games/sabotage/finale-ui.js');
+    const t=10000;
+    const parent=document.querySelector('.sab-online-root')||document.querySelector('.sab-app');
+    const wrapper=document.createElement('div');
+    parent.appendChild(wrapper);
+    const states=[];
+    for(const [stepTime,label] of [[t,'alert'],[t+sabotageBombWarningMs,'card']]){
+     const step=sabotageBombFinalePhase(t,stepTime).step;
+     wrapper.innerHTML=sabotageFinaleBody('impostor',{type:'error'},step);
+     const frame=wrapper.querySelector('.sab-finale');
+     const card=wrapper.querySelector('.sab-finale-card-img');
+     await card.decode();
+     states.push({label,step:frame.dataset.finaleStep,
+       heading:frame.querySelector('.sab-finale-heading')?.textContent||'',
+       hasWarning:!!frame.querySelector('.sab-finale-warning'),
+       cardText:frame.querySelector('.sab-finale-card-label')?.textContent||'',
+       loaded:card.naturalWidth>0});
+    }
+    wrapper.remove();
+    return states;
+   });
+   assert.deepEqual(result.map(x=>x.step),['alert','card']);
+   assert.ok(result.every(x=>x.loaded));
+   assert.ok(result[0].hasWarning&&!result[0].heading&&!result[0].cardText);
+   assert.equal(result[1].heading,'BOMB!');
+   assert.equal(result[1].cardText,'爆弾（BOMB）');
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
