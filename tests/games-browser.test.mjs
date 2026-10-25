@@ -481,3 +481,27 @@ test('Sabotage desktop layout audit: online role, code, board, chat and selectio
   }finally{await context.close()}
  }
 });
+
+test('Sabotage offline navigation stays on one row on narrow phones',async()=>{
+ for(const [width,height] of [[345,700],[390,780]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+'/games/sabotage/',{waitUntil:'load'});
+   const x=await page.evaluate(()=>{
+    const nav=document.querySelector('.sab-nav').getBoundingClientRect();
+    const items=[...document.querySelector('.sab-nav').children].map(el=>el.getBoundingClientRect());
+    return {nav:{left:nav.left,right:nav.right},items:items.map(r=>({left:r.left,right:r.right,top:r.top,bottom:r.bottom})),overflow:document.documentElement.scrollWidth-innerWidth};
+   });
+   assert.ok(x.overflow<=2,'navigation horizontally overflows on '+width);
+   assert.equal(x.items.length,4,'back, logo, home and settings should all exist');
+   for(let i=0;i<x.items.length;i++){
+    assert.ok(x.items[i].left>=x.nav.left-2&&x.items[i].right<=x.nav.right+2,
+      'nav item outside screen '+JSON.stringify(x));
+    if(i>0)assert.ok(x.items[i].left>=x.items[i-1].right-2,'nav items overlap '+JSON.stringify(x));
+   }
+   const tops=x.items.map(item=>Math.round(item.top));
+   assert.ok(Math.max(...tops)-Math.min(...tops)<6,'nav is wrapped on '+width);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
