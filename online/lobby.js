@@ -1,3 +1,5 @@
+import {sabotageChangeSettings} from '../games/sabotage/engine.js?v=20261025-sabroles1';
+import {sabotageSettingsPanel} from '../games/sabotage/visuals.js?v=20261025-sabroles1';
 /* 放課後ゲーム部 / 共通オンラインロビー v2 (ゲーム画面は別URL) */
 (()=>{
 'use strict';
@@ -91,6 +93,9 @@ function draw(){
  $('game-in-room').value=room.gameId;
  $('member-count').textContent=room.members.length+' / '+(room.maxPlayers||10)+'人';
  const host=room.hostId===session?.id;
+ const settingsPanel=$('sabotage-settings');
+ settingsPanel.hidden=room.gameId!=='sabotage'||room.phase!=='lobby'||room.members.length<4||room.members.length>10||!room.sabotageSettings;
+ if(!settingsPanel.hidden)settingsPanel.innerHTML=sabotageSettingsPanel(room.members.length,room.sabotageSettings,host&&ws?.readyState===WebSocket.OPEN);
  $('change-game').hidden=!host||room.phase!=='lobby';if(!host||room.phase!=='lobby')$('game-change').hidden=true;
  const self=room.members.find(m=>m.id===session?.id);
  $('ready').textContent=self?.ready?'準備完了を取り消す':'準備完了にする';
@@ -146,11 +151,19 @@ function connect(){
  };
  current.onerror=()=>{};
 }
+$('sabotage-settings').addEventListener('click',event=>{
+ const button=event.target.closest('[data-sab-setting]');
+ if(!button||button.disabled||room?.gameId!=='sabotage'||room.phase!=='lobby'||room.hostId!==session?.id)return;
+ const action=button.dataset.sabSetting,value=action==='jackal'?button.dataset.value==='true':Number(button.dataset.value);
+ if(!room.sabotageSettings)return;
+ const next=sabotageChangeSettings(room.members.length,room.sabotageSettings,action,value);
+ if(next)send({type:'sabotage-settings',settings:next});
+});
 $('start-secret').addEventListener('click',async()=>{
  if(room?.phase!=='lobby'||!room.allReady)return;
  if(room.gameId==='sabotage'&&room.members.length>=4){
   try{const health=await fetch(base+'/api/health',{cache:'no-store'}).then(r=>r.json());
-    if(!health.ok||health.version<10){notice('サボタージュのサーバー更新待ちだよ。');return}
+    if(!health.ok||health.version<11){notice('サボタージュのサーバー更新待ちだよ。');return}
   }catch{notice('通信サーバーに接続できないよ。');return}
   send({type:'sabotage-start'});
  }else if(room.gameId==='nise-transfer-student'&&room.members.length>=3){
