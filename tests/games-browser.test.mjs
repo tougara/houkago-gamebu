@@ -195,7 +195,7 @@ test('Sabotage uploaded artwork loads on offline and online pages',async()=>{
   const title=page.locator('.sab-title-art');
   await title.evaluate(image=>image.decode());
   assert.equal(await title.evaluate(image=>image.naturalWidth>0),true);
-  const cardFiles=['sabotage_card_repair.png','sabotage_card_bomb.png','sabotage_card_no_response.png'];
+  const cardFiles=['sabotage_card_repair.png','sabotage_card_bomb.png','sabotage_card_no_response.png','sabotage_card_back.png'];
   for(const filename of cardFiles){
    const loaded=await page.evaluate(async file=>{
     const img=new Image();img.src='/'+file;await img.decode();return img.naturalWidth>0;
@@ -250,13 +250,19 @@ test('Sabotage offline long-press role, then code, and preserve five visible slo
   assert.equal(await page.locator('.sab-player').count(),4);
   assert.equal(await page.locator('.sab-badge').count(),4);
   for(const card of await page.locator('.sab-player').all())assert.equal(await card.locator('.sab-wire').count(),5);
+  assert.ok(await page.locator('.sab-roster .sab-slot-closed .sab-slot-back-art').count()>0);
+  await page.locator('.sab-roster .sab-slot-back-art').first().evaluate(img=>img.decode());
   await page.locator('.sab-player[data-target]:not([disabled])').first().click();
   assert.equal(await page.locator('[data-wire]').count(),5);
+  assert.ok(await page.locator('.sab-slot-grid .sab-slot-closed .sab-slot-back-art').count()>0);
+  await page.locator('.sab-slot-grid .sab-slot-back-art').first().evaluate(img=>img.decode());
   await page.locator('[data-wire="0"]').click();
   await page.locator('[data-action="cut"]').click();
   assert.equal(await page.locator('.sab-confirm-overlay').count(),1);
   await page.locator('[data-confirm-ok]').click();
   await page.locator('[data-reveal-stage="suspense"]').waitFor();
+  assert.equal(await page.locator('.sab-closed-code .sab-reveal-back-art').count(),1);
+  await page.locator('.sab-reveal-back-art').evaluate(img=>img.decode());
   await page.locator('[data-reveal-stage="ready"]').waitFor();
   await page.locator('[data-action="next"]').click();
   if(await page.locator('.sab-play').count()){
@@ -317,6 +323,8 @@ test('Sabotage online trial has role-first, private peek, five slots and game co
   assert.equal(await page.locator('.sab-player').count(),4);
   assert.equal(await page.locator('.sab-badge').count(),4);
   for(const card of await page.locator('.sab-player').all())assert.equal(await card.locator('.sab-wire').count(),5);
+  assert.ok(await page.locator('.sab-roster .sab-slot-closed .sab-slot-back-art').count()>0);
+  await page.locator('.sab-roster .sab-slot-back-art').first().evaluate(img=>img.decode());
   await page.locator('[data-action="private"]').click();
   await page.locator('.sab-private-overlay .sab-role-goal').waitFor();
   await page.locator('[data-private-close]').click();
@@ -328,11 +336,15 @@ test('Sabotage online trial has role-first, private peek, five slots and game co
   await panel.locator('[data-action="cancel"]').click();
   await page.locator('.sab-player[data-target]:not([disabled])').first().click();
   assert.equal(await page.locator('[data-wire]').count(),5);
+  assert.ok(await page.locator('.sab-slot-grid .sab-slot-closed .sab-slot-back-art').count()>0);
+  await page.locator('.sab-slot-grid .sab-slot-back-art').first().evaluate(img=>img.decode());
   await page.locator('[data-wire="0"]').click();
   await page.locator('[data-action="cut"]').click();
   assert.equal(await page.locator('.sab-confirm-overlay').count(),1);
   await page.locator('[data-confirm-ok]').click();
   await page.locator('[data-reveal-stage="suspense"]').waitFor();
+  assert.equal(await page.locator('.sab-closed-code .sab-reveal-back-art').count(),1);
+  await page.locator('.sab-reveal-back-art').evaluate(img=>img.decode());
   await page.locator('[data-reveal-stage="ready"]').waitFor();
   await page.locator('[data-action="next"]').click();
   if(await page.locator('.sab-play').count()){
