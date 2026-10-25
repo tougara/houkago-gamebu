@@ -1,6 +1,7 @@
-import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase,sabotageDefaultSettings,sabotageChangeSettings} from './engine.js?v=20261025-sabfinale1';
+import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase,sabotageDefaultSettings,sabotageChangeSettings} from './engine.js?v=20261026-sabcinema2';
 import {sabotageRevealBody} from './reveal-ui.js?v=20261025-sabback1';
-import {sabotageFinaleBody,sabotageFinalePhase} from './finale-ui.js?v=20261025-sabfinale1';
+import {sabotageFinaleBody,sabotageFinalePhase,sabotageBombFinalePhase} from './finale-ui.js?v=20261026-sabcinema2';
+import {sabotageRoundIntroBody,sabotageRoundIntroPhase} from './transition-ui.js?v=20261026-sabcinema2';
 import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo,sabotageSettingsPanel} from './visuals.js?v=20261025-sabback1';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -81,16 +82,21 @@ function render(){
  else if(screen==='members')html+=members();
  else if(screen==='setup')html+=setup();
  else if(screen==='rules')html+='<section class="sab-panel"><h2>あそびかた</h2>'+rules()+'</section>'+btn('もどる','title','secondary');
- else if(screen==='handoff')html+=handoff();
+ else if(screen==='handoff')html+=(g?.stage==='briefing'&&sabotageRoundIntroPhase(g.round,g.roundIntroAt).active?sabotageRoundIntroBody(g.round):handoff());
  else if(screen==='secret')html+=secret();
  else if(screen==='select')html+=picker();
  else if(screen==='history')html+=history();
- else if(screen==='result')html+=sabotageFinalePhase(g?.finishedAt).active?sabotageFinaleBody(g.winner,g.lastCut):finish();
+ else if(screen==='result')html+=sabotageFinalePhase(g?.finishedAt).active
+ ?sabotageFinaleBody(g.winner,g.lastCut,g.lastCut?.type==='error'?sabotageBombFinalePhase(g.finishedAt).step:'card'):finish();
  else if(g?.stage==='reveal')html+=reveal();
  else if(g?.stage==='playing')html+=playing();
  else if(g?.stage==='briefing'||g?.stage==='roles'){screen='handoff';peek=0;secretOpen=false;html+=handoff()}
  else html+=title();
  app.innerHTML=html;
+ if(g?.stage==='briefing'&&screen==='handoff'){
+  const intro=sabotageRoundIntroPhase(g.round,g.roundIntroAt);
+  if(intro.active)revealTimer=setTimeout(()=>{if(g?.stage==='briefing'&&screen==='handoff')render()},Math.ceil(intro.waitMs)+30);
+ }
  if(g?.stage==='reveal'&&screen==='play'){
   const phase=sabotageRevealPhase(g.lastCut);
   if(phase.waitMs>0)revealTimer=setTimeout(()=>{if(g?.stage==='reveal'&&screen==='play')render()},Math.ceil(phase.waitMs)+30);
@@ -99,7 +105,11 @@ function render(){
  // The finale timer MUST live inside render(): this state is reached only after play.
  if(g?.stage==='finished'&&screen==='result'){
   const finale=sabotageFinalePhase(g.finishedAt);
-  if(finale.active)revealTimer=setTimeout(()=>{if(g?.stage==='finished'&&screen==='result')render()},Math.ceil(finale.waitMs)+30);
+  if(finale.active){
+   const bomb=g.lastCut?.type==='error'?sabotageBombFinalePhase(g.finishedAt):null;
+   const waitMs=bomb?Math.min(finale.waitMs,bomb.waitMs||finale.waitMs):finale.waitMs;
+   revealTimer=setTimeout(()=>{if(g?.stage==='finished'&&screen==='result')render()},Math.ceil(waitMs)+30);
+  }
  }
 }
 function begin(){loadPlayers();if(players.length<4){screen='members';return render()}roleSettings=roleSettings||sabotageDefaultSettings(players.length);g=createSabotage(players,roleSettings);peek=0;screen='handoff';recorded=false;persist();render()}
