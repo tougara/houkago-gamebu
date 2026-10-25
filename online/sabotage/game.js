@@ -1,6 +1,7 @@
-import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js?v=20261025-sabroles1';
-import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js?v=20261025-sabroles1';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js?v=20261025-sabroles1';
+import {createSabotage,sabotageView,sabotageAction,sabotageRevealPhase} from '../../games/sabotage/engine.js?v=20261025-sabfinale1';
+import {sabotageRevealBody} from '../../games/sabotage/reveal-ui.js?v=20261025-sabfinale1';
+import {sabotageFinaleBody,sabotageFinalePhase} from '../../games/sabotage/finale-ui.js?v=20261025-sabfinale1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm} from '../../games/sabotage/visuals.js?v=20261025-sabfinale1';
 const $=id=>document.getElementById(id),root=$('game-root'),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const base=String(window.HOUKAGO_ONLINE_API_URL||'').replace(/\/$/,'');
 const q=new URLSearchParams(location.search),demo=q.get('testPlay')==='1';
@@ -94,6 +95,7 @@ function picker(d){
  '<div class="sab-actions" style="margin-top:16px">'+btn('このコードを公開する','cut','',wire<0)+
  btn('自分の役職・内訳を確認','private','secondary')+btn('選び直す','cancel','secondary')+'</div></section>';
 }
+function isFinalCode(d){return !!(d?.lastCut&&(d.lastCut.type==='error'||d.lastCut.type==='repair'&&d.repaired===d.required||d.round===4&&d.cuts===d.totalCuts))}
 function reveal(d){
  const x=d.lastCut,p=person(x.targetId),phase=sabotageRevealPhase(x);
  return '<section class="sab-panel sab-center sab-wait sab-reveal-scene">'+
@@ -140,11 +142,16 @@ function render(){
  if(d.stage==='briefing'||d.stage==='roles')h=briefing(d);
  else if(d.stage==='playing'){h=panel==='chat'?chat(d):panel==='history'?history(d):target?picker(d):playing(d)}
  else if(d.stage==='reveal')h=reveal(d);
- else if(d.stage==='finished')h=panel==='history'?history(d):result(d);
+ else if(d.stage==='finished')h=panel==='history'?history(d):sabotageFinalePhase(d.finishedAt).active?sabotageFinaleBody(d.winner,d.lastCut):result(d);
  root.innerHTML=h;
  if(d.stage==='reveal'){
   const phase=sabotageRevealPhase(d.lastCut);
   if(phase.waitMs>0)revealTimer=setTimeout(()=>{if(data()?.stage==='reveal'&&data()?.lastCut?.startedAt===d.lastCut?.startedAt)render()},Math.ceil(phase.waitMs)+30);
+  else if(host()&&isFinalCode(d))revealTimer=setTimeout(()=>{if(data()?.stage==='reveal'&&isFinalCode(data()))send('sabotage-next')},1600);
+ }
+ if(d.stage==='finished'&&panel!=='history'){
+  const finale=sabotageFinalePhase(d.finishedAt);
+  if(finale.active)revealTimer=setTimeout(()=>{if(data()?.stage==='finished'&&panel!=='history')render()},Math.ceil(finale.waitMs)+30);
  }
 }
 root.addEventListener('click',e=>{

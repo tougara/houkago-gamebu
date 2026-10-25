@@ -123,7 +123,7 @@ export function sabotageAction(g,id,data){
  }
  if(data.type==='sabotage-next'){
   if(g.stage!=='reveal'||sabotageRevealPhase(g.lastCut).stage!=='ready')return false;
-  if(g.pendingResult){g.winner=g.pendingResult;g.stage='finished';return true}
+  if(g.pendingResult){g.winner=g.pendingResult;g.finishedAt=Date.now();g.stage='finished';return true}
   if(g.cuts===g.players.length){
    const deck=g.players.flatMap(p=>p.hand);
    g.round++;
@@ -141,7 +141,7 @@ export function sabotageView(g,id){
  const counts={repair:count(p.hand,'repair'),error:count(p.hand,'error'),dummy:count(p.hand,'dummy')};
  return {stage:g.stage,round:g.round,rounds:4,cuts:g.cuts,totalCuts:g.players.length,
   required:g.required,repaired:g.repaired,currentId:g.currentId,lastCut:g.lastCut,
-  winner:g.winner,history:g.history.slice(-18),chat:g.chat||[],
+  winner:g.winner,finishedAt:finished?(g.finishedAt||null):null,history:g.history.slice(-18),chat:g.chat||[],
   seenCount:g.players.filter(x=>g.stage==='roles'?x.roleSeen:x.seen).length,mySeen:g.stage==='roles'?p.roleSeen:p.seen,
   myRole:p.role,myCounts:counts,
   members:g.players.map(x=>({id:x.id,name:x.name,icon:x.icon,cards:x.hand.length,

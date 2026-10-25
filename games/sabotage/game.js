@@ -1,6 +1,7 @@
-import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase,sabotageDefaultSettings,sabotageChangeSettings} from './engine.js?v=20261025-sabroles1';
-import {sabotageRevealBody} from './reveal-ui.js?v=20261025-sabroles1';
-import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo,sabotageSettingsPanel} from './visuals.js?v=20261025-sabroles1';
+import {createSabotage,sabotageAction,sabotageView,sabotageRevealPhase,sabotageDefaultSettings,sabotageChangeSettings} from './engine.js?v=20261025-sabfinale1';
+import {sabotageRevealBody} from './reveal-ui.js?v=20261025-sabfinale1';
+import {sabotageFinaleBody,sabotageFinalePhase} from './finale-ui.js?v=20261025-sabfinale1';
+import {sabotageBadges,sabotageSlots,sabotageSlotLegend,sabotageVictory,sabotageRoleCard,sabotageCutConfirm,sabotageRoleGoal,sabotageBrandLogo,sabotageSettingsPanel} from './visuals.js?v=20261025-sabfinale1';
 const app=document.getElementById('app'),api=window.HoukagoPlayers,resume=window.HoukagoResume;
 const SAVE='sabotage',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let g=null,screen='title',players=[],roleSettings=null,peek=0,secretOpen=false,target='',wire=-1,recorded=false,returnScreen='title',revealTimer=null;
@@ -60,7 +61,7 @@ function reveal(){
  return '<section class="sab-panel sab-center sab-handoff sab-reveal-scene"><p class="sab-kicker">CODE REVEAL / ROUND '+g.round+'</p>'+
  '<h2>'+esc(p.icon)+' '+esc(p.name)+' のコード</h2>'+
  sabotageRevealBody(x.type,phase.stage,g.repaired,g.required)+
- (phase.stage==='ready'?btn(g.pendingResult?'最終結果を見る':g.cuts===g.players.length?'次のラウンドへ':'次の選択へ','next'):'<p class="sab-reveal-pause" aria-label="演出中">……</p>')+'</section>';
+ (phase.stage==='ready'?btn(g.pendingResult?'決着演出へ':g.cuts===g.players.length?'次のラウンドへ':'次の選択へ','next'):'<p class="sab-reveal-pause" aria-label="演出中">……</p>')+'</section>';
 }
 function history(){return '<section class="sab-panel"><h2>コード公開履歴</h2><p class="sab-sub">'+(g.history.length?g.history.map(x=>{const p=g.players.find(v=>v.id===x.targetId);return 'ROUND '+x.round+'：'+esc(p?.name)+' → '+wireName[x.type]}).join('<hr style="border-color:#44677b">'):'まだ公開されたコードはありません')+'</p></section>'+btn('ゲームにもどる','cancel','secondary')}
 function finish(){
@@ -84,7 +85,7 @@ function render(){
  else if(screen==='secret')html+=secret();
  else if(screen==='select')html+=picker();
  else if(screen==='history')html+=history();
- else if(screen==='result')html+=finish();
+ else if(screen==='result')html+=sabotageFinalePhase(g?.finishedAt).active?sabotageFinaleBody(g.winner,g.lastCut):finish();
  else if(g?.stage==='reveal')html+=reveal();
  else if(g?.stage==='playing')html+=playing();
  else if(g?.stage==='briefing'||g?.stage==='roles'){screen='handoff';peek=0;secretOpen=false;html+=handoff()}
@@ -93,7 +94,12 @@ function render(){
  if(g?.stage==='reveal'&&screen==='play'){
   const phase=sabotageRevealPhase(g.lastCut);
   if(phase.waitMs>0)revealTimer=setTimeout(()=>{if(g?.stage==='reveal'&&screen==='play')render()},Math.ceil(phase.waitMs)+30);
+  else if(g.pendingResult)revealTimer=setTimeout(()=>{if(g?.stage==='reveal'&&screen==='play')advance()},1600);
  }
+}
+if(g?.stage==='finished'&&screen==='result'){
+ const finale=sabotageFinalePhase(g.finishedAt);
+ if(finale.active)revealTimer=setTimeout(()=>{if(g?.stage==='finished'&&screen==='result')render()},Math.ceil(finale.waitMs)+30);
 }
 function begin(){loadPlayers();if(players.length<4){screen='members';return render()}roleSettings=roleSettings||sabotageDefaultSettings(players.length);g=createSabotage(players,roleSettings);peek=0;screen='handoff';recorded=false;persist();render()}
 function advance(){sabotageAction(g,g.currentId,{type:'sabotage-next'});if(g.stage==='briefing'){screen='handoff';peek=0}else if(g.stage==='finished')screen='result';else screen='play';persist();render()}

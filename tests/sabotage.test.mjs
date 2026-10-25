@@ -357,3 +357,33 @@ test('共通役職設定UIは候補枚数だけ表示し配布結果を含まな
  for(const path of ['games/sabotage/game.js','online/lobby.js','games/sabotage/engine.js','games/sabotage/visuals.js','worker/src/index.js'])
   execFileSync(process.execPath,['--check',new URL('../'+path,import.meta.url).pathname],{stdio:'pipe'});
 });
+
+test('決着カットインは勝者公開より先、3種類の演出はオフライン・オンライン共通',async()=>{
+ const {sabotageFinaleBody,sabotageFinalePhase,sabotageFinaleKind,sabotageFinaleMs}=await import('../games/sabotage/finale-ui.js');
+ for(const [winner,type,kind,asset] of [
+  ['impostor','error','bomb','sabotage_card_bomb.png'],
+  ['crew','repair','crew','sabotage_card_repair.png'],
+  ['jackal','dummy','timeout','sabotage_card_no_response.png'],
+  ['impostor','dummy','timeout','sabotage_card_no_response.png']
+ ]){
+  assert.equal(sabotageFinaleKind(winner,{type}),kind);
+  const html=sabotageFinaleBody(winner,{type});
+  assert.match(html,new RegExp('data-finale="'+kind+'"'));
+  assert.ok(html.includes(asset));
+  assert.doesNotMatch(html,/勝利！|YOU WIN/);
+ }
+ assert.deepEqual(sabotageFinalePhase(5000,5000),{active:true,waitMs:sabotageFinaleMs});
+ assert.deepEqual(sabotageFinalePhase(5000,5000+sabotageFinaleMs),{active:false,waitMs:0});
+ assert.deepEqual(sabotageFinalePhase(null,5000),{active:false,waitMs:0});
+ const game=createSabotage(members(4));revealAll(game);
+ const target=game.players.find(p=>p.id!==game.currentId&&p.hand.includes('error'));
+ const index=target.hand.indexOf('error');
+ assert.ok(sabotageAction(game,game.currentId,{type:'sabotage-cut',targetId:target.id,index}));
+ assert.equal(game.finishedAt,undefined);
+ assert.ok(advance(game));
+ assert.equal(game.stage,'finished');
+ assert.ok(game.finishedAt>0);
+ assert.equal(sabotageView(game,game.players[0].id).finishedAt,game.finishedAt);
+ for(const p of ['games/sabotage/finale-ui.js','games/sabotage/game.js','online/sabotage/game.js'])
+  execFileSync(process.execPath,['--check',new URL('../'+p,import.meta.url).pathname],{stdio:'pipe'});
+});

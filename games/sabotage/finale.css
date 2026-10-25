@@ -1,0 +1,31 @@
+/* Shared finale cinema: code card is shown only once, not flipped again. */
+.sab-finale{--fl:#bfa0ff;--fg:#8153bd77;position:relative;isolation:isolate;overflow:hidden;flex:1 0 auto;min-height:min(490px,73dvh);width:100%;max-width:720px;margin:auto;padding:15px;display:grid;place-items:center;text-align:center;color:#fff;border:2px solid var(--fl);border-radius:22px;background:radial-gradient(ellipse at center,var(--fg),transparent 65%),linear-gradient(135deg,#142e47,#071326);box-shadow:0 0 26px var(--fg)}
+.sab-finale-bomb{--fl:#ff697d;--fg:#e53a597c}
+.sab-finale-crew{--fl:#70fff1;--fg:#29c8d082}
+.sab-finale-timeout{--fl:#c29fff;--fg:#7151bc7b}
+.sab-finale::before{content:"";position:absolute;inset:-10%;z-index:-1;background:repeating-conic-gradient(from 0deg,transparent 0 20deg,var(--fg) 22deg 24deg,transparent 26deg 45deg);opacity:.7;animation:sab-finale-rotate 12s linear infinite}
+.sab-finale-bomb::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(circle,#ffeac8 0,#ffad70 25%,#e94d6e 48%,transparent 73%);opacity:0;animation:sab-finale-flash 3.9s ease-out both}
+.sab-finale-content{z-index:2;display:flex;flex-direction:column;align-items:center;gap:clamp(7px,1.6dvh,12px)}
+.sab-finale-kicker{margin:0;color:var(--fl);font-size:clamp(12px,3vw,17px);letter-spacing:.2em;font-weight:1000}
+.sab-finale-card{height:clamp(135px,32dvh,250px);width:auto;aspect-ratio:2/3;max-width:70%;filter:drop-shadow(0 0 16px var(--fl));animation:sab-finale-card 3.9s ease-in-out both}
+.sab-finale-card-img{width:100%;height:100%;object-fit:contain;display:block}
+.sab-finale-heading{font-size:clamp(38px,10vw,72px);font-weight:1000;letter-spacing:.06em;line-height:1.05;text-shadow:0 0 22px var(--fl);animation:sab-finale-text 3.9s ease-out both}
+.sab-finale-subtitle{font-size:clamp(15px,4vw,22px);margin:0;font-weight:900;animation:sab-finale-text 3.9s ease-out both}
+.sab-finale-loading{margin:5px 0 0;font-size:12px;color:#d3e3f2}
+.sab-finale-shock{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:1}
+.sab-finale-shock span{grid-area:1/1;width:130px;aspect-ratio:1;border-radius:50%;border:4px solid var(--fl);box-shadow:0 0 28px var(--fl);opacity:0;animation:sab-finale-wave 3.9s ease-out both}
+.sab-finale-shock span:nth-child(2){animation-delay:.18s}
+.sab-finale-shock span:nth-child(3){animation-delay:.36s}
+.sab-finale-sparks{position:absolute;inset:0;pointer-events:none;z-index:1}
+.sab-finale-sparks i{position:absolute;top:50%;left:50%;width:7px;height:17px;border-radius:4px;background:var(--fl);box-shadow:0 0 11px var(--fl);opacity:0;animation:sab-finale-spark 3.9s ease-out both;animation-delay:calc(var(--i)*11ms)}
+@keyframes sab-finale-rotate{to{transform:rotate(360deg)}}
+@keyframes sab-finale-card{0%{opacity:0;transform:scale(.82)}14%,28%{opacity:1;transform:scale(1)}39%{filter:brightness(2.1);transform:scale(1.15)}55%,100%{filter:brightness(.65);transform:scale(.94)}}
+@keyframes sab-finale-text{0%,31%{opacity:0;transform:translateY(15px) scale(.86)}49%,100%{opacity:1;transform:none}}
+@keyframes sab-finale-flash{0%,30%,59%,100%{opacity:0}38%{opacity:.8}49%{opacity:.15}}
+@keyframes sab-finale-wave{0%,26%{opacity:0;transform:scale(.2)}40%{opacity:.95}80%,100%{opacity:0;transform:scale(4.2)}}
+@keyframes sab-finale-spark{0%,29%{opacity:0;transform:rotate(calc(var(--i)*22.5deg)) translateY(0)}39%{opacity:1}85%,100%{opacity:0;transform:rotate(calc(var(--i)*22.5deg)) translateY(-205px)}}
+.sab-finale-timeout .sab-finale-card{animation:sab-finale-time-card 3.9s ease-out both}
+@keyframes sab-finale-time-card{0%{opacity:0}18%,32%{opacity:1;filter:brightness(1)}63%,100%{opacity:.55;filter:brightness(.35) grayscale(.6)}}
+@media(max-height:660px){.sab-finale{min-height:0;padding:8px}.sab-finale-card{height:clamp(95px,26dvh,165px)}.sab-finale-heading{font-size:clamp(33px,8vw,49px)}.sab-finale-content{gap:5px}}
+@media(prefers-reduced-motion:reduce){.sab-finale,.sab-finale::before,.sab-finale::after,.sab-finale *{animation:none!important;transition:none!important}.sab-finale-heading,.sab-finale-subtitle{opacity:1!important}}
+html[data-hg-motion="reduced"] .sab-finale,html[data-hg-motion="reduced"] .sab-finale::before,html[data-hg-motion="reduced"] .sab-finale::after,html[data-hg-motion="reduced"] .sab-finale *{animation:none!important;transition:none!important}
