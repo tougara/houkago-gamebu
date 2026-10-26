@@ -132,8 +132,8 @@ test('online tower uses a single gameplay viewport with compact action-first flo
  assert.match(js,/height\/\(rows\+\.12\)/);
  assert.match(js,/\.setAttribute\('data-stage',g\.stage\)/);
  assert.match(css,/body:has\(\.hog-demo-tools\) \.tower-online\[data-stage="playing"\]/);
- assert.match(html,/game\.css\?v=20261020-compact2/);
- assert.match(html,/game\.js\?v=20261020-compact2/);
+ assert.match(html,/game\.css\?v=20261026-waiting-hand1/);
+ assert.match(html,/game\.js\?v=20261026-waiting-hand1/);
  assert.match(js,/tower-quick-rules/);
  assert.match(js,/詳しいルールを見る/);
 });
@@ -197,8 +197,11 @@ test('online play hides repetitive status panels, keeping personal actions and c
  assert.ok(self.indexOf('board-panel')<self.indexOf('hand-panel'));
  const waiting=render(false);
  assert.match(waiting,/is-waiting/);
- assert.match(waiting,/自分の手札を見る/);
+ assert.doesNotMatch(waiting,/自分の手札を見る/);
+ assert.match(waiting,/class="hand-panel"/);
+ assert.equal((waiting.match(/hand-panel/g)||[]).length,1);
  assert.equal((waiting.match(/board-panel/g)||[]).length,1);
+ assert.ok(waiting.indexOf('board-panel')<waiting.indexOf('hand-panel'));
 });
 test('Worker routes actions and broadcasts only caller hand, rejects late joins, returns to lobby',async()=>{
  const state=new Map(),sockets=[];
@@ -225,4 +228,27 @@ test('Worker routes actions and broadcasts only caller hand, rejects late joins,
  await send(p0,'tower-stop');
  assert.equal(worker.snapshot().phase,'lobby');
  assert.ok(worker.room.members.every(m=>!m.ready));
+});
+
+test('online waiting hand remains openly visible while placement is disabled',()=>{
+ const js=readFileSync(new URL('../online/kyokasho-tower/game.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../online/kyokasho-tower/game.css',import.meta.url),'utf8');
+ const start=js.indexOf('function hand(g,editable){'),end=js.indexOf('\nfunction setup(g){',start);
+ assert.ok(start>=0&&end>start);
+ const subjects=TOWER_SUBJECTS.map(s=>({key:s.key,name:s.label,image:'../../textbook_'+s.key+'.png'}));
+ const esc=s=>s,lookup=Object.fromEntries(subjects.map(s=>[s.key,s]));
+ const hand=new Function('g','editable','selected','pending','subjects','esc','lookup','btn',
+  js.slice(start,end)+'return hand(g,editable);');
+ const myHand={japanese:2,math:0,science:3,social:1,english:0};
+ const g={myHand,choices:null,myTurn:false};
+ const markup=hand(g,false,null,null,subjects,esc,lookup,()=>'<button></button>');
+ assert.match(markup,/class="panel hand-panel"/);
+ assert.match(markup,/自分の番まで確認できます/);
+ assert.equal((markup.match(/data-subject=/g)||[]).length,5);
+ assert.equal((markup.match(/disabled/g)||[]).length,5);
+ assert.equal((markup.match(/has-cards/g)||[]).length,3);
+ assert.match(markup,/×3/);
+ assert.doesNotMatch(markup,/place-confirm|ここに置く/);
+ assert.match(css,/\.tower-play-screen\.is-waiting \.hand-book\.has-cards:disabled/);
+ assert.match(css,/\.tower-play-screen\{[^}]*grid-template-rows:auto minmax\(0,1fr\) auto/);
 });

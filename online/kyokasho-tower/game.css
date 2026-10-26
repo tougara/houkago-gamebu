@@ -339,3 +339,19 @@ body:has(.tower-online[data-stage="playing"]) .hog-demo-tools{
 .tower-intro-panel .turn-banner strong{font-size:16px}
 .tower-intro-hand{padding:9px!important}
 .tower-intro-hand .hand-panel{margin-top:9px}
+
+/* Both turns share the same one-screen hand layout.
+   Non-current players can SEE their personal cards/counts but cannot place. */
+.tower-play-screen.is-waiting .hand-book.has-cards:disabled{
+ opacity:1;
+ cursor:default;
+ border-color:#d4b88e;
+ background:#fffdf8;
+ color:#45546a;
+}
+.tower-play-screen.is-waiting .hand-book:not(.has-cards):disabled{
+ opacity:.48;
+}
+.tower-play-screen.is-waiting .hand-heading small{
+ color:#66788b;
+}

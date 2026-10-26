@@ -103,14 +103,14 @@ function hand(g,editable){
  const entries=subjects.map(sub=>{
   const count=g.myHand[sub.key]||0;
   const can=editable&&count>0&&(g.choices?.[sub.key]||[]).length>0;
-  return '<button type="button" class="hand-book'+(can?' playable':'')+
+  return '<button type="button" class="hand-book'+(count>0?' has-cards':'')+(can?' playable':'')+
    (selected===sub.key?' selected':'')+'" data-subject="'+sub.key+'" '+(!can?'disabled':'')+
    ' aria-pressed="'+String(selected===sub.key)+'">'+
    '<img src="'+sub.image+'" alt="'+sub.name+'"><span>'+sub.name+'</span><b>×'+count+'</b></button>';
  }).join('');
  return '<section class="panel hand-panel'+(pending?' choosing-place':'')+'">'+
  '<div class="hand-heading"><h2>あなたの手札</h2><small>'+
- (pending?'置く場所を確認中':selected?'光る場所をタップ':'教科書を選ぼう')+'</small></div>'+
+ (editable?(pending?'置く場所を確認中':selected?'光る場所をタップ':'教科書を選ぼう'):'自分の番まで確認できます')+'</small></div>'+
  '<div class="hand-grid">'+entries+'</div>'+
  (editable&&pending&&selected?
  '<div class="place-confirm"><p>'+esc(lookup[selected].name)+'をここに置く？</p>'+
@@ -170,12 +170,7 @@ function playing(g){
  '<div class="top-stats"><span>配置 '+g.movesMade+'冊</span><span>土台 '+g.bottom.count+' / 8</span></div>'+
  '</div></details></header>';
  return '<div class="tower-play-screen'+(editable?' is-my-turn':' is-waiting')+'">'+
- summary+board(g,editable)+
- (editable?hand(g,true):
- '<div class="tower-wait-footer"><strong>'+pname(g.currentId)+' が配置中</strong>'+
- '<span>タワーが更新されたら自動で表示されるよ</span>'+
- '<details><summary>自分の手札を見る</summary>'+hand(g,false)+'</details></div>')+
- '</div>';
+ summary+board(g,editable)+hand(g,editable)+'</div>';
 }
 
 function result(g){

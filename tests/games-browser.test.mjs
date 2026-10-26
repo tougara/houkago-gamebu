@@ -711,3 +711,49 @@ test('Sabotage BOMB cut-in explicitly shows alert then card label then winner re
   }finally{await context.close()}
  }
 });
+
+
+test('Online textbook tower keeps my hand visible on every other turn, in one screen',async()=>{
+ for(const [width,height] of [[345,680],[390,780],[1366,768]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   await page.goto(base+'/online/kyokasho-tower/?testPlay=1',{waitUntil:'load'});
+   await page.evaluate(()=>{window.HoukagoOfflinePreview.choose('playing')});
+   await page.locator('.tower-play-screen.is-my-turn').waitFor();
+   const myCount=await page.locator('.tower-play-screen .hand-grid .hand-book').count();
+   assert.equal(myCount,5);
+   await page.evaluate(()=>{
+    document.querySelector('.hog-demo-tools [data-demo-role="guest"]').click();
+   });
+   await page.locator('.tower-play-screen.is-waiting').waitFor();
+   assert.equal(await page.locator('.hand-panel .hand-book').count(),5);
+   assert.equal(await page.locator('.hand-book.has-cards').count(),5);
+   assert.equal(await page.locator('.hand-book:not([disabled])').count(),0,
+    'non-current player must not be able to place');
+   assert.equal(await page.locator('.tower-wait-footer').count(),0,
+    'waiting hand should not be hidden behind a details toggle');
+   assert.match(await page.locator('.hand-heading').textContent(),/あなたの手札/);
+   assert.match(await page.locator('.hand-heading').textContent(),/確認できます/);
+   const rect=await page.evaluate(()=>{
+    const hand=document.querySelector('.tower-play-screen .hand-panel').getBoundingClientRect();
+    const board=document.querySelector('.tower-play-screen .board-panel').getBoundingClientRect();
+    const pane=document.querySelector('.tower-play-screen').getBoundingClientRect();
+    const css=getComputedStyle(document.querySelector('.hand-book.has-cards'));
+    return {handTop:hand.top,handBottom:hand.bottom,boardBottom:board.bottom,
+      paneBottom:pane.bottom,overflow:document.documentElement.scrollWidth-innerWidth,
+      visible:getComputedStyle(document.querySelector('.hand-panel')).display!=='none',
+      opacity:css.opacity};
+   });
+   assert.equal(rect.visible,true);
+   assert.ok(rect.handTop>=rect.boardBottom-2,'hand should follow board');
+   assert.ok(rect.handBottom<=rect.paneBottom+2,'hand is clipped at '+width+'x'+height+': '+JSON.stringify(rect));
+   assert.ok(rect.overflow<=2,'horizontal scrolling at '+width+'x'+height);
+   assert.equal(rect.opacity,'1','owned books must remain readable while waiting');
+   await page.evaluate(()=>{document.querySelector('.hog-demo-tools [data-demo-role="host"]').click()});
+   await page.locator('.tower-play-screen.is-my-turn').waitFor();
+   assert.equal(await page.locator('.hand-panel .hand-book').count(),5);
+   assert.ok(await page.locator('.hand-book:not([disabled])').count()>0);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
