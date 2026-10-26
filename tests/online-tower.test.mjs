@@ -127,7 +127,8 @@ test('online tower uses a single gameplay viewport with compact action-first flo
  assert.match(js,/class="tower-more"/);
  assert.match(js,/順位・詳細/);
  assert.match(js,/tower-more-popover/);
- assert.match(js,/tower-wait-footer/);
+ assert.doesNotMatch(js,/tower-wait-footer/);
+ assert.match(js,/summary\+board\(g,editable\)\+hand\(g,editable\)/);
  assert.match(js,/fitTowerBoard\(\)/);
  assert.match(js,/height\/\(rows\+\.12\)/);
  assert.match(js,/\.setAttribute\('data-stage',g\.stage\)/);
