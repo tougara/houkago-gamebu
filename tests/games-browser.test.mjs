@@ -757,3 +757,29 @@ test('Online textbook tower keeps my hand visible on every other turn, in one sc
   }finally{await context.close()}
  }
 });
+
+test('Sabotage card markup contains real newlines, never visible backslash-n text',async()=>{
+ for(const [width,height] of [[390,780],[1366,768]]){
+  const {page,context,errors}=await open(width,height);
+  try{
+   const src=await readFile(resolve(root,'games/index.html'),'utf8');
+   const start=src.indexOf('href="sabotage/"');
+   const end=src.indexOf('id="favoritesEmpty"',start);
+   assert.ok(start>=0&&end>start);
+   assert.doesNotMatch(src.slice(start,end),/\\n/,'literal backslash-n must not be present in the card HTML');
+   const card=page.locator('.compact-card-wrap[data-game-id="sabotage"]');
+   assert.equal(await card.locator('h2').textContent(),'サボタージュ');
+   assert.equal(await card.locator('.compact-tags span').count(),2);
+   const artifacts=await page.evaluate(()=>{
+    const grid=document.querySelector('.compact-game-grid');
+    const walker=document.createTreeWalker(grid,NodeFilter.SHOW_TEXT);
+    const bad=[];
+    while(walker.nextNode())if(walker.currentNode.textContent.includes('\\n'))
+      bad.push(walker.currentNode.textContent.trim());
+    return bad;
+   });
+   assert.deepEqual(artifacts,[],'the UI must not display escaped newline characters');
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
