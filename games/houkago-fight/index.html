@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#101a34">
+<link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
+<title>放課後ファイト！ 試作版｜放課後ゲーム部</title>
+<link rel="stylesheet" href="./game.css?v=20261027-proto1">
+</head>
+<body>
+<main class="fight-app" id="fightApp">
+ <header class="fight-topbar">
+  <a href="../" class="fight-back">← ゲーム一覧</a>
+  <div class="fight-brand"><strong>放課後ファイト！</strong><span>PROTOTYPE / CPU BATTLE</span></div>
+  <div class="fight-toolbar"><button id="pauseBtn" type="button" disabled aria-label="一時停止">Ⅱ</button>
+  <button id="fullBtn" type="button" aria-label="全画面表示" title="全画面">⛶</button></div>
+ </header>
+ <section class="fight-stage" id="stage" aria-label="格闘ゲームの対戦画面">
+  <canvas id="battle" width="960" height="540" role="img" aria-label="二人のキャラクターと足場を表示する対戦ステージ"></canvas>
+  <div class="fight-hud">
+   <div class="fighter-hud fighter-one">
+    <span id="p1Name">アオ</span>
+    <div class="fighter-stats"><b id="p1Damage">0%</b><span id="p1Stocks" aria-label="残りストック">● ●</span></div>
+   </div>
+   <div class="fight-center"><b id="fightClock">3:00</b><small id="fightRound">2 STOCKS</small></div>
+   <div class="fighter-hud fighter-two">
+    <span id="p2Name">アカ</span>
+    <div class="fighter-stats"><b id="p2Damage">0%</b><span id="p2Stocks" aria-label="相手の残りストック">● ●</span></div>
+   </div>
+  </div>
+  <div class="fight-fx-text" id="fxText" aria-live="polite"></div>
+  <div class="fight-game-overlay" id="menu">
+   <div class="fight-menu-card">
+    <div class="menu-overline">放課後ゲーム部 / NEW PROJECT</div>
+    <h1>放課後ファイト！</h1>
+    <p class="menu-lead">吹っ飛ばして、場外KO！</p>
+    <div class="menu-preview" aria-hidden="true"><span class="preview-blue">アオ</span><b>VS</b><span class="preview-red">アカ</span></div>
+    <p class="menu-sub">最初の試作版はCPU対戦。2ストック・3分間で勝負！</p>
+    <fieldset class="fighter-picker"><legend>自分のキャラを選ぼう</legend>
+      <label class="pick"><input type="radio" name="fighter" value="speed" checked><span><b>アオ</b><small>スピード型／軽量</small></span></label>
+      <label class="pick"><input type="radio" name="fighter" value="power"><span><b>アカ</b><small>パワー型／重量</small></span></label>
+    </fieldset>
+    <button id="startBtn" class="primary-btn" type="button">CPUと対戦する</button>
+    <p class="menu-hint">スマホは横向きがおすすめ。PCは WASD・J・K・L・Space・Shift。</p>
+   </div>
+  </div>
+  <div class="fight-controls" aria-label="スマホ操作">
+   <div class="move-controls" aria-label="方向キー">
+     <button type="button" data-key="up" class="dir-key up" aria-label="上方向">▲</button>
+     <button type="button" data-key="left" class="dir-key left" aria-label="左移動">◀</button>
+     <button type="button" data-key="down" class="dir-key down" aria-label="下方向">▼</button>
+     <button type="button" data-key="right" class="dir-key right" aria-label="右移動">▶</button>
+   </div>
+   <div class="action-controls" aria-label="攻撃とジャンプ">
+     <button type="button" data-key="guard" class="action-key guard" aria-label="ガード"><b>G</b><span>防御</span></button>
+     <button type="button" data-key="jump" class="action-key jump" aria-label="ジャンプ"><b>J</b><span>ジャンプ</span></button>
+     <button type="button" data-key="attack" class="action-key attack" aria-label="通常攻撃"><b>A</b><span>攻撃</span></button>
+     <button type="button" data-key="special" class="action-key special" aria-label="必殺技"><b>B</b><span>必殺</span></button>
+     <button type="button" data-key="smash" class="action-key smash" aria-label="スマッシュ攻撃（長押しで溜める）"><b>S</b><span>スマッシュ</span></button>
+   </div>
+  </div>
+ </section>
+ <footer class="fight-bottom">
+  <span>方向キー + A：強攻撃　/　S長押し→離す：スマッシュ　/　空中J：二段ジャンプ</span>
+  <span>試作 Ver.0.1｜オンライン・キャラクター素材は開発中</span>
+ </footer>
+</main>
+<div class="portrait-notice" id="rotateNotice">
+ <span aria-hidden="true">▭ ↻</span><strong>スマホを横向きにして遊ぼう</strong>
+ <p>横持ちで移動ボタンと攻撃ボタンを使えるよ。</p>
+ <button type="button" id="portraitProceed">縦画面のまま試す</button>
+</div>
+<script type="module" src="./game.js?v=20261027-proto1"></script>
+</body>
+</html>
