@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+ <meta name="theme-color" content="#173b4c">
+ <meta name="description" content="放課後ゲーム部の新作3D試作。美術室を歩いて、キャラクターを自由にペイント！">
+ <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
+ <title>ぬりかくれ！ 3D試作｜放課後ゲーム部</title>
+ <link rel="stylesheet" href="./style.css?v=20261027-nk01">
+</head>
+<body>
+<main class="app" id="app">
+ <header class="topbar">
+  <a class="back-link" href="../" aria-label="ゲーム一覧へ戻る">← もどる</a>
+  <div class="titlemark"><strong>ぬりかくれ！</strong><span>3D ART ROOM / PROTOTYPE</span></div>
+  <button class="soft-btn" id="helpButton" type="button">？ 遊び方</button>
+ </header>
+ <section class="viewport" id="viewport" aria-label="3D美術室">
+  <canvas id="world" aria-label="自由に歩き回れる3Dの美術室"></canvas>
+  <div class="room-pill"><span class="room-dot"></span><span>放課後の美術室</span><b>試作版</b></div>
+  <div class="room-hint" id="roomHint" aria-live="polite">美術室を歩き回ろう！</div>
+  <div class="loading" id="loading" role="status"><div class="spinner"></div><strong>美術室を準備中…</strong><span>初回は3Dライブラリを読み込みます</span></div>
+  <div class="drag-label" id="dragLabel">画面をドラッグして見回す</div>
+  <div class="controls" id="controls">
+   <div class="joystick-area">
+    <div class="joystick" id="joystick" aria-label="移動スティック" role="group">
+     <div class="joystick-thumb" id="joystickThumb"></div>
+    </div>
+    <small>移動</small>
+   </div>
+   <div class="action-buttons">
+    <button class="view-button" id="frontButton" type="button" title="カメラを正面方向へ戻す"><span>◎</span><small>視点</small></button>
+    <button class="paint-button" id="openPaint" type="button"><span>✎</span><strong>ペイント</strong></button>
+   </div>
+  </div>
+ </section>
+ <footer class="footer"><span>PC：WASD／矢印で移動、ドラッグで視点、ホイールでズーム</span><span>スマホ：左スティックで移動、右側をドラッグで視点</span></footer>
+</main>
+<div class="modal" id="paintModal" role="dialog" aria-modal="true" aria-labelledby="paintTitle" hidden>
+ <div class="paint-shell">
+  <header class="paint-header"><div><span class="eyebrow">CUSTOMIZE YOUR CAMOUFLAGE</span><h1 id="paintTitle">キャラクターをぬろう！</h1></div><button id="closePaint" type="button" class="close-button">✕ <span>完成</span></button></header>
+  <p class="paint-info">指でなぞって自由にお絵かき！ 描いた模様が3Dキャラにすぐ反映されるよ。</p>
+  <div class="paint-layout">
+   <div class="paint-board">
+    <div class="board-heading"><strong>ぬりぬりキャンバス</strong><small>左右に回り込む模様にも挑戦！</small></div>
+    <div class="paint-canvas-frame"><canvas id="paintCanvas" width="512" height="512" aria-label="キャラクターの色や模様を描くキャンバス"></canvas></div>
+    <div class="brush-size"><label for="brushSize">太さ <output id="brushValue">22</output></label><input type="range" id="brushSize" min="4" max="70" value="22"></div>
+   </div>
+   <div class="paint-tools">
+    <section class="paint-tool-section"><h2>色をえらぶ</h2><div class="color-grid" id="colorPalette" aria-label="ペイント色"></div><div class="custom-color"><label for="customColor">好きな色</label><input id="customColor" type="color" value="#ef7474" aria-label="好きな色を選ぶ"><span id="colorSample"></span></div></section>
+    <section class="paint-tool-section"><h2>どうぐ</h2><div class="tool-grid"><button id="brushTool" type="button" class="tool selected" aria-pressed="true">✎ ふで</button><button id="eraserTool" type="button" class="tool" aria-pressed="false">◻ 消しゴム</button><button id="undoPaint" type="button" class="tool">↶ 1つ戻す</button><button id="resetPaint" type="button" class="tool danger">⟲ 全部消す</button></div></section>
+    <div class="paint-save"><span id="saveStatus" role="status">変更は自動保存されます</span><button id="finishPaint" type="button" class="save-btn">このデザインで遊ぶ！</button></div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+ <div class="help-card"><h2 id="helpTitle">ぬりかくれ！ 試作版</h2><p>放課後の美術室を3Dで自由に探索。ペイントボタンでキャラクターの体に好きな模様を描けます。</p><p><b>スマホ</b>：左下のスティックで移動。背景をドラッグして視点を回転。</p><p><b>PC</b>：WASD／矢印で移動。ドラッグで見回し、マウスホイールでズーム。</p><p>ペイントは自動で端末に保存され、次に開いたときも復元されます。</p><p class="help-note">この試作は1人用の美術室探索・ペイント機能です。オンラインかくれんぼは今後の制作段階です。</p><button id="closeHelp" class="save-btn" type="button">わかった！</button></div>
+</div>
+<script type="module" src="./main.js?v=20261027-nk01"></script>
+</body>
+</html>
