@@ -34,7 +34,7 @@ test('mobile pointer paint, saved drawing, brush colors and movement are wired',
  assert.match(src,/localStorage\.getItem\(STORAGE/);
  assert.match(src,/joy\.addEventListener\('pointerdown'/);
  assert.match(src,/worldCanvas\.addEventListener\('pointermove'/);
- assert.match(src,/world\.refreshPaint\(\)/);
+ assert.match(src,/world\?\.refreshPaint\(\)/);
  assert.match(css,/touch-action:none/);
  assert.match(css,/@media\(max-width:700px\)/);
  assert.match(css,/\.paint-layout/);
