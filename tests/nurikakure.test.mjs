@@ -1,0 +1,41 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const loc=x=>new URL('../games/nurikakure/'+x,import.meta.url);
+test('Nurikakure standalone path is created and excluded from public 9-game catalog',()=>{
+ const html=readFileSync(loc('index.html'),'utf8');
+ const catalog=readFileSync(new URL('../games/index.html',import.meta.url),'utf8');
+ assert.match(html,/3D ART ROOM/);assert.match(html,/ぬりかくれ！/);
+ assert.doesNotMatch(catalog,/href="nurikakure\/"/);
+ assert.match(html,/id="world"/);assert.match(html,/id="paintCanvas"/);
+ assert.match(html,/id="characterPreview"/);assert.match(html,/id="joystick"/);
+ assert.match(html,/id="openPaint"/);assert.match(html,/id="brushTool"/);
+});
+test('3D art room is drawn using original procedural geometry, no third-party game assets',()=>{
+ const src=readFileSync(loc('scene.js'),'utf8');
+ const js=readFileSync(loc('main.js'),'utf8');
+ for(const name of ['scene.js','main.js'])execFileSync(process.execPath,['--check',loc(name).pathname],{stdio:'pipe'});
+ assert.match(src,/new THREE\.WebGLRenderer/);
+ assert.match(src,/new THREE\.CanvasTexture\(paintCanvas\)/);
+ assert.match(src,/function desk\(/);assert.match(src,/function easel\(/);
+ assert.match(src,/function shelving\(/);assert.match(src,/windowGlass/);
+ assert.match(src,/getPosition\(\)/);assert.match(src,/function move\(/);
+ assert.match(js,/cdn\.jsdelivr\.net\/npm\/three@0\.160\.0/);
+ assert.match(js,/unpkg\.com\/three@0\.160\.0/);
+ assert.match(js,/window\.NurikakureDebug/);
+});
+test('mobile pointer paint, saved drawing, brush colors and movement are wired',()=>{
+ const src=readFileSync(loc('main.js'),'utf8');
+ const css=readFileSync(loc('style.css'),'utf8');
+ assert.match(src,/canvas\.addEventListener\('pointerdown'/);
+ assert.match(src,/canvas\.addEventListener\('pointermove'/);
+ assert.match(src,/localStorage\.setItem\(STORAGE/);
+ assert.match(src,/localStorage\.getItem\(STORAGE/);
+ assert.match(src,/joy\.addEventListener\('pointerdown'/);
+ assert.match(src,/worldCanvas\.addEventListener\('pointermove'/);
+ assert.match(src,/world\.refreshPaint\(\)/);
+ assert.match(css,/touch-action:none/);
+ assert.match(css,/@media\(max-width:700px\)/);
+ assert.match(css,/\.paint-layout/);
+});

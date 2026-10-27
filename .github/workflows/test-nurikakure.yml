@@ -1,0 +1,31 @@
+name: Test Nurikakure 3D Prototype
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'games/nurikakure/**'
+      - 'tests/nurikakure.test.mjs'
+      - 'tests/nurikakure-browser.test.mjs'
+      - '.github/workflows/test-nurikakure.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate source and UI
+        run: node --test tests/nurikakure.test.mjs
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install chromium
+      - name: Verify 3D rendering and touch painting
+        run: node --test tests/nurikakure-browser.test.mjs

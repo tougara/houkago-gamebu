@@ -174,6 +174,13 @@ async function start(){
  try{
   world=createArtRoom(THREE,worldCanvas,$('characterPreview'),canvas);
   loading.hidden=true;
+  // Read-only diagnostics for gameplay/device verification.
+  window.NurikakureDebug=Object.freeze({
+   get position(){return world?.getPosition()||null},
+   get camera(){return world?.getCamera()||null},
+   get painting(){return active},
+   get loaded(){return !!world}
+  });
   const resize=()=>world?.setViewport();
   window.addEventListener('resize',resize);
   new ResizeObserver(resize).observe($('viewport'));
