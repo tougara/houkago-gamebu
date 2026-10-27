@@ -48,6 +48,7 @@
     <div class="brush-size"><label for="brushSize">太さ <output id="brushValue">22</output></label><input type="range" id="brushSize" min="4" max="70" value="22"></div>
    </div>
    <div class="paint-tools">
+    <div class="preview-card"><div class="preview-caption"><strong>3Dプレビュー</strong><span>実際のキャラに反映中！</span></div><canvas id="characterPreview" width="340" height="170" aria-label="ペイントされたキャラクターの回転3Dプレビュー"></canvas></div>
     <section class="paint-tool-section"><h2>色をえらぶ</h2><div class="color-grid" id="colorPalette" aria-label="ペイント色"></div><div class="custom-color"><label for="customColor">好きな色</label><input id="customColor" type="color" value="#ef7474" aria-label="好きな色を選ぶ"><span id="colorSample"></span></div></section>
     <section class="paint-tool-section"><h2>どうぐ</h2><div class="tool-grid"><button id="brushTool" type="button" class="tool selected" aria-pressed="true">✎ ふで</button><button id="eraserTool" type="button" class="tool" aria-pressed="false">◻ 消しゴム</button><button id="undoPaint" type="button" class="tool">↶ 1つ戻す</button><button id="resetPaint" type="button" class="tool danger">⟲ 全部消す</button></div></section>
     <div class="paint-save"><span id="saveStatus" role="status">変更は自動保存されます</span><button id="finishPaint" type="button" class="save-btn">このデザインで遊ぶ！</button></div>
