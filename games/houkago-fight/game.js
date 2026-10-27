@@ -17,7 +17,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){resetInput
 document.querySelectorAll('[data-key]').forEach(button=>{
  button.addEventListener('pointerdown',e=>{
   if(e.button!==0)return;e.preventDefault();
-  button.setPointerCapture?.(e.pointerId);
+  try{button.setPointerCapture?.(e.pointerId)}catch{/* synthetic events and old browsers may not expose capture */}
   pointers.set(e.pointerId,button.dataset.key);held.add(button.dataset.key);button.classList.add('pressed');
  });
  const release=e=>{

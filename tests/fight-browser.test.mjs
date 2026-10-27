@@ -64,11 +64,19 @@ test('touch controls support two fingers in landscape and retain readable button
   });
   assert.ok(geom.over<=2);
   assert.ok(geom.buttons.every(x=>x.width>25&&x.height>25&&x.top>=geom.stage.top-3&&x.bottom<=geom.stage.bottom+3),JSON.stringify(geom));
-  await page.locator('[data-key="right"]').dispatchEvent('pointerdown',{pointerId:22,button:0});
-  await page.locator('[data-key="jump"]').dispatchEvent('pointerdown',{pointerId:23,button:0});
+  // Chrome DevTools multi-touch is a real browser pointer stream, not synthetic DOM events.
+  const points=await page.evaluate(()=>{
+    const r=document.querySelector('[data-key="right"]').getBoundingClientRect();
+    const j=document.querySelector('[data-key="jump"]').getBoundingClientRect();
+    return [{x:r.left+r.width/2,y:r.top+r.height/2,id:11},{x:j.left+j.width/2,y:j.top+j.height/2,id:12}];
+  });
+  const cdp=await context.newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points});
   await page.waitForTimeout(100);
-  await page.locator('[data-key="right"]').dispatchEvent('pointerup',{pointerId:22,button:0});
-  await page.locator('[data-key="jump"]').dispatchEvent('pointerup',{pointerId:23,button:0});
+  assert.equal(await page.locator('.fight-controls .pressed').count(),2,'both finger controls should be active together');
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForTimeout(80);
+  assert.equal(await page.locator('.fight-controls .pressed').count(),0,'releasing touch restores buttons');
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });

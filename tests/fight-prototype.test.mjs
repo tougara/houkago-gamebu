@@ -129,3 +129,11 @@ test('published prototype keeps catalog private and wires both touch and keyboar
  assert.match(css,/@media\(orientation:portrait\)/);
  assert.doesNotMatch(readFileSync(new URL('../games/index.html',import.meta.url),'utf8'),/href="houkago-fight\/"/);
 });
+
+test('left/right + A instantly sets horizontal attack facing',()=>{
+ const m=createMatch();startMatch(m);
+ const p=m.fighters[0];p.facing=1;
+ frames(m,1,{p1:{left:true,attack:true}});
+ assert.equal(p.attack.kind,'tilt');
+ assert.equal(p.facing,-1);
+});

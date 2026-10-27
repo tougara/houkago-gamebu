@@ -88,6 +88,8 @@ function fighterStep(m,f,r,controls,dt){
  const axis=(key.right?1:0)-(key.left?1:0);
  const canAct=f.stun===0;
  const guarding=!!key.guard&&f.grounded&&canAct&&!f.attack&&!f.charging;
+ // Horizontal + attack must strike towards the freshly pressed direction.
+ if(axis!==0&&f.grounded&&!f.attack&&!f.charging&&canAct)f.facing=axis;
  if(canAct&&!guarding){
   if(f.charging>0){
    f.charging=clamp(f.charging+dt,.001,.8);
@@ -107,7 +109,6 @@ function fighterStep(m,f,r,controls,dt){
  }
  if(!key.guard)f.shield=Math.min(100,f.shield+dt*19);
  // No facing reversal in air; press left/right on ground to face the attack.
- if(axis!==0&&f.grounded&&!f.attack&&!f.charging&&canAct)f.facing=axis;
  if(f.stun===0&&!f.charging){
   const target=axis*cfg.speed*(f.grounded?1:.82)*(f.attack?.kind==='smash'?.20:1);
   f.vx+=(target-f.vx)*Math.min(1,dt*(f.grounded?22:7));
