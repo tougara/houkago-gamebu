@@ -1,0 +1,32 @@
+name: Test Fight Prototype
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'games/houkago-fight/**'
+      - 'tests/fight-prototype.test.mjs'
+      - 'tests/fight-browser.test.mjs'
+      - '.github/workflows/test-fight-prototype.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-fight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test combat engine
+        run: node --test tests/fight-prototype.test.mjs
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install chromium
+      - name: Test phone and PC prototype interaction
+        run: node --test tests/fight-browser.test.mjs
