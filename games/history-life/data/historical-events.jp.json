@@ -1,0 +1,609 @@
+{
+  "version": "2026-10-29",
+  "country": "japan",
+  "isPlayable": false,
+  "method": "History events sourced from public archival chronologies; impacts and probabilities are NOT numeric or given",
+  "events": [
+    {
+      "id": "jp-1467-01",
+      "year": 1467,
+      "endYear": 1477,
+      "title": "応仁の乱",
+      "category": "war",
+      "regionId": "kyoto",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "war",
+        "migration",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1543-02",
+      "year": 1543,
+      "title": "鉄砲の伝来",
+      "category": "technology",
+      "regionId": "japan",
+      "sourceId": "ndl-books",
+      "gameplayHooks": [
+        "trade",
+        "technology",
+        "military"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1549-03",
+      "year": 1549,
+      "title": "キリスト教の伝来",
+      "category": "religion",
+      "regionId": "japan",
+      "sourceId": "ndl-books",
+      "gameplayHooks": [
+        "religion",
+        "trade",
+        "social"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1560-04",
+      "year": 1560,
+      "title": "桶狭間の戦い",
+      "category": "war",
+      "regionId": "owari",
+      "sourceId": "ndl-battles",
+      "gameplayHooks": [
+        "war",
+        "migration",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1568-05",
+      "year": 1568,
+      "title": "織田信長の上洛",
+      "category": "politics",
+      "regionId": "kyoto",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "politics",
+        "trade",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1573-06",
+      "year": 1573,
+      "title": "足利義昭の追放",
+      "category": "politics",
+      "regionId": "kyoto",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "politics",
+        "military",
+        "trade"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1582-07",
+      "year": 1582,
+      "title": "本能寺の変",
+      "category": "politics",
+      "regionId": "kyoto",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "politics",
+        "military",
+        "migration"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1592-08",
+      "year": 1592,
+      "endYear": 1598,
+      "title": "文禄・慶長の役",
+      "category": "war",
+      "regionId": "japan",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "war",
+        "livelihood",
+        "military"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1598-09",
+      "year": 1598,
+      "title": "豊臣秀吉の死",
+      "category": "politics",
+      "regionId": "japan",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "politics",
+        "military",
+        "trade"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1600-10",
+      "year": 1600,
+      "title": "関ヶ原の戦い",
+      "category": "war",
+      "regionId": "sekigahara",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "war",
+        "politics",
+        "migration"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1603-11",
+      "year": 1603,
+      "title": "江戸幕府の開府",
+      "category": "politics",
+      "regionId": "edo",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "politics",
+        "trade",
+        "social"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1614-12",
+      "year": 1614,
+      "endYear": 1615,
+      "title": "大坂の陣",
+      "category": "war",
+      "regionId": "osaka",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "war",
+        "livelihood",
+        "migration"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1635-13",
+      "year": 1635,
+      "title": "海外渡航・海外在住日本人の帰国に関する禁令",
+      "category": "policy",
+      "regionId": "japan",
+      "sourceId": "archives-bakumatsu",
+      "gameplayHooks": [
+        "mobility",
+        "trade",
+        "social"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1637-14",
+      "year": 1637,
+      "endYear": 1638,
+      "title": "島原の乱",
+      "category": "war",
+      "regionId": "shimabara",
+      "sourceId": "archives-wars",
+      "gameplayHooks": [
+        "war",
+        "religion",
+        "migration"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1641-15",
+      "year": 1641,
+      "endYear": 1642,
+      "title": "寛永の飢饉",
+      "category": "famine",
+      "regionId": "japan",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "food",
+        "health",
+        "economy"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1657-16",
+      "year": 1657,
+      "title": "明暦の大火",
+      "category": "fire",
+      "regionId": "edo",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "housing",
+        "health",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1703-17",
+      "year": 1703,
+      "title": "元禄地震",
+      "category": "earthquake",
+      "regionId": "kanto",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "housing",
+        "health",
+        "migration"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1707-18",
+      "year": 1707,
+      "title": "宝永地震・富士山宝永噴火",
+      "category": "disaster",
+      "regionId": "tokai",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "housing",
+        "food",
+        "health"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1716-19",
+      "year": 1716,
+      "title": "徳川吉宗が将軍に就任",
+      "category": "politics",
+      "regionId": "edo",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "politics",
+        "work",
+        "education"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1732-20",
+      "year": 1732,
+      "endYear": 1733,
+      "title": "享保の飢饉",
+      "category": "famine",
+      "regionId": "japan",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "food",
+        "health",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1783-21",
+      "year": 1783,
+      "title": "天明の飢饉の開始・浅間山噴火",
+      "category": "disaster",
+      "regionId": "japan",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "food",
+        "housing",
+        "migration"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1788-22",
+      "year": 1788,
+      "title": "京都大火",
+      "category": "fire",
+      "regionId": "kyoto",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "housing",
+        "health",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1833-23",
+      "year": 1833,
+      "title": "天保の飢饉の開始",
+      "category": "famine",
+      "regionId": "japan",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "food",
+        "health",
+        "economy"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1853-24",
+      "year": 1853,
+      "title": "米国東インド艦隊の浦賀来航",
+      "category": "diplomacy",
+      "regionId": "uraga",
+      "sourceId": "ndl-modern",
+      "gameplayHooks": [
+        "trade",
+        "politics",
+        "social"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1854-25",
+      "year": 1854,
+      "title": "日米和親条約",
+      "category": "diplomacy",
+      "regionId": "japan",
+      "sourceId": "ndl-modern",
+      "gameplayHooks": [
+        "trade",
+        "mobility",
+        "politics"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1855-26",
+      "year": 1855,
+      "title": "安政江戸地震",
+      "category": "earthquake",
+      "regionId": "edo",
+      "sourceId": "archives-edo",
+      "gameplayHooks": [
+        "housing",
+        "health",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1858-27",
+      "year": 1858,
+      "title": "日米修好通商条約",
+      "category": "diplomacy",
+      "regionId": "japan",
+      "sourceId": "ndl-modern",
+      "gameplayHooks": [
+        "trade",
+        "mobility",
+        "economy"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1867-28",
+      "year": 1867,
+      "title": "大政奉還・王政復古",
+      "category": "politics",
+      "regionId": "japan",
+      "sourceId": "archives-meiji",
+      "gameplayHooks": [
+        "politics",
+        "social",
+        "work"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1868-29",
+      "year": 1868,
+      "endYear": 1869,
+      "title": "戊辰戦争",
+      "category": "war",
+      "regionId": "japan",
+      "sourceId": "archives-meiji",
+      "gameplayHooks": [
+        "war",
+        "migration",
+        "livelihood"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1871-30",
+      "year": 1871,
+      "title": "廃藩置県",
+      "category": "policy",
+      "regionId": "japan",
+      "sourceId": "archives-meiji",
+      "gameplayHooks": [
+        "mobility",
+        "politics",
+        "work"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1872-31",
+      "year": 1872,
+      "title": "新橋〜横浜間の鉄道開通",
+      "category": "technology",
+      "regionId": "kanto",
+      "sourceId": "archives-meiji",
+      "gameplayHooks": [
+        "mobility",
+        "trade",
+        "work"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1873-32",
+      "year": 1873,
+      "title": "地租改正・徴兵令",
+      "category": "policy",
+      "regionId": "japan",
+      "sourceId": "archives-meiji",
+      "gameplayHooks": [
+        "work",
+        "tax",
+        "military"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1889-33",
+      "year": 1889,
+      "title": "大日本帝国憲法の発布",
+      "category": "policy",
+      "regionId": "japan",
+      "sourceId": "archives-meiji",
+      "gameplayHooks": [
+        "politics",
+        "social",
+        "education"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1907-34",
+      "year": 1907,
+      "title": "義務教育を6年に延長",
+      "category": "education",
+      "regionId": "japan",
+      "sourceId": "archives-meiji-education",
+      "gameplayHooks": [
+        "education",
+        "work",
+        "family"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    },
+    {
+      "id": "jp-1912-35",
+      "year": 1912,
+      "title": "明治から大正へ改元",
+      "category": "politics",
+      "regionId": "japan",
+      "sourceId": "archives-meiji",
+      "gameplayHooks": [
+        "politics",
+        "social"
+      ],
+      "status": "historical_fact",
+      "impactRule": "Not every inhabitant experiences this event directly. Game probabilities and local reach are NOT sourced or assigned.",
+      "narrativeMode": "regional_filter_then_individual_conditions",
+      "note": "年表に載る史実。タグと地域IDはゲーム設計上の索引用で、個人の被害率・影響範囲を示さない。"
+    }
+  ]
+}

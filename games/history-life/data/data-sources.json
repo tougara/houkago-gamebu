@@ -1,0 +1,149 @@
+{
+  "version": "2026-10-29",
+  "purpose": "Historically grounded inputs for a future original Japanese historical life-simulation game",
+  "independentOf": "1in8b.life/game code or proprietary tables",
+  "sources": [
+    {
+      "id": "game-official",
+      "name": "80億分の1 公式・遊び方",
+      "url": "https://1in8b.life/ja/",
+      "kind": "reference_only",
+      "license": "ゲーム独自のコード、イベント文、UI・画像の再利用権は未確認",
+      "coverage": "現在・過去1950–2025",
+      "use": "設計の比較分析のみ。固有表現やゲーム内データの複製には使わない"
+    },
+    {
+      "id": "wpp2024",
+      "name": "UN World Population Prospects 2024",
+      "url": "https://population.un.org/wpp/",
+      "kind": "primary_statistical_source",
+      "license": "個別データの利用条件・帰属表示を取得時に確認",
+      "coverage": "国・年・年齢・性別ごとの人口・出生・死亡、1950–2100",
+      "use": "近現代の出生・生存率・人口分布。江戸・戦国期には直接外挿しない"
+    },
+    {
+      "id": "ipss2026",
+      "name": "国立社会保障・人口問題研究所 人口統計資料集（2026年版）",
+      "url": "https://www.ipss.go.jp/syoushika/tohkei/Popular/Popular2026.asp?chap=1",
+      "kind": "primary_statistical_source",
+      "license": "再利用時に資料の利用条件と原典を要確認",
+      "coverage": "近代以前の日本人口推定、近代以降の全国人口",
+      "use": "時代別の出生母集団・人口規模の参考。調査範囲・欠落に注意"
+    },
+    {
+      "id": "maddison2023",
+      "name": "Maddison Project Database 2023",
+      "url": "https://www.rug.nl/ggdc/historicaldevelopment/maddison/releases/maddison-project-database-2023?lang=en",
+      "kind": "primary_statistical_source",
+      "license": "CC BY 4.0。対象国が12未満の場合等は元論文の帰属表示にも注意",
+      "coverage": "長期の人口・一人当たりGDP推計、紀元1年～2022年（国・年による欠損あり）",
+      "use": "世界史モードの長期経済環境の背景。個人の年収に直接換算しない"
+    },
+    {
+      "id": "owid-life",
+      "name": "Our World in Data - Life Expectancy",
+      "url": "https://ourworldindata.org/grapher/life-expectancy?tab=table",
+      "kind": "compiled_statistical_source",
+      "license": "OWIDが加工したデータはCC BY。原データ所有者の条件も別途確認",
+      "coverage": "長期の出生時平均余命。国・年による欠損あり",
+      "use": "時代差の確認用。出生時平均余命を全員の死亡年齢にしない"
+    },
+    {
+      "id": "archives-wars",
+      "name": "国立公文書館 歴史と物語 年表",
+      "url": "https://www.archives.go.jp/exhibition/digital/rekishitomonogatari/history01.html",
+      "kind": "historical_chronology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "戦国～江戸成立、主要史実",
+      "use": "戦国期の事実イベント発生日"
+    },
+    {
+      "id": "ndl-battles",
+      "name": "国立国会図書館典拠データ 合戦",
+      "url": "https://id.ndl.go.jp/auth/ndlsh/%E5%90%88%E6%88%A6",
+      "kind": "historical_chronology",
+      "license": "典拠データ利用条件を確認",
+      "coverage": "戦国主要合戦の年・期間",
+      "use": "桶狭間、応仁の乱、関ヶ原など"
+    },
+    {
+      "id": "ndl-books",
+      "name": "国立国会図書館 蔵書印の世界 年表",
+      "url": "https://www.ndl.go.jp/zoshoin/list.html",
+      "kind": "historical_chronology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "16–18世紀中心の歴史年表",
+      "use": "戦国～江戸初期の史実確認"
+    },
+    {
+      "id": "archives-edo",
+      "name": "国立公文書館 天下大変 江戸時代災害年表",
+      "url": "https://www.archives.go.jp/exhibition/digital/tenkataihen/history.html",
+      "kind": "historical_chronology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "江戸期の火災・地震・噴火・飢饉・社会事件",
+      "use": "地域と期間に応じた災害イベント候補。死亡確率はこの年表だけでは算出不可"
+    },
+    {
+      "id": "archives-bakumatsu",
+      "name": "国立公文書館 激動幕末 年表",
+      "url": "https://www.archives.go.jp/exhibition/digital/bakumatsu/history.html",
+      "kind": "historical_chronology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "幕末期の外交・制度変更",
+      "use": "職業・移動・政策変更の史実イベント"
+    },
+    {
+      "id": "ndl-modern",
+      "name": "国立国会図書館 史料にみる日本の近代 年表",
+      "url": "https://www.ndl.go.jp/modern/utility/chronology.html",
+      "kind": "historical_chronology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "1853年以降の政治・外交",
+      "use": "幕末の国家的イベント"
+    },
+    {
+      "id": "archives-meiji",
+      "name": "国立公文書館 日本のあゆみ 年表",
+      "url": "https://www.archives.go.jp/ayumi/table.html",
+      "kind": "historical_chronology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "1867年以降の制度・法律・鉄道",
+      "use": "明治の教育・職業・生活条件の変化"
+    },
+    {
+      "id": "archives-meiji-education",
+      "name": "国立公文書館 明治の学び 年表",
+      "url": "https://www.archives.go.jp/exhibition/digital/meiji/history.html",
+      "kind": "historical_chronology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "明治の教育政策",
+      "use": "学校の存在とアクセス可否の時代制約"
+    },
+    {
+      "id": "ucdp",
+      "name": "Uppsala Conflict Data Program ダウンロードセンター",
+      "url": "https://ucdp.uu.se/downloads/",
+      "kind": "primary_statistical_source",
+      "license": "CC BY 4.0、引用文献の表示が必要",
+      "coverage": "世界の武力紛争1946年以降・事件単位1989年以降",
+      "use": "20世紀以降の地域別紛争リスク。戦国の合戦データの代用にはしない"
+    },
+    {
+      "id": "edo-class",
+      "name": "東京書籍 士農工商という用語について",
+      "url": "https://faq.tokyo-shoseki.co.jp/fa/customer/web/knowledge8263.html",
+      "kind": "historical_methodology",
+      "license": "個別ページの利用条件を確認",
+      "coverage": "江戸時代の職業・身分区分の研究上の留意点",
+      "use": "士農工商の単純な四階級固定を避ける"
+    }
+  ],
+  "requirements": {
+    "provenance": "All imported numeric values must carry sourceId, referenceYear, unit, geographicCoverage, isEstimate and licenseCheck.",
+    "historicalUncertainty": "Different estimates for pre-modern population and survival must remain labelled estimates; do not invent exact chance distributions.",
+    "licenses": "Verify dataset license and required attribution before copying bulk rows into public files.",
+    "ages": "An average life expectancy is NOT an age-of-death roll; proper life table data and period-specific uncertainty are needed.",
+    "eventImpact": "Documentary event year != exact personal casualty rate or universal event reach."
+  }
+}

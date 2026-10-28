@@ -1,0 +1,94 @@
+{
+  "version": "2026-10-29",
+  "status": "research_inputs_only_not_balanced_gameplay",
+  "eras": [
+    {
+      "id": "sengoku",
+      "name": "戦国・安土桃山",
+      "birthYearRange": [
+        1467,
+        1603
+      ],
+      "availableEventYears": [
+        1467,
+        1603
+      ],
+      "note": "地域と領主の変化を同じ年のすべての住民に適用しない"
+    },
+    {
+      "id": "edo",
+      "name": "江戸",
+      "birthYearRange": [
+        1603,
+        1867
+      ],
+      "availableEventYears": [
+        1603,
+        1868
+      ],
+      "note": "士農工商4分類のみで職業・身分の全体を表現しない"
+    },
+    {
+      "id": "bakumatsu-meiji",
+      "name": "幕末〜明治",
+      "birthYearRange": [
+        1853,
+        1912
+      ],
+      "availableEventYears": [
+        1853,
+        1912
+      ],
+      "note": "出生時の制度と成年時の制度が異なる年齢別進行にする"
+    }
+  ],
+  "historicalPopulationResearch": {
+    "sample": [
+      {
+        "year": 1600,
+        "valueMin": 12000000,
+        "valueMax": 18000000,
+        "unit": "persons",
+        "kind": "conflicting_historical_estimates_not_observed",
+        "sourceId": "ipss2026",
+        "note": "国立国会図書館レファレンス事例でも複数の推計値を列挙。確定人口ではない。"
+      },
+      {
+        "year": 1721,
+        "value": 26065000,
+        "unit": "persons",
+        "kind": "recorded_census_count_not_full_population",
+        "sourceId": "ipss2026",
+        "note": "江戸幕府による人別改の対象範囲に制約あり。全国総人口として無条件に使わない。"
+      }
+    ],
+    "doNotInferBirthProbability": true,
+    "note": "人口の総数だけでは家柄・性別・職業・死亡年齢の精密な抽選確率を計算できない。"
+  },
+  "playerAttributes": [
+    "health",
+    "happiness",
+    "knowledge",
+    "relationships",
+    "wealth",
+    "household",
+    "role",
+    "region",
+    "age"
+  ],
+  "probabilityRules": [
+    "outcomes_are_probabilistic",
+    "historical_year_and_region_filter_events",
+    "choices_adjust_odds_not_guarantee",
+    "unknown_probability_must_be_marked_as_game_balance",
+    "do_not_derive_infant_mortality_from_total_life_expectancy"
+  ],
+  "plans": [
+    "history_event_timeline",
+    "regional_households",
+    "occupation_constraints",
+    "individual_choice_events",
+    "life_record",
+    "multiple_era_selection"
+  ]
+}
