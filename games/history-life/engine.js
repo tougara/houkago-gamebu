@@ -213,7 +213,7 @@ export function chooseEvent(s,optionId){
  if(!opt)return {ok:false};
  const wasSuccess=opt.success==null||dice(s,opt.success);
  effect(s,wasSuccess?opt.delta:(opt.failDelta||{}));
- if(opt.job){s.profession=opt.job;setCareerFromLegacy(s,opt.job,(title,text,extra={})=>log(s,title,text,extra));}
+ if(opt.job){s.profession=opt.job;setCareerFromLegacy(s,opt.job,(title,text,extra={})=>log(s,title,text,extra),()=>rng(s));}
  if(opt.personId&&Number.isFinite(opt.closeness)){
   const person=s.people.find(p=>p.id===opt.personId&&p.alive);
   if(person)person.closeness=clamp(person.closeness+opt.closeness);

@@ -43,6 +43,12 @@ export function syncFamily(s){
  };
  return s.family;
 }
+export function createMentor(s,rand,log){
+ if(peopleByRole(s,'mentor').some(p=>p.alive))return null;
+ const p=newPerson(s,'mentor',s.birthYear-8-Math.floor(rand()*27),rand,null,54);
+ log('仕事の師匠',p.name+'という仕事の先輩と出会った。技を学ぶ機会が生まれた。',{kind:'relationship',personId:p.id});
+ return p;
+}
 export function createPartner(s,rand,log){
  if(peopleByRole(s,'partner').some(p=>p.alive))return null;
  const p=newPerson(s,'partner',s.birthYear+(2-Math.floor(rand()*8)),rand,null,65);
@@ -74,7 +80,14 @@ export function interact(s,personId,actionId,log,effect){
  const p=s.people.find(x=>x.id===personId&&x.alive),action=RELATION_ACTIONS.find(x=>x.id===actionId);
  if(!p||!action)return {ok:false,reason:'相手または行動が無効'};
  if(s.stats.wealth<action.cost)return {ok:false,reason:'暮らしの余裕が足りません'};
- const matched=actionId==='reconcile'&&p.closeness>=65?2:action.closeness;
+ // Personalities change which gestures work best; not just decorative labels.
+ const traitBonus=(p.trait==='curious'&&actionId==='talk')?5:
+  (p.trait==='kind'&&actionId==='help')?5:
+  (p.trait==='quiet'&&actionId==='talk')?3:
+  (p.trait==='proud'&&actionId==='reconcile')?5:
+  (p.trait==='careful'&&actionId==='help')?3:
+  (p.trait==='open'&&actionId==='gift')?4:0;
+ const matched=(actionId==='reconcile'&&p.closeness>=65?2:action.closeness)+traitBonus;
  p.closeness=bound(p.closeness+matched);
  p.lastInteractionYear=s.year;s.lastSocialYear=s.year;
  effect({...action.stat});
@@ -103,6 +116,12 @@ export function tickPeople(s,focus,rand,log,effect){
    effect({joy:important?-8:-4,bonds:important?-4:-2});
    log('別れ',p.name+'（'+labelRole(p.role)+'）を見送った。時間を共にした思い出は残る。',{kind:'relationship',personId:p.id});
   }
+ }
+ // Good long-term ties supply emotional support. This is a fictional
+ // gameplay modifier, never a measured historical effect.
+ if(familyFocus&&s.age>15&&s.age%5===0&&alivePeople(s).some(p=>p.closeness>=78)){
+  effect({joy:2});
+  log('支え合う暮らし','時間を重ねた人との縁が、日々の心の支えになった。',{kind:'relationship'});
  }
  if(s.age===11&&!peopleByRole(s,'friend').length){
   const p=newPerson(s,'friend',s.birthYear+(2-Math.floor(rand()*5)),rand,null,47);

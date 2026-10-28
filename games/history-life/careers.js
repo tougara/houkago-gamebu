@@ -1,6 +1,7 @@
 /* Career catalogue, qualifications and fictional balance economy.
  * Era-specific availability is a gameplay approximation, not a census of occupations.
  */
+import {createMentor,alivePeople,peopleByRole} from './social.js';
 const clamp=(n)=>Math.max(0,Math.min(100,Math.round(n)));
 export const JOBS=[
  {id:'farm',name:'農業',eras:['sengoku','edo','bakumatsu-meiji'],familyIndex:[0],requirements:{knowledge:0,skill:0},income:4,healthCost:2,description:'田畑を守り、季節とともに働く'},
@@ -50,7 +51,9 @@ export function switchCareer(s,jobId,rand,log,effect){
  const opt=jobOptions(s).find(j=>j.id===jobId);
  if(!opt||!opt.available)return {ok:false,reason:opt?.reason||'今はこの仕事を選べません'};
  s.career.lastSwitchYear=s.year;
- const odds=opt.familyAccess?.96:Math.min(.94,Math.max(.32,.56+s.stats.knowledge*.003+(s.career.skill||0)*.002-(opt.difficult?.14:0)));
+ const socialSupport=alivePeople(s).filter(p=>['friend','mentor','partner'].includes(p.role)&&p.closeness>=70).length;
+ const odds=opt.familyAccess?.96:Math.min(.94,Math.max(.32,.56+s.stats.knowledge*.003+
+  (s.career.skill||0)*.002-(opt.difficult?.14:0)+Math.min(.08,socialSupport*.035)));
  const success=rand()<odds;
  if(success){
   s.career.jobId=opt.id;s.career.years=0;s.career.rank=0;s.career.skill=clamp(Math.floor(s.career.skill*.6));
@@ -59,18 +62,20 @@ export function switchCareer(s,jobId,rand,log,effect){
   if(s.career.history.length>25)s.career.history.shift();
   effect({knowledge:2,wealth:-2,joy:3});
   log('仕事の転機',opt.name+'の道を歩み始めた。家の縁や経験が、新しい仕事への一歩を支えた。',{kind:'career'});
+  if(!peopleByRole(s,'mentor').some(p=>p.alive))createMentor(s,rand,log);
  }else{
   effect({wealth:-3,joy:-3,knowledge:2});
   log('仕事の転機',opt.name+'を目指したが、今は縁や機会に恵まれなかった。',{kind:'career'});
  }
  return {ok:true,success,jobId:success?opt.id:s.career.jobId};
 }
-export function setCareerFromLegacy(s,label,log){
+export function setCareerFromLegacy(s,label,log,rand=()=>.4){
  const job=JOBS.find(j=>j.name===label);
  if(!job)return;
  s.career.jobId=job.id;s.career.years=0;s.career.rank=0;
  s.career.history.push({year:s.year,jobId:job.id,name:job.name});
  if(log)log('仕事を始める',job.name+'の道へ進んだ。',{kind:'career'});
+ if(!peopleByRole(s,'mentor').some(p=>p.alive))createMentor(s,rand,log||(()=>{}));
 }
 export function careerYear(s,focus,rand,log,effect){
  if(s.age<15)return;
