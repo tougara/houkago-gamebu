@@ -1,8 +1,10 @@
 import {ERAS,REGIONS,FOCI,FIRST_NAMES,getEra,getRegion,relevantLocal} from './scenarios.js';
+import {initPeople,syncFamily,createPartner,createChild,migratePeople,interact as interactPerson,tickPeople,relationshipEvent,labelRole} from './social.js';
+import {initCareer,migrateCareer,setCareerFromLegacy,careerYear,jobOptions,switchCareer as tryCareerSwitch} from './careers.js';
 /* Deterministic, serializable history-life MVP engine.
  * Statistical caution: all personal odds here are invented GAME RULES,
  * never historical mortality, class, wealth or gender data. */
-export const VERSION=1;
+export const VERSION=2;
 const LIMITS={stats:100,age:110,log:240};
 const clamp=(x,lo=0,hi=100)=>Math.max(lo,Math.min(hi,x));
 function rng(state){
@@ -41,6 +43,7 @@ export function createLife({eraId='sengoku',seed=1,birthYear=null,regionId=null}
   choices:0,specialChoices:0,autoFocus:'family',
   meta:{chanceModel:'game_balance_placeholder',historicalEventSource:'original annotated research',birthWeights:'fictional_equal_weights'}
  };
+ initPeople(state,()=>rng(state));initCareer(state);
  log(state,'誕生',year+'年、'+region.name+'の「'+state.background+'」に生まれた。家族から「'+name+'」と呼ばれる。',{kind:'birth'});
  return state;
 }
@@ -158,22 +161,17 @@ function death(s){
  s.death={year:s.year,age:s.age,reason:s.stats.health<=0?'健康状態の悪化':'生涯の終わり'};
  log(s,'人生の終わり',s.name+'は'+s.age+'年の人生を終えた。歴史に名が残らなくても、確かにここに生きていた。',{kind:'ending'});
 }
-function backgroundYear(s){
- // Background occurrences: never claim personal casualty rates.
+function backgroundYear(s,focus){
+ // Social odds are fictional gameplay tuning; not demographic historical rates.
+ tickPeople(s,focus,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
  const a=s.age;
- if(a>8&&s.family.parentsAlive&&a>35&&dice(s,.045)){
-  s.family.parentsAlive=false;
-  effect(s,{bonds:-5,joy:-9});
-  log(s,'家族との別れ','家族の一人を見送り、これまでの時間を思い返した。');
- }
  if(a>=23&&a<=48&&s.family.partner&&s.family.children<5&&dice(s,.11)){
-  s.family.children++;effect(s,{bonds:4,joy:3,wealth:-4});
-  log(s,'新しい家族','家族が増えた。暮らしの忙しさと喜びも増していく。');
+  const person=createChild(s,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra));
+  if(person)effect(s,{bonds:4,joy:3,wealth:-4});
  }
  if(a>=18&&a<43&&!s.family.partner&&dice(s,.015+s.stats.bonds/5000)){
-  s.family.partner=true;
-  log(s,'新しい縁','ともに暮らす大切な相手との縁を結んだ。');
-  effect(s,{bonds:4,joy:3});
+  const person=createPartner(s,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra));
+  if(person)effect(s,{bonds:4,joy:3});
  }
  if(a>45){effect(s,{health:-Math.max(1,Math.floor((a-40)/22))});}
  if(s.stats.wealth<15&&dice(s,.3))effect(s,{health:-2,joy:-3});
@@ -183,7 +181,8 @@ export function advanceYear(s,focus='family',historicalEvents=[]){
  const previousYear=s.year;
  const result=focusYear(s,focus);
  s.age++;s.year=s.birthYear+s.age;
- backgroundYear(s);
+ backgroundYear(s,focus);
+ careerYear(s,focus,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
  if(s.age>=110||s.stats.health<=0||dice(s,mortalityProbability(s))){
   death(s);return {ok:true,year:s.year,ended:true,description:result};
  }
@@ -197,6 +196,10 @@ export function advanceYear(s,focus='family',historicalEvents=[]){
   else for(const ev of hit)log(s,'歴史の知らせ：'+ev.title,'この年の出来事。幼少期の本人への直接の影響は不明。',{kind:'history',sourceId:ev.sourceId,eventId:ev.id});
  }
  if(s.phase==='living'){milestone(s)}
+ if(s.phase==='living'){
+  const rel=relationshipEvent(s,()=>rng(s));
+  if(rel)defineEvent(s,rel.id,rel.title,rel.description,rel.options,{kind:'relationship',eventId:rel.personId});
+ }
  if(s.phase==='living')maybeDailyEvent(s);
  return {ok:true,year:s.year,description:result,pending:!!s.pending,previousYear};
 }
@@ -206,10 +209,13 @@ export function chooseEvent(s,optionId){
  if(!opt)return {ok:false};
  const wasSuccess=opt.success==null||dice(s,opt.success);
  effect(s,wasSuccess?opt.delta:(opt.failDelta||{}));
- if(opt.job)s.profession=opt.job;
+ if(opt.job){s.profession=opt.job;setCareerFromLegacy(s,opt.job,(title,text,extra={})=>log(s,title,text,extra));}
+ if(opt.personId&&Number.isFinite(opt.closeness)){
+  const person=s.people.find(p=>p.id===opt.personId&&p.alive);
+  if(person)person.closeness=clamp(person.closeness+opt.closeness);
+ }
  if(opt.partnerChance!=null&&dice(s,opt.partnerChance)){
-  s.family.partner=true;effect(s,{bonds:5,joy:4});
-  log(s,'縁を結ぶ','ともに暮らす相手と出会い、生活を共にする道を選んだ。');
+  if(createPartner(s,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra)))effect(s,{bonds:5,joy:4});
  }
  log(s,'選んだ道：'+opt.label,wasSuccess?opt.result:(opt.failResult||'思うような成果にはつながらなかった。'));
  s.specialChoices++;
@@ -232,7 +238,28 @@ export function lifeSummary(s){
  return {name:s.name,eraId:s.eraId,birthYear:s.birthYear,endYear:s.year,age:s.age,
   hometown:getRegion(s.regionId).name,background:s.background,profession:s.profession,
   partner:s.family.partner,children:s.family.children,historySeen:history.length,
-  focusCount:s.choices,turningPoints:s.specialChoices,stats:{...s.stats}};
+  lovedOnes:(s.people||[]).length,careerChanges:s.career?.history?.length||0,
+  careerSkill:s.career?.skill||0,focusCount:s.choices,turningPoints:s.specialChoices,stats:{...s.stats}};
+}
+export function interactWithPerson(s,personId,actionId){
+ return interactPerson(s,personId,actionId,(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
+}
+export function changeCareer(s,jobId){
+ return tryCareerSwitch(s,jobId,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
+}
+export {jobOptions};
+export function upgradeSave(old){
+ if(!old||!Number.isInteger(old.version))return null;
+ if(old.version===VERSION)return validateSave(old)?old:null;
+ if(old.version!==1||!ERAS.some(e=>e.id===old.eraId)||!REGIONS.some(r=>r.id===old.regionId))return null;
+ if(!Number.isInteger(old.age)||old.age<0||old.age>110||old.year!==old.birthYear+old.age)return null;
+ if(!old.stats||!['health','knowledge','bonds','joy','wealth'].every(k=>Number.isFinite(old.stats[k])&&old.stats[k]>=0&&old.stats[k]<=100))return null;
+ if(!Array.isArray(old.log)||old.log.length>240||!old.family||!Number.isInteger(old.rng)||old.rng<0)return null;
+ const migrated=JSON.parse(JSON.stringify(old));
+ migrated.version=VERSION;
+ migratePeople(migrated);migrateCareer(migrated);
+ migrated.meta={...migrated.meta,upgradedFrom:1};
+ return validateSave(migrated)?migrated:null;
 }
 export function validateSave(obj){
  if(!obj||obj.version!==VERSION||!ERAS.some(e=>e.id===obj.eraId)||!REGIONS.some(r=>r.id===obj.regionId))return false;
@@ -241,6 +268,16 @@ export function validateSave(obj){
  if(!obj.stats||!['health','knowledge','bonds','joy','wealth'].every(k=>Number.isFinite(obj.stats[k])&&obj.stats[k]>=0&&obj.stats[k]<=100))return false;
  if(!Array.isArray(obj.log)||obj.log.length>LIMITS.log)return false;
  if(!obj.family||!Number.isInteger(obj.family.children)||obj.family.children<0||obj.family.children>5)return false;
+ if(!Array.isArray(obj.people)||obj.people.length>25||!Number.isInteger(obj.nextPersonId)||obj.nextPersonId<0)return false;
+ const personIds=new Set();
+ for(const p of obj.people){
+  if(!p||typeof p.id!=='string'||personIds.has(p.id)||typeof p.name!=='string'||!Number.isInteger(p.birthYear)||
+   !Number.isFinite(p.closeness)||p.closeness<0||p.closeness>100||typeof p.alive!=='boolean')return false;
+  personIds.add(p.id);
+ }
+ if(obj.family.children!==obj.people.filter(p=>p.role==='child').length)return false;
+ if(!obj.career||typeof obj.career.jobId!=='string'||!Number.isFinite(obj.career.skill)||obj.career.skill<0||obj.career.skill>100||
+ !Number.isInteger(obj.career.rank)||!Array.isArray(obj.career.history))return false;
  if(obj.phase==='event'&&(!obj.pending||!Array.isArray(obj.pending.options)))return false;
  return true;
 }
