@@ -164,3 +164,24 @@ test('life summary preserves careers and people; choice randomness is reproducib
  assert.equal(summary.careerSkill,x.career.skill);
  assert.ok(JOBS.length>=10);assert.equal(RELATION_ACTIONS.length,4);
 });
+
+test('history and age-15 career choice both appear in 1560 when they coincide',()=>{
+ const events=JSON.parse(requireHistoryFile());
+ const s=createLife({seed:110,birthYear:1545,regionId:'tokai'});
+ for(let i=0;i<250&&s.age<15&&s.phase!=='ended';i++){
+  if(s.phase==='event'){chooseEvent(s,s.pending.options[0].id);continue}
+  advanceYear(s,'family',events);
+ }
+ assert.equal(s.age,15);assert.equal(s.phase,'event');
+ assert.match(s.pending.title,/桶狭間/);
+ assert.ok(s.eventQueue.some(e=>e.id==='milestone-15'),'career milestone must queue after historical event');
+ assert.equal(chooseEvent(s,'observe').ok,true);
+ assert.equal(s.pending.id,'milestone-15');
+ assert.equal(chooseEvent(s,'home').ok,true);
+ assert.notEqual(s.profession,'家族に育てられる子ども');
+ assert.ok(s.log.some(x=>x.title==='暮らしの道を選ぶ'));
+ assert.ok(validateSave(s));
+});
+function requireHistoryFile(){
+ return readFileSync(new URL('../games/history-life/data/historical-events.jp.json',import.meta.url),'utf8');
+}
