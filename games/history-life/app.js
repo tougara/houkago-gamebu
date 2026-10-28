@@ -2,7 +2,7 @@ import {ERAS,REGIONS,FOCI,getEra,getRegion} from './scenarios.js';
 import {createLife,advanceYear,chooseEvent,autoAdvance,lifeSummary,validateSave} from './engine.js';
 const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
-let events=[],sourceMap=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[];
+let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[];
 const barConfig=[
  ['health','健康','#7bbd99'],['knowledge','知恵・技能','#78a4c7'],
  ['bonds','人との縁','#d3ac73'],['joy','幸福','#cb8ca4'],['wealth','暮らしの余裕','#9b9bbd']
@@ -64,6 +64,12 @@ function renderStat(s){
   ['子ども',s.family.children+'人'],['選択の回数',s.choices+'年＋転機'+s.specialChoices+'回']
  ];
  $('personalFacts').innerHTML=facts.map(([a,b])=>'<div class="fact"><span>'+escaped(a)+'</span><strong>'+escaped(b)+'</strong></div>').join('');
+ const pop=population.get(s.year),element=$('populationContext');
+ element.hidden=!pop;
+ if(pop){
+  element.innerHTML='<b>その年の全国人口推計</b><br>'+dateNumber(Math.round(pop.populationThousand/1000*10)/10)+'百万人（学術的推計）<br>'+
+    '<small>個人の出生確率・死亡率を表す数値ではありません。<a href="https://www.ipss.go.jp/syoushika/tohkei/Data/Popular2024/T01-07.files/sheet001.htm" target="_blank" rel="noopener noreferrer">出典・国立社会保障・人口問題研究所</a></small>';
+ }
 }
 function logRows(items,full=false){
  return items.length?items.map(e=>{
@@ -242,13 +248,16 @@ function showSources(){
 async function loadData(){
  const result=await Promise.allSettled([
   fetch('./data/historical-events.jp.json').then(r=>{if(!r.ok)throw Error('historical events '+r.status);return r.json()}),
-  fetch('./data/data-sources.json').then(r=>{if(!r.ok)throw Error('sources '+r.status);return r.json()})
+  fetch('./data/data-sources.json').then(r=>{if(!r.ok)throw Error('sources '+r.status);return r.json()}),
+  fetch('./data/historical-population.jp.json').then(r=>{if(!r.ok)throw Error('population '+r.status);return r.json()})
  ]);
  if(result[0].status==='fulfilled'&&Array.isArray(result[0].value.events)){
   events=result[0].value.events.filter(e=>Number.isInteger(e.year)&&typeof e.title==='string');
  }else console.warn('Historical timeline unavailable: offline life simulation continues');
  if(result[1].status==='fulfilled'&&Array.isArray(result[1].value.sources))
   sourceMap=new Map(result[1].value.sources.map(s=>[s.id,s]));
+ if(result[2].status==='fulfilled'&&Array.isArray(result[2].value.records))
+  population=new Map(result[2].value.records.map(row=>[row.year,row]));
  showSources();
 }
 window.HistoryLifeDebug=Object.freeze({

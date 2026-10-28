@@ -114,9 +114,10 @@ test('five-year automation stops for decisions or death, never skips historical 
 });
 test('health/death and end of life produce a complete record without claiming precise mortality data',()=>{
  const s=createLife({seed:108,birthYear:1535});
+ advanceReady(s,8);
  s.stats.health=0;
- advanceYear(s,'rest',[]);
- assert.equal(s.phase,'ended');assert.equal(s.death.age,1);
+ advanceYear(s,'work',[]);
+ assert.equal(s.phase,'ended');assert.equal(s.death.age,9);
  assert.equal(s.pending,null);assert.ok(s.log.find(e=>e.kind==='ending'));
  const r=lifeSummary(s);
  assert.equal(r.age,1);assert.equal(r.birthYear,1535);assert.ok(validateSave(s));
@@ -127,7 +128,7 @@ test('saved pending events can be serialized and resumed identically',()=>{
  advanceReady(s,7);
  const json=JSON.parse(JSON.stringify(s));
  assert.ok(validateSave(json));assert.deepEqual(json,s);
- const result=chooseEvent(json,'help');
+ const result=chooseEvent(json,'not-an-option');
  assert.equal(result.ok,false,'unknown option should not remove event');
  const option=json.pending.options[1].id;
  assert.equal(chooseEvent(json,option).ok,true);

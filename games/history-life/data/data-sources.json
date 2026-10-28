@@ -146,6 +146,15 @@
       "license": "各史料の利用条件を確認",
       "coverage": "1600年頃の人口推計12–18百万人や江戸時代の人別改の記録",
       "use": "数値間の不一致・測定範囲を保存し、偽の厳密出生確率を付けない"
+    },
+    {
+      "id": "ipss2024-estimated-population",
+      "name": "国立社会保障・人口問題研究所『人口統計資料集2024』表1-7 江戸時代の推定人口：1847〜70年",
+      "url": "https://www.ipss.go.jp/syoushika/tohkei/Data/Popular2024/T01-07.files/sheet001.htm",
+      "kind": "derived_historical_population_estimate",
+      "license": "サイトの再利用条件を再確認。出典は森田優三『人口増加の分析』（1944年）。数字の引用時にこの資料を明示",
+      "coverage": "1847〜1870年の全国人口の推定値、単位1000人",
+      "use": "幕末〜明治の年ごとの全国人口推計を示す参考情報。出生地抽選や職業・死亡確率には直接利用しない"
     }
   ],
   "requirements": {

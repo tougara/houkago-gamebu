@@ -1,0 +1,156 @@
+{
+  "version": "2026-10-29",
+  "country": "Japan",
+  "type": "reconstructed_national_population_estimates",
+  "unit": "thousand_persons",
+  "sourceId": "ipss2024-estimated-population",
+  "originalPublication": "森田優三『人口増加の分析』日本評論社、1944年",
+  "republication": "国立社会保障・人口問題研究所『人口統計資料集2024』表1-7",
+  "usageRestrictions": "These are historical estimates, not directly observed complete census counts. Never convert to individual birth chance, death risk, gender ratios, or class proportions.",
+  "records": [
+    {
+      "year": 1847,
+      "populationThousand": 30195,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1848,
+      "populationThousand": 30367,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1849,
+      "populationThousand": 30540,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1850,
+      "populationThousand": 30714,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1851,
+      "populationThousand": 30890,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1852,
+      "populationThousand": 31066,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1853,
+      "populationThousand": 31243,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1854,
+      "populationThousand": 31421,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1855,
+      "populationThousand": 31599,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1856,
+      "populationThousand": 31780,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1857,
+      "populationThousand": 31961,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1858,
+      "populationThousand": 32143,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1859,
+      "populationThousand": 32327,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1860,
+      "populationThousand": 32511,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1861,
+      "populationThousand": 32696,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1862,
+      "populationThousand": 32883,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1863,
+      "populationThousand": 33070,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1864,
+      "populationThousand": 33259,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1865,
+      "populationThousand": 33448,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1866,
+      "populationThousand": 33639,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1867,
+      "populationThousand": 33831,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1868,
+      "populationThousand": 34024,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1869,
+      "populationThousand": 34218,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    },
+    {
+      "year": 1870,
+      "populationThousand": 34413,
+      "kind": "historical_population_estimate",
+      "sourceId": "ipss2024-estimated-population"
+    }
+  ]
+}
