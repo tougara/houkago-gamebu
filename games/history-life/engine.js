@@ -39,7 +39,7 @@ export function createLife({eraId='sengoku',seed=1,birthYear=null,regionId=null}
   profession:'家族に育てられる子ども',family:{partner:false,children:0,parentsAlive:true},
   stats:{health:clamp(70+Math.round(rng(roll)*22)),knowledge:3,bonds:clamp(43+Math.floor(rng(roll)*20)),
    joy:clamp(42+Math.floor(rng(roll)*29)),wealth:clamp(20+fortune*13)},
-  rng:roll.rng,phase:'living',pending:null,death:null,log:[],focusHistory:[],
+  rng:roll.rng,phase:'living',pending:null,eventQueue:[],death:null,log:[],focusHistory:[],
   choices:0,specialChoices:0,autoFocus:'family',
   meta:{chanceModel:'game_balance_placeholder',historicalEventSource:'original annotated research',birthWeights:'fictional_equal_weights'}
  };
@@ -48,9 +48,13 @@ export function createLife({eraId='sengoku',seed=1,birthYear=null,regionId=null}
  return state;
 }
 function defineEvent(state,id,title,description,options,{kind='life',sourceId=null,eventId=null}={}){
- state.pending={id,title,description,kind,sourceId,eventId,options};
- state.phase='event';
- log(state,title,description,{kind,sourceId,eventId});
+ const next={id,title,description,kind,sourceId,eventId,options};
+ if(!Array.isArray(state.eventQueue))state.eventQueue=[];
+ if(state.phase==='event'&&state.pending)state.eventQueue.push(next);
+ else{
+  state.pending=next;state.phase='event';
+  log(state,title,description,{kind,sourceId,eventId});
+ }
 }
 const chance=(s,base,boost)=>dice(s,clamp(base+boost,0,.95));
 function focusYear(s,focus){
@@ -157,7 +161,7 @@ function mortalityProbability(s){
  return clamp(baseline+Math.max(0,health-.35)*.035,0,.75);
 }
 function death(s){
- s.phase='ended';s.pending=null;
+ s.phase='ended';s.pending=null;s.eventQueue=[];
  s.death={year:s.year,age:s.age,reason:s.stats.health<=0?'健康状態の悪化':'生涯の終わり'};
  log(s,'人生の終わり',s.name+'は'+s.age+'年の人生を終えた。歴史に名が残らなくても、確かにここに生きていた。',{kind:'ending'});
 }
@@ -195,12 +199,12 @@ export function advanceYear(s,focus='family',historicalEvents=[]){
   if(s.age>=7){historicalCard(s,hit[0]);for(const other of hit.slice(1))log(s,'同じ年の史実：'+other.title,'他にも歴史上の出来事が起きている。',{kind:'history',sourceId:other.sourceId,eventId:other.id})}
   else for(const ev of hit)log(s,'歴史の知らせ：'+ev.title,'この年の出来事。幼少期の本人への直接の影響は不明。',{kind:'history',sourceId:ev.sourceId,eventId:ev.id});
  }
- if(s.phase==='living'){milestone(s)}
- if(s.phase==='living'){
-  const rel=relationshipEvent(s,()=>rng(s));
-  if(rel)defineEvent(s,rel.id,rel.title,rel.description,rel.options,{kind:'relationship',eventId:rel.personId});
- }
- if(s.phase==='living')maybeDailyEvent(s);
+ // Queue each life milestone, person story and annual event after a historical
+ // event. Otherwise a history event on a birthday could erase a life decision.
+ milestone(s);
+ const rel=relationshipEvent(s,()=>rng(s));
+ if(rel)defineEvent(s,rel.id,rel.title,rel.description,rel.options,{kind:'relationship',eventId:rel.personId});
+ maybeDailyEvent(s);
  return {ok:true,year:s.year,description:result,pending:!!s.pending,previousYear};
 }
 export function chooseEvent(s,optionId){
@@ -220,7 +224,12 @@ export function chooseEvent(s,optionId){
  log(s,'選んだ道：'+opt.label,wasSuccess?opt.result:(opt.failResult||'思うような成果にはつながらなかった。'));
  s.specialChoices++;
  s.pending=null;s.phase='living';
- if(s.stats.health<=0)death(s);
+ if(s.stats.health<=0){death(s)}
+ else if(s.eventQueue?.length){
+  const next=s.eventQueue.shift();
+  s.pending=next;s.phase='event';
+  log(s,next.title,next.description,{kind:next.kind,sourceId:next.sourceId,eventId:next.eventId});
+ }
  return {ok:true,success:wasSuccess};
 }
 export function autoAdvance(s,years,historicalEvents=[]){
@@ -257,6 +266,7 @@ export function upgradeSave(old){
  if(!Array.isArray(old.log)||old.log.length>240||!old.family||!Number.isInteger(old.rng)||old.rng<0)return null;
  const migrated=JSON.parse(JSON.stringify(old));
  migrated.version=VERSION;
+ migrated.eventQueue=[];
  migratePeople(migrated);migrateCareer(migrated);
  migrated.meta={...migrated.meta,upgradedFrom:1};
  return validateSave(migrated)?migrated:null;
@@ -279,5 +289,6 @@ export function validateSave(obj){
  if(!obj.career||typeof obj.career.jobId!=='string'||!Number.isFinite(obj.career.skill)||obj.career.skill<0||obj.career.skill>100||
  !Number.isInteger(obj.career.rank)||!Array.isArray(obj.career.history))return false;
  if(obj.phase==='event'&&(!obj.pending||!Array.isArray(obj.pending.options)))return false;
+ if(obj.eventQueue!=null&&(!Array.isArray(obj.eventQueue)||obj.eventQueue.length>6))return false;
  return true;
 }
