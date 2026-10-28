@@ -113,7 +113,7 @@ test('five-year automation stops for decisions or death, never skips historical 
  assert.match(s.pending.title,/桶狭間/);
 });
 test('health/death and end of life produce a complete record without claiming precise mortality data',()=>{
- const s=createLife({seed:108,birthYear:1535});
+ const s=createLife({seed:108,birthYear:1544});
  advanceReady(s,8);
  s.stats.health=0;
  advanceYear(s,'work',[]);
