@@ -137,6 +137,15 @@
       "license": "個別ページの利用条件を確認",
       "coverage": "江戸時代の職業・身分区分の研究上の留意点",
       "use": "士農工商の単純な四階級固定を避ける"
+    },
+    {
+      "id": "ndl-population",
+      "name": "国立国会図書館 レファレンス協同データベース 近世以前の日本人口",
+      "url": "https://crd.ndl.go.jp/reference/detail?page=ref_view&id=1000061198",
+      "kind": "historical_methodology",
+      "license": "各史料の利用条件を確認",
+      "coverage": "1600年頃の人口推計12–18百万人や江戸時代の人別改の記録",
+      "use": "数値間の不一致・測定範囲を保存し、偽の厳密出生確率を付けない"
     }
   ],
   "requirements": {

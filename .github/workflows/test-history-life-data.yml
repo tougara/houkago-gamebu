@@ -1,0 +1,24 @@
+name: Test Historical Life Data
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'games/history-life/**'
+      - 'tests/history-life-data.test.mjs'
+      - '.github/workflows/test-history-life-data.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  historical-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify historical data and provenance
+        run: node --test tests/history-life-data.test.mjs

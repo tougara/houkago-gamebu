@@ -50,7 +50,7 @@
         "valueMax": 18000000,
         "unit": "persons",
         "kind": "conflicting_historical_estimates_not_observed",
-        "sourceId": "ipss2026",
+        "sourceId": "ndl-population",
         "note": "国立国会図書館レファレンス事例でも複数の推計値を列挙。確定人口ではない。"
       },
       {
