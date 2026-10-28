@@ -15,8 +15,8 @@ function rng(state){
 }
 function draw(state,list){return list[Math.floor(rng(state)*list.length)]}
 function dice(state,p){return rng(state)<p}
-function log(state,title,text,{kind='life',sourceId=null,eventId=null}={}){
- state.log.push({year:state.year,age:state.age,title,text,kind,sourceId,eventId});
+function log(state,title,text,{kind='life',sourceId=null,eventId=null,personId=null}={}){
+ state.log.push({year:state.year,age:state.age,title,text,kind,sourceId,eventId,personId});
  if(state.log.length>LIMITS.log)state.log.shift();
 }
 function effect(state,deltas){

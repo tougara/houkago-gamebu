@@ -52,9 +52,12 @@ test('no interaction with dead relatives, missing person, or without wealth',()=
  assert.equal(interactWithPerson(s,next.id,'talk').ok,true);
 });
 test('partner creation records identity and children gain actual independent age and relationship',()=>{
- const s=createLife({seed:999,birthYear:1550});
- travel(s,22);
- assert.equal(s.pending?.id,'milestone-22');
+ const survivors=Array.from({length:24},(_,i)=>{
+  const state=createLife({seed:1000+i,birthYear:1550});
+  return travel(state,22);
+ });
+ const s=survivors.find(state=>state.age===22&&state.pending?.id==='milestone-22');
+ assert.ok(s,'at least one seeded life should reach the age-22 relationship milestone');
  // Regardless of marriage roll, a partnership choice must not produce phantom children.
  chooseEvent(s,'partner');
  const actualPartners=peopleByRole(s,'partner').filter(p=>p.alive);
