@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#172c3a">
+ <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
+ <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
+ <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
+ <link rel="stylesheet" href="./style.css?v=20261029-life1">
+</head>
+<body>
+<div class="app-shell">
+ <header class="site-top">
+  <a href="../" class="back" aria-label="ゲーム一覧へ戻る">← ゲーム一覧</a>
+  <div class="brand"><small>放課後ゲーム部 / 歴史人生シミュレーション</small><strong>時代のなかの一人</strong></div>
+  <button id="helpBtn" type="button" class="header-button">遊び方・出典</button>
+ </header>
+ <main id="app" class="app-content">
+  <section id="setupView" class="setup-view">
+   <div class="setup-hero">
+    <div class="hero-label">HISTORY OF ONE LIFE</div>
+    <h1>歴史には残らない、<br>たった一人の人生。</h1>
+    <p>戦国の戦乱、江戸の暮らし、幕末から明治への変化。その時代のどこかに生まれ、家族と暮らし、仕事をし、人生を選ぼう。</p>
+    <div class="hero-mark"><span>誕生</span><span>成長</span><span>歴史</span><span>人生記録</span></div>
+   </div>
+   <div class="setup-main">
+    <h2>生まれる時代を選ぶ</h2>
+    <p class="subtle">時代を選ばず、すべてランダムで始めることもできる。</p>
+    <fieldset class="era-choice" id="eraChoices"><legend class="sr-only">出生時代</legend>
+      <label class="era-card"><input type="radio" name="era" value="random" checked><span class="era-icon">✦</span><span class="era-text"><strong>おまかせ</strong><small>いつ、どこに生まれるかは運次第</small></span></label>
+      <label class="era-card"><input type="radio" name="era" value="sengoku"><span class="era-icon">⚔</span><span class="era-text"><strong>戦国〜安土桃山</strong><small>戦乱と動く社会</small></span></label>
+      <label class="era-card"><input type="radio" name="era" value="edo"><span class="era-icon">🏮</span><span class="era-text"><strong>江戸時代</strong><small>町と村、家業と人の縁</small></span></label>
+      <label class="era-card"><input type="radio" name="era" value="bakumatsu-meiji"><span class="era-icon">🚂</span><span class="era-text"><strong>幕末〜明治</strong><small>暮らしと制度の変化</small></span></label>
+    </fieldset>
+    <div class="setup-options">
+     <label>出生年 <span class="field-hint">省略するとランダム</span><input id="birthYearInput" type="number" inputmode="numeric" placeholder="ランダム" min="1400" max="1950"></label>
+     <label>出生地 <span class="field-hint">省略するとランダム</span>
+      <select id="regionSelect"><option value="">ランダム</option><option value="tokai">尾張・東海</option><option value="kinai">京・近畿</option><option value="kanto">江戸・関東</option><option value="tohoku">東北地方</option><option value="kyushu">九州地方</option><option value="setouchi">瀬戸内地方</option></select>
+     </label>
+     <label>セーブ先 <span class="field-hint">最大3つの人生を保存</span>
+      <select id="slotSelect"><option value="0">スロット1</option><option value="1">スロット2</option><option value="2">スロット3</option></select>
+     </label>
+    </div>
+    <p class="setup-clarify" id="birthYearNotice">出生年・家柄などの割合は研究統計ではなく、試作用のゲーム内抽選です。</p>
+    <button type="button" id="newLifeButton" class="primary large">この時代に生まれる <span aria-hidden="true">→</span></button>
+    <div class="save-list" id="savesList" aria-label="続きから遊べる人生"></div>
+   </div>
+  </section>
+  <section id="gameView" class="game-view" hidden>
+   <div class="game-ribbon">
+    <div><span id="eraBadge" class="eyebrow">戦国</span><strong id="gameYear">1550年</strong><span id="ageText">0歳</span></div>
+    <div class="game-ribbon-actions"><button id="historyButton" type="button" class="outline">年表・記録</button><button id="homeButton" type="button" class="outline">保存して戻る</button></div>
+   </div>
+   <div class="game-grid">
+    <div class="left-col">
+     <article class="life-card">
+      <div class="life-heading">
+       <span class="chapter" id="chapter">誕生</span>
+       <div class="person"><div class="portrait" id="portrait" aria-hidden="true">人</div><div><h1 id="personName">主人公</h1><p id="personDetail"></p></div></div>
+      </div>
+      <div class="story-box">
+       <div id="storyLabel" class="story-label">一年の物語</div>
+       <h2 id="storyTitle">新しい人生</h2>
+       <p id="storyText"></p>
+       <div id="storySource"></div>
+      </div>
+      <div id="actionArea" class="action-area" aria-live="polite"></div>
+     </article>
+    </div>
+    <aside class="right-col">
+     <section class="status-card">
+      <div class="section-heading"><h2>人生の状態</h2><span>0〜100 / 試作</span></div>
+      <div id="statBars" class="stat-bars"></div>
+      <div class="personal-facts" id="personalFacts"></div>
+     </section>
+     <section class="timeline-card">
+      <div class="section-heading"><h2>これまでの歩み</h2><button id="seeFullLog" class="text-button" type="button">すべて見る</button></div>
+      <div id="miniLog"></div>
+     </section>
+    </aside>
+   </div>
+  </section>
+ </main>
+ <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.1｜正式ゲーム一覧には未掲載</span></footer>
+</div>
+<div class="modal-layer" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle" hidden>
+ <div class="modal-card history-dialog">
+  <div class="modal-header"><div><small>YOUR LIFE, YOUR HISTORY</small><h2 id="historyTitle">人生の年表</h2></div><button id="closeHistory" class="close-button" type="button">閉じる ✕</button></div>
+  <div id="fullLog" class="full-log"></div>
+ </div>
+</div>
+<div class="modal-layer" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+ <div class="modal-card help-dialog">
+  <div class="modal-header"><div><small>ゲームの説明</small><h2 id="helpTitle">遊び方と歴史資料</h2></div><button id="closeHelp" class="close-button" type="button">閉じる ✕</button></div>
+  <div class="help-content">
+   <h3>どう遊ぶ？</h3><p>出生年・出生地・家柄が決まり、毎年の重点行動を選んで人生を進めます。歴史上の出来事と人生の節目では、特別な選択が登場します。寿命を迎えると人生の記録が残ります。</p>
+   <h3>「史実」と「ゲーム上の抽選」は別です</h3><p>有名な戦い、政策、災害の年号は資料に沿って扱います。しかし当時の一般人の正確な出生率・収入・死亡率を網羅する統計はありません。試作の数値は娯楽用の仮ルールであり、史実の統計や実際の確率ではありません。</p>
+   <h3>今回の制約</h3><p>最初の3時代・6地域で出生し、一生を進められる試作です。全歴史の網羅、精密な史料再現、子孫継承、現代・世界史は今後の制作対象です。日本史イベントは現在35件を収録。</p>
+   <div id="sourceLinks" class="source-links"></div>
+  </div>
+ </div>
+</div>
+<script type="module" src="./app.js?v=20261029-life1"></script>
+</body>
+</html>
