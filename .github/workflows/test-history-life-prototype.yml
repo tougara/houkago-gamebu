@@ -1,0 +1,31 @@
+name: Test Historical Life Prototype
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'games/history-life/**'
+      - 'tests/history-life-engine.test.mjs'
+      - 'tests/history-life-browser.test.mjs'
+      - '.github/workflows/test-history-life-prototype.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test historical simulator engine
+        run: node --test tests/history-life-engine.test.mjs tests/history-life-data.test.mjs
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install chromium
+      - name: Test playable mobile and PC browser simulation
+        run: node --test tests/history-life-browser.test.mjs
