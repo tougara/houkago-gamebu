@@ -123,3 +123,68 @@ test('5-year travel, archive and end-of-life view never allow unintended extra y
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('v0.2 mobile relationship interaction survives a reload and blocks a second interaction',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#birthYearInput').fill('1544');
+  await page.locator('#newLifeButton').click();
+  let attempts=0;
+  while((await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age))<7&&attempts++<9)
+    await page.locator('[data-action="child"]').click();
+  assert.equal(await page.locator('[data-choice]').count(),3);
+  await page.locator('[data-choice]').first().click();
+  assert.ok(await page.locator('.person-row').count()>=2);
+  const before=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  const button=page.locator('[data-social-action="talk"]').first();
+  await button.click();
+  const after=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(after.lastSocialYear,after.year);
+  assert.equal(after.people.length,before.people.length);
+  assert.ok(after.log.some(e=>e.kind==='relationship'));
+  assert.equal(await page.locator('[data-social-action="talk"]').count(),0,'no extra interaction in same year');
+  await page.locator('#homeButton').click();
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  const persisted=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(persisted.lastSocialYear,persisted.year);
+  assert.equal(persisted.people.length,after.people.length);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('career picker works after age 15; job skills and options survive save/reload',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#birthYearInput').fill('1544');
+  await page.locator('#newLifeButton').click();
+  let attempts=0;
+  while(attempts++<70){
+   const s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+   if(s.age>=15&&s.phase==='living')break;
+   if(s.phase==='event')await page.locator('[data-choice]').first().click();
+   else if(s.age<7)await page.locator('[data-action="child"]').click();
+   else await page.locator('[data-focus="work"]').click();
+  }
+  const before=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.ok(before.age>=15);
+  assert.ok(before.career.jobId!=='dependent');
+  await page.locator('#careerButton').click();
+  assert.ok(await page.locator('#careerModal').isVisible());
+  assert.ok(await page.locator('.job-row').count()>=8);
+  const available=page.locator('.job-row button:not(:disabled)').first();
+  assert.ok(await available.count()>0);
+  await available.click();
+  const after=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(after.career.lastSwitchYear,after.year);
+  await page.locator('#homeButton').click();
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  const restored=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.deepEqual(restored.career,after.career);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
