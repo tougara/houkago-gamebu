@@ -102,7 +102,16 @@ test('Owari citizen sees 1560 event as a local history card with independently l
   const href=await page.locator('#storySource a').getAttribute('href');
   assert.match(href,/^https:\/\//);
   await page.locator('[data-choice="observe"]').click();
-  assert.equal((await page.evaluate(()=>window.HistoryLifeDebug.snapshot)).phase,'living');
+  // A second life event in the same year must not be lost after the historical card.
+  for(let i=0;i<5;i++){
+   const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+   if(state.phase!=='event')break;
+   assert.equal(state.year,1560,'queued choice must not advance year');
+   await page.locator('[data-choice]').first().click();
+  }
+  const after=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(after.phase,'living');
+  assert.equal(after.year,1560);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
