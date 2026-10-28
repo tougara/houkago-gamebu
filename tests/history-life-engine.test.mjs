@@ -120,7 +120,7 @@ test('health/death and end of life produce a complete record without claiming pr
  assert.equal(s.phase,'ended');assert.equal(s.death.age,9);
  assert.equal(s.pending,null);assert.ok(s.log.find(e=>e.kind==='ending'));
  const r=lifeSummary(s);
- assert.equal(r.age,1);assert.equal(r.birthYear,1535);assert.ok(validateSave(s));
+ assert.equal(r.age,9);assert.equal(r.birthYear,1544);assert.ok(validateSave(s));
  assert.equal(advanceYear(s,'learn',[]).ok,false);
 });
 test('saved pending events can be serialized and resumed identically',()=>{
