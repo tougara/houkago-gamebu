@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {createLife,advanceYear,chooseEvent,validateSave,upgradeSave,interactWithPerson,changeCareer,jobOptions,lifeSummary} from '../games/history-life/engine.js';
 import {alivePeople,peopleByRole,personAge,RELATION_ACTIONS} from '../games/history-life/social.js';
 import {JOBS,getJob} from '../games/history-life/careers.js';
