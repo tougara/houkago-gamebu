@@ -173,7 +173,7 @@ test('career picker works after age 15; job skills and options survive save/relo
   assert.ok(before.career.jobId!=='dependent');
   await page.locator('#careerButton').click();
   assert.ok(await page.locator('#careerModal').isVisible());
-  assert.ok(await page.locator('.job-row').count()>=8);
+  assert.ok(await page.locator('.job-row').count()>=7,'Sengoku has 7 career paths');
   const available=page.locator('.job-row button:not(:disabled)').first();
   assert.ok(await available.count()>0);
   await available.click();
