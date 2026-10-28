@@ -35,3 +35,26 @@ body{background:radial-gradient(ellipse at 15% -20%,#ede4d3 0,transparent 45%),#
 
 .population-fact{margin:12px 0 0;padding:9px 10px;background:#f2f7ed;border:1px solid #d5e4d5;border-radius:9px;font-size:12px;line-height:1.6;color:#55715d}
 .population-fact b{font-size:11px;color:#4b766c}.population-fact small{font-size:10px;color:#7d8984}.population-fact a{color:#30767d}
+
+.people-card,.career-card{padding:15px 17px;background:#fffefa;border:1px solid #e6e0d5;border-radius:16px;box-shadow:0 5px 23px #34434d12;overflow:hidden}
+.relationship-help{color:#758888;margin:-6px 0 9px;font-size:11px;line-height:1.5}
+.people-list{display:grid;gap:7px;max-height:410px;overflow-y:auto}
+.person-row{padding:10px;background:#f7f9f5;border:1px solid #e2ebe6;border-radius:10px}
+.person-row.no-longer{opacity:.65;background:#f2f1ec}
+.person-row-head{display:flex;align-items:start;justify-content:space-between;gap:8px}
+.person-row-head>div{display:grid;gap:2px}.person-row-head b{font-size:13px}.person-row-head span{font-size:11px;color:#74858b}
+.person-row-head strong{font-size:10px;color:#607976;white-space:nowrap}.person-row>small{font-size:10px;color:#788982}
+.bond-meter{width:100%;height:7px;border-radius:12px;overflow:hidden;background:#e6e9e1;margin:6px 0}
+.bond-meter>span{display:block;height:100%;background:#8db9a2;border-radius:12px}
+.social-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:8px}
+.social-actions button{font-size:10px;font-weight:800;padding:7px 2px;border-radius:7px;background:#e5f2ec;border:1px solid #b2d6cd;color:#356e69}
+.social-actions button:disabled,.career-open:disabled,.job-row button:disabled{opacity:.55;cursor:not-allowed}
+.career-name{font-size:17px;font-weight:900;color:#385b60}.career-caption{font-size:12px;color:#708284;margin-top:5px}
+.career-status p{font-size:11px;color:#86928c;line-height:1.6}.career-open{width:100%;margin-top:4px}
+.career-disclaimer{font-size:12px;line-height:1.6;color:#8b7658;margin:9px 19px}
+.job-list{min-height:0;overflow-y:auto;padding:0 16px 20px;display:grid;gap:8px}
+.job-row{display:flex;align-items:center;justify-content:space-between;gap:9px;background:#f7faf6;border:1px solid #e2e9e1;border-radius:12px;padding:12px}
+.job-row>div{display:flex;flex-direction:column;gap:3px;min-width:0}.job-row b{font-size:14px}.job-row small{font-size:11px;color:#738681}.job-row span{font-size:10px;color:#8b8c79}
+.job-row button{border:1px solid #88b9b2;color:#256e70;background:#e4f3ee;border-radius:9px;min-width:106px;padding:9px 7px;font-size:11px;font-weight:850}
+@media(max-width:870px){.right-col{grid-template-columns:repeat(2,minmax(0,1fr))}.right-col .status-card,.right-col .timeline-card{grid-column:auto}}
+@media(max-width:540px){.right-col{grid-template-columns:1fr}.people-card,.career-card{padding:11px 13px}.people-list{max-height:none}.job-row button{min-width:94px}}

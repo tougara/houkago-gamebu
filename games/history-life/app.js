@@ -1,5 +1,7 @@
 import {ERAS,REGIONS,FOCI,getEra,getRegion} from './scenarios.js';
-import {createLife,advanceYear,chooseEvent,autoAdvance,lifeSummary,validateSave} from './engine.js';
+import {createLife,advanceYear,chooseEvent,autoAdvance,lifeSummary,validateSave,upgradeSave,interactWithPerson,changeCareer,jobOptions} from './engine.js';
+import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
+import {getJob} from './careers.js';
 const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
 let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[];
@@ -13,7 +15,7 @@ function storageRead(){
  try{
   const data=JSON.parse(localStorage.getItem(STORAGE)||'{}');
   if(Array.isArray(data.slots)){
-   slots=Array.from({length:3},(_,i)=>validateSave(data.slots[i])?data.slots[i]:null);
+   slots=Array.from({length:3},(_,i)=>upgradeSave(data.slots[i]));
   }
   if(Array.isArray(data.archives))archives=data.archives.slice(-20).filter(x=>x&&x.summary);
  }catch{slots=[null,null,null];archives=[]}
@@ -78,6 +80,39 @@ function logRows(items,full=false){
    (full?'<span class="log-desc">'+escaped(e.text)+'</span>':'')+
    '</div></div>';
  }).join(''):'<p class="empty-log">まだ記録はありません</p>';
+}
+function renderPeople(s){
+ const list=(s.people||[]).slice().sort((a,b)=>Number(b.alive)-Number(a.alive));
+ $('peopleCount').textContent=list.length+'人の縁';
+ const canSocial=s.phase==='living'&&s.age>=7&&s.lastSocialYear!==s.year;
+ $('peopleList').innerHTML=list.map(p=>{
+  const age=personAge(p,s.year),canTalk=p.alive&&canSocial;
+  const actions=canTalk?'<div class="social-actions">'+RELATION_ACTIONS.map(a=>'<button type="button" data-social="'+escaped(p.id)+'" data-social-action="'+escaped(a.id)+'"'+(s.stats.wealth<a.cost?' disabled':'')+'>'+escaped(a.name)+'</button>').join('')+'</div>':'';
+  return '<div class="person-row'+(!p.alive?' no-longer':'')+'">'+
+   '<div class="person-row-head"><div><b>'+escaped(p.name)+'</b><span>'+escaped(labelRole(p.role))+'・'+age+'歳'+(!p.alive?'・故人':'')+'</span></div>'+
+   '<strong>親密度 '+p.closeness+'</strong></div>'+
+   '<div class="bond-meter"><span style="width:'+p.closeness+'%"></span></div>'+
+   '<small>'+escaped(p.traitLabel)+'</small>'+actions+'</div>';
+ }).join('');
+}
+function renderCareer(s){
+ const c=s.career||{},job=getJob(c.jobId);
+ $('careerRank').textContent=s.age<15?'修業前':c.rank===2?'熟練':c.rank===1?'一人前':'見習い';
+ $('careerStatus').innerHTML='<div class="career-name">'+escaped(job?.name||s.profession)+'</div>'+
+  '<div class="career-caption">技能 '+(c.skill||0)+'/100 ・ 経験 '+(c.years||0)+'年</div>'+
+  '<div class="bond-meter"><span style="width:'+(c.skill||0)+'%"></span></div>'+
+  '<p>仕事、技能、家庭の負担、毎年の重点によって暮らしが変化する。</p>';
+ $('careerButton').disabled=s.age<15||s.phase!=='living';
+ $('careerButton').textContent=s.age<15?'15歳から仕事を選べます':'仕事を探す・転職する';
+}
+function showCareers(){
+ if(!current||current.age<15||current.phase!=='living')return;
+ $('jobList').innerHTML=jobOptions(current).map(job=>
+  '<div class="job-row"><div><b>'+escaped(job.name)+'</b><small>'+escaped(job.description)+'</small>'+
+  '<span>必要知恵 '+job.needKnowledge+'／技能 '+job.needSkill+(job.familyAccess?'・家の縁あり':'')+'</span></div>'+
+  '<button type="button" data-job="'+escaped(job.id)+'"'+(!job.available?' disabled':'')+'>'+
+  (job.available?'この仕事を目指す':escaped(job.reason||'応募不可'))+'</button></div>').join('');
+ $('careerModal').hidden=false;
 }
 function refreshLog(s){
  $('miniLog').innerHTML=logRows(s.log.slice(-7).reverse());
@@ -145,7 +180,7 @@ function render(){
   setStory('新しい命',s.year+'年、'+getRegion(s.regionId).name+'に生まれた。',
     era.intro+'\n'+s.background+'に生まれた'+s.name+'。ここから、たった一度の人生が始まる。');
  }
- renderStat(s);renderActions(s);refreshLog(s);
+ renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);
 }
 function advance(focus){
  if(!current||current.phase!=='living')return;
@@ -188,6 +223,28 @@ function showHistory(){
  $('historyTitle').textContent=current.name+'の人生年表';
  $('historyModal').hidden=false;
 }
+$('peopleList').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-social]');if(!btn||!current)return;
+ const id=btn.dataset.social;
+ const result=interactWithPerson(current,id,btn.dataset.socialAction);
+ if(result.ok){
+  const p=current.people.find(x=>x.id===id);
+  current.lastStory={label:'人とのつながり',title:p.name+'と過ごす時間',
+   text:p.name+'（'+labelRole(p.role)+'）との関係が少し変わった。'};
+  storageWrite();render();
+ }
+});
+$('careerButton').addEventListener('click',showCareers);
+$('closeCareer').addEventListener('click',()=>$('careerModal').hidden=true);
+$('jobList').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-job]');if(!btn||!current||btn.disabled)return;
+ const name=jobOptions(current).find(j=>j.id===btn.dataset.job)?.name||'仕事';
+ const result=changeCareer(current,btn.dataset.job);
+ if(!result.ok)return;
+ $('careerModal').hidden=true;
+ current.lastStory={label:'仕事の転機',title:name,text:current.log.at(-1)?.text||'新しい仕事を目指した。'};
+ storageWrite();render();
+});
 $('actionArea').addEventListener('click',e=>{
  const button=e.target.closest('button');if(!button)return;
  if(button.dataset.focus)advance(button.dataset.focus);
@@ -236,6 +293,7 @@ $('closeHelp').addEventListener('click',()=>$('helpModal').hidden=true);
 document.addEventListener('keydown',e=>{
  if(e.key!=='Escape')return;
  if(!$('historyModal').hidden)$('historyModal').hidden=true;
+ else if(!$('careerModal').hidden)$('careerModal').hidden=true;
  else if(!$('helpModal').hidden)$('helpModal').hidden=true;
 });
 function showSources(){

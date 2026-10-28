@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261029-life1">
+ <link rel="stylesheet" href="./style.css?v=20261029-life2">
 </head>
 <body>
 <div class="app-shell">
@@ -75,6 +75,16 @@
       <div class="personal-facts" id="personalFacts"></div>
       <p class="population-fact" id="populationContext" hidden></p>
      </section>
+     <section class="people-card">
+      <div class="section-heading"><h2>家族・人との縁</h2><span id="peopleCount">人物</span></div>
+      <p class="relationship-help">人は年を重ね、関係が変化します。交流は年に1回。</p>
+      <div id="peopleList" class="people-list"></div>
+     </section>
+     <section class="career-card">
+      <div class="section-heading"><h2>仕事と暮らし</h2><span id="careerRank">見習い</span></div>
+      <div id="careerStatus" class="career-status"></div>
+      <button id="careerButton" class="secondary career-open" type="button">仕事を探す・転職する</button>
+     </section>
      <section class="timeline-card">
       <div class="section-heading"><h2>これまでの歩み</h2><button id="seeFullLog" class="text-button" type="button">すべて見る</button></div>
       <div id="miniLog"></div>
@@ -83,7 +93,7 @@
    </div>
   </section>
  </main>
- <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.1｜正式ゲーム一覧には未掲載</span></footer>
+ <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.2｜正式ゲーム一覧には未掲載</span></footer>
 </div>
 <div class="modal-layer" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle" hidden>
  <div class="modal-card history-dialog">
@@ -91,17 +101,24 @@
   <div id="fullLog" class="full-log"></div>
  </div>
 </div>
+<div class="modal-layer" id="careerModal" role="dialog" aria-modal="true" aria-labelledby="careerTitle" hidden>
+ <div class="modal-card career-dialog">
+  <div class="modal-header"><div><small>CAREER PATH</small><h2 id="careerTitle">仕事を探す</h2></div><button id="closeCareer" class="close-button" type="button">閉じる ✕</button></div>
+  <p class="career-disclaimer">職業条件・収入・成功率はゲーム調整用の仮設定。家の縁は有利不利に影響しますが、絶対的な身分制限ではありません。</p>
+  <div id="jobList" class="job-list"></div>
+ </div>
+</div>
 <div class="modal-layer" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
  <div class="modal-card help-dialog">
   <div class="modal-header"><div><small>ゲームの説明</small><h2 id="helpTitle">遊び方と歴史資料</h2></div><button id="closeHelp" class="close-button" type="button">閉じる ✕</button></div>
   <div class="help-content">
-   <h3>どう遊ぶ？</h3><p>出生年・出生地・家柄が決まり、毎年の重点行動を選んで人生を進めます。歴史上の出来事と人生の節目では、特別な選択が登場します。寿命を迎えると人生の記録が残ります。</p>
+   <h3>どう遊ぶ？</h3><p>出生年・出生地・家柄が決まり、毎年の重点行動を選んで人生を進めます。歴史上の出来事と人生の節目では、特別な選択が登場します。寿命を迎えると人生の記録が残ります。</p><p>7歳からは家族や友人と年1回交流できます。15歳から仕事を探し、技能を積んで成長・転職できます。人との関係や仕事の変化は年表に残ります。</p>
    <h3>「史実」と「ゲーム上の抽選」は別です</h3><p>有名な戦い、政策、災害の年号は資料に沿って扱います。しかし当時の一般人の正確な出生率・収入・死亡率を網羅する統計はありません。試作の数値は娯楽用の仮ルールであり、史実の統計や実際の確率ではありません。</p>
    <h3>今回の制約</h3><p>最初の3時代・6地域で出生し、一生を進められる試作です。全歴史の網羅、精密な史料再現、子孫継承、現代・世界史は今後の制作対象です。日本史イベントは現在35件を収録。</p>
    <div id="sourceLinks" class="source-links"></div>
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261029-life1"></script>
+<script type="module" src="./app.js?v=20261029-life2"></script>
 </body>
 </html>
