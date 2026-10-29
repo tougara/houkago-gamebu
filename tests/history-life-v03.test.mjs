@@ -119,8 +119,8 @@ test('extra events depend on age, money conditions, job and family rather than p
  s.career.jobId='farm';s.money.debt=0;
  const possibles=new Set();
  for(let i=0;i<=50;i++){
-  const n=i/50*.24;
-  const ev=selectLifeEvent(s,()=>n);
+  let calls=0;
+  const ev=selectLifeEvent(s,()=>calls++===0?.01:i/50);
   if(ev)possibles.add(ev.id);
  }
  assert.ok(possibles.size>=4,'multiple event themes available to the same person');
