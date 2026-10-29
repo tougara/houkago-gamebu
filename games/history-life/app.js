@@ -348,8 +348,8 @@ function renderArchive(){
   const idx=archives.length-1-i,s=entry.summary||{};
   return '<div class="archive-item"><h3>'+escaped(s.name||'名前のない人生')+'</h3>'+
    '<p>'+escaped(getEra(s.eraId).name)+'／'+escaped(s.hometown||'')+
-   '／'+s.birthYear+'〜'+s.endYear+'年（'+s.age+'歳）</p>'+
-   '<p>仕事：'+escaped(s.profession||'不明')+'／子ども '+(s.children||0)+'人／史実 '+(s.historySeen||0)+'件</p>'+
+   '／'+escaped(s.birthYear)+'〜'+escaped(s.endYear)+'年（'+escaped(s.age)+'歳）</p>'+
+   '<p>仕事：'+escaped(s.profession||'不明')+'／子ども '+escaped(s.children||0)+'人／史実 '+escaped(s.historySeen||0)+'件</p>'+
    '<button type="button" data-archive-view="'+idx+'">この人生を振り返る</button></div>';
  }).join(''):'<p class="empty-log">まだ人生を終えた記録はありません。</p>';
 }
