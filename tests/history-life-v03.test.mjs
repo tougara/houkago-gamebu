@@ -148,3 +148,34 @@ test('dynamic events can interrupt time without erasing personal state',()=>{
  assert.ok(last>=16);
  assert.ok(validateSave(s));
 });
+
+test('multi-seed 3-era lifetime economy and event simulation stays finite and serializable',()=>{
+ let count=0,finished=0,pendingCount=0,hardship=0;
+ for(const eraId of ['sengoku','edo','bakumatsu-meiji'])for(let i=1;i<=24;i++){
+  const state=createLife({eraId,seed:i*21973});
+  const focus=['work','learn','family','rest','explore'][i%5];
+  for(let n=0;n<300&&state.phase!=='ended';n++){
+   if(state.phase==='event'){
+    const options=state.pending.options;
+    assert.ok(options.length>=3);
+    const result=chooseEvent(state,options[(i+n)%options.length].id);
+    assert.ok(result.ok);pendingCount++;
+   }else{
+    advanceYear(state,focus,[]);
+    if(state.phase==='living'&&state.age%7===0&&state.age>7)
+     manageMoney(state,'save');
+   }
+   assert.ok(validateSave(state),eraId+' seed '+i+' age '+state.age+' invalid');
+   const m=state.money;
+   assert.ok(Number.isFinite(m.cash+m.savings+m.debt));
+   assert.ok(m.cash>=0&&m.savings>=0&&m.debt>=0&&m.debt<=60);
+   assert.ok(Object.values(state.stats).every(x=>x>=0&&x<=100&&Number.isInteger(x)));
+   assert.ok(state.log.length<=240&&m.ledger.length<=80);
+  }
+  assert.equal(state.phase,'ended');
+  count++;finished++;
+  if(state.money.hadHardship)hardship++;
+ }
+ assert.equal(count,72);assert.equal(finished,72);
+ assert.ok(pendingCount>100,'life events appear across many lives');
+});
