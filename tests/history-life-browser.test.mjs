@@ -197,3 +197,56 @@ test('career picker works after age 15; job skills and options survive save/relo
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('time flow auto-advances, pauses, speeds up and skips to next real milestone',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#birthYearInput').fill('1544');
+  await page.locator('#newLifeButton').click();
+  const initial=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
+  assert.equal(initial,0);
+  await page.locator('#clockSpeed').selectOption('16');
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
+  await page.waitForTimeout(1700);
+  let age=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
+  assert.ok(age>=1&&age<=6,'fast clock advanced '+age+' years');
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  const paused=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
+  await page.waitForTimeout(850);
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age),paused);
+  await page.locator('#clockNext').click();
+  const result=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(result.age,7);
+  assert.equal(result.phase,'event');
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('cash flow, shopping, saved money ledger and debt display work on phone',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
+  await page.locator('[data-choice]').first().click();
+  let initial=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(await page.locator('.money-stat').count(),3);
+  assert.equal(await page.locator('#moneyFlow').isVisible(),true);
+  await page.locator('[data-money="food"]').click();
+  const result=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(result.money.lastSpendYear,result.year);
+  assert.ok(result.money.ledger.some(e=>e.label.includes('食べ物')));
+  assert.equal(await page.locator('[data-money="tools"]').isDisabled(),true);
+  await page.locator('#homeButton').click();
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  const restored=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.deepEqual(restored.money,result.money);
+  assert.equal(restored.year,initial.year);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});

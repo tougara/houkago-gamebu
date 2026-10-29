@@ -14,7 +14,7 @@ function travel(s,age){
 test('v0.2 birth creates distinct named, aging, personality-bearing relatives in all three eras',()=>{
  for(const eraId of ['sengoku','edo','bakumatsu-meiji']){
   const s=createLife({eraId,seed:4234,birthYear:eraId==='sengoku'?1550:eraId==='edo'?1700:1854});
-  assert.equal(s.version,2);assert.ok(validateSave(s));
+  assert.equal(s.version,3);assert.ok(validateSave(s));
   const father=peopleByRole(s,'father')[0],mother=peopleByRole(s,'mother')[0];
   for(const p of [father,mother]){
    assert.ok(p.id&&p.name&&p.traitLabel&&p.alive);
@@ -126,7 +126,7 @@ test('v0.1 legacy saves migrate without changing age, year, current event or RNG
  const before={year:legacy.year,age:legacy.age,rng:legacy.rng,pending:legacy.pending};
  const migrated=upgradeSave(legacy);
  assert.ok(migrated&&validateSave(migrated));
- assert.equal(migrated.version,2);
+ assert.equal(migrated.version,3);
  assert.equal(migrated.meta.upgradedFrom,1);
  assert.equal(migrated.year,before.year);assert.equal(migrated.age,before.age);
  assert.equal(migrated.rng,before.rng);
