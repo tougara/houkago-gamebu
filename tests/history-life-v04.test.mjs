@@ -1,4 +1,5 @@
 import {test} from 'node:test';
+import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {createLife,advanceYear,chooseEvent,lifeSummary} from '../games/history-life/engine.js';
 import {ensureExperience,recordLifeYear,getReflection,saveReflection,
@@ -79,4 +80,30 @@ test('life card describes a fictional life without implying historical statistic
  const t=lifeCardText(s);
  assert.ok(t.includes(s.name));assert.match(t,/架空の人生/);
  assert.ok(t.includes('時代のなかの一人'));
+});
+
+test('historic 1560 incident leads to a distinct consequence in 1562 without rewriting history',()=>{
+ const events=JSON.parse(readFileSync(new URL('../games/history-life/data/historical-events.jp.json',import.meta.url),'utf8')).events;
+ const s=createLife({seed:19,eraId:'sengoku',birthYear:1548,regionId:'tokai'});
+ for(let i=0;i<80&&s.year<1560&&s.phase!=='ended';i++){
+  if(s.phase==='event')resolveAutonomousEvents(s);
+  else advanceYear(s,'family',events);
+ }
+ assert.equal(s.year,1560);
+ assert.equal(s.pending.kind,'history');
+ assert.match(s.pending.title,/桶狭間/);
+ assert.equal(chooseEvent(s,'protect').ok,true);
+ assert.ok(s.historyThreads.some(t=>t.followupYear===1562&&t.choice==='protect'));
+ resolveAutonomousEvents(s);
+ for(let i=0;i<30&&s.year<1562&&s.phase!=='ended';i++){
+  if(s.phase==='event')resolveAutonomousEvents(s);
+  else advanceYear(s,'family',events);
+ }
+ assert.equal(s.year,1562);
+ const echo=s.pending?.kind==='history-echo'||s.eventQueue?.some(e=>e.kind==='history-echo');
+ assert.ok(echo,'historic personal outcome reappears two years later');
+ assert.ok(s.historyThreads.some(t=>t.resolved));
+ resolveAutonomousEvents(s);
+ assert.equal(s.phase,'living');
+ assert.ok(s.log.some(e=>e.kind==='history-echo'),'fictional follow-up remains separate from sourced fact');
 });

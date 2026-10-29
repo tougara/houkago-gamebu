@@ -209,3 +209,8 @@ Implemented independently:
 - Three alternative persons born the **same year but different Japanese regions**: each is an independent, deterministic fictional life simulated with the same game system. This is **not** census-backed or an actual historical survival cohort.
 - Local archive browser, recorded life cards, JSON save transfer. No account, shared public memorial, public API or external storage.
 - **Not yet implemented**: observed historical life-table survival curve, historically calibrated unequal birth odds, 100+ deeply connected stories, social sharing as image, formal classroom/accessible content modes, rigorous period economy and legal institutions.
+
+
+### Historic event follow-through (v0.4)
+
+After a history event choice, the game stores what the player decided and shows a follow-up dilemma **two years later** if that character survives. A farm worker hears different concerns from a merchant or craftsperson. The follow-up is explicitly a **fictional consequence** based on a real historic backdrop, not proof that any specific person was affected. A single-year event is not allowed to erase other same-year choices; the existing decision queue handles collisions. 1560 Okehazama -> 1562 follow-up has a regression test.
