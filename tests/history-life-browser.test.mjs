@@ -250,3 +250,25 @@ test('cash flow, shopping, saved money ledger and debt display work on phone',as
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('annual focus can be changed during automatic flow without advancing an extra year',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#birthYearInput').fill('1544');
+  await page.locator('#newLifeButton').click();
+  for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
+  await page.locator('[data-choice]').first().click();
+  await page.locator('#clockSpeed').selectOption('1');
+  await page.locator('#clockToggle').click();
+  const age=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
+  await page.locator('[data-focus="learn"]').click();
+  const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(state.age,age,'changing focus while running must not skip a year');
+  assert.equal(state.autoFocus,'learn');
+  assert.ok(await page.locator('[data-focus="learn"]').evaluate(x=>x.classList.contains('focus-active')));
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
+  await page.locator('#clockToggle').click();
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});

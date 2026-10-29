@@ -86,3 +86,6 @@ body{background:radial-gradient(ellipse at 15% -20%,#ede4d3 0,transparent 45%),#
 .money-ledger-row{display:flex;gap:8px;justify-content:space-between;align-items:center;border-bottom:1px solid #edf0e9;padding:6px 2px;font-size:11px}
 .money-ledger-row span{color:#66786f}.money-ledger-row b{color:#4d8a6c}.money-ledger-row b.negative{color:#a36f5d}
 @media(max-width:540px){.clock-panel{padding:8px;gap:6px;margin-bottom:7px}.clock-play,.clock-next{font-size:11px;padding:8px}.clock-info{flex:1 1 100%;text-align:center}.money-card{padding:11px 13px}.money-stat strong{font-size:16px}}
+
+.action-button.focus-active{background:#e4f5ea;border:2px solid #419c8a;box-shadow:0 0 0 2px #c7e9dc}
+.action-button.focus-active .action-symbol{background:#c2ead6;color:#2b806a}
