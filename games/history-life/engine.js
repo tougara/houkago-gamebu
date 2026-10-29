@@ -97,10 +97,21 @@ function historicalCard(s,ev){
  const dist=relevantLocal(ev,s.regionId);
  const local=dist==='nearby',nationwide=dist==='nationwide';
  const title=ev.title,place=getRegion(s.regionId).name;
+ const type=HIST_TAGS[ev.category]||'歴史の知らせ';
+ const work=s.career?.jobId;
+ const context=(work==='farm'&&['famine','disaster','war'].includes(ev.category))?
+  '田畑や食糧の行方が気にかかる。':
+  (work==='merchant'&&['war','policy','diplomacy','technology'].includes(ev.category))?
+  '取引や人の往来が変わるかもしれない。':
+  (work==='craft'&&['fire','disaster','technology'].includes(ev.category))?
+  '仕事場や道具を守る方法を考える。':
+  ['fire','earthquake','disaster','famine'].includes(ev.category)?
+  '住まいと食べ物の備えが気にかかる。':'';
  let description;
  if(local)description=String(s.year)+'年。'+title+'が起こった。'+place+'の暮らしにも、直接あるいは間接に変化が及ぶかもしれない。';
  else if(nationwide)description=String(s.year)+'年。'+title+'の知らせが届く。地域や立場によって、影響の受け方は異なる。';
  else description=String(s.year)+'年。'+title+'の話を耳にした。'+place+'で暮らす自分の身近に、どれほど関わるかはまだ分からない。';
+ description+=' '+type+'。'+context;
  defineEvent(s,ev.id,'歴史のなかで：'+title,description,[
   {id:'protect',label:'暮らしと家族の備えを優先する',delta:{wealth:-3,health:2,bonds:4},result:'自分にできる備えをした。どこまで役立つかは分からない。'},
   {id:'observe',label:'情報を集め、周囲の変化を見つめる',delta:{knowledge:5,bonds:1},result:'話を聞き、記録を確かめた。何が起こっているのか少し理解した。'},
@@ -156,6 +167,27 @@ function maybeDailyEvent(s){
  const x=options[Math.floor(rng(s)*options.length)];
  defineEvent(s,'daily-'+a,x[0],x[1],x[2]);return true;
 }
+function historyEcho(s){
+ if(!Array.isArray(s.historyThreads))s.historyThreads=[];
+ const due=s.historyThreads.filter(t=>!t.resolved&&t.followupYear===s.year);
+ for(const t of due){
+  t.resolved=true;
+  const path=t.choice==='protect'?'家族や暮らしを守ろうとした':t.choice==='observe'?'情報を集めた':'新しい道を探そうとした';
+  const person=s.people?.find(p=>p.alive&&p.closeness>=65);
+  const connection=person?' '+person.name+'とのつながりも、これからの選択に関わる。':'';
+  defineEvent(s,'echo-'+t.id,'あの歴史の出来事から2年',
+   t.title+'のころ、'+path+'。あれから二年。目の前には、また違う暮らしの課題がある。'+connection,[
+    {id:'rebuild',label:'仕事や家計を立て直す',delta:{wealth:6,knowledge:2,health:-2},
+      result:'二年前の選択を思い出しながら、日々の暮らしを整えた。'},
+    {id:'pass',label:'学んだことを身近な人に伝える',delta:{bonds:6,knowledge:3,wealth:-2},
+      result:'経験を語ることで、人とのつながりが深まった。'},
+    {id:'move',label:'新しい試みに挑戦する',delta:{wealth:9,knowledge:4,joy:2},
+      failDelta:{wealth:-5,knowledge:2,joy:-3},success:.52,
+      result:'前の出来事をきっかけに、次の仕事の機会をつかんだ。',
+      failResult:'試みはうまくいかなかったが、経験は後に残った。'}
+   ],{kind:'history-echo',eventId:t.sourceEventId});
+ }
+}
 function mortalityProbability(s){
  // Purely fictional prototype balance curve; NEVER cite as historical mortality statistics.
  const a=s.age;
@@ -206,6 +238,7 @@ export function advanceYear(s,focus='family',historicalEvents=[]){
  }
  // Queue each life milestone, person story and annual event after a historical
  // event. Otherwise a history event on a birthday could erase a life decision.
+ historyEcho(s);
  milestone(s);
  const rel=relationshipEvent(s,()=>rng(s));
  if(rel)defineEvent(s,rel.id,rel.title,rel.description,rel.options,{kind:'relationship',eventId:rel.personId});
@@ -222,6 +255,13 @@ export function chooseEvent(s,optionId){
  if(!opt)return {ok:false};
  const wasSuccess=opt.success==null||dice(s,opt.success);
  effect(s,wasSuccess?opt.delta:(opt.failDelta||{}));
+ if(ev.kind==='history'){
+  if(!Array.isArray(s.historyThreads))s.historyThreads=[];
+  if(s.historyThreads.length>=30)s.historyThreads.shift();
+  s.historyThreads.push({id:ev.id+'-'+s.year,sourceEventId:ev.eventId,
+   title:ev.title.replace(/^歴史のなかで：/,''),
+   choice:opt.id,year:s.year,followupYear:s.year+2,resolved:false});
+ }
  if(opt.job){s.profession=opt.job;setCareerFromLegacy(s,opt.job,(title,text,extra={})=>log(s,title,text,extra),()=>rng(s));}
  if(opt.personId&&Number.isFinite(opt.closeness)){
   const person=s.people.find(p=>p.id===opt.personId&&p.alive);
@@ -304,5 +344,6 @@ export function validateSave(obj){
  if(!validateMoney(obj))return false;
  if(obj.phase==='event'&&(!obj.pending||!Array.isArray(obj.pending.options)))return false;
  if(obj.eventQueue!=null&&(!Array.isArray(obj.eventQueue)||obj.eventQueue.length>6))return false;
+ if(obj.historyThreads!=null&&(!Array.isArray(obj.historyThreads)||obj.historyThreads.length>30))return false;
  return true;
 }
