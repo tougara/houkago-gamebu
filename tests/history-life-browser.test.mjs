@@ -26,7 +26,7 @@ before(async()=>{
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 });
 after(async()=>{await browser?.close();await new Promise(done=>server?.close(done))});
-async function open(width=390,height=780,query=''){
+async function open(width=390,height=780,query='?seed=444'){
  const context=await browser.newContext({viewport:{width,height},isMobile:width<650,hasTouch:width<650,deviceScaleFactor:1});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
