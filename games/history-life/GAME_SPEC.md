@@ -171,3 +171,28 @@
 - 自動進行中に重点ボタンを押した場合は、年を追加で進めずに次年の重点だけ変更し、選択状態を表示する。
 
 - URLの `?seed=19` のような正の整数シードを指定すると、同一の出生条件を使ったときの乱数列を再現できる（試作テスト用、任意）。
+
+
+## Ver.0.3.1 — Original-like pacing and historical-unit display (2026-10-29)
+
+### Tempo
+- Original 1in8b.life official settings: 30 / 60 / 90 minutes, with 40–60s per year at the ~60-minute setting. https://1in8b.life/ja/
+- This original game's standard is **45 seconds/year (1x)**; 30 min preset = 22.5s/year, 90 min preset = 67.5s/year.
+- Play/pause, 1–16x speed, event interruption, skip to next milestone, and manual year advancement remain. Settings saved in separate localStorage preference and can be changed in-game without changing a life save or RNG state.
+- Preset refers to a hypothetical ~80-year life, not a guaranteed real-time play length (death and paused events change that).
+
+### Historic currency and current-yen *reference* values
+- Currency presentation \`currency.js\` changes with **actual year**, including the 1871 New Currency Act transition.
+- Sengoku (pre-1601): mon and kanmon (1 kanmon = 1000 mon); indicative rice-price reference **1 mon ≈ ¥80** using the 1591 Kyoto 833 mon per koku and rice price of the reference's 2014 example. *Not a 2026 consumer-price index.*
+  - https://crd.ndl.go.jp/reference/entry/reference/show?asc=desc&dtltbs=1&fi=5_%E5%80%8B%E4%BA%BA&id=1000170301&ldtl=1&mcmd=25&ndc1=337&ndc_lk=1&page=ref_view&st=update
+- Edo 1601–1699: 1 ryo ≈ ¥100k rice-price basis and 1 ryo:4000 mon model.
+- Edo 1700–1841: 1 ryo ≈ ¥40k–60k and 1 ryo:4000 mon model.
+- Late Edo 1842–1870: 1 ryo ≈ ¥4k–10k and 1 ryo:6500 mon model. **Actual gold/copper exchange floated; historical official rate is not exact day-to-day reality.**
+  - https://www.imes.boj.or.jp/cm/history/edojidaino1ryowa/index.html
+- Meiji after 1871: yen/sen. Approximate yen comparisons refer to published examples:
+  - 1871–1892: 1 yen ≈ ¥20k–40k *based on an 1886 salary example*, approximate application to nearby years **not historically verified**;
+  - 1893–1906: 1 yen ≈ ¥6600 from 1893 rice-price example, approximate application to nearby years;
+  - 1907 onward: 1 yen ≈ ¥2569 from 1912 rice-price example, approximate application to nearby years.
+  - https://crd.ndl.go.jp/reference/entry/index.php?id=1000341363&page=ref_view
+- **Most important limitation**: internal money remains fictional \`money.js\` points for compatible saves, and coins are a UI accounting conversion (Sengoku 100 mon/point, Edo 500 mon/point, Meiji 25 sen/point). These *gameplay design parameters are NOT observed period wages, historical exchange rates, or a scientifically meaningful year-to-year asset price series.* In particular, **wealth displayed before/after 1871 is not historically exchanged at an actual conversion rate**. Users see both historical denomination and approximate modern yen from source-specific comparison methods; labels explain uncertainty.
+- No modifications to formal game catalog.

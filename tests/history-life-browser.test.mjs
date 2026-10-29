@@ -206,10 +206,13 @@ test('time flow auto-advances, pauses, speeds up and skips to next real mileston
   await page.locator('#newLifeButton').click();
   const initial=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
   assert.equal(initial,0);
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.secondsPerYear),45);
+  await page.locator('#clockDuration').selectOption('30');
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.secondsPerYear),22.5);
   await page.locator('#clockSpeed').selectOption('16');
   await page.locator('#clockToggle').click();
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
-  await page.waitForTimeout(1700);
+  await page.waitForTimeout(2250);
   let age=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
   assert.ok(age>=1&&age<=6,'fast clock advanced '+age+' years');
   await page.locator('#clockToggle').click();
@@ -269,6 +272,51 @@ test('annual focus can be changed during automatic flow without advancing an ext
   assert.ok(await page.locator('[data-focus="learn"]').evaluate(x=>x.classList.contains('focus-active')));
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
   await page.locator('#clockToggle').click();
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('historical coins and indicative modern-yen comparisons change when Meiji yen begins',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=19');
+ try{
+  await page.locator('[name="era"][value="bakumatsu-meiji"]').check();
+  await page.locator('#birthYearInput').fill('1865');
+  await page.locator('#newLifeButton').click();
+  assert.match(await page.locator('#moneyEraUnits').innerText(),/両/);
+  assert.match(await page.locator('#currencyExample').innerText(),/1両/);
+  assert.match(await page.locator('.money-stat').first().innerText(),/円目安/);
+  for(let i=0;i<6;i++){
+   const s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+   if(s.phase==='event')await page.locator('[data-choice]').first().click();
+   else await page.locator('[data-action="child"]').click();
+  }
+  const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(state.year,1871);
+  assert.match(await page.locator('#moneyEraUnits').innerText(),/円・銭/);
+  assert.match(await page.locator('#currencyExample').innerText(),/1円/);
+  const href=await page.locator('#currencySource').getAttribute('href');
+  assert.match(href,/^https:\/\//);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('life duration is selectable, persists across reload and stays synchronized on game screen',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('#lifeDuration').selectOption('90');
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  let clock=await page.evaluate(()=>window.HistoryLifeDebug.clock);
+  assert.equal(clock.duration,90);
+  assert.equal(clock.secondsPerYear,67.5);
+  assert.equal(await page.locator('#clockDuration').inputValue(),'90');
+  await page.locator('#clockDuration').selectOption('30');
+  clock=await page.evaluate(()=>window.HistoryLifeDebug.clock);
+  assert.equal(clock.secondsPerYear,22.5);
+  await page.locator('#homeButton').click();
+  assert.equal(await page.locator('#lifeDuration').inputValue(),'30');
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  assert.equal(await page.locator('#lifeDuration').inputValue(),'30');
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
