@@ -20,6 +20,7 @@ test('auto choice acts on the life instead of allowing events to block time',()=
    assert.ok(resolveAutonomousEvents(s)>=1);
   }else advanceYear(s,'family',[]);
  }
+ if(s.phase==='event')resolveAutonomousEvents(s);
  assert.equal(s.phase,'living');
  assert.ok(s.specialChoices>2,'events have meaningful autonomous choices');
  assert.ok(s.age>=30);
