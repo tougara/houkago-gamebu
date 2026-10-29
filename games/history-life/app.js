@@ -7,7 +7,7 @@ import {getJob} from './careers.js';
 import {ensureExperience,recordLifeYear,saveReflection,getReflection,contemporariesFor,resolveAutonomousEvents,lifeCardText} from './life-experience.js';
 const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
-let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[];
+let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[],viewedArchive=null;
 let clockRunning=false,clockSpeed=1,clockProgress=0,clockLast=0,lifeDuration=60,autoDecisions=false;
 const DURATION_KEY='houkago_history_life_duration_v1';
 const AUTO_KEY='houkago_history_life_auto_decisions_v1';
@@ -39,6 +39,7 @@ function storageWrite(){
  }catch(e){console.warn('Save unavailable',e);$('saveNotice').textContent='保存できない端末環境の可能性があります'}
 }
 function updateSetup(){
+ $('archiveCount').textContent=archives.length+'人の記録';
  $('savesList').innerHTML='<h3 class="saves-title">つづきから</h3>'+slots.map((s,i)=>{
   if(!s)return '<div class="slot-row"><span>記録'+(i+1)+'</span><div><strong>空きスロット</strong><small>まだ人生はありません</small></div></div>';
   return '<div class="slot-row"><span>記録'+(i+1)+'</span><div><strong>'+
@@ -305,7 +306,8 @@ function advance(focus){
 function archiveCurrent(){
  const key=String(activeSlot)+'-'+String(current.birthYear)+'-'+String(current.rng);
  if(archives.some(a=>a.key===key))return;
- archives.push({key,summary:lifeSummary(current),log:current.log.slice(),at:new Date().toISOString()});
+ archives.push({key,summary:lifeSummary(current),log:current.log.slice(),
+  reflections:{...current.reflections},lifeCard:lifeCardText(current),at:new Date().toISOString()});
  if(archives.length>20)archives.shift();
 }
 function choose(id){
@@ -334,11 +336,79 @@ function fastForward(){
 }
 function showHistory(){
  if(!current)return;
+ viewedArchive=null;
  clockRunning=false;clockProgress=0;
  $('fullLog').innerHTML=logRows(current.log.slice().reverse(),true);
  $('historyTitle').textContent=current.name+'の人生年表';
  $('historyModal').hidden=false;
 }
+function renderArchive(){
+ $('archiveCount').textContent=archives.length+'人の記録';
+ $('archiveList').innerHTML=archives.length?archives.slice().reverse().map((entry,i)=>{
+  const idx=archives.length-1-i,s=entry.summary||{};
+  return '<div class="archive-item"><h3>'+escaped(s.name||'名前のない人生')+'</h3>'+
+   '<p>'+escaped(getEra(s.eraId).name)+'／'+escaped(s.hometown||'')+
+   '／'+s.birthYear+'〜'+s.endYear+'年（'+s.age+'歳）</p>'+
+   '<p>仕事：'+escaped(s.profession||'不明')+'／子ども '+(s.children||0)+'人／史実 '+(s.historySeen||0)+'件</p>'+
+   '<button type="button" data-archive-view="'+idx+'">この人生を振り返る</button></div>';
+ }).join(''):'<p class="empty-log">まだ人生を終えた記録はありません。</p>';
+}
+function openArchive(){
+ stopClock();renderArchive();
+ $('archiveFeedback').textContent='';
+ $('archiveModal').hidden=false;
+}
+$('archiveButton').addEventListener('click',openArchive);
+$('closeArchive').addEventListener('click',()=>$('archiveModal').hidden=true);
+$('archiveList').addEventListener('click',e=>{
+ const b=e.target.closest('[data-archive-view]');if(!b)return;
+ const a=archives[Number(b.dataset.archiveView)];if(!a)return;
+ viewedArchive=a;
+ $('historyTitle').textContent=(a.summary?.name||'名前のない人')+'の人生の記録';
+ $('fullLog').innerHTML=logRows((a.log||[]).slice().reverse(),true);
+ $('archiveModal').hidden=true;
+ $('historyModal').hidden=false;
+});
+$('copyLifeCard').addEventListener('click',async()=>{
+ const text=viewedArchive?.lifeCard||
+  (current?lifeCardText(current):
+   viewedArchive?.summary?viewedArchive.summary.name+'の人生（'+viewedArchive.summary.age+'歳）':'');
+ if(!text)return;
+ try{await navigator.clipboard.writeText(text);$('copyFeedback').textContent='コピーしました'}
+ catch{$('copyFeedback').textContent='コピーできませんでした。対応ブラウザで開いてください'}
+});
+$('exportLives').addEventListener('click',()=>{
+ const data={format:'houkago-history-life-backup',version:1,
+  exportedAt:new Date().toISOString(),slots,archives};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='history-life-backup.json';document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),2000);
+ $('archiveFeedback').textContent='この端末の記録をファイルに保存しました。';
+});
+$('importLivesButton').addEventListener('click',()=>$('importLivesFile').click());
+$('importLivesFile').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];e.target.value='';if(!file)return;
+ if(file.size>2*1024*1024){$('archiveFeedback').textContent='2MB以下の記録ファイルを選んでください';return}
+ let raw;
+ try{raw=JSON.parse(await file.text())}catch{$('archiveFeedback').textContent='正しいJSONファイルではありません';return}
+ if(raw?.format!=='houkago-history-life-backup'||raw.version!==1||!Array.isArray(raw.slots)||
+  raw.slots.length>3||!Array.isArray(raw.archives)||raw.archives.length>20){
+  $('archiveFeedback').textContent='対応する人生記録ではありません';return
+ }
+ const restored=Array.from({length:3},(_,i)=>raw.slots[i]==null?null:upgradeSave(raw.slots[i]));
+ if(raw.slots.some((v,i)=>v!=null&&!restored[i])){
+  $('archiveFeedback').textContent='セーブデータの形式が不正です';return
+ }
+ if(!raw.archives.every(a=>a&&typeof a.key==='string'&&a.key.length<200&&
+  a.summary&&typeof a.summary.name==='string'&&Array.isArray(a.log)&&a.log.length<=240)){
+  $('archiveFeedback').textContent='人生記録の形式が不正です';return
+ }
+ if((slots.some(Boolean)||archives.length)&&!confirm('この端末のセーブと人生記録を、ファイルの内容で上書きする？'))return;
+ slots=restored.map(s=>s?ensureExperience(s):null);
+ archives=raw.archives;current=null;storageWrite();renderArchive();updateSetup();
+ $('archiveFeedback').textContent='記録を取り込みました';
+});
 $('moneyActions').addEventListener('click',e=>{
  const b=e.target.closest('[data-money]');
  if(!b||!current)return;
@@ -469,12 +539,13 @@ $('savesList').addEventListener('click',e=>{
 $('homeButton').addEventListener('click',()=>{storageWrite();showSetup()});
 $('historyButton').addEventListener('click',showHistory);
 $('seeFullLog').addEventListener('click',showHistory);
-$('closeHistory').addEventListener('click',()=>$('historyModal').hidden=true);
+$('closeHistory').addEventListener('click',()=>{$('historyModal').hidden=true;viewedArchive=null;$('copyFeedback').textContent=''});
 $('helpBtn').addEventListener('click',()=>{stopClock();$('helpModal').hidden=false});
 $('closeHelp').addEventListener('click',()=>$('helpModal').hidden=true);
 document.addEventListener('keydown',e=>{
  if(e.key!=='Escape')return;
  if(!$('historyModal').hidden)$('historyModal').hidden=true;
+ else if(!$('archiveModal').hidden)$('archiveModal').hidden=true;
  else if(!$('careerModal').hidden)$('careerModal').hidden=true;
  else if(!$('helpModal').hidden)$('helpModal').hidden=true;
 });
