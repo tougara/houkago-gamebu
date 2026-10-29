@@ -150,11 +150,12 @@ function renderMoney(s){
   return '<button type="button" data-money="'+action.id+'"'+(disabled?' disabled':'')+'>'+
    '<b>'+action.label+'</b><small>'+formatCurrency(action.cost,s)+'</small></button>';
  }).join('');
- $('moneyLedger').innerHTML=m.ledger.length?m.ledger.slice(-8).reverse().map(e=>
-   '<div class="money-ledger-row"><span>'+e.year+'年 '+escaped(e.label)+'</span><div class="money-ledger-detail">'+
-   '<b class="'+(e.amount<0?'negative':'')+'">'+formatCurrency(e.amount,s,{sign:true})+'</b>'+
-   '<small>'+yenEstimate(e.amount,s)+'</small></div></div>'
- ).join(''):'<p>まだ収支の記録はありません</p>';
+ $('moneyLedger').innerHTML=m.ledger.length?m.ledger.slice(-8).reverse().map(e=>{
+  const entryState={eraId:s.eraId,year:e.year};
+  return '<div class="money-ledger-row"><span>'+e.year+'年 '+escaped(e.label)+'</span><div class="money-ledger-detail">'+
+   '<b class="'+(e.amount<0?'negative':'')+'">'+formatCurrency(e.amount,entryState,{sign:true})+'</b>'+
+   '<small>'+yenEstimate(e.amount,entryState)+'</small></div></div>';
+ }).join(''):'<p>まだ収支の記録はありません</p>';
 }
 function renderClock(){
  $('clockToggle').textContent=clockRunning?'Ⅱ 一時停止':'▶ 自動で進める';

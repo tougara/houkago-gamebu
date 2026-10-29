@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createLife,advanceYear,chooseEvent,manageMoney,moneySummary,validateSave,upgradeSave} from '../games/history-life/engine.js';
 import {PURCHASES,UNIT} from '../games/history-life/money.js';
+import {formatCurrency,yenEstimate,currencyInfo,periodFor} from '../games/history-life/currency.js';
 import {selectLifeEvent} from '../games/history-life/life-events.js';
 function toAge(s,age){
  for(let i=0;i<150&&s.age<age&&s.phase!=='ended';i++){
@@ -178,4 +179,31 @@ test('multi-seed 3-era lifetime economy and event simulation stays finite and se
  }
  assert.equal(count,72);assert.equal(finished,72);
  assert.ok(pendingCount>100,'life events appear across many lives');
+});
+
+test('historical units and yen values vary with year, including the 1871 yen transition',()=>{
+ const s=createLife({eraId:'bakumatsu-meiji',seed:77,birthYear:1850});
+ s.year=1860;s.age=10;
+ assert.equal(periodFor(s),'edo');
+ assert.match(formatCurrency(40,s),/両/);
+ assert.match(yenEstimate(40,s),/円/);
+ const old=currencyInfo(s);
+ assert.equal(old.monPerRyo,6500);
+ s.year=1871;s.age=21;
+ assert.equal(periodFor(s),'meiji');
+ assert.equal(formatCurrency(10,s),'2円50銭');
+ assert.match(yenEstimate(10,s),/円/);
+ assert.match(yenEstimate(-10,s),/^−/);
+ s.year=1912;s.age=62;
+ assert.equal(currencyInfo(s).period,'meiji');
+ assert.equal(currencyInfo(s).yenLow,2569/100);
+});
+test('early Sengoku kanmon and Edo exchange figures are explicitly source-backed examples',()=>{
+ const s=createLife({eraId:'sengoku',seed:190,birthYear:1550});
+ assert.equal(formatCurrency(10,s),'1貫文');
+ assert.equal(yenEstimate(10,s),'約80,000円');
+ assert.ok(currencyInfo(s).caution.length>20);
+ s.eraId='edo';s.year=1750;
+ assert.equal(formatCurrency(8,s),'1両');
+ assert.match(yenEstimate(8,s),/40,000円.*60,000円/);
 });

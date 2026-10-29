@@ -85,7 +85,8 @@ export function yenEstimate(points,s){
  const meta=currencyInfo(s),unit=coinsFromPoints(points,s);
  const lows=unit*meta.yenLow,highs=unit*meta.yenHigh;
  if(unit===0)return '約0円';
- return meta.yenLow===meta.yenHigh?displayYen(lows):displayYen(lows)+'〜'+displayYen(highs);
+ const value=meta.yenLow===meta.yenHigh?displayYen(lows):displayYen(lows)+'〜'+displayYen(highs);
+ return points<0?'−'+value:value;
 }
 export function unitExample(s){
  const meta=currencyInfo(s);
