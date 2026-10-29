@@ -1,3 +1,4 @@
+import {formatCurrency} from './currency.js';
 /* Historical Life fictional household accounting (game units, NEVER historic currency).
  * Positive wealth choices post income, negative wealth choices post expenses.
  * All rates/costs/starting balances are GAME BALANCE placeholders, not historical statistics. */
@@ -92,13 +93,13 @@ export function moneyAction(s,action,effect,log){
  let desc='';
  if(action==='save'){
   if(m.cash<5)return {ok:false,reason:'手元のお金が足りません'};
-  m.cash-=5;m.savings+=5;desc='手元の5生活点を蓄えに移した。';
+  m.cash-=5;m.savings+=5;desc='手元の'+formatCurrency(5,s)+'を蓄えに移した。';
  }else if(action==='withdraw'){
   if(m.savings<5)return {ok:false,reason:'蓄えが足りません'};
-  m.savings-=5;m.cash+=5;desc='蓄えから5生活点を取り出した。';
+  m.savings-=5;m.cash+=5;desc='蓄えから'+formatCurrency(5,s)+'を取り出した。';
  }else if(action==='repay'){
   if(m.cash<5||m.debt<=0)return {ok:false,reason:'返済する借り入れか現金がありません'};
-  const amount=Math.min(5,m.debt);m.cash-=amount;m.debt-=amount;desc='借りたお金を'+amount+'生活点返した。';
+  const amount=Math.min(5,m.debt);m.cash-=amount;m.debt-=amount;desc='借りたお金を'+formatCurrency(amount,s)+'返した。';
  }else{
   const item=PURCHASES.find(p=>p.id===action);
   if(!item)return {ok:false,reason:'操作が無効'};
