@@ -1,13 +1,16 @@
 import {ERAS,REGIONS,FOCI,getEra,getRegion} from './scenarios.js';
 import {createLife,advanceYear,chooseEvent,autoAdvance,lifeSummary,validateSave,upgradeSave,interactWithPerson,changeCareer,jobOptions,manageMoney,moneySummary} from './engine.js';
 import {PURCHASES} from './money.js';
+import {currencyInfo,formatCurrency,yenEstimate,unitExample} from './currency.js';
 import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
 import {getJob} from './careers.js';
 const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
 let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[];
-let clockRunning=false,clockSpeed=1,clockProgress=0,clockLast=0;
-const YEAR_SECONDS=9;
+let clockRunning=false,clockSpeed=1,clockProgress=0,clockLast=0,lifeDuration=60;
+const DURATION_KEY='houkago_history_life_duration_v1';
+const YEAR_SECONDS=45;
+const secondsPerYear=()=>YEAR_SECONDS*lifeDuration/60;
 const barConfig=[
  ['health','健康','#7bbd99'],['knowledge','知恵・技能','#78a4c7'],
  ['bonds','人との縁','#d3ac73'],['joy','幸福','#cb8ca4'],['wealth','暮らしの余裕','#9b9bbd']
@@ -119,43 +122,51 @@ function showCareers(){
 }
 function renderMoney(s){
  const m=s.money;if(!m)return;
- const b=moneySummary(s);
+ const b=moneySummary(s),meta=currencyInfo(s);
+ $('moneyEraUnits').textContent=meta.unit;
  $('moneySummary').innerHTML=[
   ['手元',b.cash,''],['蓄え',b.savings,''],['借り入れ',b.debt,'debt']
- ].map(([label,value,cls])=>'<div class="money-stat '+cls+'"><small>'+label+'</small><strong>'+value+'</strong></div>').join('');
- $('moneyFlow').innerHTML='<span>今年の収入 <b>+'+b.yearIncome+'</b></span>'+
-  '<span>今年の支出 <b class="outgo">-'+b.yearExpenses+'</b></span>'+
-  '<span>正味 <b>'+(b.netWorth>=0?'+':'')+b.netWorth+'</b></span>';
+ ].map(([label,value,cls])=>'<div class="money-stat '+cls+'"><small>'+label+'</small>'+
+  '<strong>'+formatCurrency(value,s)+'</strong><em>現代円目安 '+yenEstimate(value,s)+'</em></div>').join('');
+ $('moneyFlow').innerHTML='<span>今年の収入 <b>+'+formatCurrency(b.yearIncome,s)+'</b><em>'+yenEstimate(b.yearIncome,s)+'</em></span>'+
+  '<span>今年の支出 <b class="outgo">−'+formatCurrency(b.yearExpenses,s)+'</b><em>'+yenEstimate(b.yearExpenses,s)+'</em></span>'+
+  '<span>正味 <b>'+formatCurrency(b.netWorth,s,{sign:true})+'</b><em>現代円 '+yenEstimate(b.netWorth,s)+'</em></span>';
+ $('currencyExample').textContent=unitExample(s);
+ $('currencyCaution').textContent=meta.caution;
+ $('currencySource').href=meta.source;
  const ready=s.phase==='living'&&s.age>=7;
  const buttons=[
-  {id:'food',label:'食料・備蓄 7',cost:7,once:true},
-  {id:'tools',label:'仕事の道具 10',cost:10,once:true},
-  {id:'learning',label:'学び 9',cost:9,once:true},
-  {id:'family',label:'家族との時間 6',cost:6,once:true},
-  {id:'save',label:'5点を貯蓄',cost:5,cash:true},
-  {id:'withdraw',label:'5点を引き出す',savings:true},
-  {id:'repay',label:'借入を返す',cash:true,needDebt:true}
+  {id:'food',label:'食料・備蓄',cost:7,once:true},
+  {id:'tools',label:'仕事の道具',cost:10,once:true},
+  {id:'learning',label:'学び',cost:9,once:true},
+  {id:'family',label:'家族との時間',cost:6,once:true},
+  {id:'save',label:'貯蓄へ移す',cost:5,cash:true},
+  {id:'withdraw',label:'貯蓄を引き出す',cost:5,savings:true},
+  {id:'repay',label:'借入を返す',cost:Math.min(5,b.debt),cash:true,needDebt:true}
  ];
  $('moneyActions').innerHTML=buttons.map(action=>{
   const insufficient=action.savings?m.savings<5:action.cash?m.cash<5:m.cash+m.savings<action.cost;
   const disabled=!ready||insufficient||action.once&&m.lastSpendYear===s.year||action.needDebt&&m.debt===0;
-  return '<button type="button" data-money="'+action.id+'"'+(disabled?' disabled':'')+'>'+action.label+'</button>';
+  return '<button type="button" data-money="'+action.id+'"'+(disabled?' disabled':'')+'>'+
+   '<b>'+action.label+'</b><small>'+formatCurrency(action.cost,s)+'</small></button>';
  }).join('');
  $('moneyLedger').innerHTML=m.ledger.length?m.ledger.slice(-8).reverse().map(e=>
-   '<div class="money-ledger-row"><span>'+e.year+'年 '+escaped(e.label)+'</span>'+
-   '<b class="'+(e.amount<0?'negative':'')+'">'+(e.amount>0?'+':'')+e.amount+'</b></div>'
+   '<div class="money-ledger-row"><span>'+e.year+'年 '+escaped(e.label)+'</span><div class="money-ledger-detail">'+
+   '<b class="'+(e.amount<0?'negative':'')+'">'+formatCurrency(e.amount,s,{sign:true})+'</b>'+
+   '<small>'+yenEstimate(e.amount,s)+'</small></div></div>'
  ).join(''):'<p>まだ収支の記録はありません</p>';
 }
 function renderClock(){
  $('clockToggle').textContent=clockRunning?'Ⅱ 一時停止':'▶ 自動で進める';
  $('clockToggle').setAttribute('aria-pressed',String(clockRunning));
  $('clockSpeed').value=String(clockSpeed);
+ $('clockDuration').value=String(lifeDuration);
  $('clockFill').style.width=Math.min(100,clockProgress*100)+'%';
  $('clockToggle').disabled=!current||current.phase!=='living';
  $('clockNext').disabled=!current||current.phase!=='living';
  $('clockInfo').textContent=current?.phase==='event'?'大切な選択で停止中':
   current?.phase==='ended'?'人生が終了しました':
-  clockRunning?'次の年まで約'+Math.ceil(Math.max(0,YEAR_SECONDS/clockSpeed*(1-clockProgress)))+'秒':
+  clockRunning?'次の年まで約'+Math.ceil(Math.max(0,secondsPerYear()/clockSpeed*(1-clockProgress)))+'秒':
   '停止中・重点を選んで1年ずつ進めることもできます';
 }
 function stopClock(){clockRunning=false;clockProgress=0;renderClock()}
@@ -165,7 +176,7 @@ function timeTick(timestamp){
  clockLast=timestamp;
  if(clockRunning&&current?.phase==='living'&&!document.hidden&&
   $('historyModal').hidden&&$('helpModal').hidden&&$('careerModal').hidden){
-  clockProgress+=Math.max(0,dt)*clockSpeed/YEAR_SECONDS;
+  clockProgress+=Math.max(0,dt)*clockSpeed/secondsPerYear();
   if(clockProgress>=1){
    clockProgress=0;
    advance(current.autoFocus||'family');
@@ -301,6 +312,16 @@ $('clockToggle').addEventListener('click',()=>{
  if(!current||current.phase!=='living')return;
  clockRunning=!clockRunning;clockProgress=0;renderClock();
 });
+function chooseDuration(value){
+ const next=Number(value);
+ if(![30,60,90].includes(next))return;
+ lifeDuration=next;
+ $('lifeDuration').value=String(next);$('clockDuration').value=String(next);
+ try{localStorage.setItem(DURATION_KEY,String(next))}catch{}
+ renderClock();
+}
+$('lifeDuration').addEventListener('change',e=>chooseDuration(e.target.value));
+$('clockDuration').addEventListener('change',e=>chooseDuration(e.target.value));
 $('clockSpeed').addEventListener('change',e=>{
  const v=Number(e.target.value);if([1,2,4,8,16].includes(v))clockSpeed=v;
  renderClock();
@@ -416,7 +437,7 @@ async function loadData(){
  showSources();
 }
 window.HistoryLifeDebug=Object.freeze({
- get clock(){return {running:clockRunning,speed:clockSpeed,progress:clockProgress}},
+ get clock(){return {running:clockRunning,speed:clockSpeed,progress:clockProgress,duration:lifeDuration,secondsPerYear:secondsPerYear()}},
  get active(){return !!current},
  get phase(){return current?.phase||'setup'},
  get snapshot(){return current?structuredClone(current):null},
@@ -425,4 +446,8 @@ window.HistoryLifeDebug=Object.freeze({
 });
 const saveNotice=document.createElement('div');saveNotice.id='saveNotice';saveNotice.className='save-notice';
 document.querySelector('.game-ribbon').appendChild(saveNotice);
-storageRead();selectEra();updateSetup();loadData();requestAnimationFrame(timeTick);
+storageRead();selectEra();updateSetup();
+try{const stored=Number(localStorage.getItem(DURATION_KEY));if([30,60,90].includes(stored))lifeDuration=stored}catch{}
+$('lifeDuration').value=String(lifeDuration);
+$('clockDuration').value=String(lifeDuration);
+loadData();requestAnimationFrame(timeTick);
