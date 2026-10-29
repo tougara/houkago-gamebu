@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261029-life3">
+ <link rel="stylesheet" href="./style.css?v=20261029-life31">
 </head>
 <body>
 <div class="app-shell">
@@ -33,7 +33,7 @@
       <label class="era-card"><input type="radio" name="era" value="edo"><span class="era-icon">🏮</span><span class="era-text"><strong>江戸時代</strong><small>町と村、家業と人の縁</small></span></label>
       <label class="era-card"><input type="radio" name="era" value="bakumatsu-meiji"><span class="era-icon">🚂</span><span class="era-text"><strong>幕末〜明治</strong><small>暮らしと制度の変化</small></span></label>
     </fieldset>
-    <div class="setup-options">
+    <div class="setup-duration"><label for="lifeDuration">ひとつの人生の長さ</label><select id="lifeDuration" aria-label="人生の長さ"><option value="30">約30分</option><option value="60" selected>約1時間（標準）</option><option value="90">約1時間30分</option></select><small>1倍速の目安。人生の途中でも変更できます。</small></div><div class="setup-options">
      <label>出生年 <span class="field-hint">省略するとランダム</span><input id="birthYearInput" type="number" inputmode="numeric" placeholder="ランダム" min="1400" max="1950"></label>
      <label>出生地 <span class="field-hint">省略するとランダム</span>
       <select id="regionSelect"><option value="">ランダム</option><option value="tokai">尾張・東海</option><option value="kinai">京・近畿</option><option value="kanto">江戸・関東</option><option value="tohoku">東北地方</option><option value="kyushu">九州地方</option><option value="setouchi">瀬戸内地方</option></select>
@@ -54,7 +54,7 @@
    </div>
    <div class="clock-panel" aria-label="時間進行">
     <button id="clockToggle" class="clock-play" type="button" aria-pressed="false">▶ 自動で進める</button>
-    <label class="clock-speed">進む速さ <select id="clockSpeed" aria-label="時間の速さ"><option value="1">1倍</option><option value="2">2倍</option><option value="4">4倍</option><option value="8">8倍</option><option value="16">16倍</option></select></label>
+    <label class="clock-speed">人生の長さ <select id="clockDuration" aria-label="人生の長さを変更"><option value="30">約30分</option><option value="60" selected>約1時間</option><option value="90">約1時間30分</option></select></label><label class="clock-speed">進む速さ <select id="clockSpeed" aria-label="時間の速さ"><option value="1">1倍</option><option value="2">2倍</option><option value="4">4倍</option><option value="8">8倍</option><option value="16">16倍</option></select></label>
     <button id="clockNext" type="button" class="clock-next">次の出来事まで »</button>
     <div class="clock-progress" aria-label="次の年まで"><div id="clockFill"></div></div>
     <small id="clockInfo" class="clock-info">停止中・1年ごとに進められます</small>
@@ -83,9 +83,9 @@
       <p class="population-fact" id="populationContext" hidden></p>
      </section>
      <section class="money-card">
-      <div class="section-heading"><h2>暮らしとお金</h2><span>生活点（架空の単位）</span></div>
+      <div class="section-heading"><h2>暮らしとお金</h2><span id="moneyEraUnits">当時の貨幣</span></div>
       <div id="moneySummary" class="money-summary"></div>
-      <div id="moneyFlow" class="money-flow"></div>
+      <div id="moneyFlow" class="money-flow"></div><div class="currency-reference"><div id="currencyExample"></div><small id="currencyCaution"></small><a id="currencySource" target="_blank" rel="noopener noreferrer">換算の資料を見る</a></div>
       <div class="money-actions" id="moneyActions"></div>
       <div id="moneyFeedback" class="money-feedback" role="status"></div>
       <details class="money-details"><summary>最近の収支を見る</summary><div id="moneyLedger"></div></details>
@@ -108,7 +108,7 @@
    </div>
   </section>
  </main>
- <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.3｜正式ゲーム一覧には未掲載</span></footer>
+ <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.3.1｜正式ゲーム一覧には未掲載</span></footer>
 </div>
 <div class="modal-layer" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle" hidden>
  <div class="modal-card history-dialog">
@@ -127,13 +127,13 @@
  <div class="modal-card help-dialog">
   <div class="modal-header"><div><small>ゲームの説明</small><h2 id="helpTitle">遊び方と歴史資料</h2></div><button id="closeHelp" class="close-button" type="button">閉じる ✕</button></div>
   <div class="help-content">
-   <h3>どう遊ぶ？</h3><p>出生年・出生地・家柄が決まり、毎年の重点行動を選んで人生を進めます。歴史上の出来事と人生の節目では、特別な選択が登場します。寿命を迎えると人生の記録が残ります。</p><p>7歳からは家族や友人と年1回交流できます。15歳から仕事を探し、技能を積んで成長・転職できます。人との関係や仕事の変化は年表に残ります。</p><p>▶で年齢が自動で進み、1〜16倍速で切り替えられます。イベントで止まったら選択して再開。次の出来事まで進めるボタンもあります。家計は生活点（架空の単位）で、毎年の収入・食費や住居の支出・貯蓄・借入を管理できます。</p>
+   <h3>どう遊ぶ？</h3><p>出生年・出生地・家柄が決まり、毎年の重点行動を選んで人生を進めます。歴史上の出来事と人生の節目では、特別な選択が登場します。寿命を迎えると人生の記録が残ります。</p><p>7歳からは家族や友人と年1回交流できます。15歳から仕事を探し、技能を積んで成長・転職できます。人との関係や仕事の変化は年表に残ります。</p><p>▶で年齢が自動で進み、30分・1時間・1時間30分の人生ペースから選べます。1時間設定では1年45秒（1倍速）。さらに1〜16倍速と一時停止、イベントでの自動停止があります。家計は戦国の貫文・文、江戸の両・文、明治の円・銭で表示し、現代円の目安も併記します。</p>
    <h3>「史実」と「ゲーム上の抽選」は別です</h3><p>有名な戦い、政策、災害の年号は資料に沿って扱います。しかし当時の一般人の正確な出生率・収入・死亡率を網羅する統計はありません。試作の数値は娯楽用の仮ルールであり、史実の統計や実際の確率ではありません。</p>
-   <h3>今回の制約</h3><p>最初の3時代・6地域で出生し、一生を進められる試作です。全歴史の網羅、精密な史料再現、子孫継承、現代・世界史は今後の制作対象です。日本史イベントは現在35件を収録。</p>
+   <h3>昔のお金の参考換算</h3><p>画面の当時の貨幣額は、従来のゲーム内生活点から作る<strong>架空の家計モデル</strong>です。現代円との比較も米価や賃金の一例を使った参考試算で、実際の全時代・全地域で成立した交換レートではありません。特に明治初期は後年の資料を仮適用しており、不確実性が大きいことに注意してください。</p><h3>今回の制約</h3><p>最初の3時代・6地域で出生し、一生を進められる試作です。全歴史の網羅、精密な史料再現、子孫継承、現代・世界史は今後の制作対象です。日本史イベントは現在35件を収録。</p>
    <div id="sourceLinks" class="source-links"></div>
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261029-life3"></script>
+<script type="module" src="./app.js?v=20261029-life31"></script>
 </body>
 </html>
