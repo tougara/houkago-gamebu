@@ -210,7 +210,7 @@ function renderActions(s){
   return;
  }
  target.innerHTML='<p class="action-title">今年、何を大切にして暮らす？</p><div class="action-grid">'+
-  FOCI.map(f=>'<button class="action-button" type="button" data-focus="'+f.id+'">'+
+  FOCI.map(f=>'<button class="action-button'+(s.autoFocus===f.id?' focus-active':'')+'" type="button" data-focus="'+f.id+'">'+
     '<span class="action-symbol">'+escaped(f.icon)+'</span><span><strong>'+escaped(f.name)+'</strong>'+
     '<small>'+escaped(f.effect)+'</small></span></button>').join('')+
  '</div><div class="action-toolbar">'+
@@ -337,7 +337,11 @@ $('jobList').addEventListener('click',e=>{
 });
 $('actionArea').addEventListener('click',e=>{
  const button=e.target.closest('button');if(!button)return;
- if(button.dataset.focus)advance(button.dataset.focus);
+ if(button.dataset.focus){
+  if(clockRunning&&current?.phase==='living'){
+   current.autoFocus=button.dataset.focus;storageWrite();renderActions(current);
+  }else advance(button.dataset.focus);
+ }
  else if(button.dataset.choice)choose(button.dataset.choice);
  else if(button.dataset.action==='child')advance('family');
  else if(button.dataset.action==='auto5')fastForward();
