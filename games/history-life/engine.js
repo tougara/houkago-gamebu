@@ -2,6 +2,7 @@ import {ERAS,REGIONS,FOCI,FIRST_NAMES,getEra,getRegion,relevantLocal} from './sc
 import {initPeople,syncFamily,createPartner,createChild,migratePeople,interact as interactPerson,tickPeople,relationshipEvent,labelRole} from './social.js';
 import {initCareer,migrateCareer,setCareerFromLegacy,careerYear,jobOptions,switchCareer as tryCareerSwitch} from './careers.js';
 import {initMoney,migrateMoney,beginMoneyYear,settleYear,changeMoney,moneyAction,validateMoney,moneySummary} from './money.js';
+import {selectLifeEvent} from './life-events.js';
 /* Deterministic, serializable history-life MVP engine.
  * Statistical caution: all personal odds here are invented GAME RULES,
  * never historical mortality, class, wealth or gender data. */
@@ -209,6 +210,10 @@ export function advanceYear(s,focus='family',historicalEvents=[]){
  const rel=relationshipEvent(s,()=>rng(s));
  if(rel)defineEvent(s,rel.id,rel.title,rel.description,rel.options,{kind:'relationship',eventId:rel.personId});
  maybeDailyEvent(s);
+ if(s.phase==='living'){
+  const event=selectLifeEvent(s,()=>rng(s));
+  if(event)defineEvent(s,'life-'+s.age+'-'+event.id,event.title,event.text,event.choices,{kind:event.type});
+ }
  return {ok:true,year:s.year,description:result,pending:!!s.pending,previousYear};
 }
 export function chooseEvent(s,optionId){
