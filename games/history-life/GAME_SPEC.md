@@ -196,3 +196,16 @@
   - https://crd.ndl.go.jp/reference/entry/index.php?id=1000341363&page=ref_view
 - **Most important limitation**: internal money remains fictional \`money.js\` points for compatible saves, and coins are a UI accounting conversion (Sengoku 100 mon/point, Edo 500 mon/point, Meiji 25 sen/point). These *gameplay design parameters are NOT observed period wages, historical exchange rates, or a scientifically meaningful year-to-year asset price series.* In particular, **wealth displayed before/after 1871 is not historically exchanged at an actual conversion rate**. Users see both historical denomination and approximate modern yen from source-specific comparison methods; labels explain uncertainty.
 - No modifications to formal game catalog.
+
+
+## Ver.0.4 — comparison, meaning and post-life features
+
+Official source: https://1in8b.life/ja/ (checked 2026-10-29). Official product reports full auto-play, peers born in the same second, reflections at 5/15/30/50/70, a one-year-per-square life map, a **real life-table survival curve**, previous-life replay and export/import via its own service. This game uses original code and unique historical content.
+
+Implemented independently:
+- Auto decisions use the current stats, profession, age, family and focus priorities; all decisions are still recorded with their original effects. Can toggle off.
+- Age 5/15/30/50/70 reflection questions, optional 140-character notes stored alongside save. These do not forcibly stop time, unlike the original.
+- A one-square-per-year life map (health, joy, work, historic incidents), saved incrementally. Pre-existing saves only show years captured after migration; no historical trajectory is invented.
+- Three alternative persons born the **same year but different Japanese regions**: each is an independent, deterministic fictional life simulated with the same game system. This is **not** census-backed or an actual historical survival cohort.
+- Local archive browser, recorded life cards, JSON save transfer. No account, shared public memorial, public API or external storage.
+- **Not yet implemented**: observed historical life-table survival curve, historically calibrated unequal birth odds, 100+ deeply connected stories, social sharing as image, formal classroom/accessible content modes, rigorous period economy and legal institutions.

@@ -320,3 +320,75 @@ test('life duration is selectable, persists across reload and stays synchronized
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('life-map, peers and reflection survive reopening the saved life',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=74');
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  assert.equal(await page.locator('#lifeMap .life-tile').count(),1);
+  assert.equal(await page.locator('.contemporary').count(),3);
+  for(let i=0;i<5;i++)await page.locator('[data-action="child"]').click();
+  assert.equal(await page.locator('#reflectionPanel').isVisible(),true);
+  await page.locator('#reflectionNote').fill('家族と過ごした日々を忘れない');
+  await page.locator('#reflectionForm button').click();
+  assert.equal(await page.locator('#reflectionSaved').isVisible(),true);
+  assert.equal(await page.locator('#lifeMap .life-tile').count(),6);
+  await page.locator('[data-life-age="3"]').click();
+  assert.match(await page.locator('#lifeMapDetail').innerText(),/3歳/);
+  await page.locator('#homeButton').click();
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(state.reflections['5'],'家族と過ごした日々を忘れない');
+  assert.equal(await page.locator('#lifeMap .life-tile').count(),6);
+  assert.equal(await page.locator('.contemporary').count(),3);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('manual event auto-choice clears pending events and allows pausing anytime',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=61');
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#newLifeButton').click();
+  await page.locator('#clockNext').click();
+  let s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(s.age,7);
+  assert.equal(s.phase,'event');
+  await page.locator('#autoDecisions').check();
+  s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(s.phase,'living');
+  assert.ok(s.specialChoices>0);
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.autoDecisions),true);
+  await page.locator('#clockSpeed').selectOption('16');
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('completed life goes to local archives, and invalid backups are rejected',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=46');
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  await page.locator('#autoDecisions').check();
+  await page.locator('#clockNext').click();
+  const s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(s.phase,'ended');
+  await page.locator('#homeButton').click();
+  await page.locator('#archiveButton').click();
+  assert.ok(await page.locator('[data-archive-view]').count()>=1);
+  await page.locator('[data-archive-view]').first().click();
+  assert.equal(await page.locator('#historyModal').isVisible(),true);
+  assert.match(await page.locator('#fullLog').innerText(),/人生の終わり/);
+  await page.locator('#closeHistory').click();
+  await page.locator('#archiveButton').click();
+  const bad={name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"wrong":1}')};
+  await page.locator('#importLivesFile').setInputFiles(bad);
+  assert.match(await page.locator('#archiveFeedback').innerText(),/対応する人生記録ではありません/);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
