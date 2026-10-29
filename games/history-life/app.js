@@ -1,10 +1,13 @@
 import {ERAS,REGIONS,FOCI,getEra,getRegion} from './scenarios.js';
-import {createLife,advanceYear,chooseEvent,autoAdvance,lifeSummary,validateSave,upgradeSave,interactWithPerson,changeCareer,jobOptions} from './engine.js';
+import {createLife,advanceYear,chooseEvent,autoAdvance,lifeSummary,validateSave,upgradeSave,interactWithPerson,changeCareer,jobOptions,manageMoney,moneySummary} from './engine.js';
+import {PURCHASES} from './money.js';
 import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
 import {getJob} from './careers.js';
 const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
 let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[];
+let clockRunning=false,clockSpeed=1,clockProgress=0,clockLast=0;
+const YEAR_SECONDS=9;
 const barConfig=[
  ['health','健康','#7bbd99'],['knowledge','知恵・技能','#78a4c7'],
  ['bonds','人との縁','#d3ac73'],['joy','幸福','#cb8ca4'],['wealth','暮らしの余裕','#9b9bbd']
@@ -36,12 +39,12 @@ function updateSetup(){
  }).join('');
 }
 function showSetup(){
- current=null;
+ stopClock();current=null;
  $('gameView').hidden=true;$('setupView').hidden=false;updateSetup();
  window.scrollTo({top:0,behavior:'instant'});
 }
 function openLife(s,slot){
- activeSlot=slot;current=s;
+ stopClock();activeSlot=slot;current=s;
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
  render();window.scrollTo({top:0,behavior:'instant'});
@@ -114,6 +117,63 @@ function showCareers(){
   (job.available?'この仕事を目指す':escaped(job.reason||'応募不可'))+'</button></div>').join('');
  $('careerModal').hidden=false;
 }
+function renderMoney(s){
+ const m=s.money;if(!m)return;
+ const b=moneySummary(s);
+ $('moneySummary').innerHTML=[
+  ['手元',b.cash,''],['蓄え',b.savings,''],['借り入れ',b.debt,'debt']
+ ].map(([label,value,cls])=>'<div class="money-stat '+cls+'"><small>'+label+'</small><strong>'+value+'</strong></div>').join('');
+ $('moneyFlow').innerHTML='<span>今年の収入 <b>+'+b.yearIncome+'</b></span>'+
+  '<span>今年の支出 <b class="outgo">-'+b.yearExpenses+'</b></span>'+
+  '<span>正味 <b>'+(b.netWorth>=0?'+':'')+b.netWorth+'</b></span>';
+ const ready=s.phase==='living'&&s.age>=7;
+ const buttons=[
+  {id:'food',label:'食料・備蓄 7',cost:7,once:true},
+  {id:'tools',label:'仕事の道具 10',cost:10,once:true},
+  {id:'learning',label:'学び 9',cost:9,once:true},
+  {id:'family',label:'家族との時間 6',cost:6,once:true},
+  {id:'save',label:'5点を貯蓄',cost:5,cash:true},
+  {id:'withdraw',label:'5点を引き出す',savings:true},
+  {id:'repay',label:'借入を返す',cash:true,needDebt:true}
+ ];
+ $('moneyActions').innerHTML=buttons.map(action=>{
+  const insufficient=action.savings?m.savings<5:action.cash?m.cash<5:m.cash+m.savings<action.cost;
+  const disabled=!ready||insufficient||action.once&&m.lastSpendYear===s.year||action.needDebt&&m.debt===0;
+  return '<button type="button" data-money="'+action.id+'"'+(disabled?' disabled':'')+'>'+action.label+'</button>';
+ }).join('');
+ $('moneyLedger').innerHTML=m.ledger.length?m.ledger.slice(-8).reverse().map(e=>
+   '<div class="money-ledger-row"><span>'+e.year+'年 '+escaped(e.label)+'</span>'+
+   '<b class="'+(e.amount<0?'negative':'')+'">'+(e.amount>0?'+':'')+e.amount+'</b></div>'
+ ).join(''):'<p>まだ収支の記録はありません</p>';
+}
+function renderClock(){
+ $('clockToggle').textContent=clockRunning?'Ⅱ 一時停止':'▶ 自動で進める';
+ $('clockToggle').setAttribute('aria-pressed',String(clockRunning));
+ $('clockSpeed').value=String(clockSpeed);
+ $('clockFill').style.width=Math.min(100,clockProgress*100)+'%';
+ $('clockToggle').disabled=!current||current.phase!=='living';
+ $('clockNext').disabled=!current||current.phase!=='living';
+ $('clockInfo').textContent=current?.phase==='event'?'大切な選択で停止中':
+  current?.phase==='ended'?'人生が終了しました':
+  clockRunning?'次の年まで約'+Math.ceil(Math.max(0,YEAR_SECONDS/clockSpeed*(1-clockProgress)))+'秒':
+  '停止中・重点を選んで1年ずつ進めることもできます';
+}
+function stopClock(){clockRunning=false;clockProgress=0;renderClock()}
+function timeTick(timestamp){
+ if(!clockLast)clockLast=timestamp;
+ const dt=Math.min((timestamp-clockLast)/1000,.2);
+ clockLast=timestamp;
+ if(clockRunning&&current?.phase==='living'&&!document.hidden&&
+  $('historyModal').hidden&&$('helpModal').hidden&&$('careerModal').hidden){
+  clockProgress+=Math.max(0,dt)*clockSpeed/YEAR_SECONDS;
+  if(clockProgress>=1){
+   clockProgress=0;
+   advance(current.autoFocus||'family');
+  }
+ }
+ renderClock();
+ requestAnimationFrame(timeTick);
+}
 function refreshLog(s){
  $('miniLog').innerHTML=logRows(s.log.slice(-7).reverse());
 }
@@ -180,15 +240,17 @@ function render(){
   setStory('新しい命',s.year+'年、'+getRegion(s.regionId).name+'に生まれた。',
     era.intro+'\n'+s.background+'に生まれた'+s.name+'。ここから、たった一度の人生が始まる。');
  }
- renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);
+ renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();
 }
 function advance(focus){
  if(!current||current.phase!=='living')return;
+ clockProgress=0;
  const r=advanceYear(current,focus,events);
  if(!r.ok)return;
  current.lastStory={label:'人生の一年',title:current.age+'歳の暮らし',
   text:r.description+'\n'+current.year+'年。時代は少しずつ移り変わっていく。'};
  if(current.phase==='ended')archiveCurrent();
+ if(current.phase!=='living')clockRunning=false;
  storageWrite();render();
 }
 function archiveCurrent(){
@@ -210,6 +272,7 @@ function choose(id){
 }
 function fastForward(){
  if(!current||current.phase!=='living'||current.age<7)return;
+ clockRunning=false;clockProgress=0;
  const r=autoAdvance(current,5,events);
  current.lastStory={label:'時間の流れ',title:r.advanced+'年の歩み',
   text:'同じ重点を続けながら、'+r.advanced+'年が過ぎた。'+
@@ -219,10 +282,37 @@ function fastForward(){
 }
 function showHistory(){
  if(!current)return;
+ clockRunning=false;clockProgress=0;
  $('fullLog').innerHTML=logRows(current.log.slice().reverse(),true);
  $('historyTitle').textContent=current.name+'の人生年表';
  $('historyModal').hidden=false;
 }
+$('moneyActions').addEventListener('click',e=>{
+ const b=e.target.closest('[data-money]');
+ if(!b||!current)return;
+ const result=manageMoney(current,b.dataset.money);
+ if(result.ok){
+  $('moneyFeedback').textContent='';
+  current.lastStory={label:'暮らしとお金',title:'家計の選択',text:current.log.at(-1)?.text||'暮らしを見直した。'};
+  storageWrite();render();
+ }else $('moneyFeedback').textContent=result.reason||'操作できません';
+});
+$('clockToggle').addEventListener('click',()=>{
+ if(!current||current.phase!=='living')return;
+ clockRunning=!clockRunning;clockProgress=0;renderClock();
+});
+$('clockSpeed').addEventListener('change',e=>{
+ const v=Number(e.target.value);if([1,2,4,8,16].includes(v))clockSpeed=v;
+ renderClock();
+});
+$('clockNext').addEventListener('click',()=>{
+ if(!current||current.phase!=='living')return;
+ clockRunning=false;clockProgress=0;
+ let n=0;
+ while(n<110&&current.phase==='living'){advance(current.autoFocus||'family');n++}
+ renderClock();
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&clockRunning)stopClock()});
 $('peopleList').addEventListener('click',e=>{
  const btn=e.target.closest('[data-social]');if(!btn||!current)return;
  const id=btn.dataset.social;
@@ -288,7 +378,7 @@ $('homeButton').addEventListener('click',()=>{storageWrite();showSetup()});
 $('historyButton').addEventListener('click',showHistory);
 $('seeFullLog').addEventListener('click',showHistory);
 $('closeHistory').addEventListener('click',()=>$('historyModal').hidden=true);
-$('helpBtn').addEventListener('click',()=>$('helpModal').hidden=false);
+$('helpBtn').addEventListener('click',()=>{stopClock();$('helpModal').hidden=false});
 $('closeHelp').addEventListener('click',()=>$('helpModal').hidden=true);
 document.addEventListener('keydown',e=>{
  if(e.key!=='Escape')return;
@@ -319,6 +409,7 @@ async function loadData(){
  showSources();
 }
 window.HistoryLifeDebug=Object.freeze({
+ get clock(){return {running:clockRunning,speed:clockSpeed,progress:clockProgress}},
  get active(){return !!current},
  get phase(){return current?.phase||'setup'},
  get snapshot(){return current?structuredClone(current):null},
@@ -327,4 +418,4 @@ window.HistoryLifeDebug=Object.freeze({
 });
 const saveNotice=document.createElement('div');saveNotice.id='saveNotice';saveNotice.className='save-notice';
 document.querySelector('.game-ribbon').appendChild(saveNotice);
-storageRead();selectEra();updateSetup();loadData();
+storageRead();selectEra();updateSetup();loadData();requestAnimationFrame(timeTick);

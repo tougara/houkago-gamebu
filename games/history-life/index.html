@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261029-life2">
+ <link rel="stylesheet" href="./style.css?v=20261029-life3">
 </head>
 <body>
 <div class="app-shell">
@@ -52,6 +52,13 @@
     <div><span id="eraBadge" class="eyebrow">戦国</span><strong id="gameYear">1550年</strong><span id="ageText">0歳</span></div>
     <div class="game-ribbon-actions"><button id="historyButton" type="button" class="outline">年表・記録</button><button id="homeButton" type="button" class="outline">保存して戻る</button></div>
    </div>
+   <div class="clock-panel" aria-label="時間進行">
+    <button id="clockToggle" class="clock-play" type="button" aria-pressed="false">▶ 自動で進める</button>
+    <label class="clock-speed">進む速さ <select id="clockSpeed" aria-label="時間の速さ"><option value="1">1倍</option><option value="2">2倍</option><option value="4">4倍</option><option value="8">8倍</option><option value="16">16倍</option></select></label>
+    <button id="clockNext" type="button" class="clock-next">次の出来事まで »</button>
+    <div class="clock-progress" aria-label="次の年まで"><div id="clockFill"></div></div>
+    <small id="clockInfo" class="clock-info">停止中・1年ごとに進められます</small>
+   </div>
    <div class="game-grid">
     <div class="left-col">
      <article class="life-card">
@@ -75,6 +82,14 @@
       <div class="personal-facts" id="personalFacts"></div>
       <p class="population-fact" id="populationContext" hidden></p>
      </section>
+     <section class="money-card">
+      <div class="section-heading"><h2>暮らしとお金</h2><span>生活点（架空の単位）</span></div>
+      <div id="moneySummary" class="money-summary"></div>
+      <div id="moneyFlow" class="money-flow"></div>
+      <div class="money-actions" id="moneyActions"></div>
+      <div id="moneyFeedback" class="money-feedback" role="status"></div>
+      <details class="money-details"><summary>最近の収支を見る</summary><div id="moneyLedger"></div></details>
+     </section>
      <section class="people-card">
       <div class="section-heading"><h2>家族・人との縁</h2><span id="peopleCount">人物</span></div>
       <p class="relationship-help">人は年を重ね、関係が変化します。交流は年に1回。</p>
@@ -93,7 +108,7 @@
    </div>
   </section>
  </main>
- <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.2｜正式ゲーム一覧には未掲載</span></footer>
+ <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.3｜正式ゲーム一覧には未掲載</span></footer>
 </div>
 <div class="modal-layer" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle" hidden>
  <div class="modal-card history-dialog">
@@ -112,13 +127,13 @@
  <div class="modal-card help-dialog">
   <div class="modal-header"><div><small>ゲームの説明</small><h2 id="helpTitle">遊び方と歴史資料</h2></div><button id="closeHelp" class="close-button" type="button">閉じる ✕</button></div>
   <div class="help-content">
-   <h3>どう遊ぶ？</h3><p>出生年・出生地・家柄が決まり、毎年の重点行動を選んで人生を進めます。歴史上の出来事と人生の節目では、特別な選択が登場します。寿命を迎えると人生の記録が残ります。</p><p>7歳からは家族や友人と年1回交流できます。15歳から仕事を探し、技能を積んで成長・転職できます。人との関係や仕事の変化は年表に残ります。</p>
+   <h3>どう遊ぶ？</h3><p>出生年・出生地・家柄が決まり、毎年の重点行動を選んで人生を進めます。歴史上の出来事と人生の節目では、特別な選択が登場します。寿命を迎えると人生の記録が残ります。</p><p>7歳からは家族や友人と年1回交流できます。15歳から仕事を探し、技能を積んで成長・転職できます。人との関係や仕事の変化は年表に残ります。</p><p>▶で年齢が自動で進み、1〜16倍速で切り替えられます。イベントで止まったら選択して再開。次の出来事まで進めるボタンもあります。家計は生活点（架空の単位）で、毎年の収入・食費や住居の支出・貯蓄・借入を管理できます。</p>
    <h3>「史実」と「ゲーム上の抽選」は別です</h3><p>有名な戦い、政策、災害の年号は資料に沿って扱います。しかし当時の一般人の正確な出生率・収入・死亡率を網羅する統計はありません。試作の数値は娯楽用の仮ルールであり、史実の統計や実際の確率ではありません。</p>
    <h3>今回の制約</h3><p>最初の3時代・6地域で出生し、一生を進められる試作です。全歴史の網羅、精密な史料再現、子孫継承、現代・世界史は今後の制作対象です。日本史イベントは現在35件を収録。</p>
    <div id="sourceLinks" class="source-links"></div>
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261029-life2"></script>
+<script type="module" src="./app.js?v=20261029-life3"></script>
 </body>
 </html>
