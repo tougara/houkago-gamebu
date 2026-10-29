@@ -4,11 +4,13 @@ import {PURCHASES} from './money.js';
 import {currencyInfo,formatCurrency,yenEstimate,unitExample} from './currency.js';
 import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
 import {getJob} from './careers.js';
+import {ensureExperience,recordLifeYear,saveReflection,getReflection,contemporariesFor,resolveAutonomousEvents,lifeCardText} from './life-experience.js';
 const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
 let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[];
-let clockRunning=false,clockSpeed=1,clockProgress=0,clockLast=0,lifeDuration=60;
+let clockRunning=false,clockSpeed=1,clockProgress=0,clockLast=0,lifeDuration=60,autoDecisions=false;
 const DURATION_KEY='houkago_history_life_duration_v1';
+const AUTO_KEY='houkago_history_life_auto_decisions_v1';
 const YEAR_SECONDS=45;
 const secondsPerYear=()=>YEAR_SECONDS*lifeDuration/60;
 const barConfig=[
@@ -21,7 +23,11 @@ function storageRead(){
  try{
   const data=JSON.parse(localStorage.getItem(STORAGE)||'{}');
   if(Array.isArray(data.slots)){
-   slots=Array.from({length:3},(_,i)=>upgradeSave(data.slots[i]));
+   slots=Array.from({length:3},(_,i)=>{
+    const loaded=upgradeSave(data.slots[i]);
+    if(loaded){ensureExperience(loaded);recordLifeYear(loaded)}
+    return loaded;
+   });
   }
   if(Array.isArray(data.archives))archives=data.archives.slice(-20).filter(x=>x&&x.summary);
  }catch{slots=[null,null,null];archives=[]}
@@ -47,7 +53,7 @@ function showSetup(){
  window.scrollTo({top:0,behavior:'instant'});
 }
 function openLife(s,slot){
- stopClock();activeSlot=slot;current=s;
+ stopClock();activeSlot=slot;current=ensureExperience(s);recordLifeYear(current);
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
  render();window.scrollTo({top:0,behavior:'instant'});
@@ -186,6 +192,35 @@ function timeTick(timestamp){
  renderClock();
  requestAnimationFrame(timeTick);
 }
+function renderExperience(s){
+ ensureExperience(s);
+ const selectedAge=$('lifeMapDetail').dataset.selectedAge;
+ const items=s.lifeMap||[];
+ $('lifeMap').innerHTML=items.map(t=>{
+  const types=[t.alive?'':'end',t.events?.length?'history':'',t.health<40||t.joy<25?'low':''].filter(Boolean).join(' ');
+  return '<button type="button" class="life-tile '+types+(Number(selectedAge)===t.age?' selected':'')+
+   '" data-life-age="'+t.age+'" aria-label="'+t.age+'歳・'+t.year+'年の人生" title="'+t.year+'年 '+t.age+'歳">'+t.age+'</button>';
+ }).join('');
+ const selected=items.find(t=>String(t.age)===selectedAge)||items.at(-1);
+ $('lifeMapDetail').textContent=selected?selected.year+'年・'+selected.age+'歳｜'+
+  selected.profession+'／健康 '+selected.health+'・幸福 '+selected.joy+
+  (selected.events?.length?'｜史実：'+selected.events.join('・'):''):'まだ記録はありません';
+ const others=contemporariesFor(s,events);
+ $('contemporaries').innerHTML=others.map(person=>
+  '<div class="contemporary"><div class="peer-top"><strong>'+escaped(person.name)+'</strong>'+
+  '<span class="'+(person.alive?'':'peer-ended')+'">'+(person.alive?person.age+'歳で暮らしている':person.age+'歳で人生を終えた')+'</span></div>'+
+  '<small>'+escaped(person.region)+'／'+escaped(person.background)+'<br>'+
+   escaped(person.profession)+'・幸福 '+person.happiness+'</small></div>').join('');
+ const reflection=getReflection(s),written=s.reflections?.[s.age];
+ $('reflectionPanel').hidden=!reflection;
+ if(reflection){
+  $('reflectionAge').textContent=s.age+'歳';
+  $('reflectionQuestion').textContent=reflection.question;
+  $('reflectionSaved').hidden=!written;
+  $('reflectionSaved').textContent=written?'残した言葉：'+written:'';
+  $('reflectionForm').hidden=!!written||s.phase==='ended';
+ }
+}
 function refreshLog(s){
  $('miniLog').innerHTML=logRows(s.log.slice(-7).reverse());
 }
@@ -252,13 +287,15 @@ function render(){
   setStory('新しい命',s.year+'年、'+getRegion(s.regionId).name+'に生まれた。',
     era.intro+'\n'+s.background+'に生まれた'+s.name+'。ここから、たった一度の人生が始まる。');
  }
- renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();
+ renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();renderExperience(s);
 }
 function advance(focus){
  if(!current||current.phase!=='living')return;
  clockProgress=0;
  const r=advanceYear(current,focus,events);
  if(!r.ok)return;
+ if(autoDecisions&&current.phase==='event')resolveAutonomousEvents(current);
+ recordLifeYear(current);
  current.lastStory={label:'人生の一年',title:current.age+'歳の暮らし',
   text:r.description+'\n'+current.year+'年。時代は少しずつ移り変わっていく。'};
  if(current.phase==='ended')archiveCurrent();
@@ -276,6 +313,7 @@ function choose(id){
  const eventTitle=current.pending.title,option=current.pending.options.find(o=>o.id===id);
  const result=chooseEvent(current,id);
  if(!result.ok)return;
+ recordLifeYear(current);
  const last=current.log[current.log.length-1];
  current.lastStory={label:'選択の結果',title:eventTitle,
   text:(option?option.label+'。\n':'')+(last?.text||'新しい道を歩むことになった。')};
@@ -286,6 +324,8 @@ function fastForward(){
  if(!current||current.phase!=='living'||current.age<7)return;
  clockRunning=false;clockProgress=0;
  const r=autoAdvance(current,5,events);
+ if(autoDecisions&&current.phase==='event')resolveAutonomousEvents(current);
+ recordLifeYear(current);
  current.lastStory={label:'時間の流れ',title:r.advanced+'年の歩み',
   text:'同じ重点を続けながら、'+r.advanced+'年が過ぎた。'+
    (r.stoppedBy==='event'?'歴史や人生の大切な転機が訪れた。':r.stoppedBy==='ended'?'この人生はここで終わりを迎えた。':'次の一年は、どんな道を選ぼうか。')};
@@ -304,10 +344,29 @@ $('moneyActions').addEventListener('click',e=>{
  if(!b||!current)return;
  const result=manageMoney(current,b.dataset.money);
  if(result.ok){
+  recordLifeYear(current);
   $('moneyFeedback').textContent='';
   current.lastStory={label:'暮らしとお金',title:'家計の選択',text:current.log.at(-1)?.text||'暮らしを見直した。'};
   storageWrite();render();
  }else $('moneyFeedback').textContent=result.reason||'操作できません';
+});
+$('autoDecisions').addEventListener('change',e=>{
+ autoDecisions=!!e.target.checked;
+ try{localStorage.setItem(AUTO_KEY,autoDecisions?'1':'0')}catch{}
+ if(autoDecisions&&current?.phase==='event'){
+  resolveAutonomousEvents(current);recordLifeYear(current);storageWrite();render();
+ }
+});
+$('reflectionForm').addEventListener('submit',e=>{
+ e.preventDefault();if(!current)return;
+ if(saveReflection(current,current.age,$('reflectionNote').value)){
+  $('reflectionNote').value='';storageWrite();render();
+ }
+});
+$('lifeMap').addEventListener('click',e=>{
+ const b=e.target.closest('[data-life-age]');if(!b||!current)return;
+ $('lifeMapDetail').dataset.selectedAge=b.dataset.lifeAge;
+ renderExperience(current);
 });
 $('clockToggle').addEventListener('click',()=>{
  if(!current||current.phase!=='living')return;
@@ -340,6 +399,7 @@ $('peopleList').addEventListener('click',e=>{
  const id=btn.dataset.social;
  const result=interactWithPerson(current,id,btn.dataset.socialAction);
  if(result.ok){
+  recordLifeYear(current);
   const p=current.people.find(x=>x.id===id);
   current.lastStory={label:'人とのつながり',title:p.name+'と過ごす時間',
    text:p.name+'（'+labelRole(p.role)+'）との関係が少し変わった。'};
@@ -353,6 +413,7 @@ $('jobList').addEventListener('click',e=>{
  const name=jobOptions(current).find(j=>j.id===btn.dataset.job)?.name||'仕事';
  const result=changeCareer(current,btn.dataset.job);
  if(!result.ok)return;
+ recordLifeYear(current);
  $('careerModal').hidden=true;
  current.lastStory={label:'仕事の転機',title:name,text:current.log.at(-1)?.text||'新しい仕事を目指した。'};
  storageWrite();render();
@@ -397,6 +458,8 @@ $('newLifeButton').addEventListener('click',()=>{
  const querySeed=new URLSearchParams(location.search).get('seed');
  if(querySeed&&/^\d{1,10}$/.test(querySeed)&&Number(querySeed)<=4294967295)seed[0]=Number(querySeed)>>>0;
  const life=createLife({eraId:era.id,seed:seed[0],birthYear:year,regionId:$('regionSelect').value||null});
+ life.meta.originSeed=seed[0]>>>0;
+ recordLifeYear(life);
  slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot);
 });
 $('savesList').addEventListener('click',e=>{
@@ -430,6 +493,7 @@ async function loadData(){
  ]);
  if(result[0].status==='fulfilled'&&Array.isArray(result[0].value.events)){
   events=result[0].value.events.filter(e=>Number.isInteger(e.year)&&typeof e.title==='string');
+  if(current)renderExperience(current);
  }else console.warn('Historical timeline unavailable: offline life simulation continues');
  if(result[1].status==='fulfilled'&&Array.isArray(result[1].value.sources))
   sourceMap=new Map(result[1].value.sources.map(s=>[s.id,s]));
@@ -438,7 +502,7 @@ async function loadData(){
  showSources();
 }
 window.HistoryLifeDebug=Object.freeze({
- get clock(){return {running:clockRunning,speed:clockSpeed,progress:clockProgress,duration:lifeDuration,secondsPerYear:secondsPerYear()}},
+ get clock(){return {running:clockRunning,speed:clockSpeed,progress:clockProgress,duration:lifeDuration,secondsPerYear:secondsPerYear(),autoDecisions}},
  get active(){return !!current},
  get phase(){return current?.phase||'setup'},
  get snapshot(){return current?structuredClone(current):null},
@@ -449,6 +513,8 @@ const saveNotice=document.createElement('div');saveNotice.id='saveNotice';saveNo
 document.querySelector('.game-ribbon').appendChild(saveNotice);
 storageRead();selectEra();updateSetup();
 try{const stored=Number(localStorage.getItem(DURATION_KEY));if([30,60,90].includes(stored))lifeDuration=stored}catch{}
+try{autoDecisions=localStorage.getItem(AUTO_KEY)==='1'}catch{}
+$('autoDecisions').checked=autoDecisions;
 $('lifeDuration').value=String(lifeDuration);
 $('clockDuration').value=String(lifeDuration);
 loadData();requestAnimationFrame(timeTick);
