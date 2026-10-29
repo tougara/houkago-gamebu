@@ -26,11 +26,11 @@ before(async()=>{
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 });
 after(async()=>{await browser?.close();await new Promise(done=>server?.close(done))});
-async function open(width=390,height=780){
+async function open(width=390,height=780,query=''){
  const context=await browser.newContext({viewport:{width,height},isMobile:width<650,hasTouch:width<650,deviceScaleFactor:1});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.goto(base+'/games/history-life/',{waitUntil:'load'});
+ await page.goto(base+'/games/history-life/'+query,{waitUntil:'load'});
  await page.waitForFunction(()=>window.HistoryLifeDebug&&window.HistoryLifeDebug.eventCount>=35);
  return {page,context,errors};
 }
@@ -82,7 +82,7 @@ test('birth -> childhood -> first milestone -> focused year -> save and continue
  }finally{await context.close()}
 });
 test('Owari citizen sees 1560 event as a local history card with independently linked source',async()=>{
- const {page,context,errors}=await open(390,780);
+ const {page,context,errors}=await open(390,780,'?seed=19');
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#birthYearInput').fill('1548');

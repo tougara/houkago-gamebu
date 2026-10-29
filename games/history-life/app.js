@@ -371,6 +371,9 @@ $('newLifeButton').addEventListener('click',()=>{
   alert('出生年は'+era.birthYears[0]+'〜'+era.birthYears[1]+'年の範囲にしてね。');return;
  }
  const seed=new Uint32Array(1);if(globalThis.crypto?.getRandomValues)crypto.getRandomValues(seed);else seed[0]=Date.now()>>>0;
+ // Optional deterministic scenario reproduction. Not a historical probability.
+ const querySeed=new URLSearchParams(location.search).get('seed');
+ if(querySeed&&/^\d{1,10}$/.test(querySeed)&&Number(querySeed)<=4294967295)seed[0]=Number(querySeed)>>>0;
  const life=createLife({eraId:era.id,seed:seed[0],birthYear:year,regionId:$('regionSelect').value||null});
  slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot);
 });
