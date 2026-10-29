@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createLife,advanceYear,chooseEvent,manageMoney,moneySummary,validateSave,upgradeSave} from '../games/history-life/engine.js';
 import {PURCHASES,UNIT} from '../games/history-life/money.js';
+import {selectLifeEvent} from '../games/history-life/life-events.js';
 function toAge(s,age){
  for(let i=0;i<150&&s.age<age&&s.phase!=='ended';i++){
   if(s.phase==='event'){chooseEvent(s,s.pending.options[0].id);continue}
@@ -100,4 +101,50 @@ test('mangled financial saves are rejected',()=>{
  assert.equal(validateSave({...s,money:{...s.money,ledger:new Array(81).fill({})}}),false);
  assert.equal(manageMoney(s,'invalid').ok,false);
  assert.ok(PURCHASES.length>=4);
+});
+
+test('extra events depend on age, money conditions, job and family rather than pure annual repetition',()=>{
+ const s=createLife({seed:118,birthYear:1544});
+ s.age=17;s.year=s.birthYear+s.age;
+ const none=selectLifeEvent(s,()=>.99);
+ assert.equal(none,null,'event chance does not guarantee a yearly event');
+ s.money.debt=28;
+ const poor=selectLifeEvent(s,()=>0);
+ assert.ok(poor&&poor.id==='supplies','random drawing picks an eligible event');
+ assert.equal(poor.choices.length,3);
+ const year6={...s,age:18};
+ assert.equal(selectLifeEvent(year6,()=>0),null,'old year-six cards avoid duplicate bursts');
+ const young={...s,age:12};
+ assert.equal(selectLifeEvent(young,()=>0),null);
+ s.career.jobId='farm';s.money.debt=0;
+ const possibles=new Set();
+ for(let i=0;i<=50;i++){
+  const n=i/50*.24;
+  const ev=selectLifeEvent(s,()=>n);
+  if(ev)possibles.add(ev.id);
+ }
+ assert.ok(possibles.size>=4,'multiple event themes available to the same person');
+});
+test('dynamic events can interrupt time without erasing personal state',()=>{
+ const s=createLife({seed:788,birthYear:1544});
+ for(let i=0;i<80&&s.age<16&&s.phase!=='ended';i++){
+  if(s.phase==='event'){chooseEvent(s,s.pending.options[0].id);continue}
+  advanceYear(s,'family',[]);
+ }
+ if(s.phase==='ended')return;
+ if(s.phase==='event')chooseEvent(s,s.pending.options[0].id);
+ let last=s.age;
+ for(let i=0;i<45&&s.phase!=='ended';i++){
+  if(s.phase==='event'){
+   const pending=s.pending;
+   assert.equal(s.year,s.birthYear+s.age);
+   assert.ok(pending.title&&pending.description&&pending.options.length>=3);
+   assert.ok(pending.options.every(o=>o.id&&o.label&&o.result));
+   assert.equal(chooseEvent(s,pending.options[0].id).ok,true);
+   continue;
+  }
+  advanceYear(s,'family',[]);last=s.age;
+ }
+ assert.ok(last>=16);
+ assert.ok(validateSave(s));
 });
