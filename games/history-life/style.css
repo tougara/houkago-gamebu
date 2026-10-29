@@ -111,3 +111,43 @@ body{background:radial-gradient(ellipse at 15% -20%,#ede4d3 0,transparent 45%),#
 .money-ledger-detail small{color:#8a8c80;font-size:10px}
 .clock-panel .clock-speed{min-width:0}
 @media(max-width:540px){.clock-panel .clock-speed{font-size:10px;gap:4px}.clock-panel .clock-speed select{font-size:10px;padding:6px 3px}.clock-panel{gap:5px}.money-stat{padding:7px 5px}.money-stat strong{font-size:12px}.money-stat em{font-size:9px}}
+
+/* Ver 0.4: human history, choices and reflections */
+.auto-decisions{display:flex;align-items:center;gap:5px;padding:7px 8px;border-radius:8px;background:#e2eee7;color:#356b62;font-size:11px;font-weight:900;white-space:nowrap}
+.auto-decisions input{width:17px;height:17px;accent-color:#338883}
+.reflection-panel{margin:14px 18px 18px;padding:15px;border-radius:12px;background:#f5f0e6;border:1px solid #dfd3bb}
+.reflection-panel .section-heading{margin-bottom:8px}.reflection-panel p{color:#6d6151;font-size:13px;line-height:1.7}
+#reflectionForm{display:flex;flex-direction:column;gap:8px}
+#reflectionNote{width:100%;resize:vertical;background:#fffdf7;border-radius:9px;border:1px solid #cfc8ba;padding:10px;color:#394f52;font:inherit;font-size:13px}
+.reflection-saved{font-weight:800;white-space:pre-wrap}
+.contemporaries-card,.life-map-card{padding:15px 17px;background:#fffefa;border:1px solid #e6e0d5;border-radius:16px;box-shadow:0 5px 23px #34434d12;overflow:hidden}
+.contemporaries{display:grid;gap:8px}
+.contemporary{border:1px solid #dce8e1;background:#f8faf7;border-radius:10px;padding:9px 10px}
+.contemporary .peer-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.contemporary strong{font-size:13px;color:#3d615b}.contemporary span{font-size:11px;color:#667c77}
+.contemporary small{font-size:11px;color:#80918a;display:block;margin-top:4px;line-height:1.5}
+.contemporary .peer-ended{color:#997463}
+.life-map{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+.life-tile{padding:0;border:1px solid #ffffffbb;border-radius:4px;aspect-ratio:1;min-width:0;display:grid;place-items:center;background:#9dcab2;color:#345246;font-weight:800;font-size:9px;line-height:1}
+.life-tile.low{background:#d6a489;color:#673f30}
+.life-tile.history{background:#d7bb6f;color:#5c4722}
+.life-tile.end{background:#8495aa;color:white}
+.life-tile:focus-visible,.life-tile.selected{outline:3px solid #3a7d7b;outline-offset:1px;z-index:1}
+.life-map-detail{background:#f8f5ef;border:1px solid #eee5d6;border-radius:8px;padding:10px;margin-top:10px;min-height:41px;font-size:12px;line-height:1.7;color:#506965}
+.life-map-legend{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px;color:#83918a;font-size:10px}
+.life-map-legend span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;background:#9dcab2;margin-right:5px}
+.life-map-legend span:nth-child(2):before{background:#d6a489}.life-map-legend span:nth-child(3):before{background:#d7bb6f}
+.archive-shortcut{margin-top:11px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.archive-shortcut button{background:#fff;border:1px solid #9cbbb0;border-radius:10px;color:#477969;padding:10px;font-size:12px;font-weight:850}
+.archive-shortcut span{font-size:11px;color:#788581}
+.archive-hint{font-size:12px;padding:0 17px;color:#80908a}.archive-actions{display:flex;gap:8px;padding:5px 17px 13px;flex-wrap:wrap}
+.archive-list{padding:0 17px 17px;overflow-y:auto;display:grid;gap:9px}
+.archive-item{border:1px solid #dde4db;border-radius:11px;background:#f8faf6;padding:12px}
+.archive-item h3{font-size:14px;margin:0 0 4px}.archive-item p{font-size:12px;color:#698075;line-height:1.6;margin:3px 0}
+.archive-item button{margin-top:8px;border:1px solid #b8cbbd;background:#ecf6ee;color:#3d7461;border-radius:8px;padding:7px 12px;font-weight:800;font-size:11px}
+.archive-feedback{padding:0 17px;min-height:12px;font-size:12px;color:#956e49}
+.history-footer{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 20px;background:#f7f4ed}
+.history-footer span{font-size:11px;color:#4a8a6f}
+@media(max-width:540px){.auto-decisions{font-size:10px;padding:6px}.clock-panel{gap:5px}
+.contemporaries-card,.life-map-card{padding:11px 13px}
+.reflection-panel{margin:9px;padding:11px}.life-map{gap:3px}.life-tile{font-size:9px}}
