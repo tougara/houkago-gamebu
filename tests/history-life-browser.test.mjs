@@ -393,3 +393,39 @@ test('completed life goes to local archives, and invalid backups are rejected',a
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('life archive JSON export/import round-trip restores all three slots without an account',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=34');
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  for(let i=0;i<5;i++)await page.locator('[data-action="child"]').click();
+  await page.locator('#reflectionNote').fill('家族の思い出を覚えておこう');
+  await page.locator('#reflectionForm button').click();
+  const original=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  await page.locator('#homeButton').click();
+  await page.locator('#archiveButton').click();
+  const downloaded=page.waitForEvent('download');
+  await page.locator('#exportLives').click();
+  const download=await downloaded;
+  assert.equal(download.suggestedFilename(),'history-life-backup.json');
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('houkago_history_life_slots_v1')));
+  const payload={format:'houkago-history-life-backup',version:1,slots:saved.slots,archives:saved.archives};
+  await page.evaluate(()=>{localStorage.removeItem('houkago_history_life_slots_v1')});
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  assert.equal(await page.locator('[data-continue]').count(),0);
+  await page.locator('#archiveButton').click();
+  await page.locator('#importLivesFile').setInputFiles({
+   name:'saved-lives.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(payload))
+  });
+  await page.waitForFunction(()=>document.getElementById('archiveFeedback').textContent.includes('取り込みました'));
+  await page.locator('#closeArchive').click();
+  await page.locator('[data-continue="0"]').click();
+  const restored=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(restored.year,original.year);
+  assert.equal(restored.reflections['5'],'家族の思い出を覚えておこう');
+  assert.equal(restored.meta.originSeed,original.meta.originSeed);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
