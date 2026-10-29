@@ -388,6 +388,7 @@ test('completed life goes to local archives, and invalid backups are rejected',a
   await page.locator('#archiveButton').click();
   const bad={name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"wrong":1}')};
   await page.locator('#importLivesFile').setInputFiles(bad);
+  await page.waitForFunction(()=>document.getElementById('archiveFeedback').textContent.includes('対応する人生記録ではありません'));
   assert.match(await page.locator('#archiveFeedback').innerText(),/対応する人生記録ではありません/);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
