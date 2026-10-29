@@ -1,10 +1,11 @@
 import {ERAS,REGIONS,FOCI,FIRST_NAMES,getEra,getRegion,relevantLocal} from './scenarios.js';
 import {initPeople,syncFamily,createPartner,createChild,migratePeople,interact as interactPerson,tickPeople,relationshipEvent,labelRole} from './social.js';
 import {initCareer,migrateCareer,setCareerFromLegacy,careerYear,jobOptions,switchCareer as tryCareerSwitch} from './careers.js';
+import {initMoney,migrateMoney,beginMoneyYear,settleYear,changeMoney,moneyAction,validateMoney,moneySummary} from './money.js';
 /* Deterministic, serializable history-life MVP engine.
  * Statistical caution: all personal odds here are invented GAME RULES,
  * never historical mortality, class, wealth or gender data. */
-export const VERSION=2;
+export const VERSION=3;
 const LIMITS={stats:100,age:110,log:240};
 const clamp=(x,lo=0,hi=100)=>Math.max(lo,Math.min(hi,x));
 function rng(state){
@@ -21,6 +22,7 @@ function log(state,title,text,{kind='life',sourceId=null,eventId=null,personId=n
 }
 function effect(state,deltas){
  for(const [key,diff] of Object.entries(deltas)){
+  if(key==='wealth'&&state.money){changeMoney(state,diff,'行動・出来事による収支');continue}
   if(key in state.stats)state.stats[key]=Math.round(clamp(state.stats[key]+diff));
  }
 }
@@ -43,7 +45,7 @@ export function createLife({eraId='sengoku',seed=1,birthYear=null,regionId=null}
   choices:0,specialChoices:0,autoFocus:'family',
   meta:{chanceModel:'game_balance_placeholder',historicalEventSource:'original annotated research',birthWeights:'fictional_equal_weights'}
  };
- initPeople(state,()=>rng(state));initCareer(state);
+ initPeople(state,()=>rng(state));initCareer(state);initMoney(state);
  log(state,'誕生',year+'年、'+region.name+'の「'+state.background+'」に生まれた。家族から「'+name+'」と呼ばれる。',{kind:'birth'});
  return state;
 }
@@ -183,10 +185,12 @@ function backgroundYear(s,focus){
 export function advanceYear(s,focus='family',historicalEvents=[]){
  if(s.phase!=='living')return {ok:false,reason:'Resolve pending event or end first'};
  const previousYear=s.year;
+ beginMoneyYear(s);
  const result=focusYear(s,focus);
  s.age++;s.year=s.birthYear+s.age;
  backgroundYear(s,focus);
  careerYear(s,focus,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
+ settleYear(s);
  if(s.age>=110||s.stats.health<=0||dice(s,mortalityProbability(s))){
   death(s);return {ok:true,year:s.year,ended:true,description:result};
  }
@@ -248,7 +252,8 @@ export function lifeSummary(s){
   hometown:getRegion(s.regionId).name,background:s.background,profession:s.profession,
   partner:s.family.partner,children:s.family.children,historySeen:history.length,
   lovedOnes:(s.people||[]).length,careerChanges:s.career?.history?.length||0,
-  careerSkill:s.career?.skill||0,focusCount:s.choices,turningPoints:s.specialChoices,stats:{...s.stats}};
+  careerSkill:s.career?.skill||0,finances:s.money?moneySummary(s):null,
+  focusCount:s.choices,turningPoints:s.specialChoices,stats:{...s.stats}};
 }
 export function interactWithPerson(s,personId,actionId){
  return interactPerson(s,personId,actionId,(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
@@ -256,19 +261,22 @@ export function interactWithPerson(s,personId,actionId){
 export function changeCareer(s,jobId){
  return tryCareerSwitch(s,jobId,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
 }
-export {jobOptions};
+export function manageMoney(s,action){
+ return moneyAction(s,action,d=>effect(s,d),(title,text,extra={})=>log(s,title,text,extra));
+}
+export {jobOptions,moneySummary};
 export function upgradeSave(old){
  if(!old||!Number.isInteger(old.version))return null;
  if(old.version===VERSION)return validateSave(old)?old:null;
- if(old.version!==1||!ERAS.some(e=>e.id===old.eraId)||!REGIONS.some(r=>r.id===old.regionId))return null;
+ if(![1,2].includes(old.version)||!ERAS.some(e=>e.id===old.eraId)||!REGIONS.some(r=>r.id===old.regionId))return null;
  if(!Number.isInteger(old.age)||old.age<0||old.age>110||old.year!==old.birthYear+old.age)return null;
  if(!old.stats||!['health','knowledge','bonds','joy','wealth'].every(k=>Number.isFinite(old.stats[k])&&old.stats[k]>=0&&old.stats[k]<=100))return null;
  if(!Array.isArray(old.log)||old.log.length>240||!old.family||!Number.isInteger(old.rng)||old.rng<0)return null;
  const migrated=JSON.parse(JSON.stringify(old));
  migrated.version=VERSION;
- migrated.eventQueue=[];
- migratePeople(migrated);migrateCareer(migrated);
- migrated.meta={...migrated.meta,upgradedFrom:1};
+ if(!Array.isArray(migrated.eventQueue))migrated.eventQueue=[];
+ migratePeople(migrated);migrateCareer(migrated);migrateMoney(migrated);
+ migrated.meta={...migrated.meta,upgradedFrom:old.version};
  return validateSave(migrated)?migrated:null;
 }
 export function validateSave(obj){
@@ -288,6 +296,7 @@ export function validateSave(obj){
  if(obj.family.children!==obj.people.filter(p=>p.role==='child').length)return false;
  if(!obj.career||typeof obj.career.jobId!=='string'||!Number.isFinite(obj.career.skill)||obj.career.skill<0||obj.career.skill>100||
  !Number.isInteger(obj.career.rank)||!Array.isArray(obj.career.history))return false;
+ if(!validateMoney(obj))return false;
  if(obj.phase==='event'&&(!obj.pending||!Array.isArray(obj.pending.options)))return false;
  if(obj.eventQueue!=null&&(!Array.isArray(obj.eventQueue)||obj.eventQueue.length>6))return false;
  return true;

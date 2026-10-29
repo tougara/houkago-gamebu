@@ -15,7 +15,7 @@ const balance=m=>m.cash+m.savings-m.debt;
 function reflect(s){s.stats.wealth=limit(Math.round(20+balance(s.money)*.65),0,100)}
 function entry(s,label,amount,kind){
  const m=s.money;
- m.ledger.push({year:s.year,label,amount:Math.round(amount),kind});
+ m.ledger.push({year:m.year,label,amount:Math.round(amount),kind});
  if(m.ledger.length>80)m.ledger.shift();
  if(amount>0)m.yearIncome+=amount;
  else if(amount<0)m.yearExpenses+=-amount;
