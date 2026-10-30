@@ -16,8 +16,8 @@ const AUTO_KEY='houkago_history_life_auto_decisions_v1';
 const YEAR_SECONDS=45;
 const secondsPerYear=()=>YEAR_SECONDS*lifeDuration/60;
 const barConfig=[
- ['health','健康','#7bbd99'],['knowledge','知恵・技能','#78a4c7'],
- ['bonds','人との縁','#d3ac73'],['joy','幸福','#cb8ca4'],['wealth','暮らしの余裕','#9b9bbd']
+ ['health','健康','健康','#7bbd99'],['knowledge','知恵','知恵・技能','#78a4c7'],
+ ['bonds','関係','人との縁','#d3ac73'],['joy','幸福','幸福','#cb8ca4'],['wealth','余裕','暮らしの余裕','#9b9bbd']
 ];
 const escaped=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateNumber=(n)=>new Intl.NumberFormat('ja-JP').format(n);
@@ -59,7 +59,7 @@ function openLife(s,slot){
  stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
- render();window.scrollTo({top:0,behavior:'instant'});
+ showDetailTab('family');render();window.scrollTo({top:0,behavior:'instant'});
 }
 function ageCategory(a){
  if(a<7)return '幼年期';
@@ -68,6 +68,19 @@ function ageCategory(a){
  if(a<45)return '壮年期';
  if(a<65)return '中年期';
  return '老年期';
+}
+let selectedDetailTab='family';
+function showDetailTab(key){
+ if(!['family','career','money','records','person'].includes(key))return;
+ selectedDetailTab=key;
+ document.querySelectorAll('[data-detail-tab]').forEach(btn=>{
+  const active=btn.dataset.detailTab===key;
+  btn.classList.toggle('selected',active);
+  btn.setAttribute('aria-pressed',String(active));
+ });
+ document.querySelectorAll('[data-detail-panel]').forEach(panel=>{
+  panel.hidden=panel.dataset.detailPanel!==key;
+ });
 }
 function renderLineage(s){
  const l=ensureLineage(s),node=$('lineageRibbon');
@@ -91,10 +104,10 @@ function renderInstitutions(s){
  $('institutionCaution').textContent=info.caution;
 }
 function renderStat(s){
- $('statBars').innerHTML=barConfig.map(([key,title,color])=>{
+ $('statBars').innerHTML=barConfig.map(([key,title,fullTitle,color])=>{
   const n=s.stats[key];
-  return '<div class="stat-line"><div class="stat-meta"><span>'+title+'</span><span>'+n+'</span></div>'+
-   '<div class="bar" role="progressbar" aria-label="'+title+'" aria-valuenow="'+n+'" aria-valuemin="0" aria-valuemax="100"><div style="width:'+n+'%;background:'+color+'"></div></div></div>';
+  return '<div class="stat-line" title="'+escaped(fullTitle)+'：'+n+'/100"><div class="stat-meta"><span>'+escaped(title)+'</span><b>'+n+'</b></div>'+
+   '<div class="bar" role="progressbar" aria-label="'+escaped(fullTitle)+'" aria-valuenow="'+n+'" aria-valuemin="0" aria-valuemax="100"><div style="width:'+n+'%;background:'+color+'"></div></div></div>';
  }).join('');
  const facts=[
   ['出生地',getRegion(s.regionId).name],['生まれ',s.background],
@@ -192,7 +205,10 @@ function renderClock(){
  $('clockToggle').setAttribute('aria-pressed',String(clockRunning));
  $('clockSpeed').value=String(clockSpeed);
  $('clockDuration').value=String(lifeDuration);
- $('clockFill').style.width=Math.min(100,clockProgress*100)+'%';
+ const percent=Math.min(100,Math.max(0,Math.round(clockProgress*100)));
+ $('clockFill').style.width=percent+'%';
+ $('clockPercent').textContent=percent+'%';
+ $('clockProgress').setAttribute('aria-valuenow',String(percent));
  $('clockToggle').disabled=!current||current.phase!=='living';
  $('clockNext').disabled=!current||current.phase!=='living';
  $('clockInfo').textContent=current?.phase==='event'?'大切な選択で停止中':
@@ -477,7 +493,7 @@ $('lifeMap').addEventListener('click',e=>{
 });
 $('clockToggle').addEventListener('click',()=>{
  if(!current||current.phase!=='living')return;
- clockRunning=!clockRunning;clockProgress=0;renderClock();
+ clockRunning=!clockRunning;renderClock();
 });
 function chooseDuration(value){
  const next=Number(value);
@@ -582,6 +598,9 @@ $('newLifeButton').addEventListener('click',()=>{
 $('savesList').addEventListener('click',e=>{
  const button=e.target.closest('[data-continue]');if(!button)return;
  const slot=Number(button.dataset.continue),state=slots[slot];if(state)openLife(state,slot);
+});
+$('detailsTabs').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-detail-tab]');if(btn)showDetailTab(btn.dataset.detailTab);
 });
 $('homeButton').addEventListener('click',()=>{storageWrite();showSetup()});
 $('historyButton').addEventListener('click',showHistory);
