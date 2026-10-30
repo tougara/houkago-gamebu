@@ -80,7 +80,9 @@ function focusYear(s,focus){
   return improve?'教わったことを覚え、できる仕事や考え方が広がった。':'学ぶ機会は限られていたが、自分なりに知恵を積んだ。';
  }
  if(chosen.id==='family'){
-  effect(s,{bonds:improve?7:3,joy:improve?4:1,wealth:-1});
+  // Household living costs are already charged once per year in settleYear.
+  // Spending time with family sacrifices work-focus income, but adds no second fee.
+  effect(s,{bonds:improve?7:3,joy:improve?4:1});
   return improve?'大切な人と時間を過ごし、つながりが深まった。':'周囲を気にかけた。分かり合えない時もある。';
  }
  if(chosen.id==='rest'){
