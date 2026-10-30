@@ -59,6 +59,7 @@ test('birth -> childhood -> first milestone -> focused year -> save and continue
   await page.locator('#newLifeButton').click();
   await page.locator('#lotterySkip').click();
   await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click(); // deterministic manual-turn playtest
   assert.equal(await page.locator('#gameView').isVisible(),true);
   let s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
   assert.equal(s.birthYear,1548);assert.equal(s.age,0);
@@ -94,6 +95,7 @@ test('Owari citizen sees 1560 event as a local history card with independently l
   await page.locator('#newLifeButton').click();
   await page.locator('#lotterySkip').click();
   await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click(); // deterministic manual-turn playtest
   for(let n=0;n<24;n++){
    const data=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
    if(data.year===1560)break;
@@ -181,6 +183,7 @@ test('career picker works after age 15; job skills and options survive save/relo
   await page.locator('#newLifeButton').click();
   await page.locator('#lotterySkip').click();
   await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click(); // deterministic manual-turn playtest
   let attempts=0;
   while(attempts++<70){
    const s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
@@ -283,7 +286,7 @@ test('annual focus can be changed during automatic flow without advancing an ext
   for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
   await page.locator('[data-choice]').first().click();
   await page.locator('#clockSpeed').selectOption('1');
-  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
   const age=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
   await page.locator('[data-focus="learn"]').click();
   const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);

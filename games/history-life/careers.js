@@ -88,7 +88,7 @@ export function careerYear(s,focus,rand,log,effect){
  c.skill=clamp(c.skill+proficiency+(rand()<.3?2:0));
  // Fictional balance: annual basic living costs and dependents are already charged in settleYear.
  // Do not charge another maintenance fee here. Early career still pays less than mastery.
- const income=Math.max(1,Math.floor(job.income*(1.5+c.skill/130)*(1+c.rank*.15)));
+ const income=Math.max(1,Math.floor(job.income*(1.15+c.skill/130)*(1+c.rank*.15)));
  const maintenance=0;
  // Wealth is a 0-100 gameplay comfort index, not currency or historical income.
  effect({wealth:income,health:focus==='work'?-job.healthCost:0});

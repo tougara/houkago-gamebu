@@ -416,3 +416,10 @@ body.birth-lottery-open{overflow:hidden}
  .game-play-top .stat-meta{font-size:8px}
  .game-play-top .stat-meta b{font-size:12px}
 }
+
+/* In-play work prompt: notice unemployment without forcing a career decision. */
+.career-prompt{margin:12px 0 4px;padding:12px 14px;border:1px solid #c3d9ca;border-left:4px solid #428b76;border-radius:10px;background:#edf7ef;display:grid;gap:5px}
+.career-prompt strong{font-size:14px;color:#2d6357}
+.career-prompt p{font-size:12px;line-height:1.6;color:#567b6d;margin:0}
+.career-prompt button{justify-self:start;min-height:40px;padding:8px 15px}
+@media(max-width:540px){.career-prompt{padding:9px 11px;gap:4px}.career-prompt strong{font-size:13px}.career-prompt p{font-size:11px}}
