@@ -480,15 +480,15 @@ test('sourced institution guide appears for the birth year, remains collapsed, a
  const {page,context,errors}=await open(390,780);
  try{
   await page.locator('[name="era"][value="bakumatsu-meiji"]').check();
-  await page.locator('#birthYearInput').fill('1886');
+  await page.locator('#birthYearInput').fill('1873');
   await page.locator('#regionSelect').selectOption('kyushu');
   await page.locator('#newLifeButton').click();
-  assert.match(await page.locator('#institutionSummary').innerText(),/1886年/);
+  assert.match(await page.locator('#institutionSummary').innerText(),/1873年/);
   assert.equal(await page.locator('#institutionCard').getAttribute('open'),null,'closed until player opens it');
   const before=await page.evaluate(()=>JSON.stringify(window.HistoryLifeDebug.snapshot));
   await page.locator('#institutionSummary').click();
   const body=await page.locator('#institutionDetails').innerText();
-  assert.match(body,/小学校令/);
+  assert.match(body,/学制/);
   assert.match(body,/地租改正/);
   assert.equal(await page.locator('#institutionDetails a').count(),2);
   assert.match(await page.locator('#institutionCaution').innerText(),/九州/);
