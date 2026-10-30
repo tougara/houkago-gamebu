@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261030-decision1">
+ <link rel="stylesheet" href="./style.css?v=20261031-history-map1">
 </head>
 <body>
 <div class="app-shell">
@@ -63,10 +63,12 @@
       <strong id="lotteryRegionValue" class="lottery-value" aria-hidden="true">出生地</strong>
      </div>
     </div>
+    <div id="lotteryBirthMap" class="historical-map-slot lottery-map-slot" aria-label="抽選中の出生地域の位置"></div>
     <div class="lottery-progress" aria-hidden="true"><div id="lotteryProgress"></div></div>
     <p id="lotteryStatus" class="lottery-status" role="status" aria-live="polite">運命をたどっています……</p>
     <p class="lottery-note">時代・地域の抽選はゲーム用の仕組みです。史実の出生確率を表すものではありません。</p>
     <button id="lotterySkip" class="lottery-skip" type="button">演出をスキップ</button>
+    <button id="lotteryConfirm" class="lottery-confirm" type="button" hidden>この時代・この場所に生まれる →</button>
    </div>
   </section>
   <section id="birthScreen" class="birth-screen" role="dialog" aria-modal="true" aria-labelledby="birthTitle" hidden>
@@ -79,6 +81,7 @@
      <div class="birth-seal" aria-hidden="true" id="birthSeal">人</div>
      <div><small>この時代に生まれた一人</small><strong id="birthName"></strong><span id="birthIdentityDetail"></span></div>
     </div>
+    <div id="birthMap" class="historical-map-slot birth-map-slot" aria-label="決定した出生地域の位置"></div>
     <div class="birth-family"><h2>生まれた家と人々</h2><div id="birthFamily"></div></div>
     <p class="birth-disclaimer">出生条件や家族構成はゲーム内の架空の抽選です。史実の出生率・家族統計ではありません。</p>
     <button id="birthStart" type="button" class="birth-start">この人生を生きる →</button>
@@ -249,6 +252,6 @@
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261030-decision1"></script>
+<script type="module" src="./app.js?v=20261031-history-map1"></script>
 </body>
 </html>

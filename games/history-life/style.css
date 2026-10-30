@@ -460,3 +460,50 @@ body.birth-lottery-open{overflow:hidden}
  .decision-outcome small,.decision-tag{font-size:10px}
  .action-button .focus-numbers{font-size:9px}
 }
+
+/* Historical-looking birth map: geographic outline only; no invented feudal borders. */
+.historical-map-slot{min-width:0}
+.historical-map{--paper:#f4e9d5;--ink:#8f8b6c;--accent:#a95037;--sea:#e9ede5;background:var(--paper);border:1px solid #d9c7a6;border-radius:13px;padding:8px 11px;display:grid;gap:5px;min-width:0;box-shadow:inset 0 0 27px #6c563119}
+.historical-map[data-era="edo"]{--paper:#f5ead5;--ink:#828e7a;--accent:#a13d44;--sea:#eff2e8}
+.historical-map[data-era="bakumatsu-meiji"]{--paper:#eaf1ed;--ink:#7c9092;--accent:#9a4b3f;--sea:#e6eff0}
+.historical-map-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:10px;color:#887452}
+.historical-map-heading b{font-size:12px;color:#715d45}
+.historical-map svg{width:100%;height:auto;display:block;max-height:190px;color:#786956;overflow:visible}
+.historical-map-coast path{fill:var(--sea);stroke:var(--ink);stroke-width:2.4;stroke-linejoin:round}
+.history-map-point{fill:#a3a98e;stroke:#fffbea;stroke-width:1.5}
+.history-map-point.selected{fill:var(--accent);stroke:#fffbea;stroke-width:2.4}
+.history-map-halo{fill:var(--accent);opacity:.19}
+.history-map-pin,.history-map-callout{fill:var(--accent)}
+.history-map-target{color:var(--accent)}
+.history-map-callout-text{fill:white;font-size:19px;font-weight:900}
+.historical-map-era{font-size:11px;font-weight:850;color:#756b54;text-align:center}
+.historical-map-accuracy{display:block;font-size:9px;color:#8a8478;line-height:1.45;text-align:center}
+.lottery-map-slot .historical-map{padding:7px 9px 6px}
+.lottery-map-slot .historical-map svg{max-height:175px}
+.lottery-inner:has(.lottery-map-slot){gap:10px}
+.lottery-inner .lottery-lead{margin:-5px 0 0}
+.lottery-confirm{width:min(100%,410px);justify-self:center;min-height:52px;padding:12px 19px;border:1px solid #287268;border-radius:12px;background:#287268;color:white;font-weight:900;font-size:15px;box-shadow:0 5px 13px #3d6b5d2c}
+.lottery-confirm:hover{background:#225c52}
+.lottery-confirm[hidden],.lottery-skip[hidden]{display:none!important}
+.lottery-screen[data-phase="settled"] .lottery-cell{border-color:#6b9f84}
+.lottery-screen[data-phase="settled"] .historical-map{border-color:#bc965e}
+.birth-map-slot .historical-map{padding:5px 9px;gap:3px}
+.birth-map-slot .historical-map svg{max-height:143px}
+.birth-map-slot .historical-map-accuracy{font-size:9px}
+@media(max-width:540px){
+ .lottery-screen{padding:10px 9px max(15px,env(safe-area-inset-bottom))}
+ .lottery-inner{gap:8px}
+ .lottery-inner .lottery-lead{font-size:11px;margin:-6px 0 0}
+ .lottery-inner h2{font-size:18px}
+ .lottery-pair{gap:6px}
+ .lottery-cell{padding:9px 5px;gap:4px}
+ .lottery-value{font-size:clamp(18px,5.2vw,24px);min-height:2.6em}
+ .lottery-map-slot .historical-map svg{max-height:155px}
+ .lottery-map-slot .historical-map-accuracy{font-size:8px}
+ .lottery-map-slot .historical-map-era{font-size:10px}
+ .lottery-confirm{min-height:47px;font-size:13px}
+ .birth-map-slot .historical-map svg{max-height:118px}
+ .birth-card{gap:8px}
+ .birth-map-slot .historical-map-heading{font-size:9px}
+ .birth-map-slot .historical-map-accuracy{font-size:8px}
+}

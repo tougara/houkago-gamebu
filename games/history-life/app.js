@@ -5,6 +5,7 @@ import {currencyInfo,formatCurrency,yenEstimate,unitExample} from './currency.js
 import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
 import {getJob} from './careers.js';
 import {getInstitutionContext} from './institutions.js';
+import {historicalMapMarkup} from './historical-map.js';
 import {eventPreview,focusPreview} from './choice-preview.js';
 import {ensureLineage,eligibleHeirs,inheritLife} from './generations.js';
 import {ensureExperience,recordLifeYear,saveReflection,getReflection,contemporariesFor,resolveAutonomousEvents,lifeCardText} from './life-experience.js';
@@ -52,50 +53,60 @@ function updateSetup(){
     '</small></div><button type="button" data-continue="'+i+'">ひらく</button></div>';
  }).join('');
 }
-// Birth roulette is presentation only. Actual lifetime choices are made once by createLife.
-let lotteryFrame=0,lotteryTimer=0,lotteryLife=null;
+// Roulette is visual only: the new life is generated and saved exactly once before display.
+let lotteryFrame=0,lotteryLife=null,lotteryRandomEra=false,lotteryRandomRegion=false;
 function hideBirthLottery(){
  if(lotteryFrame)cancelAnimationFrame(lotteryFrame);
- if(lotteryTimer)clearTimeout(lotteryTimer);
- lotteryFrame=0;lotteryTimer=0;lotteryLife=null;
+ lotteryFrame=0;lotteryLife=null;
  $('lotteryScreen').hidden=true;
  document.body.classList.remove('birth-lottery-open');
 }
-function finishBirthLottery(){
+function confirmBirthLottery(){
  const life=lotteryLife;
- if(life&&current===life)showBirth(life);
+ if(!life||$('lotteryScreen').dataset.phase!=='settled')return;
+ showBirth(life);
  hideBirthLottery();
+}
+function settleBirthLottery(){
+ const life=lotteryLife;
+ if(!life)return;
+ if(lotteryFrame)cancelAnimationFrame(lotteryFrame);
+ lotteryFrame=0;
+ const era=getEra(life.meta?.birthEraId||life.eraId),region=getRegion(life.regionId);
+ $('lotteryEraValue').textContent=era.name;
+ $('lotteryRegionValue').textContent=region.name;
+ $('lotteryEraStatus').textContent=lotteryRandomEra?'決定':'指定';
+ $('lotteryRegionStatus').textContent=lotteryRandomRegion?'決定':'指定';
+ $('lotteryProgress').style.width='100%';
+ $('lotteryStatus').textContent='時代と出生地が決まったよ！　地図の「ここ！」を確認しよう。';
+ $('lotteryBirthMap').innerHTML=historicalMapMarkup(life.regionId,era.id);
+ $('lotteryScreen').dataset.era=era.id;
+ $('lotteryScreen').dataset.phase='settled';
+ $('lotterySkip').hidden=true;
+ $('lotteryConfirm').hidden=false;
+ $('lotteryConfirm').focus({preventScroll:true});
 }
 function showBirthLottery(life,{randomEra,randomRegion}){
  hideBirthLottery();
- lotteryLife=life;
+ lotteryLife=life;lotteryRandomEra=!!randomEra;lotteryRandomRegion=!!randomRegion;
  const screen=$('lotteryScreen');
- const eraTarget=getEra(life.meta?.birthEraId||life.eraId).name;
- const regionTarget=getRegion(life.regionId).name;
- screen.dataset.phase='rolling';
+ const targetEra=getEra(life.meta?.birthEraId||life.eraId),targetRegion=getRegion(life.regionId);
+ screen.dataset.phase='rolling';screen.dataset.steps='0';
+ const initialEra=randomEra?ERAS[0]:targetEra,initialRegion=randomRegion?REGIONS[0]:targetRegion;
  $('lotteryEraStatus').textContent=randomEra?'抽選中':'指定';
  $('lotteryRegionStatus').textContent=randomRegion?'抽選中':'指定';
- $('lotteryEraValue').textContent=randomEra?ERAS[0].name:eraTarget;
- $('lotteryRegionValue').textContent=randomRegion?REGIONS[0].name:regionTarget;
+ $('lotteryEraValue').textContent=initialEra.name;
+ $('lotteryRegionValue').textContent=initialRegion.name;
+ $('lotteryBirthMap').innerHTML=historicalMapMarkup(initialRegion.id,initialEra.id);
+ screen.dataset.era=initialEra.id;
  $('lotteryStatus').textContent='運命をたどっています……';
  $('lotteryProgress').style.width='0%';
+ $('lotterySkip').hidden=false;$('lotteryConfirm').hidden=true;
  screen.hidden=false;document.body.classList.add('birth-lottery-open');
- $('lotterySkip').focus();
- const settle=()=>{
-  if(lotteryLife!==life)return;
-  $('lotteryEraValue').textContent=eraTarget;
-  $('lotteryRegionValue').textContent=regionTarget;
-  $('lotteryEraStatus').textContent=randomEra?'決定':'指定';
-  $('lotteryRegionStatus').textContent=randomRegion?'決定':'指定';
-  $('lotteryProgress').style.width='100%';
-  $('lotteryStatus').textContent='生まれる時代と場所が決まりました';
-  screen.dataset.phase='settled';
-  lotteryFrame=0;
-  lotteryTimer=setTimeout(finishBirthLottery,650);
- };
  if((!randomEra&&!randomRegion)||matchMedia('(prefers-reduced-motion: reduce)').matches){
-  settle();return;
+  settleBirthLottery();return;
  }
+ $('lotterySkip').focus();
  const duration=5250;
  let start=null,nextChange=0,step=0;
  const frame=now=>{
@@ -103,18 +114,19 @@ function showBirthLottery(life,{randomEra,randomRegion}){
   if(start===null)start=now;
   const progress=Math.min(1,(now-start)/duration);
   $('lotteryProgress').style.width=Math.round(progress*100)+'%';
-  if(progress>=1){settle();return}
+  if(progress>=1){settleBirthLottery();return}
   if(now>=nextChange){
    step++;
-   if(randomEra)$('lotteryEraValue').textContent=ERAS[step%ERAS.length].name;
-   if(randomRegion)$('lotteryRegionValue').textContent=REGIONS[(step*5)%REGIONS.length].name;
-   screen.dataset.steps=String(step);
-   const interval=55+225*Math.pow(progress,2.8);
-   nextChange=now+interval;
+   const era=randomEra?ERAS[step%ERAS.length]:targetEra;
+   const region=randomRegion?REGIONS[(step*5)%REGIONS.length]:targetRegion;
+   $('lotteryEraValue').textContent=era.name;
+   $('lotteryRegionValue').textContent=region.name;
+   $('lotteryBirthMap').innerHTML=historicalMapMarkup(region.id,era.id);
+   screen.dataset.era=era.id;screen.dataset.steps=String(step);
+   nextChange=now+55+225*Math.pow(progress,2.8);
   }
   lotteryFrame=requestAnimationFrame(frame);
  };
- screen.dataset.steps='0';
  lotteryFrame=requestAnimationFrame(frame);
 }
 function hideBirth(){
@@ -129,6 +141,7 @@ function showBirth(s){
  $('birthYear').textContent=s.birthYear+'年';
  $('birthTitle').textContent=place+'に、生まれた。';
  $('birthIntro').textContent=era.intro;
+ $('birthMap').innerHTML=historicalMapMarkup(s.regionId,era.id);
  $('birthSeal').textContent=s.name.slice(0,1);
  $('birthName').textContent=s.name;
  $('birthIdentityDetail').textContent=(s.sex==='female'?'女の子':'男の子')+'・'+s.background;
@@ -756,7 +769,8 @@ $('savesList').addEventListener('click',e=>{
 $('detailsTabs').addEventListener('click',e=>{
  const btn=e.target.closest('[data-detail-tab]');if(btn)showDetailTab(btn.dataset.detailTab);
 });
-$('lotterySkip').addEventListener('click',finishBirthLottery);
+$('lotterySkip').addEventListener('click',settleBirthLottery);
+$('lotteryConfirm').addEventListener('click',confirmBirthLottery);
 $('birthStart').addEventListener('click',()=>{
  hideBirth();
  clockRunning=!!current&&current.phase==='living'&&!document.hidden;

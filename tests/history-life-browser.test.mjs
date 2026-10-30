@@ -36,6 +36,10 @@ async function open(width=390,height=780,query='?seed=444'){
  await page.waitForFunction(()=>window.HistoryLifeDebug&&window.HistoryLifeDebug.eventCount>=35);
  return {page,context,errors};
 }
+async function confirmLottery(page){
+ if(await page.locator('#lotterySkip').isVisible())await page.locator('#lotterySkip').click();
+ await page.locator('#lotteryConfirm').click();
+}
 test('standalone game opens three eras and 3 save slots on mobile and desktop',async()=>{
  for(const [w,h] of [[375,720],[390,780],[1366,768]]){
   const {page,context,errors}=await open(w,h);
@@ -57,7 +61,7 @@ test('birth -> childhood -> first milestone -> focused year -> save and continue
   await page.locator('#birthYearInput').fill('1548');
   await page.locator('#regionSelect').selectOption('tokai');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click(); // deterministic manual-turn playtest
   assert.equal(await page.locator('#gameView').isVisible(),true);
@@ -93,7 +97,7 @@ test('Owari citizen sees 1560 event as a local history card with independently l
   await page.locator('#birthYearInput').fill('1548');
   await page.locator('#regionSelect').selectOption('tokai');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click(); // deterministic manual-turn playtest
   for(let n=0;n<24;n++){
@@ -128,7 +132,7 @@ test('5-year travel, archive and end-of-life view never allow unintended extra y
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
   await page.locator('[data-choice]').first().click();
@@ -149,7 +153,7 @@ test('v0.2 mobile relationship interaction survives a reload and blocks a second
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#birthYearInput').fill('1544');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   let attempts=0;
   while((await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age))<7&&attempts++<9)
@@ -181,7 +185,7 @@ test('career picker works after age 15; job skills and options survive save/relo
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#birthYearInput').fill('1544');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click(); // deterministic manual-turn playtest
   let attempts=0;
@@ -220,7 +224,7 @@ test('time flow auto-advances, pauses, speeds up and skips to next real mileston
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#birthYearInput').fill('1544');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   const initial=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
   assert.equal(initial,0);
@@ -251,7 +255,7 @@ test('cash flow, shopping, saved money ledger and debt display work on phone',as
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
   await page.locator('[data-choice]').first().click();
@@ -281,7 +285,7 @@ test('annual focus can be changed during automatic flow without advancing an ext
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#birthYearInput').fill('1544');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
   await page.locator('[data-choice]').first().click();
@@ -305,7 +309,7 @@ test('historical coins and indicative modern-yen comparisons change when Meiji y
   await page.locator('[name="era"][value="bakumatsu-meiji"]').check();
   await page.locator('#birthYearInput').fill('1865');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   assert.match(await page.locator('#moneyEraUnits').innerText(),/両/);
   assert.match(await page.locator('#currencyExample').innerText(),/1両/);
@@ -330,7 +334,7 @@ test('life duration is selectable, persists across reload and stays synchronized
   await page.locator('#lifeDuration').selectOption('90');
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   let clock=await page.evaluate(()=>window.HistoryLifeDebug.clock);
   assert.equal(clock.duration,90);
@@ -354,7 +358,7 @@ test('life-map, peers and reflection survive reopening the saved life',async()=>
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   assert.equal(await page.locator('#lifeMap .life-tile').count(),1);
   assert.equal(await page.locator('.contemporary').count(),3);
@@ -383,7 +387,7 @@ test('manual event auto-choice clears pending events and allows pausing anytime'
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockNext').click();
   let s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
@@ -409,7 +413,7 @@ test('completed life goes to local archives, and invalid backups are rejected',a
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockOptions summary').click();
   await page.locator('#autoDecisions').check();
@@ -437,7 +441,7 @@ test('life archive JSON export/import round-trip restores all three slots withou
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   for(let i=0;i<5;i++)await page.locator('[data-action="child"]').click();
   await page.locator('#reflectionNote').fill('家族の思い出を覚えておこう');
@@ -521,7 +525,7 @@ test('sourced institution guide appears for the birth year, remains collapsed, a
   await page.locator('#birthYearInput').fill('1873');
   await page.locator('#regionSelect').selectOption('kyushu');
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   assert.match(await page.locator('#institutionSummary').innerText(),/1873年/);
   await page.locator('[data-detail-tab="records"]').click();
@@ -545,7 +549,7 @@ test('phone HUD places five abilities above story and progress spans screen',asy
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   assert.equal(await page.locator('#statBars .stat-line').count(),5);
   const p=await page.evaluate(()=>{
@@ -571,7 +575,7 @@ test('time bar moves and pause retains elapsed progress',async()=>{
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockSpeed').selectOption('16');
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
@@ -598,7 +602,7 @@ test('new birth starts with the person and parents, and resume does not replay t
   await page.locator('#regionSelect').selectOption('kanto');
   await page.locator('#newLifeButton').click();
   assert.ok(await page.locator('#lotteryScreen').isVisible());
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   assert.equal(await page.locator('#birthScreen').isVisible(),true);
   assert.match(await page.locator('#birthTitle').innerText(),/江戸・関東/);
   assert.match(await page.locator('#birthYear').innerText(),/1750年/);
@@ -620,7 +624,7 @@ test('recent chronicle remains readable without changing tabs and full history o
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   assert.equal(await page.locator('#chronicleRecent .log-row').count(),1);
   await page.locator('[data-action="child"]').click();
@@ -659,7 +663,7 @@ test('age, time progress and playback controls stay together when scrolling on p
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   assert.ok(await page.locator('.game-play-top').isVisible());
   await page.evaluate(()=>window.scrollTo({top:700,behavior:'instant'}));
@@ -708,9 +712,18 @@ test('era and birthplace spin simultaneously and automatically settle on the act
   const target=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
   assert.equal(await page.locator('#lotteryEraValue').innerText(),({sengoku:'戦国〜安土桃山',edo:'江戸時代','bakumatsu-meiji':'幕末〜明治'})[target.eraId]);
   assert.equal(await page.locator('#lotteryRegionValue').innerText(),({tokai:'尾張・東海',kinai:'京・近畿',kanto:'江戸・関東',tohoku:'東北地方',kyushu:'九州地方',setouchi:'瀬戸内地方'})[target.regionId]);
-  await page.locator('#birthScreen').waitFor({state:'visible',timeout:3000});
-  assert.equal(await page.locator('#lotteryScreen').isVisible(),false);
+  assert.equal(await page.locator('#lotteryScreen').isVisible(),true,'stays on the confirmed result');
+  assert.equal(await page.locator('#birthScreen').isVisible(),false);
+  assert.ok(await page.locator('#lotteryConfirm').isVisible());
+  assert.equal(await page.locator('#lotterySkip').isVisible(),false);
+  assert.equal(await page.locator('#lotteryBirthMap .historical-map').getAttribute('data-region-id'),target.regionId);
+  await page.waitForTimeout(800);
+  assert.equal(await page.locator('#lotteryScreen').isVisible(),true,'must not auto-transition after draw');
   assert.equal(JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot)),state,'roulette must not alter the life or RNG');
+  await page.locator('#lotteryConfirm').click();
+  assert.ok(await page.locator('#birthScreen').isVisible());
+  assert.equal(await page.locator('#lotteryScreen').isVisible(),false);
+  assert.equal(await page.locator('#birthMap .historical-map').getAttribute('data-region-id'),target.regionId);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
@@ -727,7 +740,7 @@ test('specified era and birthplace are both shown together and skip reaches birt
   assert.equal(await page.locator('#lotteryEraStatus').innerText(),'指定');
   assert.equal(await page.locator('#lotteryRegionStatus').innerText(),'指定');
   const before=JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot));
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   assert.equal(await page.locator('#lotteryScreen').isVisible(),false);
   assert.ok(await page.locator('#birthScreen').isVisible());
   assert.equal(JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot)),before);
@@ -748,7 +761,7 @@ test('when only birthplace is chosen, region remains fixed while era rolls',asyn
   assert.equal(await page.locator('#lotteryEraStatus').innerText(),'抽選中');
   await page.waitForFunction(()=>Number(document.getElementById('lotteryScreen').dataset.steps)>=3);
   assert.equal(await page.locator('#lotteryRegionValue').innerText(),'九州地方');
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   assert.equal((await page.evaluate(()=>window.HistoryLifeDebug.snapshot)).regionId,'kyushu');
   assert.ok(await page.locator('#birthScreen').isVisible());
   assert.deepEqual(errors,[]);
@@ -761,7 +774,7 @@ test('automatic time is on by default only after birth; pause remains a manual c
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false,'roulette must not start time');
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false,'birth introduction must not start time');
   await page.locator('#birthStart').click();
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true,'birthStart activates automatic flow');
@@ -783,7 +796,7 @@ test('continue resumes automatic time for living saves; ended lives stay stopped
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click();
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
@@ -813,7 +826,7 @@ test('playtest: the entire sticky HUD includes five stats and leaves useful room
   try{
    await page.locator('[name="era"][value="edo"]').check();
    await page.locator('#newLifeButton').click();
-   await page.locator('#lotterySkip').click();
+   await confirmLottery(page);
    await page.locator('#birthStart').click();
    // Full-page scroll and actual layout measurements, not a static CSS assertion.
    await page.evaluate(()=>window.scrollTo({top:640,behavior:'instant'}));
@@ -844,7 +857,7 @@ test('career shortcut makes age-15 work discoverable without opening detail tabs
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click();
   // Advance through childhood and resolve milestone events.
@@ -869,7 +882,7 @@ test('autoplay pauses on a real decision and continues after the player chooses'
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#newLifeButton').click();
-  await page.locator('#lotterySkip').click();
+  await confirmLottery(page);
   await page.locator('#birthStart').click();
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
   await page.locator('#clockNext').click();
@@ -894,7 +907,7 @@ test('automatic choice popup shows milestone effects and can be closed and reope
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#birthYearInput').fill('1544');
-  await page.locator('#newLifeButton').click();await page.locator('#lotterySkip').click();await page.locator('#birthStart').click();
+  await page.locator('#newLifeButton').click();await confirmLottery(page);await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click();
   for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
   assert.ok(await page.locator('#decisionModal').isVisible());
@@ -916,7 +929,7 @@ test('risky historical choice popup shows both numeric outcomes and actual game 
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
   await page.locator('#birthYearInput').fill('1548');await page.locator('#regionSelect').selectOption('tokai');
-  await page.locator('#newLifeButton').click();await page.locator('#lotterySkip').click();await page.locator('#birthStart').click();
+  await page.locator('#newLifeButton').click();await confirmLottery(page);await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click();
   for(let i=0;i<12;i++){
    const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
@@ -935,12 +948,54 @@ test('everyday focus choices show precise numeric success and ordinary changes',
  const {page,context,errors}=await open(390,780);
  try{
   await page.locator('[name="era"][value="edo"]').check();
-  await page.locator('#newLifeButton').click();await page.locator('#lotterySkip').click();await page.locator('#birthStart').click();
+  await page.locator('#newLifeButton').click();await confirmLottery(page);await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click();
   for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
   await page.locator('#decisionOptions [data-choice]').first().click();
   assert.match(await page.locator('[data-focus="work"]').innerText(),/家計\+7生活点/);
   assert.match(await page.locator('[data-focus="family"]').innerText(),/関係\+7/);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('historical Japan map highlights each selected region and era on the birth card',async()=>{
+ for(const [era,region] of [['sengoku','kyushu'],['edo','kanto'],['bakumatsu-meiji','tohoku'],['edo','setouchi']]){
+  const {page,context,errors}=await open(375,720,'?seed=381');
+  try{
+   await page.locator('[name="era"][value="'+era+'"]').check();
+   await page.locator('#regionSelect').selectOption(region);
+   await page.locator('#newLifeButton').click();
+   assert.equal(await page.locator('#lotteryScreen').isVisible(),true);
+   assert.equal(await page.locator('#lotteryBirthMap .historical-map').getAttribute('data-region-id'),region);
+   assert.equal(await page.locator('#lotteryBirthMap .historical-map').getAttribute('data-era'),era);
+   assert.ok(await page.locator('#lotteryConfirm').isVisible(),'fixed inputs still need confirmation');
+   await page.locator('#lotteryConfirm').click();
+   assert.equal(await page.locator('#birthMap .historical-map').getAttribute('data-region-id'),region);
+   assert.equal(await page.locator('#birthMap .historical-map').getAttribute('data-era'),era);
+   const m=await page.locator('#birthMap svg').boundingBox();
+   assert.ok(m&&m.width>250&&m.height>90,'map must be readable on phone');
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});
+test('skipping a random draw settles but cannot start a new life without tapping the confirm button',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=29');
+ try{
+  await page.locator('#newLifeButton').click();
+  assert.equal(await page.locator('#lotteryConfirm').isVisible(),false);
+  await page.locator('#lotterySkip').click();
+  assert.equal(await page.locator('#lotteryScreen').getAttribute('data-phase'),'settled');
+  assert.ok(await page.locator('#lotteryConfirm').isVisible());
+  assert.equal(await page.locator('#birthScreen').isVisible(),false);
+  const before=JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot));
+  await page.waitForTimeout(850);
+  assert.ok(await page.locator('#lotteryScreen').isVisible());
+  assert.equal(JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot)),before);
+  await page.locator('#lotteryConfirm').click();
+  assert.ok(await page.locator('#birthScreen').isVisible());
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  await page.locator('#birthStart').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
