@@ -43,3 +43,9 @@ export function relevantLocal(event,regionId){
  const region=getRegion(regionId);
  return region.local.includes(event.regionId)?'nearby':'distant';
 }
+
+/* Era module for the CURRENT year. Real transitions occurred over time; these
+ * boundaries only select game data, not instant changes to every social rule. */
+export function eraForYear(year){
+ return year>=1853?'bakumatsu-meiji':year>=1603?'edo':'sengoku';
+}

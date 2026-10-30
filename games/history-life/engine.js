@@ -1,4 +1,4 @@
-import {ERAS,REGIONS,FOCI,FIRST_NAMES,getEra,getRegion,relevantLocal} from './scenarios.js';
+import {ERAS,REGIONS,FOCI,FIRST_NAMES,getEra,getRegion,relevantLocal,eraForYear} from './scenarios.js';
 import {initPeople,syncFamily,createPartner,createChild,migratePeople,interact as interactPerson,tickPeople,relationshipEvent,labelRole} from './social.js';
 import {initCareer,migrateCareer,setCareerFromLegacy,careerYear,jobOptions,switchCareer as tryCareerSwitch} from './careers.js';
 import {initMoney,migrateMoney,beginMoneyYear,settleYear,changeMoney,moneyAction,validateMoney,moneySummary} from './money.js';
@@ -44,7 +44,7 @@ export function createLife({eraId='sengoku',seed=1,birthYear=null,regionId=null}
    joy:clamp(42+Math.floor(rng(roll)*29)),wealth:clamp(20+fortune*13)},
   rng:roll.rng,phase:'living',pending:null,eventQueue:[],death:null,log:[],focusHistory:[],
   choices:0,specialChoices:0,autoFocus:'family',
-  meta:{chanceModel:'game_balance_placeholder',historicalEventSource:'original annotated research',birthWeights:'fictional_equal_weights'}
+  meta:{chanceModel:'game_balance_placeholder',historicalEventSource:'original annotated research',birthWeights:'fictional_equal_weights',birthEraId:era.id}
  };
  initPeople(state,()=>rng(state));initCareer(state);initMoney(state);
  log(state,'誕生',year+'年、'+region.name+'の「'+state.background+'」に生まれた。家族から「'+name+'」と呼ばれる。',{kind:'birth'});
@@ -221,6 +221,13 @@ export function advanceYear(s,focus='family',historicalEvents=[]){
  beginMoneyYear(s);
  const result=focusYear(s,focus);
  s.age++;s.year=s.birthYear+s.age;
+ const actualEra=eraForYear(s.year);
+ if(actualEra!==s.eraId){
+  if(!s.meta)s.meta={};
+  if(!s.meta.birthEraId)s.meta.birthEraId=s.eraId;
+  s.eraId=actualEra;
+  log(s,'時代の変わり目',s.year+'年。社会の動きを映すため、生活や仕事に使う時代設定が切り替わった。実際の制度は地域ごとに段階的に変化した。',{kind:'history-context'});
+ }
  backgroundYear(s,focus);
  careerYear(s,focus,()=>rng(s),(title,text,extra={})=>log(s,title,text,extra),d=>effect(s,d));
  settleYear(s);
@@ -293,7 +300,8 @@ export function autoAdvance(s,years,historicalEvents=[]){
 }
 export function lifeSummary(s){
  const history=s.log.filter(x=>x.kind==='history');
- return {name:s.name,eraId:s.eraId,birthYear:s.birthYear,endYear:s.year,age:s.age,
+ return {name:s.name,eraId:s.eraId,birthEraId:s.meta?.birthEraId||s.eraId,
+  birthYear:s.birthYear,endYear:s.year,age:s.age,
   hometown:getRegion(s.regionId).name,background:s.background,profession:s.profession,
   partner:s.family.partner,children:s.family.children,historySeen:history.length,
   lovedOnes:(s.people||[]).length,careerChanges:s.career?.history?.length||0,

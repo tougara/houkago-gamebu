@@ -5,7 +5,7 @@
 import {createLife,lifeSummary} from './engine.js';
 import {syncFamily} from './social.js';
 import {getJob} from './careers.js';
-import {getRegion} from './scenarios.js';
+import {getRegion,eraForYear} from './scenarios.js';
 
 const nonnegative=n=>Math.max(0,Math.floor(Number(n)||0));
 const bounded=n=>Math.max(0,Math.min(100,Math.round(Number(n)||0)));
@@ -54,12 +54,13 @@ export function inheritLife(s,childId){
  const birthYear=child.birthYear;
  // createLife normally only generates initial era births. Here we need a child
  // already born inside a continuing family whose birthday may fall much later.
- const next=createLife({eraId:s.eraId,seed:stableChildSeed(s,child),
+ const next=createLife({eraId:eraForYear(s.year),seed:stableChildSeed(s,child),
    regionId:s.regionId,birthYear});
  next.birthYear=birthYear;next.year=s.year;next.age=s.year-birthYear;
  next.name=child.name;next.sex=child.sex||next.sex;
  next.background=s.background;next.backgroundIndex=s.backgroundIndex;
- next.meta={...next.meta,continuedFamily:true,originSeed:stableChildSeed(s,child)};
+ next.meta={...next.meta,continuedFamily:true,originSeed:stableChildSeed(s,child),
+   birthEraId:eraForYear(birthYear)};
  next.stats={
   health:bounded(60+Math.min(24,child.closeness/5)-Math.max(0,next.age-50)*.35),
   knowledge:bounded(8+Math.min(40,next.age*.65)+s.stats.knowledge*.12),

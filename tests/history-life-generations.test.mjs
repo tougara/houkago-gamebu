@@ -4,6 +4,7 @@ import {createLife,validateSave,upgradeSave,advanceYear,chooseEvent} from '../ga
 import {syncFamily,labelRole} from '../games/history-life/social.js';
 import {ensureLineage,eligibleHeirs,inheritLife,ancestorSummary} from '../games/history-life/generations.js';
 import {periodFor} from '../games/history-life/currency.js';
+import {eraForYear} from '../games/history-life/scenarios.js';
 function endedFamily({eraId='sengoku',seed=78,year=1611,children=2}={}){
  const s=createLife({eraId,seed,regionId:'tokai'});
  s.age=year-s.birthYear;s.year=year;s.phase='ended';
@@ -115,4 +116,33 @@ test('absent or deceased children cannot advance a family, allowing a meaningful
  assert.deepEqual(eligibleHeirs(s),[]);
  assert.equal(inheritLife(s,'npc-444').ok,false);
  assert.equal(ancestorSummary(s).children,0);
+});
+
+test('calendar-year change updates a living person without erasing their birthplace or family',()=>{
+ assert.equal(eraForYear(1602),'sengoku');
+ assert.equal(eraForYear(1603),'edo');
+ assert.equal(eraForYear(1852),'edo');
+ assert.equal(eraForYear(1853),'bakumatsu-meiji');
+ let person=null;
+ for(let seed=10;seed<50;seed++){
+  const testLife=createLife({eraId:'sengoku',seed,birthYear:1586});
+  for(let n=0;n<50&&testLife.age<17&&testLife.phase!=='ended';n++){
+   if(testLife.phase==='event')chooseEvent(testLife,testLife.pending.options[0].id);
+   else advanceYear(testLife,'family',[]);
+  }
+  if(testLife.phase!=='ended'){person=testLife;break}
+ }
+ assert.ok(person);
+ assert.equal(person.year,1603);
+ assert.equal(person.eraId,'edo');
+ assert.equal(person.meta.birthEraId,'sengoku');
+ assert.ok(person.log.some(e=>e.kind==='history-context'));
+ assert.ok(validateSave(person));
+});
+test('heir arriving in 1640 has Edo career choices even if ancestor was born in Sengoku',()=>{
+ const parent=endedFamily({year:1640});
+ const next=inheritLife(parent,eligibleHeirs(parent)[0].id).life;
+ assert.equal(next.eraId,'edo');
+ assert.equal(next.meta.birthEraId,'edo');
+ assert.ok(validateSave(next));
 });

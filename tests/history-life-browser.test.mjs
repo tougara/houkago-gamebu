@@ -469,6 +469,7 @@ test('a deceased life opens a child heir choice and preserves the family across 
   await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
   await page.locator('[data-continue="0"]').click();
   assert.equal((await page.evaluate(()=>window.HistoryLifeDebug.snapshot)).lineage.generation,2);
+  await page.locator('#homeButton').click();
   await page.locator('#archiveButton').click();
   assert.match(await page.locator('#archiveList').innerText(),new RegExp(parent.name));
   assert.deepEqual(errors,[]);
