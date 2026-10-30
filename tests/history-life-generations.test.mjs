@@ -62,6 +62,7 @@ test('parent is genuinely deceased, surviving partner and children become relati
 });
 test('net household estate divided per living heir without manufacturing new credit',()=>{
  const s=endedFamily();
+ ensureLineage(s); // A family identity is added lazily, but the deceased life otherwise stays unchanged.
  const old=JSON.stringify(s);
  const first=inheritLife(s,eligibleHeirs(s)[0].id);
  assert.equal(first.share,52);assert.equal(first.heirs,2);
