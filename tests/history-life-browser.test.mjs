@@ -182,6 +182,7 @@ test('career picker works after age 15; job skills and options survive save/relo
   const before=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
   assert.ok(before.age>=15);
   assert.ok(before.career.jobId!=='dependent');
+  await page.locator('[data-detail-tab="career"]').click();
   await page.locator('#careerButton').click();
   assert.ok(await page.locator('#careerModal').isVisible());
   assert.ok(await page.locator('.job-row').count()>=7,'Sengoku has 7 career paths');
@@ -209,6 +210,7 @@ test('time flow auto-advances, pauses, speeds up and skips to next real mileston
   const initial=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
   assert.equal(initial,0);
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.secondsPerYear),45);
+  await page.locator('#clockOptions summary').click();
   await page.locator('#clockDuration').selectOption('30');
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.secondsPerYear),22.5);
   await page.locator('#clockSpeed').selectOption('16');
@@ -239,6 +241,7 @@ test('cash flow, shopping, saved money ledger and debt display work on phone',as
   await page.locator('[data-choice]').first().click();
   let initial=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
   assert.equal(await page.locator('.money-stat').count(),3);
+  await page.locator('[data-detail-tab="money"]').click();
   assert.equal(await page.locator('#moneyFlow').isVisible(),true);
   await page.locator('[data-money="food"]').click();
   const result=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
@@ -311,6 +314,7 @@ test('life duration is selectable, persists across reload and stays synchronized
   assert.equal(clock.duration,90);
   assert.equal(clock.secondsPerYear,67.5);
   assert.equal(await page.locator('#clockDuration').inputValue(),'90');
+  await page.locator('#clockOptions summary').click();
   await page.locator('#clockDuration').selectOption('30');
   clock=await page.evaluate(()=>window.HistoryLifeDebug.clock);
   assert.equal(clock.secondsPerYear,22.5);
@@ -336,6 +340,7 @@ test('life-map, peers and reflection survive reopening the saved life',async()=>
   await page.locator('#reflectionForm button').click();
   assert.equal(await page.locator('#reflectionSaved').isVisible(),true);
   assert.equal(await page.locator('#lifeMap .life-tile').count(),6);
+  await page.locator('[data-detail-tab="records"]').click();
   await page.locator('[data-life-age="3"]').click();
   assert.match(await page.locator('#lifeMapDetail').innerText(),/3歳/);
   await page.locator('#homeButton').click();
@@ -484,6 +489,7 @@ test('sourced institution guide appears for the birth year, remains collapsed, a
   await page.locator('#regionSelect').selectOption('kyushu');
   await page.locator('#newLifeButton').click();
   assert.match(await page.locator('#institutionSummary').innerText(),/1873年/);
+  await page.locator('[data-detail-tab="records"]').click();
   assert.equal(await page.locator('#institutionCard').getAttribute('open'),null,'closed until player opens it');
   const before=await page.evaluate(()=>JSON.stringify(window.HistoryLifeDebug.snapshot));
   await page.locator('#institutionSummary').click();
@@ -495,6 +501,52 @@ test('sourced institution guide appears for the birth year, remains collapsed, a
   assert.equal(await page.evaluate(()=>JSON.stringify(window.HistoryLifeDebug.snapshot)),before);
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
   assert.ok(overflow<=2,'institution panel must not cause horizontal overflow');
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('phone HUD places five abilities above story and progress spans screen',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  assert.equal(await page.locator('#statBars .stat-line').count(),5);
+  const p=await page.evaluate(()=>{
+   const r=q=>document.querySelector(q).getBoundingClientRect();
+   const bar=r('#clockProgress'),stats=r('.life-stat-strip'),story=r('.story-box');
+   return {barWidth:bar.width,barHeight:bar.height,statTop:stats.top,statBottom:stats.bottom,storyTop:story.top,barTop:bar.top,overflow:document.documentElement.scrollWidth-innerWidth};
+  });
+  assert.ok(p.barWidth>=300,'clock track width '+p.barWidth);
+  assert.ok(p.barHeight>=12,'clock track height '+p.barHeight);
+  assert.ok(p.statTop>p.barTop&&p.statBottom<p.storyTop,'stats between clock and story');
+  assert.ok(p.overflow<=2,'horizontal overflow '+p.overflow);
+  assert.equal(await page.locator('[data-detail-panel]:visible').count(),1);
+  await page.locator('[data-detail-tab="money"]').click();
+  assert.ok(await page.locator('.money-card').isVisible());
+  assert.equal(await page.locator('.people-card').isVisible(),false);
+  await page.locator('[data-detail-tab="family"]').click();
+  assert.ok(await page.locator('.people-card').isVisible());
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('time bar moves and pause retains elapsed progress',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#newLifeButton').click();
+  await page.locator('#clockSpeed').selectOption('16');
+  await page.locator('#clockToggle').click();
+  await page.waitForTimeout(520);
+  await page.locator('#clockToggle').click();
+  const fraction=Number(await page.locator('#clockProgress').getAttribute('aria-valuenow'));
+  assert.ok(fraction>0&&fraction<100,'progress '+fraction);
+  await page.waitForTimeout(220);
+  assert.equal(Number(await page.locator('#clockProgress').getAttribute('aria-valuenow')),fraction);
+  await page.locator('#clockToggle').click();
+  await page.waitForTimeout(340);
+  await page.locator('#clockToggle').click();
+  const resumed=Number(await page.locator('#clockProgress').getAttribute('aria-valuenow'));
+  assert.ok(resumed>fraction,'clock must continue same year');
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
