@@ -11,6 +11,7 @@ const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
 let events=[],sourceMap=new Map(),population=new Map(),slots=[null,null,null],activeSlot=0,current=null,archives=[],viewedArchive=null;
 let clockRunning=false,clockSpeed=1,clockProgress=0,clockLast=0,lifeDuration=60,autoDecisions=false;
+let autoResumeAfterDecision=false;
 const DURATION_KEY='houkago_history_life_duration_v1';
 const AUTO_KEY='houkago_history_life_auto_decisions_v1';
 const YEAR_SECONDS=45;
@@ -303,7 +304,7 @@ function renderClock(){
   clockRunning?'次の年まで約'+Math.ceil(Math.max(0,secondsPerYear()/clockSpeed*(1-clockProgress)))+'秒':
   '停止中・重点を選んで1年ずつ進めることもできます';
 }
-function stopClock(){clockRunning=false;clockProgress=0;renderClock()}
+function stopClock(){clockRunning=false;autoResumeAfterDecision=false;clockProgress=0;renderClock()}
 function timeTick(timestamp){
  if(!clockLast)clockLast=timestamp;
  const dt=Math.min((timestamp-clockLast)/1000,.2);
@@ -396,7 +397,9 @@ function renderActions(s){
   FOCI.map(f=>'<button class="action-button'+(s.autoFocus===f.id?' focus-active':'')+'" type="button" data-focus="'+f.id+'">'+
     '<span class="action-symbol">'+escaped(f.icon)+'</span><span><strong>'+escaped(f.name)+'</strong>'+
     '<small>'+escaped(f.effect)+'</small></span></button>').join('')+
- '</div><div class="action-toolbar">'+
+ '</div>'+(s.age>=15&&s.career?.jobId==='dependent'
+  ?'<div class="career-prompt"><strong>仕事を探そう</strong><p>15歳から仕事を選べるよ。仕事に就くと毎年の収入と技能が変わる。</p><button type="button" data-action="career" class="primary">仕事を探す →</button></div>':'')+
+ '<div class="action-toolbar">'+
   '<button class="secondary" data-action="auto5" type="button">同じ重点で最大5年進める</button>'+
   '<span class="turn-note">歴史イベントや人生の節目が発生したら自動で停止します。</span></div>';
 }
@@ -452,7 +455,11 @@ function advance(focus){
  current.lastStory={label:'人生の一年',title:current.age+'歳の暮らし',
   text:r.description+'\n'+current.year+'年。時代は少しずつ移り変わっていく。'};
  if(current.phase==='ended')archiveCurrent();
- if(current.phase!=='living')clockRunning=false;
+ if(current.phase!=='living'){
+  if(current.phase==='event')autoResumeAfterDecision=autoResumeAfterDecision||clockRunning;
+  else autoResumeAfterDecision=false;
+  clockRunning=false;
+ }
  storageWrite();render();
 }
 function archiveCurrent(){
@@ -471,12 +478,15 @@ function choose(id){
  const last=current.log[current.log.length-1];
  current.lastStory={label:'選択の結果',title:eventTitle,
   text:(option?option.label+'。\n':'')+(last?.text||'新しい道を歩むことになった。')};
- if(current.phase==='ended')archiveCurrent();
+ if(current.phase==='ended'){archiveCurrent();autoResumeAfterDecision=false}
+ else if(current.phase==='living'&&autoResumeAfterDecision){
+  autoResumeAfterDecision=false;clockRunning=true;
+ }
  storageWrite();render();
 }
 function fastForward(){
  if(!current||current.phase!=='living'||current.age<7)return;
- clockRunning=false;clockProgress=0;
+ clockRunning=false;autoResumeAfterDecision=false;clockProgress=0;
  const r=autoAdvance(current,5,events);
  if(autoDecisions&&current.phase==='event')resolveAutonomousEvents(current);
  recordLifeYear(current);
@@ -489,7 +499,7 @@ function fastForward(){
 function showHistory(){
  if(!current)return;
  viewedArchive=null;
- clockRunning=false;clockProgress=0;
+ clockRunning=false;autoResumeAfterDecision=false;clockProgress=0;
  const lineage=ensureLineage(current);
  $('ancestorHistory').hidden=lineage.generation===1;
  $('ancestorHistory').innerHTML=lineage.ancestors.length?
@@ -599,7 +609,7 @@ $('lifeMap').addEventListener('click',e=>{
 });
 $('clockToggle').addEventListener('click',()=>{
  if(!current||current.phase!=='living')return;
- clockRunning=!clockRunning;renderClock();
+ clockRunning=!clockRunning;autoResumeAfterDecision=false;renderClock();
 });
 function chooseDuration(value){
  const next=Number(value);
@@ -617,6 +627,7 @@ $('clockSpeed').addEventListener('change',e=>{
 });
 $('clockNext').addEventListener('click',()=>{
  if(!current||current.phase!=='living')return;
+ autoResumeAfterDecision=clockRunning;
  clockRunning=false;clockProgress=0;
  let n=0;
  while(n<110&&current.phase==='living'){advance(current.autoFocus||'family');n++}
@@ -667,6 +678,7 @@ $('actionArea').addEventListener('click',e=>{
  else if(button.dataset.choice)choose(button.dataset.choice);
  else if(button.dataset.action==='child')advance('family');
  else if(button.dataset.action==='auto5')fastForward();
+ else if(button.dataset.action==='career')showCareers();
  else if(button.dataset.action==='timeline')showHistory();
  else if(button.dataset.action==='another')showSetup();
 });

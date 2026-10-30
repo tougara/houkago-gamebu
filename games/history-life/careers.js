@@ -86,10 +86,12 @@ export function careerYear(s,focus,rand,log,effect){
  let proficiency=focus==='work'?7:focus==='learn'?4:2;
  if(s.stats.health<25)proficiency=Math.max(1,Math.round(proficiency*.5));
  c.skill=clamp(c.skill+proficiency+(rand()<.3?2:0));
- const income=Math.max(1,Math.floor(job.income*(.50+c.skill/130)*(1+c.rank*.15)));
- const maintenance=3+Math.min(5,Math.floor(s.family.children/2));
+ // Fictional balance: annual basic living costs and dependents are already charged in settleYear.
+ // Do not charge another maintenance fee here. Early career still pays less than mastery.
+ const income=Math.max(1,Math.floor(job.income*(1.5+c.skill/130)*(1+c.rank*.15)));
+ const maintenance=0;
  // Wealth is a 0-100 gameplay comfort index, not currency or historical income.
- effect({wealth:income-maintenance,health:focus==='work'?-job.healthCost:0});
+ effect({wealth:income,health:focus==='work'?-job.healthCost:0});
  if(c.skill>=30&&c.years>=4&&c.rank===0){
   c.rank=1;effect({wealth:3,joy:2});
   log('仕事で成長',job.name+'の腕を認められ、任される仕事が増えた。',{kind:'career'});

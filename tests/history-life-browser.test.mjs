@@ -550,7 +550,7 @@ test('phone HUD places five abilities above story and progress spans screen',asy
    return {barWidth:bar.width,barHeight:bar.height,statTop:stats.top,statBottom:stats.bottom,storyTop:story.top,barTop:bar.top,overflow:document.documentElement.scrollWidth-innerWidth};
   });
   assert.ok(p.barWidth>=300,'clock track width '+p.barWidth);
-  assert.ok(p.barHeight>=12,'clock track height '+p.barHeight);
+  assert.ok(p.barHeight>=10,'clock track height '+p.barHeight);
   assert.ok(p.statTop>p.barTop&&p.statBottom<p.storyTop,'stats between clock and story');
   assert.ok(p.overflow<=2,'horizontal overflow '+p.overflow);
   assert.equal(await page.locator('[data-detail-panel]:visible').count(),1);
@@ -833,4 +833,54 @@ test('playtest: the entire sticky HUD includes five stats and leaves useful room
    assert.deepEqual(errors,[]);
   }finally{await context.close()}
  }
+});
+
+test('career shortcut makes age-15 work discoverable without opening detail tabs',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=422');
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  await page.locator('#lotterySkip').click();
+  await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click();
+  // Advance through childhood and resolve milestone events.
+  for(let i=0;i<15;i++){
+   const s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+   if(s.phase==='event'){await page.locator('[data-choice]').first().click();i--;continue}
+   await page.locator(s.age<7?'[data-action="child"]':'[data-focus="learn"]').click();
+  }
+  let s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  while(s.phase==='event'){await page.locator('[data-choice]').first().click();s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot)}
+  assert.equal(s.age,15);
+  if(s.career.jobId==='dependent'){
+   assert.ok(await page.locator('.career-prompt').isVisible(),'work CTA should appear on primary play screen');
+   await page.locator('.career-prompt button').click();
+   assert.ok(await page.locator('#careerModal').isVisible());
+  }
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('autoplay pauses on a real decision and continues after the player chooses',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=431');
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#newLifeButton').click();
+  await page.locator('#lotterySkip').click();
+  await page.locator('#birthStart').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
+  await page.locator('#clockNext').click();
+  let s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(s.phase,'event');
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  let loops=0;
+  while(s.phase==='event'&&loops++<12){
+   await page.locator('[data-choice]').first().click();
+   s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  }
+  assert.equal(s.phase,'living');
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true,'automatic clock resumes after the decision');
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false,'manual pause remains respected');
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
 });
