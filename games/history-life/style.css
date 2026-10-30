@@ -191,3 +191,66 @@ body{background:radial-gradient(ellipse at 15% -20%,#ede4d3 0,transparent 45%),#
 .institution-caution,.institution-none{margin:0;padding:10px 13px;font-size:10px;line-height:1.65;color:#837c6e}
 @media(min-width:871px){.institution-card{grid-column:1/-1}}
 @media(max-width:540px){.institution-card>summary{padding:10px 12px;font-size:12px}}
+
+/* Compact play HUD 2026-10-30 */
+.life-stat-strip{background:#fffefa;border:1px solid #d9e1d8;border-radius:13px;padding:9px 12px 11px;margin-bottom:10px;box-shadow:0 3px 12px #253e4010}
+.life-stat-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px;color:#46665f}
+.life-stat-heading strong{font-size:12px}.life-stat-heading small{font-size:10px;color:#84958d}
+.life-stat-strip .stat-bars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.life-stat-strip .stat-line{min-width:0;gap:6px;padding:4px 7px 6px;background:#f2f6f1;border:1px solid #e2e9e2;border-radius:8px}
+.life-stat-strip .stat-meta{min-width:0;display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:11px}
+.life-stat-strip .stat-meta span{min-width:0;white-space:nowrap;overflow:hidden;color:#526c65}
+.life-stat-strip .stat-meta b{font-size:15px;color:#233f42;font-variant-numeric:tabular-nums}
+.life-stat-strip .bar{height:6px;background:#dce6de}
+.game-grid .right-col{gap:10px}
+.details-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;grid-column:1/-1}
+.details-tabs button{min-width:0;min-height:39px;padding:6px 2px;background:#f7f8f3;border:1px solid #c8d9d3;border-radius:8px;color:#466961;font-size:11px;font-weight:850}
+.details-tabs button.selected{background:#276d70;border-color:#276d70;color:white;box-shadow:0 2px 8px #276d7026}
+.details-tabs button:focus-visible{outline:3px solid #c99557}
+.right-col [data-detail-panel][hidden]{display:none!important}
+.clock-panel{display:flex;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:6px;padding:9px 12px;border:1px solid #a8cfc6;background:#eaf4f0}
+.clock-main-row{display:flex;align-items:center;gap:8px;min-width:0}
+.clock-main-row .clock-play{flex:1 1 150px;min-width:0}
+.clock-main-row .clock-next{flex:1 1 138px;min-width:0}
+.clock-main-row .clock-speed{flex:0 0 auto}
+.clock-progress-line{display:grid;gap:5px;min-width:0}
+.clock-progress-label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;color:#375d57}
+.clock-progress-label strong{font-weight:900}
+.clock-progress-label span{font-weight:900;font-variant-numeric:tabular-nums;color:#1f746f}
+.clock-panel .clock-progress{width:100%;height:13px;min-height:13px;flex:none;min-width:0;background:#c8dcd4;border:1px solid #a3c9bd;border-radius:100px;overflow:hidden}
+.clock-panel .clock-progress>div{background:linear-gradient(90deg,#2e9385,#65b49a);height:100%;border-radius:100px}
+.clock-panel .clock-info{font-size:10px;text-align:left;color:#56786e;line-height:1.3}
+.clock-options{border-top:1px solid #c9ddd3;padding-top:5px;min-width:0}
+.clock-options>summary{font-size:10px;color:#52776e;font-weight:850;cursor:pointer;min-height:23px;line-height:1.8}
+.clock-option-fields{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:6px 0 4px}
+.clock-option-fields .auto-decisions{padding:3px 6px}
+@media(min-width:871px){.right-col .details-tabs,.right-col .detail-panel{grid-column:1/-1}}
+@media(max-width:870px){.right-col{grid-template-columns:1fr}.right-col .details-tabs,.right-col .detail-panel{grid-column:1/-1}}
+@media(max-width:540px){
+ .game-view{padding:6px}.game-ribbon{margin-bottom:6px}
+ .clock-panel{position:sticky;top:0;z-index:8;box-shadow:0 3px 12px #29484122;padding:7px 9px;gap:4px;margin-bottom:6px;border-radius:10px}
+ .clock-main-row{gap:5px}
+ .clock-main-row .clock-play,.clock-main-row .clock-next{font-size:11px;min-height:36px;padding:7px 6px}
+ .clock-main-row .clock-speed{gap:3px;font-size:10px}
+ .clock-main-row .clock-speed select{min-height:35px;font-size:11px;padding:4px 2px}
+ .clock-panel .clock-progress{height:13px;min-height:13px}
+ .clock-progress-label{font-size:10px}
+ .clock-panel .clock-info{font-size:10px}
+ .life-stat-strip{padding:6px 7px 8px;margin-bottom:7px;border-radius:10px}
+ .life-stat-heading{margin-bottom:4px}
+ .life-stat-strip .stat-bars{gap:4px;grid-template-columns:repeat(5,minmax(0,1fr))}
+ .life-stat-strip .stat-line{padding:5px 3px;gap:4px;text-align:center}
+ .life-stat-strip .stat-meta{display:grid;justify-items:center;justify-content:center;gap:1px;font-size:10px}
+ .life-stat-strip .stat-meta span{max-width:100%}
+ .life-stat-strip .stat-meta b{font-size:16px;line-height:1.2}
+ .life-stat-strip .bar{height:5px}
+ .game-grid{gap:8px}
+ .details-tabs{gap:3px}.details-tabs button{font-size:10px;min-height:41px}
+ .right-col .detail-panel{min-width:0}
+ .right-col .status-card,.right-col .timeline-card{padding:12px}
+}
+@media(max-width:355px){
+ .clock-main-row .clock-play,.clock-main-row .clock-next{font-size:10px}
+ .life-stat-strip .stat-meta{font-size:9px}.details-tabs button{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){.clock-panel .clock-progress>div{transition:none}}
