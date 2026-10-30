@@ -696,7 +696,10 @@ test('era and birthplace spin simultaneously and automatically settle on the act
   assert.ok(await page.locator('#lotteryEraValue').isVisible());
   assert.ok(await page.locator('#lotteryRegionValue').isVisible());
   const state=JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot));
-  await page.waitForFunction(()=>document.getElementById('lotteryScreen').dataset.phase==='settled',{timeout:6500});
+  const beforeSettle=await page.evaluate(()=>performance.now());
+  await page.waitForFunction(()=>document.getElementById('lotteryScreen').dataset.phase==='settled',{timeout:10000});
+  const elapsed=await page.evaluate(t=>performance.now()-t,beforeSettle);
+  assert.ok(elapsed>=3500,'roulette should stay noticeably longer: '+elapsed+'ms');
   assert.equal(await page.locator('#lotteryEraStatus').innerText(),'決定');
   assert.equal(await page.locator('#lotteryRegionStatus').innerText(),'決定');
   const target=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);

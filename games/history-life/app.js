@@ -94,7 +94,7 @@ function showBirthLottery(life,{randomEra,randomRegion}){
  if((!randomEra&&!randomRegion)||matchMedia('(prefers-reduced-motion: reduce)').matches){
   settle();return;
  }
- const duration=2100;
+ const duration=5250;
  let start=null,nextChange=0,step=0;
  const frame=now=>{
   if(lotteryLife!==life)return;
