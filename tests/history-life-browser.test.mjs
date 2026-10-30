@@ -630,3 +630,26 @@ test('ended life displays a dignified result and keeps the original heir options
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('age, time progress and playback controls stay together when scrolling on phone',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  await page.locator('#birthStart').click();
+  assert.ok(await page.locator('.game-play-top').isVisible());
+  await page.evaluate(()=>window.scrollTo({top:700,behavior:'instant'}));
+  await page.waitForTimeout(150);
+  const result=await page.evaluate(()=>{
+   const header=document.querySelector('.game-play-top').getBoundingClientRect();
+   const progress=document.querySelector('#clockProgress').getBoundingClientRect();
+   const age=document.querySelector('#ageText').getBoundingClientRect();
+   return {scrollY:window.scrollY,top:header.top,progressBottom:progress.bottom,ageTop:age.top,overflow:document.documentElement.scrollWidth-innerWidth};
+  });
+  assert.ok(result.scrollY>80,'must scroll past initial view');
+  assert.ok(Math.abs(result.top)<3,'whole controls header should remain on screen');
+  assert.ok(result.ageTop>=-1&&result.progressBottom<780,'age and progress should both be visible');
+  assert.ok(result.overflow<=2);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});

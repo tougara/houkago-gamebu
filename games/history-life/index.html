@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261030-life-presentation1">
+ <link rel="stylesheet" href="./style.css?v=20261030-life-presentation2">
 </head>
 <body>
 <div class="app-shell">
@@ -64,6 +64,7 @@
    </div>
   </section>
   <section id="gameView" class="game-view" hidden>
+   <div class="game-play-top">
    <div class="game-ribbon">
     <div class="ribbon-identity"><span id="ageText" class="ribbon-age">0歳</span><strong id="gameYear">1550年</strong><span id="ribbonName" class="ribbon-name"></span><span id="eraBadge" class="eyebrow">戦国</span></div>
     <div class="game-ribbon-actions"><button id="historyButton" type="button" class="outline">年表・記録</button><button id="homeButton" type="button" class="outline">保存して戻る</button></div>
@@ -83,6 +84,7 @@
      <div class="clock-option-fields"><label class="clock-speed">人生の長さ <select id="clockDuration" aria-label="人生の長さを変更"><option value="30">約30分</option><option value="60" selected>約1時間</option><option value="90">約1時間30分</option></select></label>
       <label class="auto-decisions"><input id="autoDecisions" type="checkbox"> 決断もおまかせ</label></div>
     </details>
+   </div>
    </div>
    <section class="life-stat-strip" aria-label="現在の能力値">
     <div class="life-stat-heading"><strong>今の状態</strong><small>0〜100</small></div>

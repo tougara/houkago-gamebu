@@ -326,3 +326,10 @@ body.birth-reveal-open{overflow:hidden}
  .ending-scene{padding:24px 16px 20px}
 }
 @media(prefers-reduced-motion:reduce){.birth-screen{scroll-behavior:auto}}
+
+/* Keep age, year and time controls together as one stable mobile header. */
+.game-play-top{min-width:0}
+@media(max-width:540px){
+ .game-play-top{position:sticky;top:0;z-index:12;padding:0 0 3px;background:#f3f0e9;box-shadow:0 4px 14px #18384216}
+ .game-play-top .clock-panel{position:static;top:auto;box-shadow:none}
+}
