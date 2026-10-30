@@ -50,6 +50,71 @@ function updateSetup(){
     '</small></div><button type="button" data-continue="'+i+'">ひらく</button></div>';
  }).join('');
 }
+// Birth roulette is presentation only. Actual lifetime choices are made once by createLife.
+let lotteryFrame=0,lotteryTimer=0,lotteryLife=null;
+function hideBirthLottery(){
+ if(lotteryFrame)cancelAnimationFrame(lotteryFrame);
+ if(lotteryTimer)clearTimeout(lotteryTimer);
+ lotteryFrame=0;lotteryTimer=0;lotteryLife=null;
+ $('lotteryScreen').hidden=true;
+ document.body.classList.remove('birth-lottery-open');
+}
+function finishBirthLottery(){
+ const life=lotteryLife;
+ if(life&&current===life)showBirth(life);
+ hideBirthLottery();
+}
+function showBirthLottery(life,{randomEra,randomRegion}){
+ hideBirthLottery();
+ lotteryLife=life;
+ const screen=$('lotteryScreen');
+ const eraTarget=getEra(life.meta?.birthEraId||life.eraId).name;
+ const regionTarget=getRegion(life.regionId).name;
+ screen.dataset.phase='rolling';
+ $('lotteryEraStatus').textContent=randomEra?'抽選中':'指定';
+ $('lotteryRegionStatus').textContent=randomRegion?'抽選中':'指定';
+ $('lotteryEraValue').textContent=randomEra?ERAS[0].name:eraTarget;
+ $('lotteryRegionValue').textContent=randomRegion?REGIONS[0].name:regionTarget;
+ $('lotteryStatus').textContent='運命をたどっています……';
+ $('lotteryProgress').style.width='0%';
+ screen.hidden=false;document.body.classList.add('birth-lottery-open');
+ $('lotterySkip').focus();
+ const settle=()=>{
+  if(lotteryLife!==life)return;
+  $('lotteryEraValue').textContent=eraTarget;
+  $('lotteryRegionValue').textContent=regionTarget;
+  $('lotteryEraStatus').textContent=randomEra?'決定':'指定';
+  $('lotteryRegionStatus').textContent=randomRegion?'決定':'指定';
+  $('lotteryProgress').style.width='100%';
+  $('lotteryStatus').textContent='生まれる時代と場所が決まりました';
+  screen.dataset.phase='settled';
+  lotteryFrame=0;
+  lotteryTimer=setTimeout(finishBirthLottery,650);
+ };
+ if((!randomEra&&!randomRegion)||matchMedia('(prefers-reduced-motion: reduce)').matches){
+  settle();return;
+ }
+ const duration=2100;
+ let start=null,nextChange=0,step=0;
+ const frame=now=>{
+  if(lotteryLife!==life)return;
+  if(start===null)start=now;
+  const progress=Math.min(1,(now-start)/duration);
+  $('lotteryProgress').style.width=Math.round(progress*100)+'%';
+  if(progress>=1){settle();return}
+  if(now>=nextChange){
+   step++;
+   if(randomEra)$('lotteryEraValue').textContent=ERAS[step%ERAS.length].name;
+   if(randomRegion)$('lotteryRegionValue').textContent=REGIONS[(step*5)%REGIONS.length].name;
+   screen.dataset.steps=String(step);
+   const interval=55+225*Math.pow(progress,2.8);
+   nextChange=now+interval;
+  }
+  lotteryFrame=requestAnimationFrame(frame);
+ };
+ screen.dataset.steps='0';
+ lotteryFrame=requestAnimationFrame(frame);
+}
 function hideBirth(){
  $('birthScreen').hidden=true;document.body.classList.remove('birth-reveal-open');
 }
@@ -70,12 +135,12 @@ function showBirth(s){
  $('birthStart').focus();
 }
 function showSetup(){
- hideBirth();stopClock();current=null;
+ hideBirthLottery();hideBirth();stopClock();current=null;
  $('gameView').hidden=true;$('setupView').hidden=false;updateSetup();
  window.scrollTo({top:0,behavior:'instant'});
 }
 function openLife(s,slot){
- hideBirth();stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
+ hideBirthLottery();hideBirth();stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
  showDetailTab('family');render();window.scrollTo({top:0,behavior:'instant'});
@@ -631,7 +696,8 @@ $('newLifeButton').addEventListener('click',()=>{
  const life=createLife({eraId:era.id,seed:seed[0],birthYear:year,regionId:$('regionSelect').value||null});
  life.meta.originSeed=seed[0]>>>0;
  recordLifeYear(life);
- slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot);showBirth(life);
+ slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot);
+ showBirthLottery(life,{randomEra:chosen==='random',randomRegion:!$('regionSelect').value});
 });
 $('savesList').addEventListener('click',e=>{
  const button=e.target.closest('[data-continue]');if(!button)return;
@@ -640,6 +706,7 @@ $('savesList').addEventListener('click',e=>{
 $('detailsTabs').addEventListener('click',e=>{
  const btn=e.target.closest('[data-detail-tab]');if(btn)showDetailTab(btn.dataset.detailTab);
 });
+$('lotterySkip').addEventListener('click',finishBirthLottery);
 $('birthStart').addEventListener('click',()=>{
  hideBirth();window.scrollTo({top:0,behavior:'instant'});
 });

@@ -338,3 +338,39 @@ body.birth-reveal-open{overflow:hidden}
 .game-ribbon #ageText{font-size:clamp(24px,4vw,32px);line-height:1.1;font-weight:950;color:#fff}
 @media(max-width:540px){.game-ribbon #ageText{font-size:clamp(23px,6vw,29px)}}
 @media(max-width:355px){.game-ribbon #ageText{font-size:23px}}
+
+/* Historical birth roulette v0.5.3: era and region switch together. */
+body.birth-lottery-open{overflow:hidden}
+.lottery-screen{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px 16px max(24px,env(safe-area-inset-bottom));background:#e9f0ec;color:#1c3037;overflow-y:auto}
+.lottery-screen[hidden]{display:none!important}
+.lottery-inner{display:grid;gap:19px;width:min(100%,700px);text-align:center}
+.lottery-kicker{font-size:12px;font-weight:900;letter-spacing:.2em;color:#47766b}
+.lottery-inner h2{font-size:clamp(19px,4vw,28px);margin:0;line-height:1.4;letter-spacing:.025em}
+.lottery-lead{font-size:13px;line-height:1.6;margin:-11px 0 8px;color:#6b807a}
+.lottery-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;align-items:stretch}
+.lottery-cell{min-width:0;padding:22px 14px;display:grid;align-content:center;gap:15px;border:1px solid #c7dad0;border-radius:16px;background:#fffdf9;box-shadow:0 4px 17px #21443d0d}
+.lottery-label{font-size:12px;color:#56766f;font-weight:850;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px}
+.lottery-label span{font-size:10px;font-variant-numeric:tabular-nums;color:#a17b4a}
+.lottery-label small{font-size:10px;background:#e9f1ec;color:#598072;border-radius:8px;padding:3px 6px}
+.lottery-value{font-size:clamp(21px,4.5vw,37px);line-height:1.4;overflow-wrap:anywhere;color:#253f48;min-height:2.9em;display:grid;place-items:center}
+.lottery-screen[data-phase="rolling"] .lottery-value{animation:lottery-flicker .105s linear infinite alternate}
+.lottery-screen[data-phase="settled"] .lottery-cell{border-color:#5b9990;background:#f2f9f3}
+.lottery-screen[data-phase="settled"] .lottery-value{color:#226a61;animation:none}
+.lottery-progress{width:100%;height:6px;overflow:hidden;background:#c8dad3;border-radius:20px}
+.lottery-progress>div{height:100%;width:0;background:#548c7b;transition:width .12s linear;border-radius:20px}
+.lottery-status{font-size:13px;font-weight:850;color:#52766b;min-height:22px;margin:-6px 0 0}
+.lottery-note{font-size:11px;line-height:1.65;color:#778880;margin:-8px 0 0}
+.lottery-skip{justify-self:center;min-width:170px;min-height:44px;padding:10px 19px;border-radius:999px;border:1px solid #91aca3;background:#ffffffb0;color:#47645d;font-size:12px;font-weight:850}
+.lottery-skip:hover{background:#fff}
+@keyframes lottery-flicker{from{opacity:.7;transform:translateY(-1px)}to{opacity:1;transform:translateY(1px)}}
+@media(max-width:540px){
+ .lottery-screen{padding:18px 12px max(24px,env(safe-area-inset-bottom))}
+ .lottery-inner{gap:15px}
+ .lottery-inner h2{font-size:21px}
+ .lottery-pair{gap:7px}
+ .lottery-cell{padding:17px 7px;gap:10px;border-radius:12px}
+ .lottery-label{font-size:10px;gap:4px}
+ .lottery-value{font-size:clamp(19px,5.6vw,26px);min-height:3.5em}
+ .lottery-status{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){.lottery-screen .lottery-value{animation:none!important}.lottery-progress>div{transition:none}}
