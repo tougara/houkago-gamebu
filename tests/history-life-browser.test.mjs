@@ -411,7 +411,6 @@ test('completed life goes to local archives, and invalid backups are rejected',a
   await page.locator('#newLifeButton').click();
   await page.locator('#lotterySkip').click();
   await page.locator('#birthStart').click();
-  await page.locator('#decisionClose').click();
   await page.locator('#clockOptions summary').click();
   await page.locator('#autoDecisions').check();
   await page.locator('#clockNext').click();
@@ -894,6 +893,7 @@ test('automatic choice popup shows milestone effects and can be closed and reope
  const {page,context,errors}=await open(390,780,'?seed=551');
  try{
   await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#birthYearInput').fill('1544');
   await page.locator('#newLifeButton').click();await page.locator('#lotterySkip').click();await page.locator('#birthStart').click();
   await page.locator('#clockToggle').click();
   for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
