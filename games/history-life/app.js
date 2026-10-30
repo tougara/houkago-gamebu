@@ -5,6 +5,7 @@ import {currencyInfo,formatCurrency,yenEstimate,unitExample} from './currency.js
 import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
 import {getJob} from './careers.js';
 import {getInstitutionContext} from './institutions.js';
+import {eventPreview,focusPreview} from './choice-preview.js';
 import {ensureLineage,eligibleHeirs,inheritLife} from './generations.js';
 import {ensureExperience,recordLifeYear,saveReflection,getReflection,contemporariesFor,resolveAutonomousEvents,lifeCardText} from './life-experience.js';
 const $=id=>document.getElementById(id);
@@ -136,6 +137,7 @@ function showBirth(s){
  $('birthStart').focus();
 }
 function showSetup(){
+ closeDecisionPopup();decisionKey=null;decisionDismissed=false;
  hideBirthLottery();hideBirth();stopClock();current=null;
  $('gameView').hidden=true;$('setupView').hidden=false;updateSetup();
  window.scrollTo({top:0,behavior:'instant'});
@@ -362,6 +364,32 @@ function setStory(label,title,text,sourceId=null){
   $('storySource').innerHTML='<div class="source-pill">史実の参照資料：<a href="'+escaped(source.url)+'" target="_blank" rel="noopener noreferrer">'+escaped(source.name)+'</a><br>本人への影響や確率はゲーム用の仮設定です。</div>';
  }else $('storySource').textContent='';
 }
+let decisionKey=null,decisionDismissed=false;
+function closeDecisionPopup(){$('decisionModal').hidden=true}
+function showDecisionPopup(s){
+ const key=s.phase==='event'&&s.pending?s.year+'|'+s.pending.id+'|'+s.log.length:null;
+ if(!key){decisionKey=null;decisionDismissed=false;closeDecisionPopup();return}
+ const fresh=key!==decisionKey;
+ if(fresh){decisionKey=key;decisionDismissed=false}
+ if(decisionDismissed){closeDecisionPopup();return}
+ const ev=s.pending;
+ $('decisionKind').textContent=ev.kind==='history'?'歴史上の出来事':'人生の転機 ・ '+s.age+'歳';
+ $('decisionTitle').textContent=ev.title;
+ $('decisionDescription').textContent=ev.description;
+ const source=sourceMap.get(ev.sourceId);
+ $('decisionSource').innerHTML=source?'<a class="decision-source" href="'+escaped(source.url)+'" target="_blank" rel="noopener noreferrer">出典：'+escaped(source.name)+'</a>':'';
+ const tags=a=>a.map(x=>'<span class="decision-tag'+(x.includes('−')?' negative':'')+'">'+escaped(x)+'</span>').join('');
+ $('decisionOptions').innerHTML=ev.options.map((o,i)=>{
+  const p=eventPreview(o);
+  const text=p.probability===null?'<div class="decision-outcome"><small>変化</small>'+tags(p.success)+'</div>':
+   '<div class="decision-outcome"><small>成功 '+p.probability+'%</small>'+tags(p.success)+'</div>'+
+   '<div class="decision-outcome"><small>失敗 '+(100-p.probability)+'%</small>'+tags(p.failure)+'</div>';
+  return '<button class="decision-option" type="button" data-choice="'+escaped(o.id)+'"><strong><em>'+(i+1)+'</em>'+escaped(o.label)+'</strong>'+
+   text+(p.extra.length?'<span class="decision-extra">'+p.extra.map(escaped).join('／')+'</span>':'')+'</button>';
+ }).join('');
+ $('decisionModal').hidden=false;
+ if(fresh)$('decisionOptions').querySelector('button')?.focus({preventScroll:true});
+}
 function renderActions(s){
  const target=$('actionArea');
  if(s.phase==='ended'){
@@ -382,9 +410,9 @@ function renderActions(s){
   return;
  }
  if(s.phase==='event'&&s.pending){
-  target.innerHTML='<p class="action-title">あなたはどうする？</p><div class="event-grid">'+
-   s.pending.options.map((o,i)=>'<button class="event-button" type="button" data-choice="'+escaped(o.id)+'"><span>'+(i+1)+'</span>'+escaped(o.label)+'</button>').join('')+
-   '</div><p class="turn-note">選択で結果の可能性は変わりますが、必ず成功するとは限りません。</p>';
+  target.innerHTML='<p class="action-title">大切な決断が発生しました</p>'+
+   '<p class="turn-note">時間は停止しています。数値を見て選択しよう。</p>'+
+   '<button type="button" class="primary decision-reopen" data-action="decision">選択肢を確認する →</button>';
   return;
  }
  if(s.age<7){
@@ -396,7 +424,8 @@ function renderActions(s){
  target.innerHTML='<p class="action-title">今年、何を大切にして暮らす？</p><div class="action-grid">'+
   FOCI.map(f=>'<button class="action-button'+(s.autoFocus===f.id?' focus-active':'')+'" type="button" data-focus="'+f.id+'">'+
     '<span class="action-symbol">'+escaped(f.icon)+'</span><span><strong>'+escaped(f.name)+'</strong>'+
-    '<small>'+escaped(f.effect)+'</small></span></button>').join('')+
+    '<small class="focus-numbers">成功('+escaped(focusPreview(f.id,s.stats.knowledge).chance)+')：'+escaped(focusPreview(f.id,s.stats.knowledge).success.join(' / '))+
+     '｜通常：'+escaped(focusPreview(f.id,s.stats.knowledge).failure.join(' / '))+'</small></span></button>').join('')+
  '</div>'+(s.age>=15&&s.career?.jobId==='dependent'
   ?'<div class="career-prompt"><strong>仕事を探そう</strong><p>15歳から仕事を選べるよ。仕事に就くと毎年の収入と技能が変わる。</p><button type="button" data-action="career" class="primary">仕事を探す →</button></div>':'')+
  '<div class="action-toolbar">'+
@@ -444,6 +473,7 @@ function render(){
  }
  renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();renderExperience(s);renderLineage(s);renderInstitutions(s);
  renderEnding(s);
+ showDecisionPopup(s);
 }
 function advance(focus){
  if(!current||current.phase!=='living')return;
@@ -471,6 +501,7 @@ function archiveCurrent(){
 }
 function choose(id){
  if(!current||current.phase!=='event')return;
+ closeDecisionPopup();
  const eventTitle=current.pending.title,option=current.pending.options.find(o=>o.id===id);
  const result=chooseEvent(current,id);
  if(!result.ok)return;
@@ -658,6 +689,9 @@ $('jobList').addEventListener('click',e=>{
  current.lastStory={label:'仕事の転機',title:name,text:current.log.at(-1)?.text||'新しい仕事を目指した。'};
  storageWrite();render();
 });
+$('decisionClose').addEventListener('click',()=>{decisionDismissed=true;closeDecisionPopup();$('actionArea').querySelector('.decision-reopen')?.focus()});
+$('decisionOptions').addEventListener('click',e=>{const b=e.target.closest('[data-choice]');if(b)choose(b.dataset.choice)});
+$('decisionModal').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();$('decisionClose').click()}});
 $('actionArea').addEventListener('click',e=>{
  const button=e.target.closest('button');if(!button)return;
  if(button.dataset.heir){
@@ -679,6 +713,7 @@ $('actionArea').addEventListener('click',e=>{
  else if(button.dataset.action==='child')advance('family');
  else if(button.dataset.action==='auto5')fastForward();
  else if(button.dataset.action==='career')showCareers();
+ else if(button.dataset.action==='decision'){decisionDismissed=false;showDecisionPopup(current)}
  else if(button.dataset.action==='timeline')showHistory();
  else if(button.dataset.action==='another')showSetup();
 });

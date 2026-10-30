@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261030-playtested-ui1">
+ <link rel="stylesheet" href="./style.css?v=20261030-decision1">
 </head>
 <body>
 <div class="app-shell">
@@ -220,6 +220,17 @@
   <div class="history-footer"><button id="copyLifeCard" type="button" class="secondary">人生カードをコピー</button><span id="copyFeedback" role="status"></span></div>
  </div>
 </div>
+<div class="modal-layer decision-modal" id="decisionModal" role="dialog" aria-modal="true" aria-labelledby="decisionTitle" aria-describedby="decisionDescription" hidden>
+ <div class="modal-card decision-dialog">
+  <div class="modal-header"><div><small id="decisionKind">人生の選択</small><h2 id="decisionTitle">決断のとき</h2></div><button id="decisionClose" type="button" class="close-button">あとで見る ✕</button></div>
+  <div class="decision-body">
+   <p id="decisionDescription" class="decision-description"></p><div id="decisionSource"></div>
+   <p class="decision-legend">選択したときの変化。家計は「生活点」で表示し、余裕の数値は手持ちなどから再計算されるよ。</p>
+   <div id="decisionOptions" class="decision-options"></div>
+   <p class="decision-caution">数値・成功率はゲーム用の仮設定。能力の上限・下限や追加の結果によって実際の変化量が異なる場合があります。</p>
+  </div>
+ </div>
+</div>
 <div class="modal-layer" id="careerModal" role="dialog" aria-modal="true" aria-labelledby="careerTitle" hidden>
  <div class="modal-card career-dialog">
   <div class="modal-header"><div><small>CAREER PATH</small><h2 id="careerTitle">仕事を探す</h2></div><button id="closeCareer" class="close-button" type="button">閉じる ✕</button></div>
@@ -238,6 +249,6 @@
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261030-lottery2"></script>
+<script type="module" src="./app.js?v=20261030-decision1"></script>
 </body>
 </html>

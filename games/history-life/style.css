@@ -423,3 +423,40 @@ body.birth-lottery-open{overflow:hidden}
 .career-prompt p{font-size:12px;line-height:1.6;color:#567b6d;margin:0}
 .career-prompt button{justify-self:start;min-height:40px;padding:8px 15px}
 @media(max-width:540px){.career-prompt{padding:9px 11px;gap:4px}.career-prompt strong{font-size:13px}.career-prompt p{font-size:11px}}
+
+/* Numerical event decision popup, focus previews. */
+.decision-modal{z-index:45;padding:8px}
+.decision-dialog{max-width:600px;max-height:min(95dvh,860px);border:2px solid #a6c7ba}
+.decision-dialog .modal-header{padding:12px 15px;background:#e7f1e9}
+.decision-dialog .modal-header h2{font-size:20px;line-height:1.35}
+.decision-dialog .close-button{font-size:11px;padding:8px;white-space:nowrap}
+.decision-body{min-height:0;overflow-y:auto;padding:12px 15px 17px;overscroll-behavior:contain}
+.decision-description{font-size:14px;line-height:1.7;white-space:pre-line;margin:0 0 11px;color:#334f55}
+.decision-source{display:inline-block;font-size:11px;margin-bottom:10px;color:#19747a;text-decoration:underline}
+.decision-legend{font-size:11px;line-height:1.6;margin:0 0 11px;padding:8px 10px;border-radius:8px;background:#f2f6ed;color:#576e65}
+.decision-options{display:grid;gap:8px}
+.decision-option{display:grid;gap:7px;text-align:left;padding:12px;border-radius:12px;border:1px solid #bfd4c8;background:#fffdfa;color:#254e50;min-height:70px}
+.decision-option:hover,.decision-option:focus-visible{border-color:#237b6d;background:#eef8f1;outline:2px solid #b3d8ca}
+.decision-option>strong{font-size:14px;line-height:1.5;display:flex;gap:9px;align-items:start}
+.decision-option>strong em{font-size:12px;font-style:normal;background:#e2efe7;color:#2e7963;border-radius:7px;padding:3px 8px}
+.decision-outcome{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.decision-outcome small{color:#738179;font-size:11px;font-weight:800}
+.decision-tag{font-size:11px;padding:3px 6px;background:#e6f3ea;color:#225e43;border-radius:6px;font-weight:850}
+.decision-tag.negative{background:#f8e8e2;color:#9a4f35}
+.decision-extra{font-size:11px;color:#657b73;line-height:1.6}
+.decision-caution{font-size:10px;line-height:1.6;color:#8a8f86;margin:12px 2px 0}
+.decision-reopen{width:100%;min-height:44px;margin-top:8px}
+.action-button .focus-numbers{color:#5a7167;font-size:10px;line-height:1.55;overflow-wrap:anywhere}
+@media(max-width:540px){
+ .decision-dialog{max-height:min(95dvh,860px);border-radius:13px}
+ .decision-dialog .modal-header{padding:10px 12px;gap:6px}
+ .decision-dialog .modal-header h2{font-size:17px}
+ .decision-body{padding:10px 11px 13px}
+ .decision-description{font-size:12px;line-height:1.6}
+ .decision-legend{font-size:10px;margin-bottom:8px}
+ .decision-options{gap:7px}
+ .decision-option{padding:9px;gap:6px}
+ .decision-option>strong{font-size:12px}
+ .decision-outcome small,.decision-tag{font-size:10px}
+ .action-button .focus-numbers{font-size:9px}
+}

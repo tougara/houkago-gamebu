@@ -389,6 +389,7 @@ test('manual event auto-choice clears pending events and allows pausing anytime'
   let s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
   assert.equal(s.age,7);
   assert.equal(s.phase,'event');
+  await page.locator('#decisionClose').click();
   await page.locator('#clockOptions summary').click();
   await page.locator('#autoDecisions').check();
   s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
@@ -410,6 +411,7 @@ test('completed life goes to local archives, and invalid backups are rejected',a
   await page.locator('#newLifeButton').click();
   await page.locator('#lotterySkip').click();
   await page.locator('#birthStart').click();
+  await page.locator('#decisionClose').click();
   await page.locator('#clockOptions summary').click();
   await page.locator('#autoDecisions').check();
   await page.locator('#clockNext').click();
@@ -884,6 +886,61 @@ test('autoplay pauses on a real decision and continues after the player chooses'
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true,'automatic clock resumes after the decision');
   await page.locator('#clockToggle').click();
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false,'manual pause remains respected');
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('automatic choice popup shows milestone effects and can be closed and reopened without altering life',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=551');
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#newLifeButton').click();await page.locator('#lotterySkip').click();await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click();
+  for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
+  assert.ok(await page.locator('#decisionModal').isVisible());
+  assert.equal(await page.locator('#decisionOptions [data-choice]').count(),3);
+  assert.match(await page.locator('#decisionOptions').innerText(),/知恵\+8/);
+  assert.match(await page.locator('#decisionOptions').innerText(),/家計−3生活点/);
+  const before=JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot));
+  await page.locator('#decisionClose').click();
+  assert.equal(await page.locator('#decisionModal').isVisible(),false);
+  assert.equal(JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot)),before);
+  await page.locator('.decision-reopen').click();
+  await page.locator('#decisionOptions [data-choice="seek"]').click();
+  assert.equal(await page.locator('#decisionModal').isVisible(),false);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('risky historical choice popup shows both numeric outcomes and actual game chance',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=19');
+ try{
+  await page.locator('[name="era"][value="sengoku"]').check();
+  await page.locator('#birthYearInput').fill('1548');await page.locator('#regionSelect').selectOption('tokai');
+  await page.locator('#newLifeButton').click();await page.locator('#lotterySkip').click();await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click();
+  for(let i=0;i<12;i++){
+   const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+   if(state.phase==='event'){await page.locator('#decisionOptions [data-choice]').first().click();i--;continue}
+   await page.locator(state.age<7?'[data-action="child"]':'[data-focus="family"]').click();
+  }
+  const state=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(state.year,1560);
+  const text=await page.locator('#decisionOptions [data-choice="adapt"]').innerText();
+  assert.match(text,/成功 48%/);assert.match(text,/失敗 52%/);
+  assert.match(text,/家計\+5生活点/);assert.match(text,/家計−6生活点/);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('everyday focus choices show precise numeric success and ordinary changes',async()=>{
+ const {page,context,errors}=await open(390,780);
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();await page.locator('#lotterySkip').click();await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click();
+  for(let i=0;i<7;i++)await page.locator('[data-action="child"]').click();
+  await page.locator('#decisionOptions [data-choice]').first().click();
+  assert.match(await page.locator('[data-focus="work"]').innerText(),/家計\+7生活点/);
+  assert.match(await page.locator('[data-focus="family"]').innerText(),/関係\+7/);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
