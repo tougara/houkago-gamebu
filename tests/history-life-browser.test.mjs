@@ -802,3 +802,35 @@ test('continue resumes automatic time for living saves; ended lives stay stopped
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('playtest: the entire sticky HUD includes five stats and leaves useful room for the story',async()=>{
+ for(const width of [320,375,390,430]){
+  const {page,context,errors}=await open(width,780,'?seed=444');
+  try{
+   await page.locator('[name="era"][value="edo"]').check();
+   await page.locator('#newLifeButton').click();
+   await page.locator('#lotterySkip').click();
+   await page.locator('#birthStart').click();
+   // Full-page scroll and actual layout measurements, not a static CSS assertion.
+   await page.evaluate(()=>window.scrollTo({top:640,behavior:'instant'}));
+   await page.waitForTimeout(110);
+   const metrics=await page.evaluate(()=>{
+    const r=q=>document.querySelector(q).getBoundingClientRect();
+    const hud=r('.game-play-top'),stat=r('.life-stat-strip'),clock=r('#clockProgress'),ribbon=r('.game-ribbon');
+    const buttons=[...document.querySelectorAll('.game-play-top button')].filter(b=>b.getClientRects().length).map(b=>({
+     title:b.textContent.trim(),w:b.getBoundingClientRect().width,h:b.getBoundingClientRect().height
+    }));
+    return {top:hud.top,bottom:hud.bottom,height:hud.height,statBottom:stat.bottom,
+      clockWidth:clock.width,ribbonHeight:ribbon.height,scrollX:document.documentElement.scrollWidth-innerWidth,buttons};
+   });
+   console.log('UI_PLAYTEST '+JSON.stringify({width,...metrics}));
+   assert.ok(Math.abs(metrics.top)<=3,'sticky header top '+width);
+   assert.ok(Math.abs(metrics.bottom-metrics.statBottom)<=12,'stats not inside sticky HUD '+width);
+   assert.ok(metrics.height<260,'sticky HUD too tall '+width+': '+metrics.height);
+   assert.ok(metrics.clockWidth>=width-60,'progress bar clipped '+width);
+   assert.ok(metrics.scrollX<=2,'horizontal overflow '+width);
+   assert.ok(metrics.buttons.filter(b=>b.title.includes('一時停止')||b.title.includes('決断')).every(b=>b.h>=32),'buttons too small '+width);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+ }
+});

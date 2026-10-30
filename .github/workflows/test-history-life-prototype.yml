@@ -13,6 +13,7 @@ on:
       - 'tests/history-life-v04.test.mjs'
       - 'tests/history-life-generations.test.mjs'
       - 'tests/history-life-browser.test.mjs'
+      - 'tests/history-life-playthrough.test.mjs'
       - '.github/workflows/test-history-life-prototype.yml'
 
 permissions:
@@ -27,7 +28,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test historical simulator engine
-        run: node --test tests/history-life-engine.test.mjs tests/history-life-v02.test.mjs tests/history-life-v03.test.mjs tests/history-life-v04.test.mjs tests/history-life-generations.test.mjs tests/history-life-data.test.mjs tests/history-life-institutions.test.mjs
+        run: node --test tests/history-life-engine.test.mjs tests/history-life-v02.test.mjs tests/history-life-v03.test.mjs tests/history-life-v04.test.mjs tests/history-life-generations.test.mjs tests/history-life-data.test.mjs tests/history-life-institutions.test.mjs tests/history-life-playthrough.test.mjs
       - name: Install headless Chromium
         run: |
           npm install --no-save --no-package-lock playwright
