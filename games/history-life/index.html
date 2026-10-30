@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261030-life5">
+ <link rel="stylesheet" href="./style.css?v=20261030-institutions1">
 </head>
 <body>
 <div class="app-shell">
@@ -85,6 +85,11 @@
      </article>
     </div>
     <aside class="right-col">
+     <details class="institution-card" id="institutionCard">
+      <summary id="institutionSummary">この年の制度と暮らし</summary>
+      <div id="institutionDetails" class="institution-details"></div>
+      <p id="institutionCaution" class="institution-caution"></p>
+     </details>
      <section class="status-card">
       <div class="section-heading"><h2>人生の状態</h2><span>0〜100 / 試作</span></div>
       <div id="statBars" class="stat-bars"></div>
@@ -165,6 +170,6 @@
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261030-life5"></script>
+<script type="module" src="./app.js?v=20261030-institutions1"></script>
 </body>
 </html>

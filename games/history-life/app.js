@@ -4,6 +4,7 @@ import {PURCHASES} from './money.js';
 import {currencyInfo,formatCurrency,yenEstimate,unitExample} from './currency.js';
 import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
 import {getJob} from './careers.js';
+import {getInstitutionContext} from './institutions.js';
 import {ensureLineage,eligibleHeirs,inheritLife} from './generations.js';
 import {ensureExperience,recordLifeYear,saveReflection,getReflection,contemporariesFor,resolveAutonomousEvents,lifeCardText} from './life-experience.js';
 const $=id=>document.getElementById(id);
@@ -78,6 +79,16 @@ function renderLineage(s){
    recent.map(a=>escaped(a.name)+'（'+a.birthYear+'〜'+a.deathYear+'年）').join(' → ')+
    ' → '+escaped(s.name)+'</span>'+
   '<small>世代のつながりと財産配分は簡易ゲームモデルです</small>';
+}
+function renderInstitutions(s){
+ const info=getInstitutionContext(s);
+ $('institutionSummary').textContent=info.heading;
+ $('institutionDetails').innerHTML=info.entries.length?info.entries.map(p=>
+  '<div class="institution-entry"><div class="institution-entry-head"><b>'+escaped(p.title)+'</b><span>'+escaped(p.topic)+'</span></div>'+
+  '<p>'+escaped(p.fact)+'</p><small>'+escaped(p.perspective)+'</small>'+
+  '<a target="_blank" rel="noopener noreferrer" href="'+escaped(p.sourceUrl)+'">資料：'+escaped(p.sourceName)+'</a></div>'
+ ).join(''):'<p class="institution-none">この年代の制度資料は準備中です。</p>';
+ $('institutionCaution').textContent=info.caution;
 }
 function renderStat(s){
  $('statBars').innerHTML=barConfig.map(([key,title,color])=>{
@@ -307,7 +318,7 @@ function render(){
   setStory('新しい命',s.year+'年、'+getRegion(s.regionId).name+'に生まれた。',
     era.intro+'\n'+s.background+'に生まれた'+s.name+'。ここから、たった一度の人生が始まる。');
  }
- renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();renderExperience(s);renderLineage(s);
+ renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();renderExperience(s);renderLineage(s);renderInstitutions(s);
 }
 function advance(focus){
  if(!current||current.phase!=='living')return;

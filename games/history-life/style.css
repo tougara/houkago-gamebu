@@ -176,3 +176,18 @@ body{background:radial-gradient(ellipse at 15% -20%,#ede4d3 0,transparent 45%),#
  background:#fffdf8;border-radius:9px;border:1px solid #e7d5b9}
 .ancestor-row span{font-size:11px;color:#96856a}
 @media(max-width:540px){.lineage-ribbon{margin:0 0 7px;padding:8px 10px}.lineage-ribbon span{font-size:11px}.heir-button strong{font-size:11px}}
+
+/* Compact sourced policy context: collapsed on initial render. */
+.institution-card{background:#fffefa;border:1px solid #dfd3bc;border-radius:14px;overflow:hidden;box-shadow:0 5px 23px #34434d12}
+.institution-card>summary{padding:12px 15px;font-size:13px;font-weight:850;color:#66523c;line-height:1.5;cursor:pointer}
+.institution-card[open]>summary{border-bottom:1px solid #eee4d5;background:#fbf6eb}
+.institution-details{display:grid;gap:8px;padding:10px 12px 0}
+.institution-entry{display:grid;gap:6px;padding:10px;background:#f9f6ee;border:1px solid #e7ddcd;border-radius:9px}
+.institution-entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:9px}
+.institution-entry-head b{font-size:12px;color:#4e493e}.institution-entry-head span{font-size:10px;color:#867863}
+.institution-entry p{margin:0;font-size:12px;line-height:1.7;color:#5e685d}
+.institution-entry small{font-size:11px;line-height:1.6;color:#786957}
+.institution-entry a{font-size:11px;color:#236c74;text-decoration:underline}
+.institution-caution,.institution-none{margin:0;padding:10px 13px;font-size:10px;line-height:1.65;color:#837c6e}
+@media(min-width:871px){.institution-card{grid-column:1/-1}}
+@media(max-width:540px){.institution-card>summary{padding:10px 12px;font-size:12px}}
