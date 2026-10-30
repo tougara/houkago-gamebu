@@ -649,6 +649,8 @@ test('age, time progress and playback controls stay together when scrolling on p
   assert.ok(result.scrollY>80,'must scroll past initial view');
   assert.ok(Math.abs(result.top)<3,'whole controls header should remain on screen');
   assert.ok(result.ageTop>=-1&&result.progressBottom<780,'age and progress should both be visible');
+  const ageFont=await page.locator('#ageText').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+  assert.ok(ageFont>=22,'age must be prominent, actual '+ageFont+'px');
   assert.ok(result.overflow<=2);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}

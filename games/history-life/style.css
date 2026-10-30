@@ -333,3 +333,8 @@ body.birth-reveal-open{overflow:hidden}
  .game-play-top{position:sticky;top:0;z-index:12;padding:0 0 3px;background:#f3f0e9;box-shadow:0 4px 14px #18384216}
  .game-play-top .clock-panel{position:static;top:auto;box-shadow:none}
 }
+
+/* Age identity contrast improvement */
+.game-ribbon #ageText{font-size:clamp(24px,4vw,32px);line-height:1.1;font-weight:950;color:#fff}
+@media(max-width:540px){.game-ribbon #ageText{font-size:clamp(23px,6vw,29px)}}
+@media(max-width:355px){.game-ribbon #ageText{font-size:23px}}
