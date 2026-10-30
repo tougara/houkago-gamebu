@@ -139,10 +139,13 @@ function showSetup(){
  $('gameView').hidden=true;$('setupView').hidden=false;updateSetup();
  window.scrollTo({top:0,behavior:'instant'});
 }
-function openLife(s,slot){
+function openLife(s,slot,{autoplay=true}={}){
  hideBirthLottery();hideBirth();stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
+ // Auto-run is the default only when the playable life view becomes active.
+ // Birth reveals, pending choices and ended lives must not advance underneath an overlay.
+ clockRunning=autoplay&&current.phase==='living'&&!document.hidden;
  showDetailTab('family');render();window.scrollTo({top:0,behavior:'instant'});
 }
 function ageCategory(a){
@@ -696,7 +699,7 @@ $('newLifeButton').addEventListener('click',()=>{
  const life=createLife({eraId:era.id,seed:seed[0],birthYear:year,regionId:$('regionSelect').value||null});
  life.meta.originSeed=seed[0]>>>0;
  recordLifeYear(life);
- slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot);
+ slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot,{autoplay:false});
  showBirthLottery(life,{randomEra:chosen==='random',randomRegion:!$('regionSelect').value});
 });
 $('savesList').addEventListener('click',e=>{
@@ -708,7 +711,10 @@ $('detailsTabs').addEventListener('click',e=>{
 });
 $('lotterySkip').addEventListener('click',finishBirthLottery);
 $('birthStart').addEventListener('click',()=>{
- hideBirth();window.scrollTo({top:0,behavior:'instant'});
+ hideBirth();
+ clockRunning=!!current&&current.phase==='living'&&!document.hidden;
+ renderClock();
+ window.scrollTo({top:0,behavior:'instant'});
 });
 $('chronicleAll').addEventListener('click',showHistory);
 $('endingRead').addEventListener('click',showHistory);

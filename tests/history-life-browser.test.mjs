@@ -226,7 +226,6 @@ test('time flow auto-advances, pauses, speeds up and skips to next real mileston
   await page.locator('#clockDuration').selectOption('30');
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.secondsPerYear),22.5);
   await page.locator('#clockSpeed').selectOption('16');
-  await page.locator('#clockToggle').click();
   assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
   await page.waitForTimeout(2250);
   let age=await page.evaluate(()=>window.HistoryLifeDebug.snapshot.age);
@@ -571,7 +570,7 @@ test('time bar moves and pause retains elapsed progress',async()=>{
   await page.locator('#lotterySkip').click();
   await page.locator('#birthStart').click();
   await page.locator('#clockSpeed').selectOption('16');
-  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true);
   await page.waitForTimeout(520);
   await page.locator('#clockToggle').click();
   const fraction=Number(await page.locator('#clockProgress').getAttribute('aria-valuenow'));
@@ -748,6 +747,58 @@ test('when only birthplace is chosen, region remains fixed while era rolls',asyn
   await page.locator('#lotterySkip').click();
   assert.equal((await page.evaluate(()=>window.HistoryLifeDebug.snapshot)).regionId,'kyushu');
   assert.ok(await page.locator('#birthScreen').isVisible());
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('automatic time is on by default only after birth; pause remains a manual choice',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=217');
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false,'roulette must not start time');
+  await page.locator('#lotterySkip').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false,'birth introduction must not start time');
+  await page.locator('#birthStart').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true,'birthStart activates automatic flow');
+  assert.equal(await page.locator('#clockToggle').getAttribute('aria-pressed'),'true');
+  assert.match(await page.locator('#clockToggle').innerText(),/一時停止/);
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  const progress=await page.evaluate(()=>window.HistoryLifeDebug.clock.progress);
+  await page.waitForTimeout(180);
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.progress),progress,'manual pause must stay stopped');
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true,'player can resume');
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('continue resumes automatic time for living saves; ended lives stay stopped',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=222');
+ try{
+  await page.locator('[name="era"][value="edo"]').check();
+  await page.locator('#newLifeButton').click();
+  await page.locator('#lotterySkip').click();
+  await page.locator('#birthStart').click();
+  await page.locator('#clockToggle').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  await page.locator('#homeButton').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  await page.locator('[data-continue="0"]').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),true,'continuing a living save starts automatically');
+  assert.equal(await page.locator('#lotteryScreen').isVisible(),false);
+  assert.equal(await page.locator('#birthScreen').isVisible(),false);
+  await page.locator('#homeButton').click();
+  const life=createLife({eraId:'edo',seed:913,birthYear:1750,regionId:'kanto'});
+  life.phase='ended';life.year=1750;life.age=0;life.death={year:1750,age:0,reason:'生涯の終わり'};
+  assert.ok(validateSave(life));
+  await page.evaluate(x=>localStorage.setItem('houkago_history_life_slots_v1',JSON.stringify({version:1,slots:[x,null,null],archives:[]})),life);
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false,'ended life cannot restart');
+  assert.equal(await page.locator('#clockToggle').isDisabled(),true);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
