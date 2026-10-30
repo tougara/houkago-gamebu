@@ -363,6 +363,7 @@ test('manual event auto-choice clears pending events and allows pausing anytime'
   let s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
   assert.equal(s.age,7);
   assert.equal(s.phase,'event');
+  await page.locator('#clockOptions summary').click();
   await page.locator('#autoDecisions').check();
   s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
   assert.equal(s.phase,'living');
@@ -381,6 +382,7 @@ test('completed life goes to local archives, and invalid backups are rejected',a
  try{
   await page.locator('[name="era"][value="edo"]').check();
   await page.locator('#newLifeButton').click();
+  await page.locator('#clockOptions summary').click();
   await page.locator('#autoDecisions').check();
   await page.locator('#clockNext').click();
   const s=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
