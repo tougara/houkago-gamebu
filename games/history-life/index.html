@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261030-institutions1">
+ <link rel="stylesheet" href="./style.css?v=20261030-hud1">
 </head>
 <body>
 <div class="app-shell">
@@ -54,13 +54,25 @@
     <div class="game-ribbon-actions"><button id="historyButton" type="button" class="outline">年表・記録</button><button id="homeButton" type="button" class="outline">保存して戻る</button></div>
    </div>
    <div class="clock-panel" aria-label="時間進行">
-    <button id="clockToggle" class="clock-play" type="button" aria-pressed="false">▶ 自動で進める</button>
-    <label class="clock-speed">人生の長さ <select id="clockDuration" aria-label="人生の長さを変更"><option value="30">約30分</option><option value="60" selected>約1時間</option><option value="90">約1時間30分</option></select></label><label class="clock-speed">進む速さ <select id="clockSpeed" aria-label="時間の速さ"><option value="1">1倍</option><option value="2">2倍</option><option value="4">4倍</option><option value="8">8倍</option><option value="16">16倍</option></select></label>
-    <button id="clockNext" type="button" class="clock-next">次の出来事まで »</button>
-    <label class="auto-decisions"><input id="autoDecisions" type="checkbox"> 決断もおまかせ</label>
-    <div class="clock-progress" aria-label="次の年まで"><div id="clockFill"></div></div>
-    <small id="clockInfo" class="clock-info">停止中・1年ごとに進められます</small>
+    <div class="clock-main-row">
+     <button id="clockToggle" class="clock-play" type="button" aria-pressed="false">▶ 自動で進める</button>
+     <label class="clock-speed">速度 <select id="clockSpeed" aria-label="時間の速さ"><option value="1">1倍</option><option value="2">2倍</option><option value="4">4倍</option><option value="8">8倍</option><option value="16">16倍</option></select></label>
+     <button id="clockNext" type="button" class="clock-next">次の決断まで »</button>
+    </div>
+    <div class="clock-progress-line">
+     <div class="clock-progress-label"><strong>次の1年まで</strong><span id="clockPercent">0%</span></div>
+     <div class="clock-progress" id="clockProgress" role="progressbar" aria-label="次の年までの進行度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="clockFill"></div></div>
+     <small id="clockInfo" class="clock-info">停止中・重点を選んで1年ずつ進めることもできます</small>
+    </div>
+    <details class="clock-options" id="clockOptions"><summary>時間と自動選択の設定</summary>
+     <div class="clock-option-fields"><label class="clock-speed">人生の長さ <select id="clockDuration" aria-label="人生の長さを変更"><option value="30">約30分</option><option value="60" selected>約1時間</option><option value="90">約1時間30分</option></select></label>
+      <label class="auto-decisions"><input id="autoDecisions" type="checkbox"> 決断もおまかせ</label></div>
+    </details>
    </div>
+   <section class="life-stat-strip" aria-label="現在の能力値">
+    <div class="life-stat-heading"><strong>今の状態</strong><small>0〜100</small></div>
+    <div id="statBars" class="stat-bars"></div>
+   </section>
    <div id="lineageRibbon" class="lineage-ribbon" hidden></div>
    <div class="game-grid">
     <div class="left-col">
@@ -84,19 +96,25 @@
       </section>
      </article>
     </div>
-    <aside class="right-col">
-     <details class="institution-card" id="institutionCard">
+    <aside class="right-col" aria-label="人生の詳しい情報">
+     <nav class="details-tabs" id="detailsTabs" aria-label="詳しい情報の切り替え">
+      <button type="button" data-detail-tab="family" class="selected" aria-pressed="true">家族</button>
+      <button type="button" data-detail-tab="career" aria-pressed="false">仕事</button>
+      <button type="button" data-detail-tab="money" aria-pressed="false">お金</button>
+      <button type="button" data-detail-tab="records" aria-pressed="false">記録・時代</button>
+      <button type="button" data-detail-tab="person" aria-pressed="false">人物</button>
+     </nav>
+     <details class="institution-card detail-panel" id="institutionCard" data-detail-panel="records" hidden>
       <summary id="institutionSummary">この年の制度と暮らし</summary>
       <div id="institutionDetails" class="institution-details"></div>
       <p id="institutionCaution" class="institution-caution"></p>
      </details>
-     <section class="status-card">
-      <div class="section-heading"><h2>人生の状態</h2><span>0〜100 / 試作</span></div>
-      <div id="statBars" class="stat-bars"></div>
+     <section class="status-card detail-panel" data-detail-panel="person" hidden>
+      <div class="section-heading"><h2>人物の情報</h2><span>経歴と出身</span></div>
       <div class="personal-facts" id="personalFacts"></div>
       <p class="population-fact" id="populationContext" hidden></p>
      </section>
-     <section class="money-card">
+     <section class="money-card detail-panel" data-detail-panel="money" hidden>
       <div class="section-heading"><h2>暮らしとお金</h2><span id="moneyEraUnits">当時の貨幣</span></div>
       <div id="moneySummary" class="money-summary"></div>
       <div id="moneyFlow" class="money-flow"></div><div class="currency-reference"><div id="currencyExample"></div><small id="currencyCaution"></small><a id="currencySource" target="_blank" rel="noopener noreferrer">換算の資料を見る</a></div>
@@ -104,28 +122,28 @@
       <div id="moneyFeedback" class="money-feedback" role="status"></div>
       <details class="money-details"><summary>最近の収支を見る</summary><div id="moneyLedger"></div></details>
      </section>
-     <section class="people-card">
+     <section class="people-card detail-panel" data-detail-panel="family">
       <div class="section-heading"><h2>家族・人との縁</h2><span id="peopleCount">人物</span></div>
       <p class="relationship-help">人は年を重ね、関係が変化します。交流は年に1回。</p>
       <div id="peopleList" class="people-list"></div>
      </section>
-     <section class="career-card">
+     <section class="career-card detail-panel" data-detail-panel="career" hidden>
       <div class="section-heading"><h2>仕事と暮らし</h2><span id="careerRank">見習い</span></div>
       <div id="careerStatus" class="career-status"></div>
       <button id="careerButton" class="secondary career-open" type="button">仕事を探す・転職する</button>
      </section>
-     <section class="contemporaries-card">
+     <section class="contemporaries-card detail-panel" data-detail-panel="records" hidden>
       <div class="section-heading"><h2>同じ年に生まれた人たち</h2><span>架空の3人</span></div>
       <p class="relationship-help">別の地域で、同じ年に生まれた3人の人生。全員ゲーム用の架空の抽選です。</p>
       <div id="contemporaries" class="contemporaries"></div>
      </section>
-     <section class="life-map-card">
+     <section class="life-map-card detail-panel" data-detail-panel="records" hidden>
       <div class="section-heading"><h2>人生地図</h2><span>1マス = 1年</span></div>
       <div id="lifeMap" class="life-map" aria-label="年齢ごとの人生の記録"></div>
       <div id="lifeMapDetail" class="life-map-detail">マスを押すとその年の記録を見られます。</div>
       <div class="life-map-legend"><span>穏やかな年</span><span>苦しい年</span><span>歴史との出会い</span></div>
      </section>
-     <section class="timeline-card">
+     <section class="timeline-card detail-panel" data-detail-panel="records" hidden>
       <div class="section-heading"><h2>これまでの歩み</h2><button id="seeFullLog" class="text-button" type="button">すべて見る</button></div>
       <div id="miniLog"></div>
      </section>
@@ -170,6 +188,6 @@
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261030-institutions1"></script>
+<script type="module" src="./app.js?v=20261030-hud1"></script>
 </body>
 </html>
