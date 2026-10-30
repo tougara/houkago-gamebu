@@ -1,7 +1,7 @@
 /* Independent life-experience features (no copyrighted UI or text).
  * All contemporaries are fictional simulations, not historical observations.
  */
-import {REGIONS,getRegion} from './scenarios.js';
+import {REGIONS,getRegion,eraForYear} from './scenarios.js';
 import {createLife,advanceYear,chooseEvent,lifeSummary} from './engine.js';
 
 export const REFLECTIONS=[
@@ -104,7 +104,8 @@ export function contemporariesFor(s,events=[],count=3){
  for(let i=0;i<count;i++){
   const region=REGIONS[(currentRegionIndex+1+i)%REGIONS.length];
   const seed=(s.meta.originSeed^Math.imul(i+1,0x9e3779b1)^0x852f3d23)>>>0;
-  const p=createLife({seed,eraId:s.eraId,birthYear:s.birthYear,regionId:region.id});
+  const p=createLife({seed,eraId:s.meta?.birthEraId||eraForYear(s.birthYear),
+    birthYear:s.birthYear,regionId:region.id,allowOutOfRange:true});
   while(p.age<s.age&&p.phase!=='ended'){
    if(p.phase==='event'){resolveAutonomousEvents(p);continue}
    advanceYear(p,p.autoFocus||'family',events);

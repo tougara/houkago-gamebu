@@ -55,7 +55,7 @@ export function inheritLife(s,childId){
  // createLife normally only generates initial era births. Here we need a child
  // already born inside a continuing family whose birthday may fall much later.
  const next=createLife({eraId:eraForYear(s.year),seed:stableChildSeed(s,child),
-   regionId:s.regionId,birthYear});
+   regionId:s.regionId,birthYear,allowOutOfRange:true});
  next.birthYear=birthYear;next.year=s.year;next.age=s.year-birthYear;
  next.name=child.name;next.sex=child.sex||next.sex;
  next.background=s.background;next.backgroundIndex=s.backgroundIndex;

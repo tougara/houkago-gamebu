@@ -4,6 +4,7 @@ import {createLife,validateSave,upgradeSave,advanceYear,chooseEvent} from '../ga
 import {syncFamily,labelRole} from '../games/history-life/social.js';
 import {ensureLineage,eligibleHeirs,inheritLife,ancestorSummary} from '../games/history-life/generations.js';
 import {periodFor} from '../games/history-life/currency.js';
+import {contemporariesFor} from '../games/history-life/life-experience.js';
 import {eraForYear} from '../games/history-life/scenarios.js';
 function endedFamily({eraId='sengoku',seed=78,year=1611,children=2}={}){
  const s=createLife({eraId,seed,regionId:'tokai'});
@@ -145,4 +146,17 @@ test('heir arriving in 1640 has Edo career choices even if ancestor was born in 
  assert.equal(next.eraId,'edo');
  assert.equal(next.meta.birthEraId,'edo');
  assert.ok(validateSave(next));
+});
+
+test('comparison peers truly share birth year across era boundaries and generations',()=>{
+ const root=createLife({eraId:'sengoku',seed:10,birthYear:1586,regionId:'tokai'});
+ root.age=18;root.year=1604;root.eraId='edo';root.meta.birthEraId='sengoku';
+ const peers=contemporariesFor(root,[],3);
+ assert.equal(peers.length,3);
+ for(const p of peers)assert.equal(p.summary.birthYear,1586);
+ const passed=endedFamily({year:1640});
+ const heir=inheritLife(passed,eligibleHeirs(passed)[0].id).life;
+ const peersAfter=contemporariesFor(heir,[],3);
+ for(const p of peersAfter)assert.equal(p.summary.birthYear,heir.birthYear);
+ assert.ok(validateSave(heir));
 });

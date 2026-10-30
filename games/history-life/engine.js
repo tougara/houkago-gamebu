@@ -27,9 +27,10 @@ function effect(state,deltas){
   if(key in state.stats)state.stats[key]=Math.round(clamp(state.stats[key]+diff));
  }
 }
-export function createLife({eraId='sengoku',seed=1,birthYear=null,regionId=null}={}){
+export function createLife({eraId='sengoku',seed=1,birthYear=null,regionId=null,allowOutOfRange=false}={}){
  const era=getEra(eraId),roll={rng:(Number(seed)>>>0)||987654321};
- const year=Number.isInteger(birthYear)?clamp(birthYear,era.birthYears[0],era.birthYears[1]):
+ const year=Number.isInteger(birthYear)?
+  (allowOutOfRange&&birthYear>=0&&birthYear<=2500?birthYear:clamp(birthYear,era.birthYears[0],era.birthYears[1])):
   era.birthYears[0]+Math.floor(rng(roll)*(era.birthYears[1]-era.birthYears[0]+1));
  const region=regionId&&REGIONS.some(r=>r.id===regionId)?getRegion(regionId):draw(roll,REGIONS);
  const sex=dice(roll,.5)?'female':'male';
