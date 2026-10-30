@@ -4,6 +4,7 @@ import {PURCHASES} from './money.js';
 import {currencyInfo,formatCurrency,yenEstimate,unitExample} from './currency.js';
 import {RELATION_ACTIONS,labelRole,personAge} from './social.js';
 import {getJob} from './careers.js';
+import {ensureLineage,eligibleHeirs,inheritLife} from './generations.js';
 import {ensureExperience,recordLifeYear,saveReflection,getReflection,contemporariesFor,resolveAutonomousEvents,lifeCardText} from './life-experience.js';
 const $=id=>document.getElementById(id);
 const STORAGE='houkago_history_life_slots_v1';
@@ -25,7 +26,7 @@ function storageRead(){
   if(Array.isArray(data.slots)){
    slots=Array.from({length:3},(_,i)=>{
     const loaded=upgradeSave(data.slots[i]);
-    if(loaded){ensureExperience(loaded);recordLifeYear(loaded)}
+    if(loaded){ensureExperience(loaded);ensureLineage(loaded);recordLifeYear(loaded)}
     return loaded;
    });
   }
@@ -54,7 +55,7 @@ function showSetup(){
  window.scrollTo({top:0,behavior:'instant'});
 }
 function openLife(s,slot){
- stopClock();activeSlot=slot;current=ensureExperience(s);recordLifeYear(current);
+ stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
  render();window.scrollTo({top:0,behavior:'instant'});
@@ -66,6 +67,17 @@ function ageCategory(a){
  if(a<45)return '壮年期';
  if(a<65)return '中年期';
  return '老年期';
+}
+function renderLineage(s){
+ const l=ensureLineage(s),node=$('lineageRibbon');
+ node.hidden=l.generation<2;
+ if(l.generation<2){node.textContent='';return}
+ const recent=l.ancestors.slice(-3);
+ node.innerHTML='<strong>第'+l.generation+'代・'+escaped(s.name)+'の人生</strong>'+
+  '<span>受け継がれた家の物語：'+
+   recent.map(a=>escaped(a.name)+'（'+a.birthYear+'〜'+a.deathYear+'年）').join(' → ')+
+   ' → '+escaped(s.name)+'</span>'+
+  '<small>世代のつながりと財産配分は簡易ゲームモデルです</small>';
 }
 function renderStat(s){
  $('statBars').innerHTML=barConfig.map(([key,title,color])=>{
@@ -236,11 +248,18 @@ function setStory(label,title,text,sourceId=null){
 function renderActions(s){
  const target=$('actionArea');
  if(s.phase==='ended'){
-  const summary=lifeSummary(s);
+  const summary=lifeSummary(s),heirs=eligibleHeirs(s);
   target.innerHTML='<p class="action-title">ひとりの人生の記録</p>'+
    '<p class="end-summary">'+escaped(s.name)+'は'+s.age+'歳まで生きた。'+
    escaped(summary.profession)+'という道を歩み、'+summary.children+'人の子どもと、'+
    summary.historySeen+'件の歴史の出来事に触れた。</p>'+
+   (heirs.length?'<div class="heir-choice"><h3>次の世代へ人生をつなぐ</h3>'+
+    '<p>子どもの人生を、その人の今の年齢から引き継ぎます。前世代の記録は保存されます。</p>'+
+    heirs.map(p=>'<button type="button" data-heir="'+escaped(p.id)+'" class="heir-button">'+
+      '<span class="heir-bloom">✦</span><span><b>'+escaped(p.name)+'</b><small>'+
+      (s.year-p.birthYear)+'歳・'+escaped(p.traitLabel||'')+'</small></span><strong>この子の人生へ →</strong></button>').join('')+
+    '<small>※財産は生存する子どもへゲーム上均等配分。史実の相続制度を表すものではありません。</small></div>':
+    '<p class="heir-unavailable">継承できる子どもがいないため、この家の物語はここで一区切りです。</p>')+
    '<div class="end-actions"><button class="primary" data-action="timeline">人生年表を見る</button>'+
    '<button class="secondary" data-action="another">別の人生を生きる</button></div>';
   return;
@@ -288,7 +307,7 @@ function render(){
   setStory('新しい命',s.year+'年、'+getRegion(s.regionId).name+'に生まれた。',
     era.intro+'\n'+s.background+'に生まれた'+s.name+'。ここから、たった一度の人生が始まる。');
  }
- renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();renderExperience(s);
+ renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();renderExperience(s);renderLineage(s);
 }
 function advance(focus){
  if(!current||current.phase!=='living')return;
@@ -306,7 +325,7 @@ function advance(focus){
 function archiveCurrent(){
  const key=String(activeSlot)+'-'+String(current.birthYear)+'-'+String(current.rng);
  if(archives.some(a=>a.key===key))return;
- archives.push({key,summary:lifeSummary(current),log:current.log.slice(),
+ archives.push({key,summary:{...lifeSummary(current),generation:ensureLineage(current).generation},log:current.log.slice(),
   reflections:{...current.reflections},lifeCard:lifeCardText(current),at:new Date().toISOString()});
  if(archives.length>20)archives.shift();
 }
@@ -338,6 +357,13 @@ function showHistory(){
  if(!current)return;
  viewedArchive=null;
  clockRunning=false;clockProgress=0;
+ const lineage=ensureLineage(current);
+ $('ancestorHistory').hidden=lineage.generation===1;
+ $('ancestorHistory').innerHTML=lineage.ancestors.length?
+  '<h3>この家の歴史（'+lineage.generation+'代目）</h3><div class="ancestor-rows">'+
+  lineage.ancestors.map(a=>'<div class="ancestor-row"><b>第'+a.generation+'代：'+escaped(a.name)+'</b>'+
+    '<span>'+a.birthYear+'〜'+a.deathYear+'年 / '+a.age+'歳 / '+escaped(a.profession)+'</span></div>').join('')+
+  '</div>':'';
  $('fullLog').innerHTML=logRows(current.log.slice().reverse(),true);
  $('historyTitle').textContent=current.name+'の人生年表';
  $('historyModal').hidden=false;
@@ -490,6 +516,16 @@ $('jobList').addEventListener('click',e=>{
 });
 $('actionArea').addEventListener('click',e=>{
  const button=e.target.closest('button');if(!button)return;
+ if(button.dataset.heir){
+  if(!current||current.phase!=='ended')return;
+  const result=inheritLife(current,button.dataset.heir);
+  if(!result.ok)return;
+  archiveCurrent();
+  const next=result.life;
+  slots[activeSlot]=next;current=next;
+  recordLifeYear(next);storageWrite();openLife(next,activeSlot);
+  return;
+ }
  if(button.dataset.focus){
   if(clockRunning&&current?.phase==='living'){
    current.autoFocus=button.dataset.focus;storageWrite();renderActions(current);

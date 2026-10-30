@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261029-life4">
+ <link rel="stylesheet" href="./style.css?v=20261030-life5">
 </head>
 <body>
 <div class="app-shell">
@@ -61,6 +61,7 @@
     <div class="clock-progress" aria-label="次の年まで"><div id="clockFill"></div></div>
     <small id="clockInfo" class="clock-info">停止中・1年ごとに進められます</small>
    </div>
+   <div id="lineageRibbon" class="lineage-ribbon" hidden></div>
    <div class="game-grid">
     <div class="left-col">
      <article class="life-card">
@@ -127,7 +128,7 @@
    </div>
   </section>
  </main>
- <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.4｜正式ゲーム一覧には未掲載</span></footer>
+ <footer class="footer"><span>歴史資料に基づく年表 ＋ 史実ではないゲーム内抽選。確率は史料の実測値ではありません。</span><span>試作 Ver.0.5｜正式ゲーム一覧には未掲載</span></footer>
 </div>
 <div class="modal-layer" id="archiveModal" role="dialog" aria-modal="true" aria-labelledby="archiveTitle" hidden>
  <div class="modal-card archive-dialog">
@@ -141,6 +142,7 @@
 <div class="modal-layer" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle" hidden>
  <div class="modal-card history-dialog">
   <div class="modal-header"><div><small>YOUR LIFE, YOUR HISTORY</small><h2 id="historyTitle">人生の年表</h2></div><button id="closeHistory" class="close-button" type="button">閉じる ✕</button></div>
+  <div id="ancestorHistory" class="ancestor-history" hidden></div>
   <div id="fullLog" class="full-log"></div>
   <div class="history-footer"><button id="copyLifeCard" type="button" class="secondary">人生カードをコピー</button><span id="copyFeedback" role="status"></span></div>
  </div>
@@ -163,6 +165,6 @@
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261029-life4"></script>
+<script type="module" src="./app.js?v=20261030-life5"></script>
 </body>
 </html>

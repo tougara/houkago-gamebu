@@ -95,7 +95,7 @@ export function interact(s,personId,actionId,log,effect){
  return {ok:true,person:p.id,closeness:p.closeness};
 }
 export function labelRole(role){
- return ({father:'父',mother:'母',sibling:'きょうだい',partner:'伴侶',child:'子ども',friend:'友人',mentor:'仕事の師匠'})[role]||'知人';
+ return ({father:'父',mother:'母',sibling:'きょうだい',grandparent:'祖父母',partner:'伴侶',child:'子ども',friend:'友人',mentor:'仕事の師匠'})[role]||'知人';
 }
 export function tickPeople(s,focus,rand,log,effect){
  if(!Array.isArray(s.people))return;

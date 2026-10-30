@@ -151,3 +151,28 @@ body{background:radial-gradient(ellipse at 15% -20%,#ede4d3 0,transparent 45%),#
 @media(max-width:540px){.auto-decisions{font-size:10px;padding:6px}.clock-panel{gap:5px}
 .contemporaries-card,.life-map-card{padding:11px 13px}
 .reflection-panel{margin:9px;padding:11px}.life-map{gap:3px}.life-tile{font-size:9px}}
+
+/* Historic generations: compact ribbon in the main screen and heir selection. */
+.lineage-ribbon{display:flex;align-items:center;flex-wrap:wrap;gap:7px 13px;
+ background:#f5efe3;border:1px solid #cfb894;border-radius:11px;
+ padding:9px 13px;margin:-2px 0 12px;color:#745b40;line-height:1.5}
+.lineage-ribbon strong{font-size:13px}.lineage-ribbon span{flex:1 1 270px;font-size:12px}
+.lineage-ribbon small{font-size:10px;color:#9b8870}
+.heir-choice{display:grid;gap:8px;margin:12px 0 17px;padding:12px;border:1px solid #d7c6a7;
+ border-radius:13px;background:#fff9ed}
+.heir-choice h3{font-size:15px;color:#70563c;margin:0}
+.heir-choice>p{margin:0;font-size:12px;line-height:1.5;color:#826d58}
+.heir-choice>small{font-size:10px;color:#967d61;line-height:1.5}
+.heir-button{display:flex;align-items:center;gap:11px;border:1px solid #8db3a2;border-radius:11px;
+ padding:10px 12px;background:#f3faf3;text-align:left;color:#335e56}
+.heir-button:hover{background:#dff3e6}.heir-button span:not(.heir-bloom){flex:1;display:grid;gap:3px}
+.heir-button b{font-size:14px}.heir-button small{font-size:11px;color:#789083}
+.heir-button strong{font-size:12px}.heir-bloom{font-size:22px;color:#8eae6b}
+.heir-unavailable{font-size:12px;color:#8e806f;line-height:1.6}
+.ancestor-history{padding:10px 21px 5px;background:#f7f1e8;border-bottom:1px solid #e8dbc7}
+.ancestor-history h3{font-size:14px;margin:0 0 9px;color:#795b42}
+.ancestor-rows{display:grid;gap:8px;margin-bottom:10px}
+.ancestor-row{display:grid;gap:3px;font-size:12px;padding:8px 9px;
+ background:#fffdf8;border-radius:9px;border:1px solid #e7d5b9}
+.ancestor-row span{font-size:11px;color:#96856a}
+@media(max-width:540px){.lineage-ribbon{margin:0 0 7px;padding:8px 10px}.lineage-ribbon span{font-size:11px}.heir-button strong{font-size:11px}}
