@@ -214,3 +214,19 @@ Implemented independently:
 ### Historic event follow-through (v0.4)
 
 After a history event choice, the game stores what the player decided and shows a follow-up dilemma **two years later** if that character survives. A farm worker hears different concerns from a merchant or craftsperson. The follow-up is explicitly a **fictional consequence** based on a real historic backdrop, not proof that any specific person was affected. A single-year event is not allowed to erase other same-year choices; the existing decision queue handles collisions. 1560 Okehazama -> 1562 follow-up has a regression test.
+
+
+## Ver.0.5 — 歴史の中を数世代にわたって生きる
+
+公式サイト v0.8.82 の再調査を踏まえた、競合比較・機能の優先順位は
+\`COMPETITIVE_REVIEW.md\` を参照。
+
+- 家族が続く人生という独自の価値を追加：死亡→存命の子どもを選ぶ→その年齢から人生を再開。
+- 世代ID、人物の生没年・仕事、故人の親・存命の親・きょうだい・祖父母を保持する。
+- 前世代は従来のローカルアーカイブに保存し、同じスロットでは子の続きを進める。
+- 現存する子どもの人数で正味財産を均等配分するのは歴史的事実ではなく**仮のゲームルール**。
+- 1603年、1853年で社会背景の時代モジュールを変更（本当の制度変更は段階的）。
+- 同時代比較人物について正確な出生年を守る。従来の出生年ウィンドウに強制移動させない。
+- 旧保存データはそのまま利用可能。家系は初回表示時に作成する。
+
+未実装：史実の相続法や家庭ごとの制度、年齢別の学術的な生存リスク、家系を木構造で表示する図版、人物関係の数世代を跨ぐ深いイベント。
