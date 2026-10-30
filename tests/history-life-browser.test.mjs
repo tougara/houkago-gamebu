@@ -5,6 +5,8 @@ import {readFile} from 'node:fs/promises';
 import {resolve,sep,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
+import {createLife,validateSave} from '../games/history-life/engine.js';
+import {syncFamily} from '../games/history-life/social.js';
 const root=resolve(fileURLToPath(new URL('../',import.meta.url)));
 let server,browser,base;
 before(async()=>{
@@ -426,6 +428,49 @@ test('life archive JSON export/import round-trip restores all three slots withou
   assert.equal(restored.year,original.year);
   assert.equal(restored.reflections['5'],'家族の思い出を覚えておこう');
   assert.equal(restored.meta.originSeed,original.meta.originSeed);
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+
+test('a deceased life opens a child heir choice and preserves the family across reload',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=444');
+ try{
+  const parent=createLife({eraId:'sengoku',seed:3344,birthYear:1550,regionId:'tokai'});
+  parent.age=55;parent.year=1605;parent.phase='ended';
+  parent.death={year:1605,age:55,reason:'生涯の終わり'};
+  parent.people.push({id:'npc-'+(++parent.nextPersonId),role:'child',
+   name:'小竹',birthYear:1581,trait:'kind',traitLabel:'面倒見がいい',
+   closeness:86,alive:true,metYear:1581,notes:[],lastInteractionYear:null});
+  syncFamily(parent);
+  assert.ok(validateSave(parent));
+  await page.evaluate(life=>localStorage.setItem('houkago_history_life_slots_v1',
+   JSON.stringify({version:1,slots:[life,null,null],archives:[]})),parent);
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  assert.equal(await page.locator('.heir-button').count(),1);
+  assert.match(await page.locator('.heir-button').innerText(),/小竹/);
+  await page.locator('[data-heir]').click();
+  const child=await page.evaluate(()=>window.HistoryLifeDebug.snapshot);
+  assert.equal(child.name,'小竹');
+  assert.equal(child.age,24);
+  assert.equal(child.year,1605);
+  assert.equal(child.phase,'living');
+  assert.equal(child.lineage.generation,2);
+  assert.equal(child.lineage.ancestors[0].name,parent.name);
+  assert.ok(await page.locator('#lineageRibbon').isVisible());
+  await page.locator('#historyButton').click();
+  assert.ok(await page.locator('#ancestorHistory').isVisible());
+  assert.match(await page.locator('#ancestorHistory').innerText(),new RegExp(parent.name));
+  await page.locator('#closeHistory').click();
+  await page.locator('#homeButton').click();
+  assert.match(await page.locator('#archiveCount').innerText(),/1人/);
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  assert.equal((await page.evaluate(()=>window.HistoryLifeDebug.snapshot)).lineage.generation,2);
+  await page.locator('#archiveButton').click();
+  assert.match(await page.locator('#archiveList').innerText(),new RegExp(parent.name));
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
