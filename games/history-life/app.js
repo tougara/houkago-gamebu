@@ -50,13 +50,32 @@ function updateSetup(){
     '</small></div><button type="button" data-continue="'+i+'">ひらく</button></div>';
  }).join('');
 }
+function hideBirth(){
+ $('birthScreen').hidden=true;document.body.classList.remove('birth-reveal-open');
+}
+function showBirth(s){
+ stopClock();
+ const era=getEra(s.meta?.birthEraId||s.eraId),place=getRegion(s.regionId).name;
+ const parents=(s.people||[]).filter(p=>p.role==='father'||p.role==='mother');
+ $('birthScreen').dataset.era=era.id;
+ $('birthEra').textContent=era.name;
+ $('birthYear').textContent=s.birthYear+'年';
+ $('birthTitle').textContent=place+'に、生まれた。';
+ $('birthIntro').textContent=era.intro;
+ $('birthSeal').textContent=s.name.slice(0,1);
+ $('birthName').textContent=s.name;
+ $('birthIdentityDetail').textContent=(s.sex==='female'?'女の子':'男の子')+'・'+s.background;
+ $('birthFamily').innerHTML=parents.map(p=>'<div class="birth-family-person"><span>'+escaped(labelRole(p.role))+'</span><b>'+escaped(p.name)+'</b><small>'+personAge(p,s.year)+'歳</small></div>').join('');
+ $('birthScreen').hidden=false;document.body.classList.add('birth-reveal-open');
+ $('birthStart').focus();
+}
 function showSetup(){
- stopClock();current=null;
+ hideBirth();stopClock();current=null;
  $('gameView').hidden=true;$('setupView').hidden=false;updateSetup();
  window.scrollTo({top:0,behavior:'instant'});
 }
 function openLife(s,slot){
- stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
+ hideBirth();stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
  showDetailTab('family');render();window.scrollTo({top:0,behavior:'instant'});
@@ -263,6 +282,8 @@ function renderExperience(s){
 }
 function refreshLog(s){
  $('miniLog').innerHTML=logRows(s.log.slice(-7).reverse());
+ // The newest 3 moments stay visible on the play screen; full history stays in a modal.
+ $('chronicleRecent').innerHTML=logRows(s.log.slice(-3).reverse(),true);
 }
 function setStory(label,title,text,sourceId=null){
  $('storyLabel').textContent=label;$('storyTitle').textContent=title;
@@ -311,11 +332,27 @@ function renderActions(s){
   '<button class="secondary" data-action="auto5" type="button">同じ重点で最大5年進める</button>'+
   '<span class="turn-note">歴史イベントや人生の節目が発生したら自動で停止します。</span></div>';
 }
+function renderEnding(s){
+ const card=$('endingScene');
+ card.hidden=s.phase!=='ended';
+ if(card.hidden)return;
+ const summary=lifeSummary(s);
+ $('endingName').textContent=s.name;
+ $('endingYears').textContent=summary.birthYear+' — '+summary.endYear+'年 ・ '+summary.age+'歳';
+ $('endingLine').textContent=summary.hometown+'に生まれ、'+summary.profession+'として生涯を終えた。';
+ const facts=[
+  ['生まれた家',summary.background],
+  ['家族', '子ども '+summary.children+'人'],
+  ['出会った史実',summary.historySeen+'件']
+ ];
+ $('endingFacts').innerHTML=facts.map(([label,value])=>'<div><span>'+escaped(label)+'</span><b>'+escaped(value)+'</b></div>').join('');
+}
 function render(){
  const s=current;if(!s)return;
  const era=getEra(s.eraId);
  $('gameYear').textContent=s.year+'年';$('eraBadge').textContent=era.name;
- $('ageText').textContent=s.age+'歳';
+ $('gameView').dataset.era=s.eraId;
+ $('ageText').textContent=s.age+'歳';$('ribbonName').textContent=s.name;
  $('chapter').textContent=s.phase==='ended'?'人生の終わり':ageCategory(s.age);
  $('personName').textContent=s.name;
  $('portrait').textContent=s.name.slice(0,1);
@@ -335,6 +372,7 @@ function render(){
     era.intro+'\n'+s.background+'に生まれた'+s.name+'。ここから、たった一度の人生が始まる。');
  }
  renderStat(s);renderActions(s);refreshLog(s);renderPeople(s);renderCareer(s);renderMoney(s);renderClock();renderExperience(s);renderLineage(s);renderInstitutions(s);
+ renderEnding(s);
 }
 function advance(focus){
  if(!current||current.phase!=='living')return;
@@ -593,7 +631,7 @@ $('newLifeButton').addEventListener('click',()=>{
  const life=createLife({eraId:era.id,seed:seed[0],birthYear:year,regionId:$('regionSelect').value||null});
  life.meta.originSeed=seed[0]>>>0;
  recordLifeYear(life);
- slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot);
+ slots[slot]=life;current=life;activeSlot=slot;storageWrite();openLife(life,slot);showBirth(life);
 });
 $('savesList').addEventListener('click',e=>{
  const button=e.target.closest('[data-continue]');if(!button)return;
@@ -602,6 +640,11 @@ $('savesList').addEventListener('click',e=>{
 $('detailsTabs').addEventListener('click',e=>{
  const btn=e.target.closest('[data-detail-tab]');if(btn)showDetailTab(btn.dataset.detailTab);
 });
+$('birthStart').addEventListener('click',()=>{
+ hideBirth();window.scrollTo({top:0,behavior:'instant'});
+});
+$('chronicleAll').addEventListener('click',showHistory);
+$('endingRead').addEventListener('click',showHistory);
 $('homeButton').addEventListener('click',()=>{storageWrite();showSetup()});
 $('historyButton').addEventListener('click',showHistory);
 $('seeFullLog').addEventListener('click',showHistory);
