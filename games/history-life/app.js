@@ -149,14 +149,48 @@ function showBirth(s){
  $('birthScreen').hidden=false;document.body.classList.add('birth-reveal-open');
  $('birthStart').focus();
 }
+// The ending blackout is transient presentation, not saved gameplay state.
+let deathVeilTimers=[];
+let deathVeilLife=null;
+function hideDeathVeil({focusResult=false}={}){
+ for(const timer of deathVeilTimers)clearTimeout(timer);
+ deathVeilTimers=[];deathVeilLife=null;
+ $('deathVeil').hidden=true;
+ $('deathVeilMessage').hidden=true;
+ document.body.classList.remove('death-veil-open');
+ if(focusResult&&current?.phase==='ended'){
+  window.scrollTo({top:0,behavior:'instant'});
+  $('endingRead').focus({preventScroll:true});
+ }
+}
+function showDeathVeil(life){
+ if(!life||life.phase!=='ended'||life!==current)return;
+ hideDeathVeil();
+ stopClock();
+ deathVeilLife=life;
+ $('deathVeilTitle').textContent=life.name;
+ $('deathVeilYears').textContent=life.birthYear+'年 〜 '+life.year+'年 ・ 享年'+life.age+'歳';
+ $('deathVeilMessage').hidden=true;
+ $('deathVeil').hidden=false;
+ document.body.classList.add('death-veil-open');
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const reveal=reduced?200:850;
+ const finish=reduced?1100:3400;
+ deathVeilTimers.push(setTimeout(()=>{
+  if(deathVeilLife===life)$('deathVeilMessage').hidden=false;
+ },reveal));
+ deathVeilTimers.push(setTimeout(()=>{
+  if(deathVeilLife===life)hideDeathVeil({focusResult:true});
+ },finish));
+}
 function showSetup(){
- closeDecisionPopup();decisionKey=null;decisionDismissed=false;
+ hideDeathVeil();closeDecisionPopup();decisionKey=null;decisionDismissed=false;
  hideBirthLottery();hideBirth();stopClock();current=null;
  $('gameView').hidden=true;$('setupView').hidden=false;updateSetup();
  window.scrollTo({top:0,behavior:'instant'});
 }
 function openLife(s,slot,{autoplay=true}={}){
- hideBirthLottery();hideBirth();stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
+ hideDeathVeil();hideBirthLottery();hideBirth();stopClock();activeSlot=slot;current=ensureExperience(s);ensureLineage(current);recordLifeYear(current);
  $('setupView').hidden=true;$('gameView').hidden=false;
  $('saveNotice').textContent='';
  // Auto-run is the default only when the playable life view becomes active.
@@ -504,6 +538,7 @@ function advance(focus){
   clockRunning=false;
  }
  storageWrite();render();
+ if(current.phase==='ended')showDeathVeil(current);
 }
 function archiveCurrent(){
  const key=String(activeSlot)+'-'+String(current.birthYear)+'-'+String(current.rng);
@@ -527,6 +562,7 @@ function choose(id){
   autoResumeAfterDecision=false;clockRunning=true;
  }
  storageWrite();render();
+ if(current.phase==='ended')showDeathVeil(current);
 }
 function fastForward(){
  if(!current||current.phase!=='living'||current.age<7)return;
@@ -539,6 +575,7 @@ function fastForward(){
    (r.stoppedBy==='event'?'歴史や人生の大切な転機が訪れた。':r.stoppedBy==='ended'?'この人生はここで終わりを迎えた。':'次の一年は、どんな道を選ぼうか。')};
  if(current.phase==='ended')archiveCurrent();
  storageWrite();render();
+ if(current.phase==='ended')showDeathVeil(current);
 }
 function showHistory(){
  if(!current)return;
@@ -769,6 +806,7 @@ $('savesList').addEventListener('click',e=>{
 $('detailsTabs').addEventListener('click',e=>{
  const btn=e.target.closest('[data-detail-tab]');if(btn)showDetailTab(btn.dataset.detailTab);
 });
+$('deathVeilSkip').addEventListener('click',()=>hideDeathVeil({focusResult:true}));
 $('lotterySkip').addEventListener('click',settleBirthLottery);
 $('lotteryConfirm').addEventListener('click',confirmBirthLottery);
 $('birthStart').addEventListener('click',()=>{

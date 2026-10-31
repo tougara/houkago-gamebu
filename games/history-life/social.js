@@ -16,10 +16,29 @@ export const RELATION_ACTIONS=[
  {id:'gift',name:'贈り物',cost:5,closeness:11,stat:{bonds:2,wealth:-5,joy:2},description:'気持ちを込めて贈り物をした'},
  {id:'reconcile',name:'関係を修復',cost:1,closeness:16,stat:{bonds:1,joy:-1,wealth:-1},description:'すれ違いに向き合い、関係を見直した'}
 ];
+// One draw per new person, then a deterministic no-repeat fallback. The current
+// protagonist and all existing relatives count, including deceased family members.
+// Preserve stable IDs and old saves; never rename anyone already in a saved life.
+const pickUnusedName=(s,rand,preferred=null)=>{
+ const used=new Set([s.name,...(s.people||[]).map(p=>p.name)].filter(Boolean));
+ if(preferred&&!used.has(preferred))return preferred;
+ const start=Math.floor(rand()*GIVEN.length);
+ for(let i=0;i<GIVEN.length;i++){
+  const candidate=GIVEN[(start+i)%GIVEN.length];
+  if(!used.has(candidate))return candidate;
+ }
+ // A safeguard for modded/legacy households larger than the standard name pool.
+ const base=GIVEN[start];
+ for(let suffix=2;suffix<10000;suffix++){
+  const candidate=base+'・'+suffix;
+  if(!used.has(candidate))return candidate;
+ }
+ throw Error('Family name pool exhausted');
+};
 const newPerson=(s,role,birthYear,rand,name=null,closeness=65)=>{
- const index=s.people.length;
  const trait=TRAITS[Math.floor(rand()*TRAITS.length)];
- const p={id:'npc-'+(++s.nextPersonId),role,name:name||GIVEN[Math.floor(rand()*GIVEN.length)],
+ const personName=pickUnusedName(s,rand,name);
+ const p={id:'npc-'+(++s.nextPersonId),role,name:personName,
   birthYear,trait:trait.id,traitLabel:trait.name,closeness:bound(closeness),alive:true,
   metYear:s.year,notes:[],lastInteractionYear:null};
  s.people.push(p);return p;

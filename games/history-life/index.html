@@ -7,7 +7,7 @@
  <meta name="description" content="歴史の中に生まれ、普通の人として一生を生きる。戦国・江戸・幕末明治の人生シミュレーション試作。">
  <link rel="icon" type="image/png" href="../../houkago_gamebu_browser_icon_transparent.png">
  <title>時代のなかの一人｜歴史人生シミュレーション試作</title>
- <link rel="stylesheet" href="./style.css?v=20261031-history-map1">
+ <link rel="stylesheet" href="./style.css?v=20261031-death1">
 </head>
 <body>
 <div class="app-shell">
@@ -86,6 +86,16 @@
     <p class="birth-disclaimer">出生条件や家族構成はゲーム内の架空の抽選です。史実の出生率・家族統計ではありません。</p>
     <button id="birthStart" type="button" class="birth-start">この人生を生きる →</button>
    </div>
+  </section>
+  <section id="deathVeil" class="death-veil" role="dialog" aria-modal="true" aria-labelledby="deathVeilTitle" hidden>
+   <div id="deathVeilMessage" class="death-veil-message" hidden>
+    <div class="death-veil-kicker">ある人生が、静かに幕を閉じた。</div>
+    <h2 id="deathVeilTitle"></h2>
+    <p id="deathVeilYears"></p>
+    <span class="death-veil-line"></span>
+    <p class="death-veil-last">生きた時間は、ここに残る。</p>
+   </div>
+   <button id="deathVeilSkip" type="button" class="death-veil-skip">結果を見る</button>
   </section>
   <section id="gameView" class="game-view" hidden>
    <div class="game-play-top">
@@ -252,6 +262,6 @@
   </div>
  </div>
 </div>
-<script type="module" src="./app.js?v=20261031-history-map1"></script>
+<script type="module" src="./app.js?v=20261031-death1"></script>
 </body>
 </html>

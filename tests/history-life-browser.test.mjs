@@ -999,3 +999,51 @@ test('skipping a random draw settles but cannot start a new life without tapping
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
+
+test('death blackout appears only when a living person dies, reveals name, and automatically returns to the end scene',async()=>{
+ const {page,context,errors}=await open(390,780,'?seed=47');
+ try{
+  const s=createLife({eraId:'edo',seed:123,birthYear:1730,regionId:'kanto'});
+  s.age=109;s.year=s.birthYear+109;s.phase='living';
+  assert.ok(validateSave(s));
+  await page.evaluate(life=>localStorage.setItem('houkago_history_life_slots_v1',JSON.stringify({version:1,slots:[life,null,null],archives:[]})),s);
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  assert.equal(await page.locator('#deathVeil').isVisible(),false);
+  await page.locator('#clockNext').click();
+  assert.equal((await page.evaluate(()=>window.HistoryLifeDebug.snapshot)).phase,'ended');
+  assert.ok(await page.locator('#deathVeil').isVisible());
+  assert.equal(await page.locator('#deathVeil').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)');
+  assert.equal(await page.locator('#deathVeilMessage').isVisible(),false,'starts with pure darkness');
+  await page.locator('#deathVeilMessage').waitFor({state:'visible',timeout:2100});
+  assert.equal(await page.locator('#deathVeilTitle').innerText(),s.name);
+  await page.locator('#deathVeil').waitFor({state:'hidden',timeout:5500});
+  assert.ok(await page.locator('#endingScene').isVisible());
+  assert.equal(await page.evaluate(()=>window.HistoryLifeDebug.clock.running),false);
+  await page.locator('#homeButton').click();
+  await page.locator('[data-continue="0"]').click();
+  assert.equal(await page.locator('#deathVeil').isVisible(),false,'ended save does not replay blackout');
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('death blackout can be skipped without changing the saved ending',async()=>{
+ const {page,context,errors}=await open(375,720,'?seed=47');
+ try{
+  const s=createLife({eraId:'sengoku',seed:334,birthYear:1550,regionId:'tokai'});
+  s.age=109;s.year=s.birthYear+109;
+  assert.ok(validateSave(s));
+  await page.evaluate(life=>localStorage.setItem('houkago_history_life_slots_v1',JSON.stringify({version:1,slots:[life,null,null],archives:[]})),s);
+  await page.reload({waitUntil:'load'});
+  await page.waitForFunction(()=>window.HistoryLifeDebug?.eventCount>=35);
+  await page.locator('[data-continue="0"]').click();
+  await page.locator('#clockNext').click();
+  assert.ok(await page.locator('#deathVeil').isVisible());
+  const before=JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot));
+  await page.locator('#deathVeilSkip').click();
+  assert.equal(await page.locator('#deathVeil').isVisible(),false);
+  assert.equal(JSON.stringify(await page.evaluate(()=>window.HistoryLifeDebug.snapshot)),before);
+  assert.ok(await page.locator('#endingScene').isVisible());
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
