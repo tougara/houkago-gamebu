@@ -110,6 +110,7 @@ function connect(m,attacker,target){
  const dmg=Math.round(move.damage*FIGHTERS[attacker.type].damage);
  target.hp=clamp(target.hp-dmg,0,MAX_HP);
  target.stun=move.hitstun;target.guardStun=0;target.vx=0;
+ target.attack=null;target.buffer=null;target.guarding=false;
  target.hitsTaken=target.hitsWindow>0&&target.lastHitBy===attacker.id?target.hitsTaken+1:1;
  target.hitsWindow=.62;target.lastHitBy=attacker.id;
  a.hit=true;

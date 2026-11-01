@@ -202,4 +202,9 @@ function tick(now){
  render(dt);if(++frameCount%4===0)updateHUD();
  requestAnimationFrame(tick);
 }
+window.FightDebug=Object.freeze({
+ get snapshot(){return JSON.parse(JSON.stringify(game))},
+ get input(){return [...held]},
+ get ai(){return {...ai}}
+});
 requestAnimationFrame(t=>{last=t;requestAnimationFrame(tick)});

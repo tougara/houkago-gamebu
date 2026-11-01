@@ -30,19 +30,24 @@ async function open(w,h){
  await page.goto(base+'/games/houkago-fight/',{waitUntil:'load'});
  return {page,context,errors};
 }
-test('landscape CPU match starts, HUD renders and keyboard inputs are accepted',async()=>{
+test('landscape CPU match displays health bars, 60s round timer, and keyboard',async()=>{
  for(const [w,h] of [[844,390],[1366,768]]){
   const {page,context,errors}=await open(w,h);
   try{
    await page.locator('#startBtn').click();
    assert.equal(await page.locator('#menu').isHidden(),true);
    assert.equal(await page.locator('#p1Name').innerText(),'アオ（あなた）');
+   assert.equal(await page.locator('#p1Damage').innerText(),'100');
+   assert.equal(await page.locator('#p2Damage').innerText(),'100');
+   assert.equal(await page.locator('#p1HpTrack').getAttribute('aria-valuenow'),'100');
+   assert.match(await page.locator('#fightRound').innerText(),/ROUND 1/);
    const pixels=await page.locator('#battle').evaluate(c=>Array.from(c.getContext('2d').getImageData(50,50,1,1).data));
-   assert.ok(pixels[3]>0,'canvas must draw visible pixel');
+   assert.ok(pixels[3]>0);
    await page.keyboard.down('d');await page.waitForTimeout(250);await page.keyboard.up('d');
-   await page.keyboard.press('Space');await page.keyboard.press('j');
-   await page.waitForTimeout(550);
-   assert.match(await page.locator('#fightClock').textContent(),/^\d+:\d\d$/);
+   await page.keyboard.press('Space');await page.keyboard.press('j');await page.keyboard.press('k');
+   await page.waitForTimeout(300);
+   assert.match(await page.locator('#fightClock').textContent(),/^\d{1,2}$/);
+   assert.ok(await page.locator('#p1State').isVisible());
    await page.locator('#pauseBtn').click();
    assert.ok(await page.locator('#menu').isVisible());
    await page.locator('[data-menu="resume"]').click();
@@ -51,36 +56,35 @@ test('landscape CPU match starts, HUD renders and keyboard inputs are accepted',
   }finally{await context.close()}
  }
 });
-test('touch controls support two fingers in landscape and retain readable buttons',async()=>{
+test('six touch controls fit landscape and support two fingers simultaneously',async()=>{
  const {page,context,errors}=await open(844,390);
  try{
   await page.locator('#startBtn').click();
-  const buttons=await page.locator('.fight-controls button').count();
-  assert.equal(buttons,9);
+  assert.equal(await page.locator('.fight-controls button').count(),6);
   const geom=await page.evaluate(()=>{
    const rect=document.querySelector('#stage').getBoundingClientRect();
-   const buttons=[...document.querySelectorAll('.fight-controls button')].map(x=>x.getBoundingClientRect());
-   return {stage:{top:rect.top,bottom:rect.bottom},buttons:buttons.map(b=>({top:b.top,bottom:b.bottom,width:b.width,height:b.height})),over:document.documentElement.scrollWidth-innerWidth};
+   const b=[...document.querySelectorAll('.fight-controls button')].map(x=>x.getBoundingClientRect());
+   return {stage:{top:rect.top,bottom:rect.bottom},b:b.map(r=>({top:r.top,bottom:r.bottom,width:r.width,height:r.height})),over:document.documentElement.scrollWidth-innerWidth};
   });
   assert.ok(geom.over<=2);
-  assert.ok(geom.buttons.every(x=>x.width>25&&x.height>25&&x.top>=geom.stage.top-3&&x.bottom<=geom.stage.bottom+3),JSON.stringify(geom));
-  // Chrome DevTools multi-touch is a real browser pointer stream, not synthetic DOM events.
+  assert.ok(geom.b.every(x=>x.width>=40&&x.height>=36&&x.top>=geom.stage.top-3&&x.bottom<=geom.stage.bottom+3),JSON.stringify(geom));
   const points=await page.evaluate(()=>{
-    const r=document.querySelector('[data-key="right"]').getBoundingClientRect();
-    const j=document.querySelector('[data-key="jump"]').getBoundingClientRect();
-    return [{x:r.left+r.width/2,y:r.top+r.height/2,id:11},{x:j.left+j.width/2,y:j.top+j.height/2,id:12}];
+   const r=document.querySelector('[data-key="right"]').getBoundingClientRect();
+   const a=document.querySelector('[data-key="light"]').getBoundingClientRect();
+   return [{x:r.left+r.width/2,y:r.top+r.height/2,id:11},{x:a.left+a.width/2,y:a.top+a.height/2,id:12}];
   });
   const cdp=await context.newCDPSession(page);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:points});
   await page.waitForTimeout(100);
-  assert.equal(await page.locator('.fight-controls .pressed').count(),2,'both finger controls should be active together');
+  assert.equal(await page.locator('.fight-controls .pressed').count(),2);
+  assert.ok((await page.evaluate(()=>window.FightDebug.input)).includes('right'));
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await page.waitForTimeout(80);
-  assert.equal(await page.locator('.fight-controls .pressed').count(),0,'releasing touch restores buttons');
+  await page.waitForTimeout(90);
+  assert.equal(await page.locator('.fight-controls .pressed').count(),0);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
-test('portrait mobile shows rotation guidance with accessible bypass',async()=>{
+test('portrait guidance works and game still starts when bypassed',async()=>{
  const {page,context,errors}=await open(390,844);
  try{
   assert.equal(await page.locator('#rotateNotice').isVisible(),true);
@@ -88,6 +92,22 @@ test('portrait mobile shows rotation guidance with accessible bypass',async()=>{
   assert.equal(await page.locator('#rotateNotice').isVisible(),false);
   await page.locator('#startBtn').click();
   assert.ok(await page.locator('#menu').isHidden());
+  assert.equal((await page.evaluate(()=>window.FightDebug.snapshot)).phase,'playing');
+  assert.deepEqual(errors,[]);
+ }finally{await context.close()}
+});
+test('HP actually falls when landing real normal attacks and recoveries are shown',async()=>{
+ const {page,context,errors}=await open(844,390);
+ try{
+  await page.locator('#startBtn').click();
+  await page.keyboard.down('d');
+  await page.waitForTimeout(540);
+  await page.keyboard.up('d');
+  for(let i=0;i<9;i++){await page.keyboard.press('j');await page.waitForTimeout(230)}
+  const snapshot=await page.evaluate(()=>window.FightDebug.snapshot);
+  assert.ok(snapshot.fighters.some(f=>f.hp<100),'real browser combat must deal HP damage: '+JSON.stringify(snapshot.fighters.map(f=>({x:f.x,hp:f.hp}))));
+  const [a,b]=snapshot.fighters;
+  assert.ok(a.x>=76&&a.x<=884&&b.x>=76&&b.x<=884);
   assert.deepEqual(errors,[]);
  }finally{await context.close()}
 });
