@@ -24,7 +24,7 @@ test('left/right movement, facing and fixed stage boundaries; no falling out',()
  assert.ok(m.fighters[0].x>x+40);
  frames(m,18,{p1:{left:true}});
  assert.ok(m.fighters[0].vx<0);
- assert.equal(m.fighters[0].facing,-1);
+ assert.equal(m.fighters[0].facing,1,'fighter automatically faces the opponent');
  m.fighters[0].x=WORLD.edgeL+22;frames(m,150,{p1:{left:true}});
  assert.ok(m.fighters[0].x>=WORLD.edgeL+21);
  m.fighters[0].x=WORLD.edgeR-22;frames(m,150,{p1:{right:true}});
@@ -66,6 +66,7 @@ test('weak -> weak -> strong connects as a simple three-hit combo',()=>{
  frames(m,1,{p1:{light:true}});
  frames(m,7);
  frames(m,1,{p1:{light:true}});
+ console.log('COMBO_DEBUG',JSON.stringify({attack:m.fighters[0].attack,prev:m.fighters[0].prev,buffer:m.fighters[0].buffer,opponentHP:m.fighters[1].hp}));
  assert.equal(m.fighters[0].attack?.stage,2);
  frames(m,9);
  frames(m,1,{p1:{heavy:true}});
@@ -112,7 +113,7 @@ test('KO awards one round; next round restores both HP and begins automatically'
  frames(m,130);
  assert.equal(m.phase,'playing');assert.equal(m.round,2);
  assert.deepEqual(m.fighters.map(x=>x.hp),[100,100]);
- assert.equal(m.clock,60);
+ assert.ok(m.clock<=60&&m.clock>58,'second round timer reset and is counting down');
 });
 test('second round victory is match victory and cannot be changed afterwards',()=>{
  const m=close();m.rounds.p1=1;m.round=2;m.fighters[1].hp=4;
