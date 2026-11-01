@@ -57,11 +57,11 @@ function prepareInput(m,f,key,dt){
  const prev=f.prev||{},press=name=>!!key[name]&&!prev[name];
  // On a light hit, a pressed follow-up may be buffered briefly; no cancel on miss or block.
  const follow=press('heavy')?'heavy':press('light')?'light':null;
- if(f.attack&&follow&&f.attack.kind==='light'&&f.attack.stage<2)f.buffer={kind:follow,ttl:.23};
+ if(f.attack&&follow&&f.attack.kind==='light'&&(f.attack.stage===1||(f.attack.stage===2&&follow==='heavy')))f.buffer={kind:follow,ttl:.23};
  if(f.buffer)f.buffer.ttl-=dt;
  if(f.buffer?.ttl<=0)f.buffer=null;
  // Hit-confirmed chain: weak -> weak -> strong. Weak -> strong is also legal.
- if(f.attack?.kind==='light'&&f.attack.hit&&f.buffer&&f.attack.time>=.12){
+ if(f.attack?.kind==='light'&&f.attack.hit&&f.buffer&&f.attack.time>=.10){
   const stage=f.attack.stage;
   if((f.buffer.kind==='light'&&stage===1)||f.buffer.kind==='heavy'){
    beginAttack(m,f,f.buffer.kind,f.buffer.kind==='light'?2:3);
