@@ -66,7 +66,6 @@ test('weak -> weak -> strong connects as a simple three-hit combo',()=>{
  frames(m,1,{p1:{light:true}});
  frames(m,7);
  frames(m,1,{p1:{light:true}});
- console.log('COMBO_DEBUG',JSON.stringify({attack:m.fighters[0].attack,prev:m.fighters[0].prev,buffer:m.fighters[0].buffer,opponentHP:m.fighters[1].hp}));
  assert.equal(m.fighters[0].attack?.stage,2);
  frames(m,9);
  frames(m,1,{p1:{heavy:true}});

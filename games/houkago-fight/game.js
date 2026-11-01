@@ -122,6 +122,18 @@ function updateHUD(){
  }
  $('fightClock').textContent=String(Math.max(0,Math.ceil(game.clock)));
  $('fightRound').textContent='ROUND '+game.round+' / 2先取';
+ const me=game.fighters[0],state=fighterStatus(me);
+ let hint='弱 → 弱 → 強　命中すればコンボ！';
+ if(game.phase==='roundOver')hint='ラウンド終了。次のラウンドはHP100で再開';
+ else if(game.phase==='playing'){
+  if(me.stun>.02)hint='被弾中！ 約'+me.stun.toFixed(1)+'秒は操作できない';
+  else if(me.guardStun>.02)hint='ガード硬直中！ 約'+me.guardStun.toFixed(1)+'秒は反撃できない';
+  else if(me.attack?.kind==='light'&&me.attack.hit&&me.attack.stage===2)hint='2 HIT！ 次は「強」で3段コンボ';
+  else if(me.attack?.kind==='light'&&me.attack.hit&&me.attack.stage===1)hint='命中！ 次は「弱」か「強」を押そう';
+  else if(state.tone==='recovery')hint='硬直 '+state.seconds.toFixed(1)+'秒：移動・攻撃・ガード不可';
+  else if(me.guarding)hint='ガード中：離すと攻撃できる';
+ }
+ $('comboHint').textContent=hint;
 }
 function finish(){
  const title=game.winner==='p1'?'YOU WIN!':game.winner==='p2'?'YOU LOSE':'DRAW';
