@@ -1,177 +1,167 @@
-/* 放課後ファイト！ prototype engine: deterministic fixed-timestep 2D platform fighter.
- * No DOM/network code; suitable for later server-authoritative online simulation. */
-export const WORLD=Object.freeze({width:960,height:540,groundY:356,edgeL:174,edgeR:786,
- blastL:-105,blastR:1065,blastTop:-135,blastBottom:700,gravity:1530});
+/* 放課後ファイト！: compact, deterministic 1vCPU traditional health-bar fighter.
+ * 60 fps; no falling, no percent damage, no stocks. Lightweight online-ready simulation.
+ * 100 HP, 60 sec rounds, first to two rounds. Inputs: left/right/jump/light/heavy/guard.
+ * The only cancel route is hit-confirmed light -> light -> heavy. */
+export const WORLD=Object.freeze({width:960,height:540,groundY:374,edgeL:76,edgeR:884,gravity:1620});
 export const FIGHTERS=Object.freeze({
- speed:{name:'アオ',label:'スピード',weight:90,speed:305,jump:600,damage:0.95,color:'#56e2f0',hair:'#183e6b'},
- power:{name:'アカ',label:'パワー',weight:110,speed:236,jump:540,damage:1.13,color:'#fd8294',hair:'#58334f'}
+ speed:{name:'アオ',label:'スピード',speed:310,jump:620,damage:1,color:'#56e2f0',hair:'#183e6b'},
+ power:{name:'アカ',label:'パワー',speed:253,jump:575,damage:1.12,color:'#fd8294',hair:'#58334f'}
 });
 export const FIXED_DT=1/60;
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const DURATION={jab:.29,tilt:.39,up:.39,down:.37,air:.36,smash:.65,projectile:.48,upSpecial:.62};
+export const ROUND_SECONDS=60;
+export const MAX_HP=100;
+export const ROUNDS_TO_WIN=2;
+// startup, active and recovery are seconds; recovery cannot be interrupted except on a confirmed light hit.
+export const MOVES=Object.freeze({
+ light:Object.freeze({startup:5/60,active:5/60,recovery:12/60,damage:7,range:86,hitstun:23/60,blockstun:10/60}),
+ heavy:Object.freeze({startup:10/60,active:5/60,recovery:18/60,damage:16,range:110,hitstun:28/60,blockstun:17/60})
+});
+const clamp=(n,low,high)=>Math.max(low,Math.min(high,n));
+const total=move=>move.startup+move.active+move.recovery;
+const fighter=(id,type,x,facing)=>({id,type,x,y:WORLD.groundY,vx:0,vy:0,grounded:true,facing,
+ hp:MAX_HP,stun:0,guardStun:0,guarding:false,attack:null,buffer:null,
+ comboChain:0,comboWindow:0,hitsTaken:0,hitsWindow:0,lastHitBy:null,prev:{},jumped:false});
 export function createMatch({p1='speed',p2='power'}={}){
  if(!FIGHTERS[p1]||!FIGHTERS[p2])throw Error('Unknown fighter');
- const fighter=(id,type,x,facing)=>({
-  id,type,x,y:WORLD.groundY,vx:0,vy:0,facing,grounded:true,jumps:0,
-  damage:0,stocks:2,invincible:0,stun:0,shield:100,charging:0,
-  attack:null,cooldown:0,skillCooldown:0,respawn:0,prev:{},lastMove:0
- });
- return {phase:'ready',clock:180,elapsed:0,round:1,winner:null,
-   fighters:[fighter('p1',p1,330,1),fighter('p2',p2,630,-1)],
-   projectiles:[],effects:[],events:[],suddenDeath:false};
+ return {phase:'ready',clock:ROUND_SECONDS,elapsed:0,round:1,rounds:{p1:0,p2:0},
+  winner:null,roundWinner:null,roundPause:0,events:[],
+  fighters:[fighter('p1',p1,328,1),fighter('p2',p2,632,-1)]};
 }
-export function startMatch(m){if(m.phase==='ready'){m.phase='playing';return true}return false}
-function event(m,type,extra={}){m.events.push({type,...extra})}
-function attackDef(kind,charge,stats){
- const p=stats.damage;
- if(kind==='jab')return {damage:3*p,base:6.2,growth:.042,range:68,height:66,length:.29};
- if(kind==='tilt')return {damage:8*p,base:7.5,growth:.060,range:82,height:77,length:.39};
- if(kind==='up')return {damage:7*p,base:7.1,growth:.057,range:64,height:106,length:.39};
- if(kind==='down')return {damage:7*p,base:6.5,growth:.052,range:70,height:40,length:.37};
- if(kind==='air')return {damage:6*p,base:7.0,growth:.054,range:69,height:74,length:.36};
- if(kind==='smash')return {damage:(15+5*charge)*p,base:9.2+1.5*charge,growth:.08+charge*.01,range:97,height:93,length:.65};
- if(kind==='upSpecial')return {damage:7*p,base:7,growth:.056,range:58,height:106,length:.62};
- return {damage:0,base:0,growth:0,range:0,height:0,length:.3};
-}
-function startAttack(m,f,kind,charge=0){
- const def=attackDef(kind,charge,FIGHTERS[f.type]);
- f.attack={kind,time:0,hit:false,charge,...def};
- f.cooldown=def.length;
- if(kind==='upSpecial'){f.vy=-660;f.grounded=false;f.jumps=2;f.skillCooldown=.85}
- event(m,'attack',{id:f.id,kind});
-}
-function hit(m,attacker,victim,a,direction){
- if(victim.invincible>0||victim.respawn>0||victim.stocks<=0)return false;
- const fromFront=(attacker.x-victim.x)*victim.facing>0;
- const blocked=victim.prev.guard&&victim.stun<=0&&fromFront;
- if(blocked&&victim.shield>0){
-  victim.shield=clamp(victim.shield-a.damage*5.2,0,100);
-  event(m,'guard',{id:victim.id,x:victim.x,y:victim.y-34});
-  if(victim.shield===0){victim.stun=1.5;event(m,'break',{id:victim.id})}
-  return true;
+export function startMatch(m){if(m.phase!=='ready')return false;m.phase='playing';return true}
+const event=(m,type,other={})=>m.events.push({type,...other});
+const canMove=f=>f.stun<=0&&f.guardStun<=0&&!f.attack;
+export function fighterStatus(f){
+ if(f.stun>0)return {label:'被弾硬直',seconds:f.stun,tone:'danger'};
+ if(f.guardStun>0)return {label:'ガード硬直',seconds:f.guardStun,tone:'block'};
+ if(f.attack){
+  const a=f.attack,move=MOVES[a.kind],end=total(move);
+  if(a.time<move.startup)return {label:'攻撃準備',seconds:move.startup-a.time,tone:'attack'};
+  if(a.time<move.startup+move.active)return {label:'攻撃中',seconds:move.startup+move.active-a.time,tone:'attack'};
+  return {label:a.connected?'攻撃後の硬直':'空振り硬直',seconds:Math.max(0,end-a.time),tone:'recovery'};
  }
- victim.damage=Math.round((victim.damage+a.damage)*10)/10;
- const sp=(a.base+victim.damage*a.growth)*(100/FIGHTERS[victim.type].weight)*26;
- const lift=direction==='up'?-.94:direction==='down'?.64:-.55;
- const dir=attacker.facing||1;
- victim.vx=sp*dir*(direction==='up'?.28:.85);
- victim.vy=sp*lift;
- victim.grounded=false;
- victim.stun=clamp(.16+sp/1500,.16,.65);
- victim.invincible=.17;
- event(m,'hit',{id:victim.id,by:attacker.id,x:victim.x,y:victim.y-33,damage:a.damage,heavy:a.kind==='smash'});
- return true;
+ if(f.guarding)return {label:'ガード中',seconds:0,tone:'block'};
+ if(!f.grounded)return {label:'ジャンプ中',seconds:0,tone:'neutral'};
+ return {label:'操作可能',seconds:0,tone:'ready'};
 }
-function attackConnect(m,f,rival){
- const a=f.attack;
- if(!a||a.hit||a.time<.065||a.time>Math.min(.27,a.length-.055))return;
- const dx=rival.x-f.x,dy=(rival.y-31)-(f.y-31);
- let connect=false,kind='side';
- if(a.kind==='up'||a.kind==='upSpecial'){connect=Math.abs(dx)<58&&dy<24&&dy>-a.height;kind='up'}
- else if(a.kind==='down'){connect=dx*f.facing>-25&&dx*f.facing<a.range&&dy>-24&&dy<54;kind='down'}
- else if(a.kind==='air'){connect=Math.abs(dx)<a.range&&Math.abs(dy)<a.height;kind=dy<0?'up':'side'}
- else connect=dx*f.facing>-20&&dx*f.facing<a.range&&Math.abs(dy)<a.height/2+24;
- if(connect){a.hit=hit(m,f,rival,a,kind)}
+function beginAttack(m,f,kind,stage=0){
+ f.attack={kind,time:0,connected:false,hit:false,stage};
+ f.buffer=null;f.guarding=false;
+ event(m,'attack',{id:f.id,kind,stage});
 }
-function fighterStep(m,f,r,controls,dt){
- const cfg=FIGHTERS[f.type],key=controls||{},prev=f.prev||{};
- const pressed=name=>!!key[name]&&!prev[name];
- f.invincible=Math.max(0,f.invincible-dt);
+function prepareInput(m,f,key,dt){
  f.stun=Math.max(0,f.stun-dt);
- f.cooldown=Math.max(0,f.cooldown-dt);
- f.skillCooldown=Math.max(0,f.skillCooldown-dt);
- if(f.respawn>0){f.respawn=Math.max(0,f.respawn-dt);f.prev={...key};return}
- if(pressed('jump')&&f.stun===0&&f.jumps<2){
-  f.vy=-cfg.jump*(f.jumps?0.86:1);f.jumps++;
-  f.grounded=false;event(m,'jump',{id:f.id});
- }
- const axis=(key.right?1:0)-(key.left?1:0);
- const canAct=f.stun===0;
- const guarding=!!key.guard&&f.grounded&&canAct&&!f.attack&&!f.charging;
- // Horizontal + attack must strike towards the freshly pressed direction.
- if(axis!==0&&f.grounded&&!f.attack&&!f.charging&&canAct)f.facing=axis;
- if(canAct&&!guarding){
-  if(f.charging>0){
-   f.charging=clamp(f.charging+dt,.001,.8);
-   if(!key.smash||f.charging>=.8){startAttack(m,f,'smash',f.charging/.8);f.charging=0}
-  }else if(!f.attack&&f.cooldown<=0){
-   if(pressed('smash')){f.charging=.001;event(m,'charge',{id:f.id})}
-   else if(pressed('attack'))startAttack(m,f,f.grounded?(key.up?'up':key.down?'down':axis?'tilt':'jab'):'air');
-   else if(pressed('special')&&f.skillCooldown<=0){
-    if(key.up){startAttack(m,f,'upSpecial');}
-    else{
-     f.skillCooldown=.85;f.cooldown=.39;
-     m.projectiles.push({owner:f.id,x:f.x+f.facing*25,y:f.y-35,vx:f.facing*450,time:1.5,r:14,damage:7*cfg.damage});
-     event(m,'special',{id:f.id});
-    }
-   }
+ f.guardStun=Math.max(0,f.guardStun-dt);
+ f.comboWindow=Math.max(0,f.comboWindow-dt);
+ f.hitsWindow=Math.max(0,f.hitsWindow-dt);
+ if(f.hitsWindow===0)f.hitsTaken=0;
+ const prev=f.prev||{},press=name=>!!key[name]&&!prev[name];
+ // On a light hit, a pressed follow-up may be buffered briefly; no cancel on miss or block.
+ const follow=press('heavy')?'heavy':press('light')?'light':null;
+ if(f.attack&&follow&&f.attack.kind==='light'&&f.attack.stage<2)f.buffer={kind:follow,ttl:.23};
+ if(f.buffer)f.buffer.ttl-=dt;
+ if(f.buffer?.ttl<=0)f.buffer=null;
+ // Hit-confirmed chain: weak -> weak -> strong. Weak -> strong is also legal.
+ if(f.attack?.kind==='light'&&f.attack.hit&&f.buffer&&f.attack.time>=.12){
+  const stage=f.attack.stage;
+  if((f.buffer.kind==='light'&&stage===1)||f.buffer.kind==='heavy'){
+   beginAttack(m,f,f.buffer.kind,f.buffer.kind==='light'?2:3);
+   event(m,'cancel',{id:f.id,stage:f.attack.stage});
   }
  }
- if(!key.guard)f.shield=Math.min(100,f.shield+dt*19);
- // No facing reversal in air; press left/right on ground to face the attack.
- if(f.stun===0&&!f.charging){
-  const target=axis*cfg.speed*(f.grounded?1:.82)*(f.attack?.kind==='smash'?.20:1);
-  f.vx+=(target-f.vx)*Math.min(1,dt*(f.grounded?22:7));
- }else if(f.stun===0)f.vx*=Math.pow(.75,dt*60);
- if(guarding)f.vx*=Math.pow(.52,dt*60);
  if(f.attack){
   f.attack.time+=dt;
-  attackConnect(m,f,r);
-  if(f.attack.time>=f.attack.length)f.attack=null;
+  if(f.attack.time>=total(MOVES[f.attack.kind]))f.attack=null;
  }
- const oldY=f.y;
- f.vy+=WORLD.gravity*dt;
- if(key.down&&!f.grounded&&f.vy>0)f.vy+=450*dt;
- f.x+=f.vx*dt;f.y+=f.vy*dt;
- const overPlatform=f.x>WORLD.edgeL-18&&f.x<WORLD.edgeR+18;
- if(f.vy>=0&&oldY<=WORLD.groundY+1&&f.y>=WORLD.groundY&&overPlatform){
-  f.y=WORLD.groundY;f.vy=0;f.grounded=true;f.jumps=0;
- }else if(!overPlatform||f.y<WORLD.groundY-2)f.grounded=false;
- f.prev={left:!!key.left,right:!!key.right,up:!!key.up,down:!!key.down,jump:!!key.jump,
-  attack:!!key.attack,smash:!!key.smash,special:!!key.special,guard:!!key.guard};
-}
-function projectileStep(m,dt){
- for(const p of m.projectiles){
-  p.x+=p.vx*dt;p.time-=dt;
-  const f=m.fighters.find(x=>x.id===p.owner),r=m.fighters.find(x=>x.id!==p.owner);
-  if(!f||!r||r.respawn>0||r.stocks<=0)continue;
-  if(Math.abs(r.x-p.x)<33&&Math.abs((r.y-35)-p.y)<47){
-   if(hit(m,f,r,{damage:p.damage,base:7.0,growth:.048,kind:'projectile'},'side'))p.time=0;
-  }
+ f.guarding=!!key.guard&&f.grounded&&f.stun<=0&&f.guardStun<=0&&!f.attack;
+ if(f.stun<=0&&f.guardStun<=0&&!f.guarding&&!f.attack){
+  if(follow)beginAttack(m,f,follow,follow==='light'?1:0);
+  else if(press('jump')&&f.grounded){f.grounded=false;f.vy=-FIGHTERS[f.type].jump;f.jumped=true;event(m,'jump',{id:f.id})}
  }
- m.projectiles=m.projectiles.filter(p=>p.time>0&&p.x>-130&&p.x<1090);
+ const axis=(key.right?1:0)-(key.left?1:0);
+ if(f.grounded&&!f.attack&&!f.guarding&&f.stun<=0&&f.guardStun<=0&&axis)f.facing=axis;
+ if(canMove(f)&&!f.guarding){
+  const speed=FIGHTERS[f.type].speed*(f.grounded?1:.78);
+  f.vx+=(axis*speed-f.vx)*Math.min(1,dt*(f.grounded?19:9));
+ }else f.vx+=(0-f.vx)*Math.min(1,dt*(f.guarding?25:15));
+ f.x=clamp(f.x+f.vx*dt,WORLD.edgeL+21,WORLD.edgeR-21);
+ if(!f.grounded){
+  f.vy+=WORLD.gravity*dt;f.y+=f.vy*dt;
+  if(f.y>=WORLD.groundY){f.y=WORLD.groundY;f.vy=0;f.grounded=true;f.jumped=false}
+ }
+ f.prev={left:!!key.left,right:!!key.right,jump:!!key.jump,light:!!key.light,heavy:!!key.heavy,guard:!!key.guard};
 }
-function stockCheck(m,f){
- if(f.respawn>0||f.stocks<=0)return;
- if(f.x<WORLD.blastL||f.x>WORLD.blastR||f.y<WORLD.blastTop||f.y>WORLD.blastBottom){
-  f.stocks--;
-  event(m,'ko',{id:f.id,stocks:f.stocks});
-  if(f.stocks<=0){m.phase='finished';m.winner=m.fighters.find(x=>x.id!==f.id)?.id||'draw';event(m,'finish',{winner:m.winner});return}
-  Object.assign(f,{x:f.id==='p1'?360:600,y:WORLD.groundY-95,vx:0,vy:0,
-    grounded:false,jumps:0,damage:m.suddenDeath?150:0,stun:0,cooldown:0,charging:0,attack:null,
-    respawn:1.05,invincible:2,shield:100});
+function connect(m,attacker,target){
+ const a=attacker.attack;
+ if(!a||a.connected||target.hp<=0)return;
+ const move=MOVES[a.kind];
+ if(a.time<move.startup||a.time>move.startup+move.active)return;
+ const dx=(target.x-attacker.x)*attacker.facing;
+ const reach=move.range+(a.kind==='heavy'&&a.stage===3?10:0);
+ const dy=Math.abs(target.y-attacker.y);
+ if(dx<0||dx>reach||dy>(a.kind==='light'?70:83))return;
+ a.connected=true;
+ const front=(attacker.x-target.x)*target.facing>0;
+ if(target.guarding&&front){
+  target.guardStun=move.blockstun;target.guarding=false;
+  target.vx=0;
+  event(m,'guard',{id:target.id,by:attacker.id,x:target.x,y:target.y-40,heavy:a.kind==='heavy'});
+  return;
+ }
+ const dmg=Math.round(move.damage*FIGHTERS[attacker.type].damage);
+ target.hp=clamp(target.hp-dmg,0,MAX_HP);
+ target.stun=move.hitstun;target.guardStun=0;target.vx=0;
+ target.hitsTaken=target.hitsWindow>0&&target.lastHitBy===attacker.id?target.hitsTaken+1:1;
+ target.hitsWindow=.62;target.lastHitBy=attacker.id;
+ a.hit=true;
+ if(a.kind==='light')attacker.comboWindow=.62;
+ else attacker.comboWindow=0;
+ event(m,'hit',{id:target.id,by:attacker.id,x:target.x,y:target.y-40,damage:dmg,hits:target.hitsTaken,heavy:a.kind==='heavy'});
+}
+function separate(a,b){
+ const dx=b.x-a.x,minimum=53;
+ if(Math.abs(dx)<minimum&&Math.abs(a.y-b.y)<65){
+  const n=(minimum-Math.abs(dx))/2,dir=dx>=0?1:-1;
+  a.x=clamp(a.x-dir*n,WORLD.edgeL+21,WORLD.edgeR-21);
+  b.x=clamp(b.x+dir*n,WORLD.edgeL+21,WORLD.edgeR-21);
+ }
+ for(const [f,r] of [[a,b],[b,a]]){
+  if(f.grounded&&canMove(f)&&!f.guarding)f.facing=r.x>=f.x?1:-1;
+ }
+}
+function resetFighters(m){
+ const a=m.fighters[0],b=m.fighters[1];
+ Object.assign(a,fighter('p1',a.type,328,1));
+ Object.assign(b,fighter('p2',b.type,632,-1));
+ m.clock=ROUND_SECONDS;m.roundWinner=null;
+}
+function endRound(m,winner){
+ m.roundWinner=winner;
+ event(m,'roundEnd',{winner,round:m.round});
+ if(winner!=='draw')m.rounds[winner]++;
+ if(m.rounds.p1>=ROUNDS_TO_WIN||m.rounds.p2>=ROUNDS_TO_WIN){
+  m.phase='finished';m.winner=winner;
+  event(m,'finish',{winner});
+ }else{
+  m.phase='roundOver';m.roundPause=1.65;
  }
 }
 export function stepMatch(m,controls={},dt=FIXED_DT){
  m.events=[];
+ if(m.phase==='roundOver'){
+  const delta=clamp(Number(dt)||FIXED_DT,0,1/30);
+  m.roundPause=Math.max(0,m.roundPause-delta);
+  if(m.roundPause===0){m.round++;resetFighters(m);m.phase='playing';event(m,'roundStart',{round:m.round})}
+  return m;
+ }
  if(m.phase!=='playing')return m;
  dt=clamp(Number(dt)||FIXED_DT,0,1/30);
  m.elapsed+=dt;m.clock=Math.max(0,m.clock-dt);
  const [a,b]=m.fighters;
- fighterStep(m,a,b,controls.p1,dt);
- fighterStep(m,b,a,controls.p2,dt);
- projectileStep(m,dt);
- stockCheck(m,a);if(m.phase==='playing')stockCheck(m,b);
- if(m.phase!=='playing')return m;
- if(m.clock<=0){
-  const [x,y]=m.fighters;
-  if(x.stocks!==y.stocks)m.winner=x.stocks>y.stocks?'p1':'p2';
-  else if(x.damage!==y.damage)m.winner=x.damage<y.damage?'p1':'p2';
-  else if(!m.suddenDeath){
-   m.suddenDeath=true;m.clock=30;x.damage=y.damage=150;
-   event(m,'suddenDeath');return m;
-  }else m.winner='draw';
-  m.phase='finished';event(m,'finish',{winner:m.winner});
- }
+ prepareInput(m,a,controls.p1||{},dt);
+ prepareInput(m,b,controls.p2||{},dt);
+ separate(a,b);
+ connect(m,a,b);connect(m,b,a);
+ if(a.hp<=0||b.hp<=0){endRound(m,a.hp<=0&&b.hp<=0?'draw':a.hp<=0?'p2':'p1');return m}
+ if(m.clock<=0)endRound(m,a.hp===b.hp?'draw':a.hp>b.hp?'p1':'p2');
  return m;
 }
